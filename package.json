@@ -1,0 +1,45 @@
+{
+	"name": "@gander-tools/osm-tagging-schema",
+	"version": "0.1.0",
+	"description": "MCP server for querying and validating OpenStreetMap tags",
+	"type": "module",
+	"main": "dist/index.js",
+	"bin": {
+		"osm-tagging-mcp": "dist/index.js"
+	},
+	"scripts": {
+		"dev": "tsx --watch src/index.ts",
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"test": "node --test tests/**/*.test.ts --loader tsx",
+		"test:watch": "node --test --watch tests/**/*.test.ts --loader tsx",
+		"lint": "biome lint .",
+		"format": "biome format --write .",
+		"check": "biome check --write .",
+		"typecheck": "tsc --noEmit"
+	},
+	"keywords": [
+		"mcp",
+		"model-context-protocol",
+		"openstreetmap",
+		"osm",
+		"tagging",
+		"schema",
+		"validation"
+	],
+	"author": "",
+	"license": "GPL-3.0",
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.0.4",
+		"@openstreetmap/id-tagging-schema": "^6.7.3"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@types/node": "^22.10.1",
+		"tsx": "^4.19.2",
+		"typescript": "^5.7.2"
+	},
+	"engines": {
+		"bun": ">=1.1.0"
+	}
+}

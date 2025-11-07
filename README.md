@@ -48,13 +48,13 @@ This project follows **Test-Driven Development (TDD)** principles:
 
 ## Development Plan
 
-### Phase 1: Project Setup
-- [ ] Initialize TypeScript 5.9 project with Bun 1.3
-- [ ] Install dependencies:
+### Phase 1: Project Setup ✅
+- [x] Initialize TypeScript 5.9 project with Bun 1.3
+- [x] Install dependencies:
   - `@modelcontextprotocol/sdk`
   - `@openstreetmap/id-tagging-schema`
   - Development tools (BiomeJS, types)
-- [ ] Set up project structure:
+- [x] Set up project structure:
   ```
   src/
   ├── index.ts           # MCP server entry point
@@ -72,10 +72,10 @@ This project follows **Test-Driven Development (TDD)** principles:
   ├── tools/
   └── utils/
   ```
-- [ ] Configure Bun build system
-- [ ] Set up BiomeJS 2.3.4 for linting and formatting
-- [ ] Configure Bun test framework
-- [ ] Set up GitHub Actions CI/CD
+- [x] Configure build system (TypeScript compiler)
+- [x] Set up BiomeJS 2.3.4 for linting and formatting
+- [x] Configure test framework (Node.js native test runner)
+- [x] Set up GitHub Actions CI/CD
 
 ### Phase 2: Schema Integration
 - [ ] Create schema loader utility
@@ -159,7 +159,7 @@ This project follows **Test-Driven Development (TDD)** principles:
 
 ### From NPM (Recommended)
 ```bash
-npx @your-org/osm-tagging-mcp
+npx @gander-tools/osm-tagging-schema
 ```
 
 ### From Source
@@ -174,12 +174,12 @@ bun run build
 
 **Using npx:**
 ```bash
-npx @your-org/osm-tagging-mcp
+npx @gander-tools/osm-tagging-schema
 ```
 
 **From source:**
 ```bash
-bun start
+npm start
 ```
 
 ### Configuration
@@ -191,7 +191,7 @@ Add to your MCP client configuration:
   "mcpServers": {
     "osm-tagging": {
       "command": "npx",
-      "args": ["@your-org/osm-tagging-mcp"]
+      "args": ["@gander-tools/osm-tagging-schema"]
     }
   }
 }
@@ -201,22 +201,25 @@ Add to your MCP client configuration:
 
 ```bash
 # Install dependencies
-bun install
+npm install
 
 # Run tests (TDD)
-bun test
+npm test
 
 # Run tests in watch mode
-bun test --watch
+npm run test:watch
 
 # Run linter
-bun run lint
+npm run lint
 
 # Run formatter
-bun run format
+npm run format
+
+# Type check
+npm run typecheck
 
 # Build for production
-bun run build
+npm run build
 ```
 
 ### Example Queries
