@@ -200,28 +200,68 @@ GNU General Public License v3.0 (GPL-3.0)
 - OpenStreetMap Tagging Schema: https://github.com/openstreetmap/id-tagging-schema
 - OSM Wiki Tags: https://wiki.openstreetmap.org/wiki/Tags
 
-## Development Workflow Commands
+## Development Workflow
 
-### refresh
-Resets the development environment to a clean state:
-1. Switch to master branch (`git checkout master`)
-2. Pull latest changes from remote repository (`git pull origin master`)
-3. Clear context (start fresh)
-4. Read CLAUDE.md to reload project instructions
+This project follows an **intent-based workflow** where development is organized around features, not individual commands.
 
-Use this command when:
-- Starting a new development session
-- Switching between different features
-- After merging PRs to sync with latest master
-- When context becomes too large or outdated
+### Workflow Principles
 
-### feature-branch
-Creates and pushes a new feature branch:
-1. Create a new branch with a descriptive name based on the feature being developed
-2. Branch naming convention: `claude/<feature-description>-<session-id>`
-3. Push the new branch to remote repository (`git push -u origin <branch-name>`)
+1. **Clean State Before New Work**
+   - When instructed to "refresh", "clean", or "prepare for new feature":
+     - Clean local branches (except current)
+     - Switch to master branch
+     - Pull latest changes from master
+     - Read CLAUDE.md to reload project context
+     - **DO NOT create a new branch yet**
 
-Use this command when:
-- Starting work on a new feature
-- Beginning implementation of a new phase
-- Creating isolated changes for a specific task
+2. **Feature Branch Creation**
+   - **DO NOT push changes** to repository without explicit instruction
+   - **Create feature branch ONLY** when instructed to push/send changes to repo
+   - Branch naming: `claude/<feature-description>-<session-id>`
+   - One branch per feature (not per command)
+   - Master branch is protected - all changes must go through feature branches
+
+3. **Feature Branch Lifecycle**
+   - Once a feature branch is created and pushed, continue using it for all related changes
+   - Create a new branch ONLY when explicitly told "this is a new feature"
+   - Each feature must have its own branch for clean git history
+   - Multiple commits per feature branch are expected and encouraged
+
+4. **Testing Requirements**
+   - **Run tests when code changes** (src/, tests/ directories)
+   - **Skip tests for documentation-only changes** (README.md, CLAUDE.md, *.md files)
+   - Before pushing code changes, ensure:
+     - `npm run test:unit` passes
+     - `npm run test:integration` passes
+     - `npm run lint` passes
+     - `npm run typecheck` passes
+
+### Intent: Refresh/Clean Environment
+
+**When to use:** Starting new session, switching features, syncing with master
+
+**What happens:**
+1. Delete all local branches except current
+2. Checkout master
+3. Pull latest from origin/master
+4. Read CLAUDE.md
+5. Ready to work locally (no branch created yet)
+
+### Intent: Push/Send Changes to Repository
+
+**When to use:** Feature implementation is complete or at a checkpoint
+
+**What happens:**
+1. If no feature branch exists yet: create and push new branch
+2. If feature branch exists: commit and push to existing branch
+3. Branch naming: `claude/<feature-description>-<session-id>`
+4. All changes for the same feature go to the same branch
+
+### Intent: Start New Feature
+
+**When to use:** Explicitly starting work on a different feature
+
+**What happens:**
+1. Perform refresh/clean workflow
+2. Begin new feature work locally
+3. When ready to push: create new feature branch
