@@ -184,7 +184,19 @@ npm start
 
 ### Configuration
 
-Add to your MCP client configuration:
+#### Quick Setup with Claude Code CLI
+
+The easiest way to add this MCP server to Claude Code CLI is using the built-in command:
+
+```bash
+claude mcp add @gander-tools/osm-tagging-schema-mcp
+```
+
+This will automatically configure the server in your Claude Code CLI environment.
+
+#### Manual Configuration
+
+Alternatively, you can manually add to your MCP client configuration:
 
 ```json
 {
@@ -196,6 +208,11 @@ Add to your MCP client configuration:
   }
 }
 ```
+
+**Configuration file locations:**
+- **Claude Code CLI:** `~/.config/claude-code/config.json`
+- **Claude Desktop (macOS):** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Claude Desktop (Windows):** `%APPDATA%\Claude\claude_desktop_config.json`
 
 ### Development
 
