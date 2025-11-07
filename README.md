@@ -38,13 +38,22 @@ This MCP server exposes OpenStreetMap's tagging schema as a set of queryable too
    - Search tags by keyword or category
    - Get statistics about tag usage in schema
 
+## Development Methodology
+
+This project follows **Test-Driven Development (TDD)** principles:
+1. Write tests first before implementation
+2. Write minimal code to make tests pass
+3. Refactor while keeping tests green
+4. Maintain high test coverage (>90%)
+
 ## Development Plan
 
 ### Phase 1: Project Setup
-- [ ] Initialize TypeScript project with proper configuration
+- [ ] Initialize TypeScript 5.9 project with Bun 1.3
 - [ ] Install dependencies:
   - `@modelcontextprotocol/sdk`
   - `@openstreetmap/id-tagging-schema`
+  - Development tools (BiomeJS, types)
 - [ ] Set up project structure:
   ```
   src/
@@ -59,9 +68,14 @@ This MCP server exposes OpenStreetMap's tagging schema as a set of queryable too
   │   └── validators.ts
   └── types/             # TypeScript type definitions
       └── index.ts
+  tests/                 # Test files (TDD)
+  ├── tools/
+  └── utils/
   ```
-- [ ] Configure build system (tsup or esbuild)
-- [ ] Set up linting (ESLint) and formatting (Prettier)
+- [ ] Configure Bun build system
+- [ ] Set up BiomeJS 2.3.4 for linting and formatting
+- [ ] Configure Bun test framework
+- [ ] Set up GitHub Actions CI/CD
 
 ### Phase 2: Schema Integration
 - [ ] Create schema loader utility
@@ -119,12 +133,13 @@ This MCP server exposes OpenStreetMap's tagging schema as a set of queryable too
 - [ ] `get_schema_stats`: Get schema statistics
   - Output: counts of tags, presets, deprecated items
 
-### Phase 4: Testing
-- [ ] Set up testing framework (Jest or Vitest)
-- [ ] Write unit tests for each tool
+### Phase 4: Testing (TDD Approach)
+- [ ] Write unit tests for each tool using Bun test (before implementation)
 - [ ] Create integration tests with MCP inspector
 - [ ] Test with real OpenStreetMap tag data
 - [ ] Validate error handling and edge cases
+- [ ] Ensure >90% test coverage
+- [ ] Run tests in CI/CD pipeline
 
 ### Phase 5: Documentation
 - [ ] Write API documentation for each tool
@@ -142,17 +157,29 @@ This MCP server exposes OpenStreetMap's tagging schema as a set of queryable too
 
 ## Installation
 
+### From NPM (Recommended)
 ```bash
-npm install
-npm run build
+npx @your-org/osm-tagging-mcp
+```
+
+### From Source
+```bash
+bun install
+bun run build
 ```
 
 ## Usage
 
 ### Running the MCP Server
 
+**Using npx:**
 ```bash
-npm start
+npx @your-org/osm-tagging-mcp
+```
+
+**From source:**
+```bash
+bun start
 ```
 
 ### Configuration
@@ -163,11 +190,33 @@ Add to your MCP client configuration:
 {
   "mcpServers": {
     "osm-tagging": {
-      "command": "node",
-      "args": ["/path/to/dist/index.js"]
+      "command": "npx",
+      "args": ["@your-org/osm-tagging-mcp"]
     }
   }
 }
+```
+
+### Development
+
+```bash
+# Install dependencies
+bun install
+
+# Run tests (TDD)
+bun test
+
+# Run tests in watch mode
+bun test --watch
+
+# Run linter
+bun run lint
+
+# Run formatter
+bun run format
+
+# Build for production
+bun run build
 ```
 
 ### Example Queries
@@ -204,13 +253,16 @@ Add to your MCP client configuration:
 
 ## Technical Stack
 
-- **Runtime**: Node.js 18+
-- **Language**: TypeScript 5+
+- **Runtime**: Bun 1.3
+- **Language**: TypeScript 5.9
 - **MCP SDK**: @modelcontextprotocol/sdk
 - **Schema Library**: @openstreetmap/id-tagging-schema
-- **Build Tool**: tsup/esbuild
-- **Testing**: Jest/Vitest
-- **Code Quality**: ESLint, Prettier
+- **Build Tool**: Bun native bundler
+- **Testing**: Bun test (TDD methodology)
+- **Code Quality**: BiomeJS 2.3.4 (linting & formatting)
+- **CI/CD**: GitHub Actions (automated testing)
+- **Dependencies**: Dependabot (automated updates)
+- **Distribution**: npm (via npx)
 
 ## Architecture
 
@@ -221,9 +273,50 @@ The server follows a modular architecture:
 3. **Validation Layer**: Provides tag validation logic
 4. **Server Layer**: MCP server setup and tool registration
 
+## CI/CD Pipeline
+
+This project uses GitHub Actions for continuous integration and delivery:
+
+### Automated Testing
+- Runs on every push and pull request
+- Executes full test suite with Bun test
+- Checks code quality with BiomeJS
+- Validates TypeScript compilation
+- Ensures test coverage >90%
+
+### Dependabot
+- Automatically checks for dependency updates
+- Creates pull requests for security patches
+- Keeps dependencies up to date
+
+### Release Process
+- Automated releases to npm registry
+- Semantic versioning
+- Changelog generation
+- Package available via `npx` command
+
+### Workflow Files
+```
+.github/
+├── workflows/
+│   ├── test.yml           # Run tests on push/PR
+│   ├── release.yml        # Automated npm releases
+│   └── dependabot.yml     # Dependency updates
+```
+
 ## Contributing
 
-Contributions are welcome! Please read our contributing guidelines and submit pull requests.
+Contributions are welcome! Please follow these guidelines:
+
+1. **Fork and clone** the repository
+2. **Install dependencies**: `bun install`
+3. **Create a branch**: `git checkout -b feature/your-feature`
+4. **Write tests first** (TDD): Add tests in `tests/` directory
+5. **Implement the feature**: Write code to make tests pass
+6. **Run tests**: `bun test` (ensure >90% coverage)
+7. **Lint and format**: `bun run lint && bun run format`
+8. **Commit changes**: Use conventional commit messages
+9. **Submit a PR**: Include description and test coverage
 
 ## License
 
