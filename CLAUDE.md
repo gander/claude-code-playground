@@ -217,6 +217,15 @@ This project follows an **intent-based workflow** where development is organized
    - Each feature must have its own branch for clean git history
    - Multiple commits per feature branch are expected and encouraged
 
+4. **Testing Requirements**
+   - **Run tests when code changes** (src/, tests/ directories)
+   - **Skip tests for documentation-only changes** (README.md, CLAUDE.md, *.md files)
+   - Before pushing code changes, ensure:
+     - `npm run test:unit` passes
+     - `npm run test:integration` passes
+     - `npm run lint` passes
+     - `npm run typecheck` passes
+
 ### Intent: Refresh/Clean Environment
 
 **When to use:** Starting new session, switching features, syncing with master
