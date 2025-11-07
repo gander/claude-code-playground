@@ -49,7 +49,7 @@ This project follows **Test-Driven Development (TDD)** principles:
 ## Development Plan
 
 ### Phase 1: Project Setup ✅
-- [x] Initialize TypeScript 5.9 project with Node.js 20.6+
+- [x] Initialize TypeScript 5.9 project with Node.js 18+
 - [x] Install dependencies:
   - `@modelcontextprotocol/sdk`
   - `@openstreetmap/id-tagging-schema`
@@ -256,7 +256,7 @@ npm run build
 
 ## Technical Stack
 
-- **Runtime**: Node.js 20.6+
+- **Runtime**: Node.js 18+
 - **Language**: TypeScript 5.9
 - **MCP SDK**: @modelcontextprotocol/sdk
 - **Schema Library**: @openstreetmap/id-tagging-schema
