@@ -3,7 +3,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
-import { getSchemaStats } from "./tools/schema.js";
+import { getSchemaStats, getCategories } from "./tools/schema.js";
 
 /**
  * Create and configure the MCP server
@@ -37,6 +37,16 @@ export function createServer(): Server {
 					required: [],
 				},
 			},
+			{
+				name: "get_categories",
+				description:
+					"Get all available tag categories with counts of presets in each category, sorted by name",
+				inputSchema: {
+					type: "object",
+					properties: {},
+					required: [],
+				},
+			},
 		],
 	}));
 
@@ -50,6 +60,18 @@ export function createServer(): Server {
 					{
 						type: "text",
 						text: JSON.stringify(stats, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "get_categories") {
+			const categories = await getCategories(schemaLoader);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(categories, null, 2),
 					},
 				],
 			};
