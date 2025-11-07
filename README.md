@@ -159,7 +159,7 @@ This project follows **Test-Driven Development (TDD)** principles:
 
 ### From NPM (Recommended)
 ```bash
-npx @gander-tools/osm-tagging-schema
+npx @gander-tools/osm-tagging-schema-mcp
 ```
 
 ### From Source
@@ -174,7 +174,7 @@ npm run build
 
 **Using npx:**
 ```bash
-npx @gander-tools/osm-tagging-schema
+npx @gander-tools/osm-tagging-schema-mcp
 ```
 
 **From source:**
@@ -191,7 +191,7 @@ Add to your MCP client configuration:
   "mcpServers": {
     "osm-tagging": {
       "command": "npx",
-      "args": ["@gander-tools/osm-tagging-schema"]
+      "args": ["@gander-tools/osm-tagging-schema-mcp"]
     }
   }
 }

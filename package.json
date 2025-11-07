@@ -1,5 +1,5 @@
 {
-	"name": "@gander-tools/osm-tagging-schema",
+	"name": "@gander-tools/osm-tagging-schema-mcp",
 	"version": "0.1.0",
 	"description": "MCP server for querying and validating OpenStreetMap tags",
 	"type": "module",
@@ -29,8 +29,19 @@
 		"schema",
 		"validation"
 	],
-	"author": "",
+	"author": {
+		"name": "Adam Gąsowski",
+		"url": "https://github.com/gander"
+	},
 	"license": "GPL-3.0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/gander-tools/osm-tagging-schema-mcp.git"
+	},
+	"bugs": {
+		"url": "https://github.com/gander-tools/osm-tagging-schema-mcp/issues"
+	},
+	"homepage": "https://github.com/gander-tools/osm-tagging-schema-mcp#readme",
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.0.4",
 		"@openstreetmap/id-tagging-schema": "^6.7.3"
