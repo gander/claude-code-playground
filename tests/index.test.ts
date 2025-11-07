@@ -1,5 +1,5 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { createServer } from "../src/index.ts";
 
