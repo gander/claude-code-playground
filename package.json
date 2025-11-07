@@ -12,6 +12,8 @@
 		"build": "tsc",
 		"start": "node dist/index.js",
 		"test": "node --import tsx --test tests/**/*.test.ts",
+		"test:unit": "node --import tsx --test tests/**/*.test.ts --exclude tests/integration/**",
+		"test:integration": "node --import tsx --test tests/integration/**/*.test.ts",
 		"test:watch": "node --import tsx --test --watch tests/**/*.test.ts",
 		"lint": "biome lint .",
 		"format": "biome format --write .",

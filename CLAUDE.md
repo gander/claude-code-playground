@@ -63,6 +63,22 @@ This project strictly follows TDD principles:
 
 All features must have corresponding tests written BEFORE implementation.
 
+### Feature Implementation Requirements
+Every feature implementation MUST follow this workflow:
+
+1. **TDD Approach**: Write tests first, then implement code
+2. **Test Coverage**: Include both unit and integration tests
+3. **Pre-Push Validation**: Before pushing to remote repository, ensure:
+   - ✅ All unit tests pass (`npm run test:unit`)
+   - ✅ All integration tests pass (`npm run test:integration`)
+   - ✅ Type checking passes (`npm run typecheck`)
+   - ✅ Linting passes (`npm run lint`)
+   - ✅ Build succeeds (`npm run build`)
+4. **Same Branch**: All tests and implementation code must be committed in the same feature branch
+5. **CI/CD**: GitHub Actions will verify all checks on push
+
+**Do NOT push to remote if any test fails.** Fix issues locally first.
+
 ### CI/CD Pipeline
 - **Automated Testing**: GitHub Actions runs Node.js tests on every push/PR
 - **Code Quality**: BiomeJS checks for linting and formatting issues
