@@ -184,7 +184,58 @@ npm start
 
 ### Configuration
 
-Add to your MCP client configuration:
+#### Claude Code CLI
+
+For [Claude Code CLI](https://docs.claude.com/claude-code), add to your `~/.config/claude-code/config.json`:
+
+```json
+{
+  "mcpServers": {
+    "osm-tagging": {
+      "command": "npx",
+      "args": ["@gander-tools/osm-tagging-schema-mcp"]
+    }
+  }
+}
+```
+
+Alternatively, on macOS/Linux:
+```bash
+# Add to ~/.config/claude-code/config.json
+mkdir -p ~/.config/claude-code
+cat >> ~/.config/claude-code/config.json <<'EOF'
+{
+  "mcpServers": {
+    "osm-tagging": {
+      "command": "npx",
+      "args": ["@gander-tools/osm-tagging-schema-mcp"]
+    }
+  }
+}
+EOF
+```
+
+#### Claude Desktop
+
+For Claude Desktop, add to your configuration file:
+
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "osm-tagging": {
+      "command": "npx",
+      "args": ["@gander-tools/osm-tagging-schema-mcp"]
+    }
+  }
+}
+```
+
+#### Other MCP Clients
+
+For other MCP-compatible clients, use the standard configuration format:
 
 ```json
 {
