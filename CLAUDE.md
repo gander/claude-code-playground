@@ -70,6 +70,13 @@ All features must have corresponding tests written BEFORE implementation.
 - **Release**: Automated npm releases with semantic versioning
 - **Distribution**: Package available via `npx` command
 
+### Documentation Updates
+When completing work on a phase or major feature (according to the todo list):
+1. **CLAUDE.md**: Update the "Development Status" section to mark completed phases and list achievements
+2. **README.md**: Update the "Development Plan" section to mark completed phase items with `[x]`
+
+Both documentation files must be kept in sync to reflect the current project status. This ensures consistency across project documentation and helps track progress accurately.
+
 ## Architecture
 
 ```
