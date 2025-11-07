@@ -11,8 +11,8 @@
 		"dev": "tsx --watch src/index.ts",
 		"build": "tsc",
 		"start": "node dist/index.js",
-		"test": "node --test 'tests/**/*.test.ts' --loader tsx",
-		"test:watch": "node --test --watch 'tests/**/*.test.ts' --loader tsx",
+		"test": "node --test 'tests/**/*.test.ts' --import tsx",
+		"test:watch": "node --test --watch 'tests/**/*.test.ts' --import tsx",
 		"lint": "biome lint .",
 		"format": "biome format --write .",
 		"check": "biome check --write .",
@@ -40,6 +40,6 @@
 		"typescript": "^5.7.2"
 	},
 	"engines": {
-		"node": ">=18.0.0"
+		"node": ">=20.6.0"
 	}
 }
