@@ -49,7 +49,7 @@ This project follows **Test-Driven Development (TDD)** principles:
 ## Development Plan
 
 ### Phase 1: Project Setup ✅
-- [x] Initialize TypeScript 5.9 project with Bun 1.3
+- [x] Initialize TypeScript 5.9 project with Node.js 18+
 - [x] Install dependencies:
   - `@modelcontextprotocol/sdk`
   - `@openstreetmap/id-tagging-schema`
@@ -134,7 +134,7 @@ This project follows **Test-Driven Development (TDD)** principles:
   - Output: counts of tags, presets, deprecated items
 
 ### Phase 4: Testing (TDD Approach)
-- [ ] Write unit tests for each tool using Bun test (before implementation)
+- [ ] Write unit tests for each tool using Node.js test runner (before implementation)
 - [ ] Create integration tests with MCP inspector
 - [ ] Test with real OpenStreetMap tag data
 - [ ] Validate error handling and edge cases
@@ -164,8 +164,8 @@ npx @gander-tools/osm-tagging-schema
 
 ### From Source
 ```bash
-bun install
-bun run build
+npm install
+npm run build
 ```
 
 ## Usage
@@ -256,12 +256,12 @@ npm run build
 
 ## Technical Stack
 
-- **Runtime**: Bun 1.3
+- **Runtime**: Node.js 18+
 - **Language**: TypeScript 5.9
 - **MCP SDK**: @modelcontextprotocol/sdk
 - **Schema Library**: @openstreetmap/id-tagging-schema
-- **Build Tool**: Bun native bundler
-- **Testing**: Bun test (TDD methodology)
+- **Build Tool**: TypeScript compiler
+- **Testing**: Node.js native test runner (TDD methodology)
 - **Code Quality**: BiomeJS 2.3.4 (linting & formatting)
 - **CI/CD**: GitHub Actions (automated testing)
 - **Dependencies**: Dependabot (automated updates)
@@ -282,7 +282,7 @@ This project uses GitHub Actions for continuous integration and delivery:
 
 ### Automated Testing
 - Runs on every push and pull request
-- Executes full test suite with Bun test
+- Executes full test suite with Node.js test runner
 - Checks code quality with BiomeJS
 - Validates TypeScript compilation
 - Ensures test coverage >90%
@@ -312,12 +312,12 @@ This project uses GitHub Actions for continuous integration and delivery:
 Contributions are welcome! Please follow these guidelines:
 
 1. **Fork and clone** the repository
-2. **Install dependencies**: `bun install`
+2. **Install dependencies**: `npm install`
 3. **Create a branch**: `git checkout -b feature/your-feature`
 4. **Write tests first** (TDD): Add tests in `tests/` directory
 5. **Implement the feature**: Write code to make tests pass
-6. **Run tests**: `bun test` (ensure >90% coverage)
-7. **Lint and format**: `bun run lint && bun run format`
+6. **Run tests**: `npm test` (ensure >90% coverage)
+7. **Lint and format**: `npm run lint && npm run format`
 8. **Commit changes**: Use conventional commit messages
 9. **Submit a PR**: Include description and test coverage
 
