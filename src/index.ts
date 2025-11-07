@@ -44,7 +44,14 @@ async function main() {
 }
 
 // Run if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Check if the file is being run directly (not imported as a module)
+const isMainModule =
+	process.argv[1] &&
+	(import.meta.url === `file://${process.argv[1]}` ||
+		import.meta.url.endsWith(process.argv[1]) ||
+		process.argv[1].endsWith("index.js"));
+
+if (isMainModule) {
 	main().catch((error) => {
 		console.error("Server error:", error);
 		process.exit(1);
