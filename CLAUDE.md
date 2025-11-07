@@ -158,3 +158,29 @@ GNU General Public License v3.0 (GPL-3.0)
 - MCP Documentation: https://modelcontextprotocol.io
 - OpenStreetMap Tagging Schema: https://github.com/openstreetmap/id-tagging-schema
 - OSM Wiki Tags: https://wiki.openstreetmap.org/wiki/Tags
+
+## Development Workflow Commands
+
+### refresh
+Resets the development environment to a clean state:
+1. Switch to master branch (`git checkout master`)
+2. Pull latest changes from remote repository (`git pull origin master`)
+3. Clear context (start fresh)
+4. Read CLAUDE.md to reload project instructions
+
+Use this command when:
+- Starting a new development session
+- Switching between different features
+- After merging PRs to sync with latest master
+- When context becomes too large or outdated
+
+### feature-branch
+Creates and pushes a new feature branch:
+1. Create a new branch with a descriptive name based on the feature being developed
+2. Branch naming convention: `claude/<feature-description>-<session-id>`
+3. Push the new branch to remote repository (`git push -u origin <branch-name>`)
+
+Use this command when:
+- Starting work on a new feature
+- Beginning implementation of a new phase
+- Creating isolated changes for a specific task
