@@ -68,8 +68,29 @@ describe("MCP Server Integration", () => {
 
 			assert.ok(response);
 			assert.ok(Array.isArray(response.tools));
-			// Currently server returns empty tools list
-			assert.strictEqual(response.tools.length, 0);
+			assert.strictEqual(response.tools.length, 1);
+			assert.strictEqual(response.tools[0]?.name, "get_schema_stats");
+		});
+
+		it("should call get_schema_stats tool successfully", async () => {
+			const response = await client.callTool({
+				name: "get_schema_stats",
+				arguments: {},
+			});
+
+			assert.ok(response);
+			assert.ok(response.content);
+			assert.ok(Array.isArray(response.content));
+			assert.strictEqual(response.content.length, 1);
+			assert.strictEqual(response.content[0]?.type, "text");
+
+			// Parse the stats from the response
+			const stats = JSON.parse((response.content[0] as { text: string }).text);
+			assert.ok(typeof stats.presetCount === "number");
+			assert.ok(typeof stats.fieldCount === "number");
+			assert.ok(typeof stats.categoryCount === "number");
+			assert.ok(typeof stats.deprecatedCount === "number");
+			assert.ok(stats.presetCount > 0);
 		});
 
 		it("should throw error for unknown tool", async () => {
