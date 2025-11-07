@@ -40,12 +40,13 @@ The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tool
 
 ## Technical Stack
 
-- **Runtime**: Bun 1.3
+- **Runtime**: Node.js 22+
 - **Language**: TypeScript 5.9
-- **MCP SDK**: @modelcontextprotocol/sdk
-- **Schema Library**: @openstreetmap/id-tagging-schema
-- **Build Tool**: Bun native bundler
-- **Testing**: Bun test with TDD methodology
+- **Package**: @gander-tools/osm-tagging-schema
+- **MCP SDK**: @modelcontextprotocol/sdk ^1.0.4
+- **Schema Library**: @openstreetmap/id-tagging-schema ^6.7.3
+- **Build Tool**: TypeScript compiler
+- **Testing**: Node.js native test runner with TDD methodology
 - **Code Quality**: BiomeJS 2.3.4 (linting & formatting)
 - **CI/CD**: GitHub Actions (automated testing)
 - **Dependencies**: Dependabot (automated updates)
@@ -63,7 +64,7 @@ This project strictly follows TDD principles:
 All features must have corresponding tests written BEFORE implementation.
 
 ### CI/CD Pipeline
-- **Automated Testing**: GitHub Actions runs Bun tests on every push/PR
+- **Automated Testing**: GitHub Actions runs Node.js tests on every push/PR
 - **Code Quality**: BiomeJS checks for linting and formatting issues
 - **Dependabot**: Automated dependency updates and security patches
 - **Release**: Automated npm releases with semantic versioning
@@ -106,13 +107,27 @@ The server follows a modular architecture with distinct layers:
 3. **Validation Layer**: Provides tag validation logic
 4. **Server Layer**: MCP server setup and tool registration
 
-All layers are fully tested using Bun test with TDD approach.
+All layers are fully tested using Node.js native test runner with TDD approach.
 
 ## Development Status
 
-The project is currently in the planning/setup phase. See README.md for the complete 6-phase development plan covering:
-- Phase 1: Project Setup
-- Phase 2: Schema Integration
+**Current Phase: Phase 1 - COMPLETED ✅**
+
+Phase 1 has been completed with the following achievements:
+- ✅ Project structure initialized with TypeScript 5.9
+- ✅ Dependencies installed (@modelcontextprotocol/sdk, @openstreetmap/id-tagging-schema)
+- ✅ BiomeJS 2.3.4 configured for code quality
+- ✅ Node.js test runner configured
+- ✅ GitHub Actions CI/CD pipeline set up
+- ✅ Dependabot configured for automated dependency updates
+- ✅ First test written and passing (TDD - Red/Green cycle completed)
+- ✅ Basic MCP server implementation with createServer() function
+
+**Next Phase: Phase 2 - Schema Integration**
+
+See README.md for the complete 6-phase development plan covering:
+- Phase 1: Project Setup ✅
+- Phase 2: Schema Integration (In Progress)
 - Phase 3: Core Tool Implementation
 - Phase 4: Testing
 - Phase 5: Documentation
