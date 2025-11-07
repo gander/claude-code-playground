@@ -40,13 +40,34 @@ The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tool
 
 ## Technical Stack
 
-- **Runtime**: Node.js 18+
-- **Language**: TypeScript 5+
+- **Runtime**: Bun 1.3
+- **Language**: TypeScript 5.9
 - **MCP SDK**: @modelcontextprotocol/sdk
 - **Schema Library**: @openstreetmap/id-tagging-schema
-- **Build Tool**: tsup or esbuild
-- **Testing**: Jest or Vitest
-- **Code Quality**: ESLint, Prettier
+- **Build Tool**: Bun native bundler
+- **Testing**: Bun test with TDD methodology
+- **Code Quality**: BiomeJS 2.3.4 (linting & formatting)
+- **CI/CD**: GitHub Actions (automated testing)
+- **Dependencies**: Dependabot (automated updates)
+- **Distribution**: npm registry (via npx)
+
+## Development Methodology
+
+### Test-Driven Development (TDD)
+This project strictly follows TDD principles:
+1. **Red**: Write a failing test first
+2. **Green**: Write minimal code to make the test pass
+3. **Refactor**: Improve code while keeping tests green
+4. **Coverage**: Maintain >90% test coverage at all times
+
+All features must have corresponding tests written BEFORE implementation.
+
+### CI/CD Pipeline
+- **Automated Testing**: GitHub Actions runs Bun tests on every push/PR
+- **Code Quality**: BiomeJS checks for linting and formatting issues
+- **Dependabot**: Automated dependency updates and security patches
+- **Release**: Automated npm releases with semantic versioning
+- **Distribution**: Package available via `npx` command
 
 ## Architecture
 
@@ -63,6 +84,20 @@ src/
 │   └── validators.ts
 └── types/             # TypeScript type definitions
     └── index.ts
+tests/                 # Test files (TDD)
+├── tools/
+│   ├── query.test.ts
+│   ├── presets.test.ts
+│   ├── validation.test.ts
+│   └── schema.test.ts
+└── utils/
+    ├── schema-loader.test.ts
+    └── validators.test.ts
+.github/
+└── workflows/
+    ├── test.yml       # CI testing workflow
+    ├── release.yml    # Release automation
+    └── dependabot.yml # Dependency updates
 ```
 
 The server follows a modular architecture with distinct layers:
@@ -70,6 +105,8 @@ The server follows a modular architecture with distinct layers:
 2. **Tool Layer**: Implements MCP tools that query the schema
 3. **Validation Layer**: Provides tag validation logic
 4. **Server Layer**: MCP server setup and tool registration
+
+All layers are fully tested using Bun test with TDD approach.
 
 ## Development Status
 
