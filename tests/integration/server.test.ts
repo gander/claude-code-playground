@@ -1,3 +1,14 @@
+/**
+ * MCP Server Integration Tests
+ *
+ * Test approach inspired by:
+ * https://github.com/czlonkowski/n8n-mcp/blob/main/tests/integration/mcp-protocol/tool-invocation.test.ts
+ * Licensed under MIT License
+ *
+ * Uses InMemoryTransport for stable client-server communication testing
+ * without subprocess spawning complexity.
+ */
+
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
