@@ -2,6 +2,8 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { SchemaLoader } from "./utils/schema-loader.js";
+import { getSchemaStats } from "./tools/schema.js";
 
 /**
  * Create and configure the MCP server
@@ -19,13 +21,41 @@ export function createServer(): Server {
 		},
 	);
 
+	// Initialize schema loader with indexing enabled
+	const schemaLoader = new SchemaLoader({ enableIndexing: true });
+
 	// Register tool handlers
 	server.setRequestHandler(ListToolsRequestSchema, async () => ({
-		tools: [],
+		tools: [
+			{
+				name: "get_schema_stats",
+				description:
+					"Get statistics about the OpenStreetMap tagging schema, including counts of presets, fields, categories, and deprecated items",
+				inputSchema: {
+					type: "object",
+					properties: {},
+					required: [],
+				},
+			},
+		],
 	}));
 
 	server.setRequestHandler(CallToolRequestSchema, async (request) => {
-		throw new Error(`Unknown tool: ${request.params.name}`);
+		const { name } = request.params;
+
+		if (name === "get_schema_stats") {
+			const stats = await getSchemaStats(schemaLoader);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(stats, null, 2),
+					},
+				],
+			};
+		}
+
+		throw new Error(`Unknown tool: ${name}`);
 	});
 
 	return server;
