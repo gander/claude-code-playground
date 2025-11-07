@@ -1,20 +1,24 @@
 import assert from "node:assert";
-import { after, before, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, it } from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { createServer } from "../../src/index.js";
 
 describe("MCP Server Integration", () => {
 	let client: Client;
-	let transport: StdioClientTransport;
+	let server: ReturnType<typeof createServer>;
 
-	before(async () => {
-		// Create transport to communicate with the server via stdio
-		transport = new StdioClientTransport({
-			command: "node",
-			args: ["./dist/index.js"],
-		});
+	beforeEach(async () => {
+		// Create server instance
+		server = createServer();
 
-		// Create client instance
+		// Create linked in-memory transports for client-server communication
+		const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+
+		// Connect server to its transport
+		await server.connect(serverTransport);
+
+		// Create and connect client
 		client = new Client(
 			{
 				name: "test-client",
@@ -25,13 +29,13 @@ describe("MCP Server Integration", () => {
 			},
 		);
 
-		// Connect to the server
-		await client.connect(transport);
+		await client.connect(clientTransport);
 	});
 
-	after(async () => {
-		// Clean up: close the client connection
+	afterEach(async () => {
+		// Clean up: close client and server connections
 		await client.close();
+		await server.close();
 	});
 
 	describe("Server Initialization", () => {
