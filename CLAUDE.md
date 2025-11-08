@@ -348,7 +348,7 @@ Phase 3 (Core Tool Implementation) is partially completed:
 
 Phase 4 (Testing) has been COMPLETED ✅:
 - ✅ Node.js test runner configured
-- ✅ Unit tests for all implemented tools (89 tests, 27 suites passing)
+- ✅ Unit tests for all implemented tools (90 tests, 28 suites passing)
 - ✅ Integration tests for MCP server (25 tests, 19 suites passing)
   - Modular structure: One integration test file per tool
   - Shared test utilities in `helpers.ts`
@@ -362,6 +362,16 @@ Phase 4 (Testing) has been COMPLETED ✅:
   - Provider pattern for comprehensive data validation
   - 100% coverage: ALL 799 tag keys tested (no hardcoded values)
   - Bidirectional validation ensures complete data integrity
+
+**Bug Fixes**:
+- ✅ **search_tags fields.json coverage** (TDD approach):
+  - **Issue**: search_tags only searched preset.tags and preset.addTags, missing tag keys that exist solely in fields.json (e.g., "wheelchair")
+  - **Root Cause**: Tool ignored fields.json as a data source
+  - **Fix**: Modified search_tags to search fields.json FIRST for matching keys, then presets
+  - **TDD RED**: Added failing test "should find tag keys from fields.json (BUG FIX TEST)" in tests/tools/search-tags.test.ts
+  - **TDD GREEN**: Implemented fix in src/tools/search-tags.ts to query fields.json before presets
+  - **Test Coverage**: Updated both unit and integration tests to validate against fields.json + presets.json
+  - **Result**: search_tags now returns results from both data sources (e.g., wheelchair=yes, wheelchair=limited, wheelchair=no)
 
 **Next Phase: Phase 3 - Continue Core Tool Implementation (Preset & Validation Tools)**
 
