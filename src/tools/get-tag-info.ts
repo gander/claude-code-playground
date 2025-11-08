@@ -21,14 +21,14 @@ export async function getTagInfo(
 	let actualKey = tagKey; // The actual OSM key (with colon)
 
 	// First, check fields for predefined options and metadata
-	// Fields are stored with slash separator (e.g., "toilets/wheelchair")
-	// but OSM uses colon separator (e.g., "toilets:wheelchair")
+	// Field map keys are FILE PATHS with slash (e.g., "toilets/wheelchair" → data/fields/toilets/wheelchair.json)
+	// To look up a field, convert OSM tag key's colons to slashes
 	const fieldKeyLookup = tagKey.replace(/:/g, "/");
 	const field = schema.fields[fieldKeyLookup];
 	if (field) {
 		hasFieldDefinition = true;
 		fieldType = field.type;
-		// Use the actual OSM key from the field definition (with colon)
+		// Use the actual OSM tag key from field.key (e.g., "parking:both" not "parking/side/parking")
 		actualKey = field.key;
 
 		// Add field options if available

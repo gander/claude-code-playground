@@ -17,14 +17,14 @@ export async function getTagValues(
 	const values = new Set<string>();
 
 	// First, check fields for predefined options
-	// Fields are stored with slash separator (e.g., "toilets/wheelchair")
-	// but OSM uses colon separator (e.g., "toilets:wheelchair")
+	// Field map keys are FILE PATHS with slash (e.g., "toilets/wheelchair" → data/fields/toilets/wheelchair.json)
+	// To look up a field, convert OSM tag key's colons to slashes
 	const fieldKeyLookup = tagKey.replace(/:/g, "/");
 	const field = schema.fields[fieldKeyLookup];
 	let actualKey = tagKey; // The actual OSM key (with colon)
 
 	if (field) {
-		// Use the actual OSM key from the field definition (with colon)
+		// Use the actual OSM tag key from field.key (e.g., "parking:both" not "parking/side/parking")
 		actualKey = field.key;
 
 		if (field.options && Array.isArray(field.options)) {
