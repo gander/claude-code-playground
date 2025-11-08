@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { getTagValues } from "../../src/tools/query.ts";
+import { getTagValues, searchTags } from "../../src/tools/query.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
 
 describe("Tag Query Tools", () => {
@@ -57,6 +57,74 @@ describe("Tag Query Tools", () => {
 
 			assert.ok(Array.isArray(values), "Should handle tag keys");
 			// Should not throw error
+		});
+	});
+
+	describe("searchTags", () => {
+		it("should return tags matching the keyword", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const results = await searchTags(loader, "restaurant");
+
+			assert.ok(Array.isArray(results), "Should return an array");
+			assert.ok(results.length > 0, "Should find matching tags");
+		});
+
+		it("should return tags with key and value properties", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const results = await searchTags(loader, "cafe");
+
+			assert.ok(results.length > 0, "Should have results");
+			const first = results[0];
+			assert.ok(first, "Should have first result");
+			assert.ok(typeof first.key === "string", "Should have key property");
+			assert.ok(typeof first.value === "string", "Should have value property");
+		});
+
+		it("should perform case-insensitive search", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const resultsLower = await searchTags(loader, "park");
+			const resultsUpper = await searchTags(loader, "PARK");
+
+			assert.ok(resultsLower.length > 0, "Should find results with lowercase");
+			assert.ok(resultsUpper.length > 0, "Should find results with uppercase");
+			assert.deepStrictEqual(
+				resultsLower,
+				resultsUpper,
+				"Case should not matter",
+			);
+		});
+
+		it("should return empty array for no matches", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const results = await searchTags(
+				loader,
+				"nonexistentkeywordinosm12345xyz",
+			);
+
+			assert.ok(Array.isArray(results), "Should return an array");
+			assert.strictEqual(results.length, 0, "Should return empty array");
+		});
+
+		it("should limit results to prevent overwhelming output", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const results = await searchTags(loader, "building");
+
+			assert.ok(Array.isArray(results), "Should return an array");
+			// Should have reasonable limit, not thousands of results
+			assert.ok(results.length <= 100, "Should limit results to reasonable number");
+		});
+
+		it("should use cached data on subsequent calls", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+
+			const results1 = await searchTags(loader, "school");
+			const results2 = await searchTags(loader, "school");
+
+			assert.deepStrictEqual(
+				results1,
+				results2,
+				"Results should be identical from cache",
+			);
 		});
 	});
 });
