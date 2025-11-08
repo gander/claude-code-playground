@@ -65,13 +65,33 @@ describe("get_tag_values", () => {
 	describe("JSON Schema Validation", () => {
 		/**
 		 * Provider pattern: Generates tag keys with their expected values from JSON
-		 * Tests multiple tag keys to ensure comprehensive validation
+		 * Tests ALL tag keys to ensure 100% comprehensive validation (CRITICAL RULE)
 		 */
 		function* tagKeyProvider() {
-			// Common tag keys to test
-			const testKeys = ["amenity", "building", "highway", "natural", "shop"];
+			// CRITICAL: Collect ALL unique tag keys from JSON (fields + presets)
+			const allKeys = new Set<string>();
 
-			for (const key of testKeys) {
+			// Collect from fields
+			for (const key of Object.keys(fields)) {
+				allKeys.add(key);
+			}
+
+			// Collect from presets
+			for (const preset of Object.values(presets)) {
+				if (preset.tags) {
+					for (const key of Object.keys(preset.tags)) {
+						allKeys.add(key);
+					}
+				}
+				if (preset.addTags) {
+					for (const key of Object.keys(preset.addTags)) {
+						allKeys.add(key);
+					}
+				}
+			}
+
+			// CRITICAL: Test EVERY key, not just a sample
+			for (const key of allKeys) {
 				const expectedValues = new Set<string>();
 
 				// First, collect values from fields if available

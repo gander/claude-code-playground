@@ -107,10 +107,14 @@ All features must have corresponding tests written BEFORE implementation.
 2. **Individual Iteration**: Loop through each value and validate individually with `for...of` or similar
 3. **NO Aggregate-Only Comparisons**: While `deepStrictEqual` can supplement tests, it CANNOT be the only validation
 4. **NO Sampling**: Testing only 10%, 50%, or any subset is NOT acceptable
-5. **Bidirectional Validation**:
+5. **NO Hardcoded Values**: Tests MUST read ALL values dynamically from JSON files at runtime
+   - Collect ALL unique tag keys from fields.json + presets.json
+   - Provider pattern MUST yield EVERY key, not a hardcoded subset
+   - Example: ~799 tag keys from JSON, not 5 hardcoded keys like ["amenity", "building", "highway", "natural", "shop"]
+6. **Bidirectional Validation**:
    - Check ALL returned values exist in expected JSON data
    - Check ALL expected JSON values are returned by the tool
-6. **Clear Error Messages**: Each assertion must identify the specific value that failed
+7. **Clear Error Messages**: Each assertion must identify the specific value that failed
 
 **Examples**:
 
@@ -144,6 +148,45 @@ assert.deepStrictEqual(returnedValues, expectedValues);
 // Testing only 10% is NOT acceptable!
 for (const key of presetKeySampleProvider()) {
   assert.ok(allKeys.includes(key));
+}
+```
+
+❌ **INCORRECT** - Hardcoded values:
+```typescript
+// Hardcoded subset is NOT acceptable!
+const testKeys = ["amenity", "building", "highway", "natural", "shop"];
+for (const key of testKeys) {
+  // test...
+}
+```
+
+✅ **CORRECT** - Dynamic ALL keys from JSON:
+```typescript
+// Collect ALL unique tag keys from JSON files dynamically
+const allKeys = new Set<string>();
+
+// From fields.json
+for (const key of Object.keys(fields)) {
+  allKeys.add(key);
+}
+
+// From presets.json
+for (const preset of Object.values(presets)) {
+  if (preset.tags) {
+    for (const key of Object.keys(preset.tags)) {
+      allKeys.add(key);
+    }
+  }
+  if (preset.addTags) {
+    for (const key of Object.keys(preset.addTags)) {
+      allKeys.add(key);
+    }
+  }
+}
+
+// Test EVERY key (~799 keys)
+for (const key of allKeys) {
+  // validate each key individually...
 }
 ```
 
@@ -288,15 +331,16 @@ Phase 3 (Core Tool Implementation) is partially completed:
   - `get_schema_stats` - Get schema statistics
   - `get_categories` - List all tag categories
   - `get_category_tags` - Get tags in a specific category
-- ✅ Tag Query Tools (3.1 - 2/4 implemented):
+- ✅ Tag Query Tools (3.1 - 3/4 implemented):
+  - `get_tag_info` - Get comprehensive information about a tag key (values, type, field definition)
   - `get_tag_values` - Get all possible values for a tag key
   - `search_tags` - Search for tags by keyword
-- ⏳ Remaining tools: get_tag_info, get_related_tags, all Preset Tools (3.2), all Validation Tools (3.3)
+- ⏳ Remaining tools: get_related_tags, all Preset Tools (3.2), all Validation Tools (3.3)
 
 Phase 4 (Testing) has been COMPLETED ✅:
 - ✅ Node.js test runner configured
-- ✅ Unit tests for all implemented tools (73 tests, 24 suites passing)
-- ✅ Integration tests for MCP server
+- ✅ Unit tests for all implemented tools (89 tests, 27 suites passing)
+- ✅ Integration tests for MCP server (26 tests, 4 suites passing)
 - ✅ Testing with real OpenStreetMap data
 - ✅ GitHub Actions CI/CD pipeline running tests
 - ✅ **JSON Data Integrity Tests**: All tools validated against source JSON files
@@ -312,7 +356,7 @@ Phase 4 (Testing) has been COMPLETED ✅:
 See README.md for the complete 6-phase development plan covering:
 - Phase 1: Project Setup ✅
 - Phase 2: Schema Integration ✅
-- Phase 3: Core Tool Implementation ⏳ (In Progress - 5 of 13 tools implemented)
+- Phase 3: Core Tool Implementation ⏳ (In Progress - 6 of 13 tools implemented)
 - Phase 4: Testing ✅ (Completed)
 - Phase 5: Documentation (Next)
 - Phase 6: Optimization & Polish

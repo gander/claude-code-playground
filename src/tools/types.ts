@@ -28,3 +28,13 @@ export interface TagSearchResult {
 	value: string;
 	presetName?: string;
 }
+
+/**
+ * Tag information interface
+ */
+export interface TagInfo {
+	key: string;
+	values: string[];
+	type?: string;
+	hasFieldDefinition: boolean;
+}
