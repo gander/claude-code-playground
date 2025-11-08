@@ -240,11 +240,12 @@ Both documentation files must be kept in sync to reflect the current project sta
 
 ### File Organization Principles
 
-**One Tool, One File**: Each MCP tool is implemented in a separate file with a corresponding test file. This modular approach ensures:
+**One Tool, One File**: Each MCP tool is implemented in a separate file with corresponding test files (both unit and integration). This modular approach ensures:
 - **Clarity**: Easy to locate and understand individual tool implementations
 - **Maintainability**: Changes to one tool don't affect others
 - **Scalability**: New tools can be added without modifying existing files
 - **Testability**: Each tool has dedicated tests that can run independently
+- **Reduced Complexity**: Integration tests are split per tool, avoiding large monolithic test files
 
 ```
 src/
@@ -265,20 +266,28 @@ src/
 └── types/                # TypeScript type definitions
     └── index.ts
 tests/                    # Test files (TDD - one test file per tool)
-├── tools/
+├── tools/                # Unit tests (one file per tool)
 │   ├── get-schema-stats.test.ts
 │   ├── get-categories.test.ts
 │   ├── get-category-tags.test.ts
 │   ├── get-tag-values.test.ts
+│   ├── get-tag-info.test.ts
 │   ├── search-tags.test.ts
 │   ├── (future tool tests...)
 │   ├── presets.test.ts   # Preset tools tests (to be split)
 │   └── validation.test.ts # Validation tools tests (to be split)
-├── utils/
+├── utils/                # Utility tests
 │   ├── schema-loader.test.ts
 │   └── validators.test.ts
-└── integration/
-    └── server.test.ts    # MCP server integration tests
+└── integration/          # Integration tests (one file per tool)
+    ├── helpers.ts        # Shared test utilities
+    ├── server-init.test.ts        # Server initialization tests
+    ├── get-schema-stats.test.ts   # get_schema_stats integration
+    ├── get-categories.test.ts     # get_categories integration
+    ├── get-category-tags.test.ts  # get_category_tags integration
+    ├── get-tag-values.test.ts     # get_tag_values integration
+    ├── get-tag-info.test.ts       # get_tag_info integration
+    └── search-tags.test.ts        # search_tags integration
 .github/
 └── workflows/
     ├── test.yml          # CI testing workflow
@@ -340,7 +349,10 @@ Phase 3 (Core Tool Implementation) is partially completed:
 Phase 4 (Testing) has been COMPLETED ✅:
 - ✅ Node.js test runner configured
 - ✅ Unit tests for all implemented tools (89 tests, 27 suites passing)
-- ✅ Integration tests for MCP server (26 tests, 4 suites passing)
+- ✅ Integration tests for MCP server (25 tests, 19 suites passing)
+  - Modular structure: One integration test file per tool
+  - Shared test utilities in `helpers.ts`
+  - Server initialization tests separated
 - ✅ Testing with real OpenStreetMap data
 - ✅ GitHub Actions CI/CD pipeline running tests
 - ✅ **JSON Data Integrity Tests**: All tools validated against source JSON files
@@ -348,7 +360,7 @@ Phase 4 (Testing) has been COMPLETED ✅:
   - Tests verify exact match between tool outputs and JSON source data
   - Ensures compatibility when schema package updates
   - Provider pattern for comprehensive data validation
-  - Sample-based testing for large datasets (presets, fields)
+  - 100% coverage: ALL 799 tag keys tested (no hardcoded values)
   - Bidirectional validation ensures complete data integrity
 
 **Next Phase: Phase 3 - Continue Core Tool Implementation (Preset & Validation Tools)**
