@@ -310,6 +310,7 @@ All layers are fully tested using Node.js native test runner with TDD approach.
 - **Tool files**: `kebab-case` matching tool name (e.g., `get-schema-stats.ts` for `get_schema_stats` tool)
 - **Test files**: Tool name + `.test.ts` suffix (e.g., `get-schema-stats.test.ts`)
 - **Shared types**: Grouped in `tools/types.ts` to avoid duplication
+- **Tool ordering**: Tools returned in **alphabetical order** by name in MCP ListToolsRequest for API predictability
 
 ## Development Status
 
@@ -349,11 +350,12 @@ Phase 3 (Core Tool Implementation) is partially completed:
 
 Phase 4 (Testing) has been COMPLETED ✅:
 - ✅ Node.js test runner configured
-- ✅ Unit tests for all implemented tools (109 tests, 48 suites passing)
+- ✅ Unit tests for all implemented tools (110 tests, 48 suites passing)
 - ✅ Integration tests for MCP server (33 tests, 22 suites passing)
   - Modular structure: One integration test file per tool
   - Shared test utilities in `helpers.ts`
   - Server initialization tests separated
+  - Order-independent test assertions (no hardcoded tool positions)
 - ✅ Testing with real OpenStreetMap data
 - ✅ GitHub Actions CI/CD pipeline running tests
 - ✅ **JSON Data Integrity Tests**: All tools validated against source JSON files
@@ -364,6 +366,11 @@ Phase 4 (Testing) has been COMPLETED ✅:
   - 100% coverage: ALL 799 tag keys tested (no hardcoded values)
   - Bidirectional validation ensures complete data integrity
 
+**Code Quality & Architecture**:
+- ✅ **Alphabetical Tool Ordering**: Tools returned in alphabetical order for predictable API
+- ✅ **Test Robustness**: Tests check tool existence, not array positions (order-independent)
+- ✅ **Modular Architecture**: One file per tool for clarity and maintainability
+
 **Bug Fixes**:
 - ✅ **search_tags fields.json coverage** (TDD approach):
   - **Issue**: search_tags only searched preset.tags and preset.addTags, missing tag keys that exist solely in fields.json (e.g., "wheelchair")
@@ -373,6 +380,11 @@ Phase 4 (Testing) has been COMPLETED ✅:
   - **TDD GREEN**: Implemented fix in src/tools/search-tags.ts to query fields.json before presets
   - **Test Coverage**: Updated both unit and integration tests to validate against fields.json + presets.json
   - **Result**: search_tags now returns results from both data sources (e.g., wheelchair=yes, wheelchair=limited, wheelchair=no)
+- ✅ **Alphabetical tool sorting** (API improvement):
+  - **Issue**: Tools returned in arbitrary order, making API unpredictable; tests relied on hardcoded positions
+  - **Fix**: Sorted tools alphabetically in ListToolsRequestSchema (src/index.ts)
+  - **Test Improvement**: Refactored tests to check tool existence vs. collection (order-independent)
+  - **Result**: Predictable tool listing, robust tests that won't break when adding new tools
 
 **Next Phase: Phase 3 - Continue Core Tool Implementation (Preset & Validation Tools)**
 
@@ -387,18 +399,39 @@ See README.md for the complete development plan covering:
 
 ## Example Use Cases
 
-**Query Example:**
+**Tag Information Query:**
 ```typescript
-// Query: "parking" tag
+// get_tag_info for "parking"
 // Returns:
-// - Values: surface, underground, multi-storey, street_side, lane, etc.
-// - Compatible tags: capacity, fee, operator, surface, access, etc.
+// - All values: surface, underground, multi-storey, street_side, lane, etc.
+// - Field type information
+// - Whether field definition exists
 ```
 
-**Validation Example:**
+**Related Tags Discovery:**
 ```typescript
-// Input tags: {amenity: "parking", parking: "surface", capacity: "50", fee: "yes"}
-// Returns: validation status, any errors/warnings, suggestions
+// get_related_tags for "amenity=restaurant"
+// Returns tags sorted by frequency:
+// - cuisine=* (appears in 80% of restaurant presets)
+// - opening_hours=* (70%)
+// - wheelchair=* (60%)
+// - Each with frequency count and example preset names
+```
+
+**Tag Search:**
+```typescript
+// search_tags for "wheelchair"
+// Returns: wheelchair=yes, wheelchair=limited, wheelchair=no
+// Searches both fields.json and presets for comprehensive results
+```
+
+**Category Exploration:**
+```typescript
+// get_categories
+// Returns all categories: "Building", "Highway", "Amenity", etc. with preset counts
+//
+// get_category_tags for "Building"
+// Returns all preset IDs in the Building category
 ```
 
 ## License
