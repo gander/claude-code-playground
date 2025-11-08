@@ -1,0 +1,23 @@
+import type { SchemaLoader } from "../utils/schema-loader.js";
+import type { CategoryInfo } from "./types.js";
+
+/**
+ * Get all tag categories with counts of presets in each category
+ *
+ * @param loader - Schema loader instance
+ * @returns Array of categories sorted by name, each with name and preset count
+ */
+export async function getCategories(loader: SchemaLoader): Promise<CategoryInfo[]> {
+	const schema = await loader.loadSchema();
+
+	// Create array of categories with counts
+	const categories: CategoryInfo[] = Object.entries(schema.categories).map(
+		([name, category]) => ({
+			name,
+			count: category.members?.length || 0,
+		}),
+	);
+
+	// Sort by name
+	return categories.sort((a, b) => a.name.localeCompare(b.name));
+}

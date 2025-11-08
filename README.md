@@ -307,10 +307,37 @@ npm run build
 
 ## Architecture
 
-The server follows a modular architecture:
+### Modular File Organization
+
+**One Tool, One File**: Each MCP tool is implemented in a separate file with a corresponding test file. This modular approach ensures:
+- **Clarity**: Easy to locate and understand individual tool implementations
+- **Maintainability**: Changes to one tool don't affect others
+- **Scalability**: New tools can be added without modifying existing files
+- **Testability**: Each tool has dedicated tests that can run independently
+
+```
+src/tools/
+├── types.ts                  # Shared type definitions
+├── get-schema-stats.ts       # get_schema_stats tool
+├── get-categories.ts         # get_categories tool
+├── get-category-tags.ts      # get_category_tags tool
+├── get-tag-values.ts         # get_tag_values tool
+└── search-tags.ts            # search_tags tool
+
+tests/tools/
+├── get-schema-stats.test.ts  # Tests for get_schema_stats
+├── get-categories.test.ts    # Tests for get_categories
+├── get-category-tags.test.ts # Tests for get_category_tags
+├── get-tag-values.test.ts    # Tests for get_tag_values
+└── search-tags.test.ts       # Tests for search_tags
+```
+
+### Architectural Layers
+
+The server follows a modular architecture with distinct layers:
 
 1. **Schema Layer**: Loads and indexes the tagging schema
-2. **Tool Layer**: Implements MCP tools that query the schema
+2. **Tool Layer**: Implements MCP tools that query the schema (one file per tool)
 3. **Validation Layer**: Provides tag validation logic
 4. **Server Layer**: MCP server setup and tool registration
 

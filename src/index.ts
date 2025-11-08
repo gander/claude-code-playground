@@ -3,8 +3,11 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
-import { getSchemaStats, getCategories, getCategoryTags } from "./tools/schema.js";
-import { getTagValues, searchTags } from "./tools/query.js";
+import { getSchemaStats } from "./tools/get-schema-stats.js";
+import { getCategories } from "./tools/get-categories.js";
+import { getCategoryTags } from "./tools/get-category-tags.js";
+import { getTagValues } from "./tools/get-tag-values.js";
+import { searchTags } from "./tools/search-tags.js";
 
 /**
  * Create and configure the MCP server
