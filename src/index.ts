@@ -4,6 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
 import { getSchemaStats, getCategories } from "./tools/schema.js";
+import { getTagValues } from "./tools/query.js";
 
 /**
  * Create and configure the MCP server
@@ -47,11 +48,26 @@ export function createServer(): Server {
 					required: [],
 				},
 			},
+			{
+				name: "get_tag_values",
+				description:
+					"Get all possible values for a given tag key (e.g., all values for 'amenity' tag)",
+				inputSchema: {
+					type: "object",
+					properties: {
+						tagKey: {
+							type: "string",
+							description: "The tag key to get values for (e.g., 'amenity', 'building')",
+						},
+					},
+					required: ["tagKey"],
+				},
+			},
 		],
 	}));
 
 	server.setRequestHandler(CallToolRequestSchema, async (request) => {
-		const { name } = request.params;
+		const { name, arguments: args } = request.params;
 
 		if (name === "get_schema_stats") {
 			const stats = await getSchemaStats(schemaLoader);
@@ -72,6 +88,22 @@ export function createServer(): Server {
 					{
 						type: "text",
 						text: JSON.stringify(categories, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "get_tag_values") {
+			const tagKey = (args as { tagKey?: string }).tagKey;
+			if (!tagKey) {
+				throw new Error("tagKey parameter is required");
+			}
+			const values = await getTagValues(schemaLoader, tagKey);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(values, null, 2),
 					},
 				],
 			};
