@@ -5,7 +5,7 @@ import type { TagSearchResult } from "./types.js";
  * Search for tags by keyword
  *
  * @param loader - Schema loader instance
- * @param keyword - Keyword to search for in tag keys, values, and preset names
+ * @param keyword - Keyword to search for in tag keys (from fields), values, and preset names
  * @param limit - Maximum number of results to return (optional, returns all by default)
  * @returns Array of matching tags with key, value, and optional preset name
  */
@@ -21,7 +21,34 @@ export async function searchTags(
 	// Normalize keyword for case-insensitive search
 	const normalizedKeyword = keyword.toLowerCase();
 
-	// Search through all presets
+	// FIRST: Search through fields for matching tag keys
+	// This finds keys like "wheelchair" that exist in fields.json but not in preset tags
+	for (const [fieldKey, field] of Object.entries(schema.fields)) {
+		if (fieldKey.toLowerCase().includes(normalizedKeyword)) {
+			// If the field has predefined options, return them as search results
+			if (field.options && Array.isArray(field.options)) {
+				for (const option of field.options) {
+					if (typeof option === "string") {
+						const tagId = `${fieldKey}=${option}`;
+						if (!seen.has(tagId)) {
+							seen.add(tagId);
+							results.push({
+								key: fieldKey,
+								value: option,
+								presetName: undefined, // Field-based results don't have preset names
+							});
+
+							if (limit !== undefined && results.length >= limit) {
+								return results;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// THEN: Search through all presets
 	for (const [_presetId, preset] of Object.entries(schema.presets)) {
 		// Check preset name
 		const presetName = preset.name || "";

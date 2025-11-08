@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, it } from "node:test";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { setupClientServer, teardownClientServer, type TestServer } from "./helpers.js";
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 
 describe("search_tags integration", () => {
 	let client: Client;
@@ -66,22 +67,35 @@ describe("search_tags integration", () => {
 
 			const results = JSON.parse((response.content[0] as { text: string }).text);
 
-			// CRITICAL: Verify EACH result exists in JSON presets
+			// CRITICAL: Verify EACH result exists in JSON (fields OR presets)
 			for (const result of results) {
 				let found = false;
-				for (const preset of Object.values(presets)) {
-					if (preset.tags?.[result.key] === result.value) {
+
+				// Check in fields.json
+				const field = fields[result.key];
+				if (field?.options && Array.isArray(field.options)) {
+					if (field.options.includes(result.value)) {
 						found = true;
-						break;
-					}
-					if (preset.addTags?.[result.key] === result.value) {
-						found = true;
-						break;
 					}
 				}
+
+				// Check in presets
+				if (!found) {
+					for (const preset of Object.values(presets)) {
+						if (preset.tags?.[result.key] === result.value) {
+							found = true;
+							break;
+						}
+						if (preset.addTags?.[result.key] === result.value) {
+							found = true;
+							break;
+						}
+					}
+				}
+
 				assert.ok(
 					found,
-					`Search result ${result.key}=${result.value} should exist in JSON`,
+					`Search result ${result.key}=${result.value} should exist in JSON (fields or presets)`,
 				);
 			}
 		});
@@ -98,22 +112,35 @@ describe("search_tags integration", () => {
 
 				const results = JSON.parse((response.content[0] as { text: string }).text);
 
-				// CRITICAL: Verify EACH returned result exists in JSON
+				// CRITICAL: Verify EACH returned result exists in JSON (fields OR presets)
 				for (const result of results) {
 					let found = false;
-					for (const preset of Object.values(presets)) {
-						if (preset.tags?.[result.key] === result.value) {
+
+					// Check in fields.json
+					const field = fields[result.key];
+					if (field?.options && Array.isArray(field.options)) {
+						if (field.options.includes(result.value)) {
 							found = true;
-							break;
-						}
-						if (preset.addTags?.[result.key] === result.value) {
-							found = true;
-							break;
 						}
 					}
+
+					// Check in presets
+					if (!found) {
+						for (const preset of Object.values(presets)) {
+							if (preset.tags?.[result.key] === result.value) {
+								found = true;
+								break;
+							}
+							if (preset.addTags?.[result.key] === result.value) {
+								found = true;
+								break;
+							}
+						}
+					}
+
 					assert.ok(
 						found,
-						`Search result "${result.key}=${result.value}" for keyword "${keyword}" should exist in JSON via MCP`,
+						`Search result "${result.key}=${result.value}" for keyword "${keyword}" should exist in JSON (fields or presets) via MCP`,
 					);
 				}
 			}
