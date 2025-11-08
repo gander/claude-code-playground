@@ -37,13 +37,14 @@ describe("MCP Server Initialization", () => {
 
 		assert.ok(response);
 		assert.ok(Array.isArray(response.tools));
-		assert.strictEqual(response.tools.length, 6);
+		assert.strictEqual(response.tools.length, 7);
 		assert.strictEqual(response.tools[0]?.name, "get_schema_stats");
 		assert.strictEqual(response.tools[1]?.name, "get_categories");
 		assert.strictEqual(response.tools[2]?.name, "get_category_tags");
 		assert.strictEqual(response.tools[3]?.name, "get_tag_values");
 		assert.strictEqual(response.tools[4]?.name, "get_tag_info");
 		assert.strictEqual(response.tools[5]?.name, "search_tags");
+		assert.strictEqual(response.tools[6]?.name, "get_related_tags");
 	});
 
 	it("should throw error for unknown tool", async () => {
