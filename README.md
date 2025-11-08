@@ -85,6 +85,8 @@ Test categories:
   │   ├── get-categories.ts
   │   ├── get-category-tags.ts
   │   ├── get-tag-values.ts
+  │   ├── get-tag-info.ts
+  │   ├── get-related-tags.ts
   │   └── search-tags.ts
   ├── utils/                # Helper functions
   │   ├── schema-loader.ts
@@ -97,11 +99,21 @@ Test categories:
   │   ├── get-categories.test.ts
   │   ├── get-category-tags.test.ts
   │   ├── get-tag-values.test.ts
+  │   ├── get-tag-info.test.ts
+  │   ├── get-related-tags.test.ts
   │   └── search-tags.test.ts
   ├── utils/
   │   └── schema-loader.test.ts
   └── integration/
-      └── server.test.ts
+      ├── helpers.ts        # Shared test utilities
+      ├── server-init.test.ts
+      ├── get-schema-stats.test.ts
+      ├── get-categories.test.ts
+      ├── get-category-tags.test.ts
+      ├── get-tag-values.test.ts
+      ├── get-tag-info.test.ts
+      ├── get-related-tags.test.ts
+      └── search-tags.test.ts
   ```
 - [x] Configure build system (TypeScript compiler)
 - [x] Set up BiomeJS 2.3.4 for linting and formatting
@@ -126,12 +138,12 @@ Test categories:
 - [x] `get_tag_values`: Get all possible values for a tag key ✅
   - Input: tag key
   - Output: array of valid values sorted alphabetically
-- [ ] `get_related_tags`: Find tags commonly used together
+- [x] `get_related_tags`: Find tags commonly used together ✅
   - Input: tag key or key-value pair
-  - Output: related tags and their relationships
+  - Output: related tags sorted by frequency with preset examples
 - [x] `search_tags`: Search for tags by keyword ✅
   - Input: search query, optional limit
-  - Output: matching tags with key, value, and preset name
+  - Output: matching tags from fields and presets with key, value, and preset name
 
 #### 3.2 Preset Tools
 - [ ] `search_presets`: Search for presets by name or tags
@@ -170,8 +182,12 @@ Test categories:
 ### Phase 4: Testing (TDD Approach) - COMPLETED ✅
 - [x] Configure Node.js native test runner
 - [x] Write unit tests for schema loader (19 tests passing)
-- [x] Write unit tests for all implemented tools (89 tests, 27 suites passing)
-- [x] Create integration tests for MCP server (26 tests, 4 suites passing)
+- [x] Write unit tests for all implemented tools (110 tests, 48 suites passing)
+- [x] Create integration tests for MCP server (33 tests, 22 suites passing)
+  - **Modular structure**: One integration test file per tool for clarity
+  - **Shared utilities**: `helpers.ts` for common setup/teardown
+  - **Order-independent tests**: Tools validated by existence, not array position
+  - **Alphabetical ordering**: Tools returned in predictable alphabetical order
 - [x] Test with real OpenStreetMap tag data
 - [x] Set up CI/CD pipeline with GitHub Actions
 - [x] **JSON Data Integrity Tests**: Verify all tool outputs match source JSON data
@@ -179,7 +195,7 @@ Test categories:
   - Integration tests verify MCP tool responses match JSON data exactly
   - Tests ensure compatibility with schema package updates
   - Provider pattern for comprehensive data validation
-  - Sample-based testing for large datasets (presets, fields)
+  - 100% coverage: ALL tag keys validated (no hardcoded samples)
   - Bidirectional validation ensures complete data integrity
 - [x] Validate error handling for all implemented tools
 - [x] Achieve high test coverage across all modules (>90%)
@@ -371,6 +387,8 @@ src/tools/
 ├── get-categories.ts         # get_categories tool
 ├── get-category-tags.ts      # get_category_tags tool
 ├── get-tag-values.ts         # get_tag_values tool
+├── get-tag-info.ts           # get_tag_info tool
+├── get-related-tags.ts       # get_related_tags tool
 └── search-tags.ts            # search_tags tool
 
 tests/tools/
@@ -378,7 +396,20 @@ tests/tools/
 ├── get-categories.test.ts    # Tests for get_categories
 ├── get-category-tags.test.ts # Tests for get_category_tags
 ├── get-tag-values.test.ts    # Tests for get_tag_values
+├── get-tag-info.test.ts      # Tests for get_tag_info
+├── get-related-tags.test.ts  # Tests for get_related_tags
 └── search-tags.test.ts       # Tests for search_tags
+
+tests/integration/
+├── helpers.ts                # Shared test utilities
+├── server-init.test.ts       # Server initialization tests
+├── get-schema-stats.test.ts  # get_schema_stats integration
+├── get-categories.test.ts    # get_categories integration
+├── get-category-tags.test.ts # get_category_tags integration
+├── get-tag-values.test.ts    # get_tag_values integration
+├── get-tag-info.test.ts      # get_tag_info integration
+├── get-related-tags.test.ts  # get_related_tags integration
+└── search-tags.test.ts       # search_tags integration
 ```
 
 ### Architectural Layers
