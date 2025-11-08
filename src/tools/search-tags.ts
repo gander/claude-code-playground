@@ -6,13 +6,13 @@ import type { TagSearchResult } from "./types.js";
  *
  * @param loader - Schema loader instance
  * @param keyword - Keyword to search for in tag keys, values, and preset names
- * @param limit - Maximum number of results to return (default: 100)
+ * @param limit - Maximum number of results to return (optional, returns all by default)
  * @returns Array of matching tags with key, value, and optional preset name
  */
 export async function searchTags(
 	loader: SchemaLoader,
 	keyword: string,
-	limit = 100,
+	limit?: number,
 ): Promise<TagSearchResult[]> {
 	const schema = await loader.loadSchema();
 	const results: TagSearchResult[] = [];
@@ -45,8 +45,8 @@ export async function searchTags(
 							presetName: preset.name,
 						});
 
-						// Stop if we reached the limit
-						if (results.length >= limit) {
+						// Stop if we reached the limit (if limit is specified)
+						if (limit !== undefined && results.length >= limit) {
 							return results;
 						}
 					}
@@ -72,7 +72,7 @@ export async function searchTags(
 								presetName: preset.name,
 							});
 
-							if (results.length >= limit) {
+							if (limit !== undefined && results.length >= limit) {
 								return results;
 							}
 						}

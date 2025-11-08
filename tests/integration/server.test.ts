@@ -281,6 +281,17 @@ describe("MCP Server Integration", () => {
 			for (const key of testKeys) {
 				const expectedValues = new Set<string>();
 
+				// First collect from fields if available
+				const field = fields[key];
+				if (field?.options && Array.isArray(field.options)) {
+					for (const option of field.options) {
+						if (typeof option === "string") {
+							expectedValues.add(option);
+						}
+					}
+				}
+
+				// Then collect from presets
 				for (const preset of Object.values(presets)) {
 					if (preset.tags?.[key]) {
 						const value = preset.tags[key];
@@ -426,8 +437,20 @@ describe("MCP Server Integration", () => {
 
 			const values = JSON.parse((response.content[0] as { text: string }).text);
 
-			// Collect expected values from JSON
+			// Collect expected values from JSON (fields + presets)
 			const expectedValues = new Set<string>();
+
+			// First collect from fields
+			const field = fields.amenity;
+			if (field?.options && Array.isArray(field.options)) {
+				for (const option of field.options) {
+					if (typeof option === "string") {
+						expectedValues.add(option);
+					}
+				}
+			}
+
+			// Then collect from presets
 			for (const preset of Object.values(presets)) {
 				if (preset.tags?.amenity) {
 					const value = preset.tags.amenity;

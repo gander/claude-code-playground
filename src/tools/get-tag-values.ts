@@ -13,10 +13,20 @@ export async function getTagValues(
 ): Promise<string[]> {
 	const schema = await loader.loadSchema();
 
-	// Collect all unique values for the tag key from presets
+	// Collect all unique values for the tag key
 	const values = new Set<string>();
 
-	// Iterate through all presets
+	// First, check fields for predefined options
+	const field = schema.fields[tagKey];
+	if (field?.options && Array.isArray(field.options)) {
+		for (const option of field.options) {
+			if (typeof option === "string") {
+				values.add(option);
+			}
+		}
+	}
+
+	// Then iterate through all presets to find additional values
 	for (const preset of Object.values(schema.presets)) {
 		// Check if this preset has the tag key
 		if (preset.tags[tagKey]) {
