@@ -3,7 +3,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
-import { getSchemaStats, getCategories } from "./tools/schema.js";
+import { getSchemaStats, getCategories, getCategoryTags } from "./tools/schema.js";
 import { getTagValues, searchTags } from "./tools/query.js";
 
 /**
@@ -46,6 +46,21 @@ export function createServer(): Server {
 					type: "object",
 					properties: {},
 					required: [],
+				},
+			},
+			{
+				name: "get_category_tags",
+				description:
+					"Get all tags (preset IDs) belonging to a specific category",
+				inputSchema: {
+					type: "object",
+					properties: {
+						category: {
+							type: "string",
+							description: "Name of the category",
+						},
+					},
+					required: ["category"],
 				},
 			},
 			{
@@ -107,6 +122,22 @@ export function createServer(): Server {
 					{
 						type: "text",
 						text: JSON.stringify(categories, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "get_category_tags") {
+			const category = (args as { category?: string }).category;
+			if (!category) {
+				throw new Error("category parameter is required");
+			}
+			const tags = await getCategoryTags(schemaLoader, category);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(tags, null, 2),
 					},
 				],
 			};

@@ -1,6 +1,10 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { getSchemaStats, getCategories } from "../../src/tools/schema.ts";
+import {
+	getSchemaStats,
+	getCategories,
+	getCategoryTags,
+} from "../../src/tools/schema.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
 
 describe("Schema Tools", () => {
@@ -99,6 +103,54 @@ describe("Schema Tools", () => {
 				categories2,
 				"Categories should be identical from cache",
 			);
+		});
+	});
+
+	describe("getCategoryTags", () => {
+		it("should return tags for a valid category", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+
+			// First get a valid category name
+			const categories = await getCategories(loader);
+			assert.ok(categories.length > 0, "Should have categories");
+
+			const categoryName = categories[0]?.name;
+			assert.ok(categoryName, "Should have category name");
+
+			const tags = await getCategoryTags(loader, categoryName);
+			assert.ok(Array.isArray(tags), "Should return an array");
+		});
+
+		it("should return preset IDs for category members", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const categories = await getCategories(loader);
+
+			// Find a category with members
+			const categoryWithMembers = categories.find((cat) => cat.count > 0);
+			assert.ok(categoryWithMembers, "Should have category with members");
+
+			const tags = await getCategoryTags(loader, categoryWithMembers.name);
+			assert.ok(tags.length > 0, "Should have tags");
+			assert.ok(typeof tags[0] === "string", "Tags should be strings (preset IDs)");
+		});
+
+		it("should return empty array for category with no members", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const tags = await getCategoryTags(loader, "nonexistent-category");
+
+			assert.ok(Array.isArray(tags), "Should return an array");
+			assert.strictEqual(tags.length, 0, "Should be empty for nonexistent category");
+		});
+
+		it("should use cached data on subsequent calls", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const categories = await getCategories(loader);
+			const categoryName = categories[0]?.name || "";
+
+			const tags1 = await getCategoryTags(loader, categoryName);
+			const tags2 = await getCategoryTags(loader, categoryName);
+
+			assert.deepStrictEqual(tags1, tags2, "Tags should be identical from cache");
 		});
 	});
 });
