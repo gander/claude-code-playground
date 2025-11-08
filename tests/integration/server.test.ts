@@ -68,10 +68,11 @@ describe("MCP Server Integration", () => {
 
 			assert.ok(response);
 			assert.ok(Array.isArray(response.tools));
-			assert.strictEqual(response.tools.length, 3);
+			assert.strictEqual(response.tools.length, 4);
 			assert.strictEqual(response.tools[0]?.name, "get_schema_stats");
 			assert.strictEqual(response.tools[1]?.name, "get_categories");
 			assert.strictEqual(response.tools[2]?.name, "get_category_tags");
+			assert.strictEqual(response.tools[3]?.name, "get_tag_values");
 		});
 
 		it("should call get_schema_stats tool successfully", async () => {
@@ -153,6 +154,39 @@ describe("MCP Server Integration", () => {
 				},
 				{
 					message: /category parameter is required/,
+				},
+			);
+		});
+
+		it("should call get_tag_values tool successfully", async () => {
+			const response = await client.callTool({
+				name: "get_tag_values",
+				arguments: { tagKey: "amenity" },
+			});
+
+			assert.ok(response);
+			assert.ok(response.content);
+			assert.ok(Array.isArray(response.content));
+			assert.strictEqual(response.content.length, 1);
+			assert.strictEqual(response.content[0]?.type, "text");
+
+			// Parse the values from the response
+			const values = JSON.parse((response.content[0] as { text: string }).text);
+			assert.ok(Array.isArray(values));
+			assert.ok(values.length > 0);
+			assert.ok(typeof values[0] === "string");
+		});
+
+		it("should throw error for missing tagKey parameter", async () => {
+			await assert.rejects(
+				async () => {
+					await client.callTool({
+						name: "get_tag_values",
+						arguments: {},
+					});
+				},
+				{
+					message: /tagKey parameter is required/,
 				},
 			);
 		});
