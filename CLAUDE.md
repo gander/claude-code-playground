@@ -98,6 +98,63 @@ All features must have corresponding tests written BEFORE implementation.
    - Failing tests indicate breaking changes in schema data
    - All tools must adapt to maintain compatibility
 
+#### CRITICAL RULE: Individual Value Validation
+
+**EVERY value MUST be validated individually** - this is a non-negotiable requirement for all tools.
+
+**Requirements**:
+1. **100% Coverage**: Tests MUST validate EVERY value from JSON data, not samples or subsets
+2. **Individual Iteration**: Loop through each value and validate individually with `for...of` or similar
+3. **NO Aggregate-Only Comparisons**: While `deepStrictEqual` can supplement tests, it CANNOT be the only validation
+4. **NO Sampling**: Testing only 10%, 50%, or any subset is NOT acceptable
+5. **Bidirectional Validation**:
+   - Check ALL returned values exist in expected JSON data
+   - Check ALL expected JSON values are returned by the tool
+6. **Clear Error Messages**: Each assertion must identify the specific value that failed
+
+**Examples**:
+
+✅ **CORRECT** - Individual validation:
+```typescript
+// Validate each returned value exists in JSON
+for (const value of returnedValues) {
+  assert.ok(
+    expectedValues.has(value),
+    `Value "${value}" should exist in JSON data`
+  );
+}
+
+// Validate each JSON value is returned (bidirectional)
+for (const expected of expectedValues) {
+  assert.ok(
+    returnedSet.has(expected),
+    `JSON value "${expected}" should be returned`
+  );
+}
+```
+
+❌ **INCORRECT** - Aggregate only:
+```typescript
+// This alone is NOT enough!
+assert.deepStrictEqual(returnedValues, expectedValues);
+```
+
+❌ **INCORRECT** - Sampling:
+```typescript
+// Testing only 10% is NOT acceptable!
+for (const key of presetKeySampleProvider()) {
+  assert.ok(allKeys.includes(key));
+}
+```
+
+**Why This Matters**:
+- Catches individual data discrepancies that aggregate tests miss
+- Provides precise error messages showing exactly which value failed
+- Ensures complete data integrity, not partial validation
+- No hidden gaps in test coverage
+
+**Enforcement**: Any tool that does not validate EVERY individual value MUST be refactored to do so.
+
 #### Why This Matters:
 - Ensures data accuracy: Tools return real OSM schema data, not mock data
 - Detects schema changes: Package updates that break compatibility are caught immediately
