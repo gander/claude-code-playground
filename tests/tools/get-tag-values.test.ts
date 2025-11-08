@@ -3,6 +3,7 @@ import assert from "node:assert";
 import { getTagValues } from "../../src/tools/get-tag-values.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 
 describe("get_tag_values", () => {
 	describe("Basic Functionality", () => {
@@ -73,7 +74,17 @@ describe("get_tag_values", () => {
 			for (const key of testKeys) {
 				const expectedValues = new Set<string>();
 
-				// Collect values from JSON presets
+				// First, collect values from fields if available
+				const field = fields[key];
+				if (field?.options && Array.isArray(field.options)) {
+					for (const option of field.options) {
+						if (typeof option === "string") {
+							expectedValues.add(option);
+						}
+					}
+				}
+
+				// Then collect values from JSON presets
 				for (const preset of Object.values(presets)) {
 					if (preset.tags?.[key]) {
 						const value = preset.tags[key];
@@ -99,12 +110,24 @@ describe("get_tag_values", () => {
 			}
 		}
 
-		it("should return tag values that exist in JSON presets", async () => {
+		it("should return tag values that exist in JSON (fields and presets)", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			const values = await getTagValues(loader, "amenity");
 
-			// Collect all amenity values from JSON
+			// Collect all amenity values from JSON (fields + presets)
 			const expectedValues = new Set<string>();
+
+			// First collect from fields
+			const field = fields.amenity;
+			if (field?.options && Array.isArray(field.options)) {
+				for (const option of field.options) {
+					if (typeof option === "string") {
+						expectedValues.add(option);
+					}
+				}
+			}
+
+			// Then collect from presets
 			for (const preset of Object.values(presets)) {
 				if (preset.tags?.amenity) {
 					const value = preset.tags.amenity;
@@ -124,7 +147,7 @@ describe("get_tag_values", () => {
 			for (const value of values) {
 				assert.ok(
 					expectedValues.has(value),
-					`Value "${value}" should exist in JSON presets`,
+					`Value "${value}" should exist in JSON (fields or presets)`,
 				);
 			}
 
@@ -207,6 +230,34 @@ describe("get_tag_values", () => {
 					);
 				}
 			}
+		});
+
+		it("should return values from fields.json for keys with field definitions", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+
+			// Test with "parking" which has comprehensive options in fields.json
+			const values = await getTagValues(loader, "parking");
+
+			// Get expected values from fields.json
+			const parkingField = fields.parking;
+			assert.ok(parkingField, "parking field should exist in fields.json");
+			assert.ok(parkingField.options, "parking field should have options");
+
+			const expectedOptions = new Set(parkingField.options);
+
+			// Verify ALL field options are included in returned values
+			for (const option of parkingField.options) {
+				assert.ok(
+					values.includes(option),
+					`Field option "${option}" should be included in returned values. Got: ${values.join(", ")}`,
+				);
+			}
+
+			// Verify we have at least the number of options from fields
+			assert.ok(
+				values.length >= expectedOptions.size,
+				`Should return at least ${expectedOptions.size} values (from fields), got ${values.length}`,
+			);
 		});
 	});
 });
