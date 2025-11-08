@@ -1,0 +1,122 @@
+/**
+ * Integration tests for search_tags tool
+ */
+
+import assert from "node:assert";
+import { afterEach, beforeEach, describe, it } from "node:test";
+import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { setupClientServer, teardownClientServer, type TestServer } from "./helpers.js";
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+
+describe("search_tags integration", () => {
+	let client: Client;
+	let server: TestServer;
+
+	beforeEach(async () => {
+		({ client, server } = await setupClientServer());
+	});
+
+	afterEach(async () => {
+		await teardownClientServer(client, server);
+	});
+
+	describe("Basic Functionality", () => {
+		it("should call search_tags tool successfully", async () => {
+			const response = await client.callTool({
+				name: "search_tags",
+				arguments: { keyword: "park" },
+			});
+
+			assert.ok(response);
+			assert.ok(response.content);
+			assert.ok(Array.isArray(response.content));
+			assert.strictEqual(response.content.length, 1);
+			assert.strictEqual(response.content[0]?.type, "text");
+
+			// Parse the results from the response
+			const results = JSON.parse((response.content[0] as { text: string }).text);
+			assert.ok(Array.isArray(results));
+			if (results.length > 0) {
+				assert.ok(typeof results[0].key === "string");
+				assert.ok(typeof results[0].value === "string");
+			}
+		});
+
+		it("should throw error for missing keyword parameter", async () => {
+			await assert.rejects(
+				async () => {
+					await client.callTool({
+						name: "search_tags",
+						arguments: {},
+					});
+				},
+				{
+					message: /keyword parameter is required/,
+				},
+			);
+		});
+	});
+
+	describe("JSON Schema Data Integrity", () => {
+		it("should return valid search results from JSON via MCP", async () => {
+			const response = await client.callTool({
+				name: "search_tags",
+				arguments: { keyword: "school", limit: 10 },
+			});
+
+			const results = JSON.parse((response.content[0] as { text: string }).text);
+
+			// CRITICAL: Verify EACH result exists in JSON presets
+			for (const result of results) {
+				let found = false;
+				for (const preset of Object.values(presets)) {
+					if (preset.tags?.[result.key] === result.value) {
+						found = true;
+						break;
+					}
+					if (preset.addTags?.[result.key] === result.value) {
+						found = true;
+						break;
+					}
+				}
+				assert.ok(
+					found,
+					`Search result ${result.key}=${result.value} should exist in JSON`,
+				);
+			}
+		});
+
+		it("should validate search results for multiple keywords via MCP", async () => {
+			const keywords = ["parking", "restaurant", "school"];
+
+			// CRITICAL: Test EACH keyword individually
+			for (const keyword of keywords) {
+				const response = await client.callTool({
+					name: "search_tags",
+					arguments: { keyword, limit: 20 },
+				});
+
+				const results = JSON.parse((response.content[0] as { text: string }).text);
+
+				// CRITICAL: Verify EACH returned result exists in JSON
+				for (const result of results) {
+					let found = false;
+					for (const preset of Object.values(presets)) {
+						if (preset.tags?.[result.key] === result.value) {
+							found = true;
+							break;
+						}
+						if (preset.addTags?.[result.key] === result.value) {
+							found = true;
+							break;
+						}
+					}
+					assert.ok(
+						found,
+						`Search result "${result.key}=${result.value}" for keyword "${keyword}" should exist in JSON via MCP`,
+					);
+				}
+			}
+		});
+	});
+});
