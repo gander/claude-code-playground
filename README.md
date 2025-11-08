@@ -198,6 +198,33 @@ Test categories:
 - [ ] Handle schema updates gracefully
 - [ ] Prepare for publication
 
+### Phase 7: Distribution & Deployment
+- [ ] **NPM Publishing with Provenance**
+  - Set up GitHub Actions workflow for npm publishing
+  - Configure npm provenance signing (attestations)
+  - Link package to GitHub repository with verified builds
+  - Enable trusted publishing from GitHub Actions
+  - Add package provenance badge to README
+- [ ] **Container Image & Registry**
+  - Create Dockerfile for containerized deployment
+  - Set up multi-stage builds for optimal image size
+  - Publish to GitHub Container Registry (ghcr.io)
+  - Add container image scanning for security
+  - Support for multiple architectures (amd64, arm64)
+- [ ] **Additional Transport Protocols**
+  - Implement Server-Sent Events (SSE) transport
+  - Implement HTTP/REST transport for web clients
+  - Add WebSocket transport support
+  - Create transport configuration system
+  - Document transport selection and use cases
+- [ ] **Public Service Deployment**
+  - Create deployment configurations (Docker Compose, Kubernetes)
+  - Set up health check endpoints
+  - Configure rate limiting and authentication
+  - Add metrics and monitoring (Prometheus/Grafana)
+  - Create deployment documentation
+  - Plan for horizontal scaling
+
 ## Installation
 
 ### From NPM (Recommended)
