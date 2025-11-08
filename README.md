@@ -1,6 +1,15 @@
 # OpenStreetMap Tagging Schema MCP Server
 
+[![Test](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/test.yml?branch=master&label=tests)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/test.yml)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen)](https://nodejs.org/)
+[![npm version](https://img.shields.io/npm/v/@gander-tools/osm-tagging-schema-mcp)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![MCP](https://img.shields.io/badge/MCP-1.21.1-orange)](https://modelcontextprotocol.io)
+[![Made with Claude Code](https://img.shields.io/badge/Made%20with-Claude%20Code-5A67D8)](https://claude.ai/code)
+
 A Model Context Protocol (MCP) server that provides tools for querying and validating OpenStreetMap tags using the @openstreetmap/id-tagging-schema library.
+
+> **Built with Claude Code**: This project was developed using [Claude Code](https://claude.ai/code), an AI-powered coding assistant that helped implement the codebase following TDD principles and best practices.
 
 ## Overview
 
