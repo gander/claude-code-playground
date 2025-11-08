@@ -14,6 +14,9 @@ import { afterEach, beforeEach, describe, it } from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../../src/index.js";
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
+import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with { type: "json" };
 
 describe("MCP Server Integration", () => {
 	let client: Client;
@@ -239,6 +242,112 @@ describe("MCP Server Integration", () => {
 					message: /Unknown tool/,
 				},
 			);
+		});
+	});
+
+	describe("JSON Schema Data Integrity", () => {
+		it("should return schema stats matching JSON data via MCP", async () => {
+			const response = await client.callTool({
+				name: "get_schema_stats",
+				arguments: {},
+			});
+
+			const stats = JSON.parse((response.content[0] as { text: string }).text);
+
+			// Verify counts match actual JSON data
+			assert.strictEqual(
+				stats.presetCount,
+				Object.keys(presets).length,
+				"Preset count should match JSON data",
+			);
+			assert.strictEqual(
+				stats.fieldCount,
+				Object.keys(fields).length,
+				"Field count should match JSON data",
+			);
+			assert.strictEqual(
+				stats.categoryCount,
+				Object.keys(categories).length,
+				"Category count should match JSON data",
+			);
+		});
+
+		it("should return all categories from JSON data via MCP", async () => {
+			const response = await client.callTool({
+				name: "get_categories",
+				arguments: {},
+			});
+
+			const returnedCategories = JSON.parse((response.content[0] as { text: string }).text);
+			const actualCategoryNames = Object.keys(categories).sort();
+			const returnedNames = returnedCategories.map((cat: { name: string }) => cat.name).sort();
+
+			assert.deepStrictEqual(
+				returnedNames,
+				actualCategoryNames,
+				"Should return all categories from JSON",
+			);
+		});
+
+		it("should return correct tag values from JSON via MCP", async () => {
+			const response = await client.callTool({
+				name: "get_tag_values",
+				arguments: { tagKey: "amenity" },
+			});
+
+			const values = JSON.parse((response.content[0] as { text: string }).text);
+
+			// Collect expected values from JSON
+			const expectedValues = new Set<string>();
+			for (const preset of Object.values(presets)) {
+				if (preset.tags?.amenity) {
+					const value = preset.tags.amenity;
+					if (value && value !== "*" && !value.includes("|")) {
+						expectedValues.add(value);
+					}
+				}
+				if (preset.addTags?.amenity) {
+					const value = preset.addTags.amenity;
+					if (value && value !== "*" && !value.includes("|")) {
+						expectedValues.add(value);
+					}
+				}
+			}
+
+			// Verify all values match
+			assert.deepStrictEqual(
+				new Set(values),
+				expectedValues,
+				"Tag values should match JSON data exactly",
+			);
+		});
+
+		it("should return valid search results from JSON via MCP", async () => {
+			const response = await client.callTool({
+				name: "search_tags",
+				arguments: { keyword: "school", limit: 10 },
+			});
+
+			const results = JSON.parse((response.content[0] as { text: string }).text);
+
+			// Verify each result exists in JSON presets
+			for (const result of results) {
+				let found = false;
+				for (const preset of Object.values(presets)) {
+					if (preset.tags?.[result.key] === result.value) {
+						found = true;
+						break;
+					}
+					if (preset.addTags?.[result.key] === result.value) {
+						found = true;
+						break;
+					}
+				}
+				assert.ok(
+					found,
+					`Search result ${result.key}=${result.value} should exist in JSON`,
+				);
+			}
 		});
 	});
 

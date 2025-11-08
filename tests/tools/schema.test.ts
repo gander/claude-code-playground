@@ -6,6 +6,9 @@ import {
 	getCategoryTags,
 } from "../../src/tools/schema.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
+import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with { type: "json" };
 
 describe("Schema Tools", () => {
 	describe("getSchemaStats", () => {
@@ -151,6 +154,85 @@ describe("Schema Tools", () => {
 			const tags2 = await getCategoryTags(loader, categoryName);
 
 			assert.deepStrictEqual(tags1, tags2, "Tags should be identical from cache");
+		});
+	});
+
+	describe("JSON Schema Validation", () => {
+		it("should return stats matching actual JSON data counts", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const stats = await getSchemaStats(loader);
+
+			// Verify preset count matches JSON data
+			const actualPresetCount = Object.keys(presets).length;
+			assert.strictEqual(
+				stats.presetCount,
+				actualPresetCount,
+				`Preset count should match JSON data: ${stats.presetCount} === ${actualPresetCount}`,
+			);
+
+			// Verify field count matches JSON data
+			const actualFieldCount = Object.keys(fields).length;
+			assert.strictEqual(
+				stats.fieldCount,
+				actualFieldCount,
+				`Field count should match JSON data: ${stats.fieldCount} === ${actualFieldCount}`,
+			);
+
+			// Verify category count matches JSON data
+			const actualCategoryCount = Object.keys(categories).length;
+			assert.strictEqual(
+				stats.categoryCount,
+				actualCategoryCount,
+				`Category count should match JSON data: ${stats.categoryCount} === ${actualCategoryCount}`,
+			);
+		});
+
+		it("should return all categories from JSON data", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const returnedCategories = await getCategories(loader);
+
+			// Get actual categories from JSON
+			const actualCategoryNames = Object.keys(categories).sort();
+
+			// Verify all categories are present
+			const returnedCategoryNames = returnedCategories.map((cat) => cat.name).sort();
+			assert.deepStrictEqual(
+				returnedCategoryNames,
+				actualCategoryNames,
+				"Should return all categories from JSON data",
+			);
+
+			// Verify each category has correct member count
+			for (const category of returnedCategories) {
+				const actualCategory = categories[category.name];
+				const expectedCount = actualCategory?.members?.length || 0;
+				assert.strictEqual(
+					category.count,
+					expectedCount,
+					`Category ${category.name} should have ${expectedCount} members`,
+				);
+			}
+		});
+
+		it("should return correct preset IDs for each category", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+
+			// Test a few categories
+			const testCategories = ["path", "building", "natural"];
+
+			for (const categoryName of testCategories) {
+				const actualCategory = categories[categoryName];
+				if (!actualCategory) continue;
+
+				const tags = await getCategoryTags(loader, categoryName);
+				const expectedMembers = actualCategory.members || [];
+
+				assert.deepStrictEqual(
+					tags,
+					expectedMembers,
+					`Category ${categoryName} should return correct preset IDs from JSON`,
+				);
+			}
 		});
 	});
 });

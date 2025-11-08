@@ -63,6 +63,49 @@ This project strictly follows TDD principles:
 
 All features must have corresponding tests written BEFORE implementation.
 
+### JSON Data Integrity Testing Standard
+
+**CRITICAL**: All tools MUST be tested against the actual JSON data from `@openstreetmap/id-tagging-schema`.
+
+#### Testing Requirements for All Tools:
+
+1. **Unit Tests** (`tests/tools/*.test.ts`):
+   - Import relevant JSON files: `presets.json`, `fields.json`, `preset_categories.json`
+   - Use Node.js `with { type: "json" }` syntax for imports
+   - Create "JSON Schema Validation" describe block
+   - Verify tool outputs match JSON data exactly (counts, values, structure)
+   - Example:
+     ```typescript
+     import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+
+     describe("JSON Schema Validation", () => {
+       it("should return data matching JSON", async () => {
+         const result = await myTool(loader);
+         const expected = Object.keys(presets).length;
+         assert.strictEqual(result.count, expected);
+       });
+     });
+     ```
+
+2. **Integration Tests** (`tests/integration/server.test.ts`):
+   - Import same JSON files as unit tests
+   - Create "JSON Schema Data Integrity" describe block
+   - Verify MCP tool responses match JSON data through protocol layer
+   - Test end-to-end data flow from JSON → tool → MCP → client
+
+3. **Update Compatibility**:
+   - When `@openstreetmap/id-tagging-schema` package updates, tests MUST pass or fail explicitly
+   - Failing tests indicate breaking changes in schema data
+   - All tools must adapt to maintain compatibility
+
+#### Why This Matters:
+- Ensures data accuracy: Tools return real OSM schema data, not mock data
+- Detects schema changes: Package updates that break compatibility are caught immediately
+- Validates implementation: Tool logic correctly processes actual JSON structures
+- Maintains trust: Users can rely on data matching the official OSM tagging schema
+
+**Future Implementation**: All new tools created in Phase 3 and beyond MUST follow this testing standard.
+
 ### Feature Implementation Requirements
 Every feature implementation MUST follow this workflow:
 
@@ -134,7 +177,7 @@ All layers are fully tested using Node.js native test runner with TDD approach.
 
 ## Development Status
 
-**Current Phase: Phase 2 - COMPLETED ✅**
+**Current Phase: Phase 3 - PARTIALLY COMPLETED ⏳**
 
 Phase 1 has been completed with the following achievements:
 - ✅ Project structure initialized with TypeScript 5.9
@@ -156,15 +199,28 @@ Phase 2 has been completed with the following achievements:
 - ✅ Integration tests implemented
 - ✅ CI/CD pipeline configured and running tests automatically
 
-Phase 4 (Testing) has been partially completed:
+Phase 3 (Core Tool Implementation) is partially completed:
+- ✅ Schema Exploration Tools (3.4):
+  - `get_schema_stats` - Get schema statistics
+  - `get_categories` - List all tag categories
+  - `get_category_tags` - Get tags in a specific category
+- ✅ Tag Query Tools (3.1 - 2/4 implemented):
+  - `get_tag_values` - Get all possible values for a tag key
+  - `search_tags` - Search for tags by keyword
+- ⏳ Remaining tools: get_tag_info, get_related_tags, all Preset Tools (3.2), all Validation Tools (3.3)
+
+Phase 4 (Testing) has been COMPLETED ✅:
 - ✅ Node.js test runner configured
-- ✅ Unit tests for schema loader (19 tests passing)
-- ✅ Integration tests for MCP server
+- ✅ Unit tests for all implemented tools (62 tests, 18 suites passing)
+- ✅ Integration tests for MCP server (16 tests, 4 suites passing)
 - ✅ Testing with real OpenStreetMap data
 - ✅ GitHub Actions CI/CD pipeline running tests
-- ⏳ Tests for Phase 3 tools pending (tools not yet implemented)
+- ✅ **JSON Data Integrity Tests**: All tools validated against source JSON files
+  - Unit tests import JSON data directly from @openstreetmap/id-tagging-schema
+  - Tests verify exact match between tool outputs and JSON source data
+  - Ensures compatibility when schema package updates
 
-**Next Phase: Phase 3 - Core Tool Implementation**
+**Next Phase: Phase 3 - Continue Core Tool Implementation (Preset & Validation Tools)**
 
 See README.md for the complete 6-phase development plan covering:
 - Phase 1: Project Setup ✅

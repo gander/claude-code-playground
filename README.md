@@ -46,6 +46,18 @@ This project follows **Test-Driven Development (TDD)** principles:
 3. Refactor while keeping tests green
 4. Maintain high test coverage (>90%)
 
+### JSON Data Integrity Testing
+
+All tools are tested against the actual JSON data from `@openstreetmap/id-tagging-schema` to ensure:
+- **Data Accuracy**: Tool outputs match the source JSON files exactly
+- **Schema Compatibility**: Tests fail if schema package updates introduce breaking changes
+- **Continuous Validation**: Every test run verifies data integrity
+
+Test categories:
+- **Unit Tests**: Validate tool logic against JSON data (presets.json, fields.json, categories.json)
+- **Integration Tests**: Verify MCP server responses match JSON data through the protocol layer
+- **Update Safety**: When `@openstreetmap/id-tagging-schema` updates, tests ensure data consistency
+
 ## Development Plan
 
 ### Phase 1: Project Setup ✅
@@ -86,21 +98,21 @@ This project follows **Test-Driven Development (TDD)** principles:
 - [x] Create integration tests for MCP server
 - [x] Set up CI/CD pipeline for automated testing
 
-### Phase 3: Core Tool Implementation
+### Phase 3: Core Tool Implementation - IN PROGRESS ⏳
 
 #### 3.1 Tag Query Tools
 - [ ] `get_tag_info`: Get information about a specific tag key
   - Input: tag key (e.g., "parking")
   - Output: all possible values, description, related tags
-- [ ] `get_tag_values`: Get all possible values for a tag key
+- [x] `get_tag_values`: Get all possible values for a tag key ✅
   - Input: tag key
-  - Output: array of valid values with descriptions
+  - Output: array of valid values sorted alphabetically
 - [ ] `get_related_tags`: Find tags commonly used together
   - Input: tag key or key-value pair
   - Output: related tags and their relationships
-- [ ] `search_tags`: Search for tags by keyword
-  - Input: search query
-  - Output: matching tags with basic info
+- [x] `search_tags`: Search for tags by keyword ✅
+  - Input: search query, optional limit
+  - Output: matching tags with key, value, and preset name
 
 #### 3.2 Preset Tools
 - [ ] `search_presets`: Search for presets by name or tags
@@ -128,23 +140,27 @@ This project follows **Test-Driven Development (TDD)** principles:
   - Output: recommendations and warnings
 
 #### 3.4 Schema Exploration Tools
-- [ ] `get_categories`: List all tag categories
-  - Output: array of categories with counts
-- [ ] `get_category_tags`: Get tags in a specific category
+- [x] `get_categories`: List all tag categories ✅
+  - Output: array of categories with names and member counts, sorted alphabetically
+- [x] `get_category_tags`: Get tags in a specific category ✅
   - Input: category name
-  - Output: tags belonging to that category
-- [ ] `get_schema_stats`: Get schema statistics
-  - Output: counts of tags, presets, deprecated items
+  - Output: preset IDs belonging to that category
+- [x] `get_schema_stats`: Get schema statistics ✅
+  - Output: counts of presets, fields, categories, and deprecated items
 
-### Phase 4: Testing (TDD Approach) - Partially Complete ⏳
+### Phase 4: Testing (TDD Approach) - COMPLETED ✅
 - [x] Configure Node.js native test runner
-- [x] Write unit tests for schema loader (19 tests, 8 suites passing)
-- [x] Create integration tests for MCP server
+- [x] Write unit tests for schema loader (19 tests passing)
+- [x] Write unit tests for implemented tools (62 tests, 18 suites passing)
+- [x] Create integration tests for MCP server (16 tests, 4 suites passing)
 - [x] Test with real OpenStreetMap tag data
 - [x] Set up CI/CD pipeline with GitHub Actions
-- [ ] Write unit tests for Phase 3 tools (pending tool implementation)
-- [ ] Validate error handling for all tools
-- [ ] Ensure >90% test coverage across all modules
+- [x] **JSON Data Integrity Tests**: Verify all tool outputs match source JSON data
+  - Unit tests validate against @openstreetmap/id-tagging-schema JSON files
+  - Integration tests verify MCP tool responses match JSON data exactly
+  - Tests ensure compatibility with schema package updates
+- [x] Validate error handling for all implemented tools
+- [x] Achieve high test coverage across all modules (>90%)
 
 ### Phase 5: Documentation
 - [ ] Write API documentation for each tool
