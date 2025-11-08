@@ -4,7 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
 import { getSchemaStats, getCategories, getCategoryTags } from "./tools/schema.js";
-import { getTagValues } from "./tools/query.js";
+import { getTagValues, searchTags } from "./tools/query.js";
 
 /**
  * Create and configure the MCP server
@@ -78,6 +78,25 @@ export function createServer(): Server {
 					required: ["tagKey"],
 				},
 			},
+			{
+				name: "search_tags",
+				description:
+					"Search for tags by keyword in tag keys, values, and preset names",
+				inputSchema: {
+					type: "object",
+					properties: {
+						keyword: {
+							type: "string",
+							description: "Keyword to search for (case-insensitive)",
+						},
+						limit: {
+							type: "number",
+							description: "Maximum number of results to return (default: 100)",
+						},
+					},
+					required: ["keyword"],
+				},
+			},
 		],
 	}));
 
@@ -135,6 +154,22 @@ export function createServer(): Server {
 					{
 						type: "text",
 						text: JSON.stringify(values, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "search_tags") {
+			const { keyword, limit } = args as { keyword?: string; limit?: number };
+			if (!keyword) {
+				throw new Error("keyword parameter is required");
+			}
+			const results = await searchTags(schemaLoader, keyword, limit);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(results, null, 2),
 					},
 				],
 			};
