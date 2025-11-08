@@ -120,9 +120,9 @@ Test categories:
 ### Phase 3: Core Tool Implementation - IN PROGRESS ⏳
 
 #### 3.1 Tag Query Tools
-- [ ] `get_tag_info`: Get information about a specific tag key
+- [x] `get_tag_info`: Get information about a specific tag key ✅
   - Input: tag key (e.g., "parking")
-  - Output: all possible values, description, related tags
+  - Output: all possible values, type, and field definition status
 - [x] `get_tag_values`: Get all possible values for a tag key ✅
   - Input: tag key
   - Output: array of valid values sorted alphabetically
@@ -170,8 +170,8 @@ Test categories:
 ### Phase 4: Testing (TDD Approach) - COMPLETED ✅
 - [x] Configure Node.js native test runner
 - [x] Write unit tests for schema loader (19 tests passing)
-- [x] Write unit tests for all implemented tools (73 tests, 24 suites passing)
-- [x] Create integration tests for MCP server
+- [x] Write unit tests for all implemented tools (89 tests, 27 suites passing)
+- [x] Create integration tests for MCP server (26 tests, 4 suites passing)
 - [x] Test with real OpenStreetMap tag data
 - [x] Set up CI/CD pipeline with GitHub Actions
 - [x] **JSON Data Integrity Tests**: Verify all tool outputs match source JSON data

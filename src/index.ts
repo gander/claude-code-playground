@@ -7,6 +7,7 @@ import { getSchemaStats } from "./tools/get-schema-stats.js";
 import { getCategories } from "./tools/get-categories.js";
 import { getCategoryTags } from "./tools/get-category-tags.js";
 import { getTagValues } from "./tools/get-tag-values.js";
+import { getTagInfo } from "./tools/get-tag-info.js";
 import { searchTags } from "./tools/search-tags.js";
 
 /**
@@ -76,6 +77,21 @@ export function createServer(): Server {
 						tagKey: {
 							type: "string",
 							description: "The tag key to get values for (e.g., 'amenity', 'building')",
+						},
+					},
+					required: ["tagKey"],
+				},
+			},
+			{
+				name: "get_tag_info",
+				description:
+					"Get comprehensive information about a specific tag key, including all possible values, type, and field definition status",
+				inputSchema: {
+					type: "object",
+					properties: {
+						tagKey: {
+							type: "string",
+							description: "The tag key to get information for (e.g., 'parking', 'amenity')",
 						},
 					},
 					required: ["tagKey"],
@@ -157,6 +173,22 @@ export function createServer(): Server {
 					{
 						type: "text",
 						text: JSON.stringify(values, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "get_tag_info") {
+			const tagKey = (args as { tagKey?: string }).tagKey;
+			if (!tagKey) {
+				throw new Error("tagKey parameter is required");
+			}
+			const info = await getTagInfo(schemaLoader, tagKey);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(info, null, 2),
 					},
 				],
 			};
