@@ -138,42 +138,69 @@ Both documentation files must be kept in sync to reflect the current project sta
 
 ## Architecture
 
+### File Organization Principles
+
+**One Tool, One File**: Each MCP tool is implemented in a separate file with a corresponding test file. This modular approach ensures:
+- **Clarity**: Easy to locate and understand individual tool implementations
+- **Maintainability**: Changes to one tool don't affect others
+- **Scalability**: New tools can be added without modifying existing files
+- **Testability**: Each tool has dedicated tests that can run independently
+
 ```
 src/
-├── index.ts           # MCP server entry point
-├── tools/             # Tool implementations
-│   ├── query.ts       # Tag query tools
-│   ├── presets.ts     # Preset-related tools
-│   ├── validation.ts  # Validation tools
-│   └── schema.ts      # Schema exploration tools
-├── utils/             # Helper functions
+├── index.ts              # MCP server entry point
+├── tools/                # Tool implementations (one file per tool)
+│   ├── types.ts          # Shared type definitions for tools
+│   ├── get-schema-stats.ts
+│   ├── get-categories.ts
+│   ├── get-category-tags.ts
+│   ├── get-tag-values.ts
+│   ├── search-tags.ts
+│   ├── (future tools...)
+│   ├── presets.ts        # Preset-related tools (to be split)
+│   └── validation.ts     # Validation tools (to be split)
+├── utils/                # Helper functions
 │   ├── schema-loader.ts
 │   └── validators.ts
-└── types/             # TypeScript type definitions
+└── types/                # TypeScript type definitions
     └── index.ts
-tests/                 # Test files (TDD)
+tests/                    # Test files (TDD - one test file per tool)
 ├── tools/
-│   ├── query.test.ts
-│   ├── presets.test.ts
-│   ├── validation.test.ts
-│   └── schema.test.ts
-└── utils/
-    ├── schema-loader.test.ts
-    └── validators.test.ts
+│   ├── get-schema-stats.test.ts
+│   ├── get-categories.test.ts
+│   ├── get-category-tags.test.ts
+│   ├── get-tag-values.test.ts
+│   ├── search-tags.test.ts
+│   ├── (future tool tests...)
+│   ├── presets.test.ts   # Preset tools tests (to be split)
+│   └── validation.test.ts # Validation tools tests (to be split)
+├── utils/
+│   ├── schema-loader.test.ts
+│   └── validators.test.ts
+└── integration/
+    └── server.test.ts    # MCP server integration tests
 .github/
 └── workflows/
-    ├── test.yml       # CI testing workflow
-    ├── release.yml    # Release automation
-    └── dependabot.yml # Dependency updates
+    ├── test.yml          # CI testing workflow
+    ├── release.yml       # Release automation
+    └── dependabot.yml    # Dependency updates
 ```
+
+### Architectural Layers
 
 The server follows a modular architecture with distinct layers:
 1. **Schema Layer**: Loads and indexes the tagging schema
-2. **Tool Layer**: Implements MCP tools that query the schema
+2. **Tool Layer**: Implements MCP tools that query the schema (one file per tool)
 3. **Validation Layer**: Provides tag validation logic
 4. **Server Layer**: MCP server setup and tool registration
 
 All layers are fully tested using Node.js native test runner with TDD approach.
+
+### Naming Conventions
+
+- **Tool files**: `kebab-case` matching tool name (e.g., `get-schema-stats.ts` for `get_schema_stats` tool)
+- **Test files**: Tool name + `.test.ts` suffix (e.g., `get-schema-stats.test.ts`)
+- **Shared types**: Grouped in `tools/types.ts` to avoid duplication
 
 ## Development Status
 
