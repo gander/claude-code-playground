@@ -18,12 +18,18 @@ export async function getTagInfo(
 	const values = new Set<string>();
 	let hasFieldDefinition = false;
 	let fieldType: string | undefined;
+	let actualKey = tagKey; // The actual OSM key (with colon)
 
 	// First, check fields for predefined options and metadata
-	const field = schema.fields[tagKey];
+	// Fields are stored with slash separator (e.g., "toilets/wheelchair")
+	// but OSM uses colon separator (e.g., "toilets:wheelchair")
+	const fieldKeyLookup = tagKey.replace(/:/g, "/");
+	const field = schema.fields[fieldKeyLookup];
 	if (field) {
 		hasFieldDefinition = true;
 		fieldType = field.type;
+		// Use the actual OSM key from the field definition (with colon)
+		actualKey = field.key;
 
 		// Add field options if available
 		if (field.options && Array.isArray(field.options)) {
@@ -36,10 +42,11 @@ export async function getTagInfo(
 	}
 
 	// Then iterate through all presets to find additional values
+	// Presets use the actual OSM key format (with colon)
 	for (const preset of Object.values(schema.presets)) {
 		// Check if this preset has the tag key
-		if (preset.tags[tagKey]) {
-			const value = preset.tags[tagKey];
+		if (preset.tags[actualKey]) {
+			const value = preset.tags[actualKey];
 			// Skip wildcards and complex patterns
 			if (value && value !== "*" && !value.includes("|")) {
 				values.add(value);
@@ -47,17 +54,17 @@ export async function getTagInfo(
 		}
 
 		// Also check addTags if present
-		if (preset.addTags?.[tagKey]) {
-			const value = preset.addTags[tagKey];
+		if (preset.addTags?.[actualKey]) {
+			const value = preset.addTags[actualKey];
 			if (value && value !== "*" && !value.includes("|")) {
 				values.add(value);
 			}
 		}
 	}
 
-	// Return tag information
+	// Return tag information with the actual OSM key (with colon)
 	return {
-		key: tagKey,
+		key: actualKey,
 		values: Array.from(values).sort(),
 		type: fieldType,
 		hasFieldDefinition,

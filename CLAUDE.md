@@ -385,6 +385,23 @@ Phase 4 (Testing) has been COMPLETED ✅:
   - **Fix**: Sorted tools alphabetically in ListToolsRequestSchema (src/index.ts)
   - **Test Improvement**: Refactored tests to check tool existence vs. collection (order-independent)
   - **Result**: Predictable tool listing, robust tests that won't break when adding new tools
+- ✅ **Tag key format: colon vs slash separator** (TDD approach):
+  - **Issue**: Tools returned tag keys with slash separator (e.g., `toilets/wheelchair`) instead of proper OSM format with colon (e.g., `toilets:wheelchair`)
+  - **Root Cause**: Fields in @openstreetmap/id-tagging-schema are stored in a map with slash separators as keys (e.g., `fields["toilets/wheelchair"]`), but each field object contains the actual OSM key with colons in `field.key` property
+  - **Examples**:
+    - Map key: `parking/side/parking` → Actual OSM key: `parking:both`
+    - Map key: `toilets/wheelchair` → Actual OSM key: `toilets:wheelchair`
+  - **Fix**:
+    - **get_tag_info**: Use `field.key` (with `:`) instead of map key; convert input key `:` → `/` for field lookup; use actualKey for preset lookups
+    - **get_tag_values**: Same approach as get_tag_info
+    - **search_tags**: Use `field.key` for returned results instead of map key; skip fields without `key` property
+  - **TDD RED**: Added failing tests in get-tag-info.test.ts, get-tag-values.test.ts, search-tags.test.ts
+  - **TDD GREEN**: Implemented fixes in src/tools/get-tag-info.ts, get-tag-values.ts, search-tags.ts
+  - **Test Updates**: Updated provider patterns in unit and integration tests to:
+    - Collect keys using `field.key` values instead of `Object.keys(fields)`
+    - Use reverse lookup (iterate field.values) for validation instead of simple key replacement
+    - Handle non-trivial mappings (e.g., `parking/side/parking` → `parking:both`)
+  - **Result**: All tools now return and accept proper OSM tag keys with colon separators; 113 tests passing
 
 **Next Phase: Phase 3 - Continue Core Tool Implementation (Preset & Validation Tools)**
 

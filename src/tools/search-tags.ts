@@ -23,17 +23,24 @@ export async function searchTags(
 
 	// FIRST: Search through fields for matching tag keys
 	// This finds keys like "wheelchair" that exist in fields.json but not in preset tags
-	for (const [fieldKey, field] of Object.entries(schema.fields)) {
-		if (fieldKey.toLowerCase().includes(normalizedKeyword)) {
+	// Note: Fields are stored with slash separator (e.g., "toilets/wheelchair")
+	// but we need to return the actual OSM key from field.key (e.g., "toilets:wheelchair")
+	for (const [_fieldKey, field] of Object.entries(schema.fields)) {
+		// Use the actual OSM key from the field definition (with colon)
+		// Some fields don't have a 'key' property, skip those
+		if (!field.key) continue;
+
+		const actualKey = field.key;
+		if (actualKey.toLowerCase().includes(normalizedKeyword)) {
 			// If the field has predefined options, return them as search results
 			if (field.options && Array.isArray(field.options)) {
 				for (const option of field.options) {
 					if (typeof option === "string") {
-						const tagId = `${fieldKey}=${option}`;
+						const tagId = `${actualKey}=${option}`;
 						if (!seen.has(tagId)) {
 							seen.add(tagId);
 							results.push({
-								key: fieldKey,
+								key: actualKey, // Use actual OSM key with colon
 								value: option,
 								presetName: undefined, // Field-based results don't have preset names
 							});

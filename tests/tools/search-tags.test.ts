@@ -97,6 +97,37 @@ describe("search_tags", () => {
 				);
 			}
 		});
+
+		it("should return keys with colon separator, not slash (BUG FIX TEST)", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			// Search for "toilets" to find nested keys like toilets:wheelchair
+			const results = await searchTags(loader, "toilets");
+
+			assert.ok(results.length > 0, "Should find toilets-related tags");
+
+			// Check that no keys contain slash separator
+			for (const result of results) {
+				assert.ok(
+					!result.key.includes("/"),
+					`Key "${result.key}" should not contain slash separator`,
+				);
+			}
+
+			// Specifically check for toilets:wheelchair (not toilets/wheelchair)
+			// This field is defined in data/fields/toilets/wheelchair.json
+			// but should be returned as "toilets:wheelchair"
+			const toiletsWheelchairField = fields["toilets/wheelchair"];
+			if (toiletsWheelchairField) {
+				// Field exists in schema, so we should find it
+				const toiletsWheelchairResults = results.filter(
+					r => r.key === "toilets:wheelchair",
+				);
+				assert.ok(
+					toiletsWheelchairResults.length > 0,
+					"Should find toilets:wheelchair (with colon, not slash)",
+				);
+			}
+		});
 	});
 
 	describe("JSON Schema Validation", () => {
@@ -159,10 +190,14 @@ describe("search_tags", () => {
 				let found = false;
 
 				// Check in fields.json
-				const field = fields[result.key];
-				if (field?.options && Array.isArray(field.options)) {
-					if (field.options.includes(result.value)) {
-						found = true;
+				// Note: field.key might not be a simple conversion from map key
+				// (e.g., "parking/side/parking" → "parking:both"), so we need to search by field.key
+				for (const field of Object.values(fields)) {
+					if (field.key === result.key && field.options && Array.isArray(field.options)) {
+						if (field.options.includes(result.value)) {
+							found = true;
+							break;
+						}
 					}
 				}
 
@@ -202,10 +237,14 @@ describe("search_tags", () => {
 					let found = false;
 
 					// Check in fields.json
-					const field = fields[result.key];
-					if (field?.options && Array.isArray(field.options)) {
-						if (field.options.includes(result.value)) {
-							found = true;
+					// Note: field.key might not be a simple conversion from map key
+					// (e.g., "parking/side/parking" → "parking:both"), so we need to search by field.key
+					for (const field of Object.values(fields)) {
+						if (field.key === result.key && field.options && Array.isArray(field.options)) {
+							if (field.options.includes(result.value)) {
+								found = true;
+								break;
+							}
 						}
 					}
 
