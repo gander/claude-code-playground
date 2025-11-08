@@ -31,18 +31,9 @@ export function createServer(): Server {
 	const schemaLoader = new SchemaLoader({ enableIndexing: true });
 
 	// Register tool handlers
+	// Tools are sorted alphabetically by name
 	server.setRequestHandler(ListToolsRequestSchema, async () => ({
 		tools: [
-			{
-				name: "get_schema_stats",
-				description:
-					"Get statistics about the OpenStreetMap tagging schema, including counts of presets, fields, categories, and deprecated items",
-				inputSchema: {
-					type: "object",
-					properties: {},
-					required: [],
-				},
-			},
 			{
 				name: "get_categories",
 				description:
@@ -69,18 +60,32 @@ export function createServer(): Server {
 				},
 			},
 			{
-				name: "get_tag_values",
+				name: "get_related_tags",
 				description:
-					"Get all possible values for a given tag key (e.g., all values for 'amenity' tag)",
+					"Find tags commonly used together with a given tag. Returns tags sorted by frequency (how often they appear together).",
 				inputSchema: {
 					type: "object",
 					properties: {
-						tagKey: {
+						tag: {
 							type: "string",
-							description: "The tag key to get values for (e.g., 'amenity', 'building')",
+							description: "Tag to find related tags for (format: 'key' or 'key=value', e.g., 'amenity' or 'amenity=restaurant')",
+						},
+						limit: {
+							type: "number",
+							description: "Maximum number of results to return (optional)",
 						},
 					},
-					required: ["tagKey"],
+					required: ["tag"],
+				},
+			},
+			{
+				name: "get_schema_stats",
+				description:
+					"Get statistics about the OpenStreetMap tagging schema, including counts of presets, fields, categories, and deprecated items",
+				inputSchema: {
+					type: "object",
+					properties: {},
+					required: [],
 				},
 			},
 			{
@@ -93,6 +98,21 @@ export function createServer(): Server {
 						tagKey: {
 							type: "string",
 							description: "The tag key to get information for (e.g., 'parking', 'amenity')",
+						},
+					},
+					required: ["tagKey"],
+				},
+			},
+			{
+				name: "get_tag_values",
+				description:
+					"Get all possible values for a given tag key (e.g., all values for 'amenity' tag)",
+				inputSchema: {
+					type: "object",
+					properties: {
+						tagKey: {
+							type: "string",
+							description: "The tag key to get values for (e.g., 'amenity', 'building')",
 						},
 					},
 					required: ["tagKey"],
@@ -115,25 +135,6 @@ export function createServer(): Server {
 						},
 					},
 					required: ["keyword"],
-				},
-			},
-			{
-				name: "get_related_tags",
-				description:
-					"Find tags commonly used together with a given tag. Returns tags sorted by frequency (how often they appear together).",
-				inputSchema: {
-					type: "object",
-					properties: {
-						tag: {
-							type: "string",
-							description: "Tag to find related tags for (format: 'key' or 'key=value', e.g., 'amenity' or 'amenity=restaurant')",
-						},
-						limit: {
-							type: "number",
-							description: "Maximum number of results to return (optional)",
-						},
-					},
-					required: ["tag"],
 				},
 			},
 		],
