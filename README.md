@@ -75,23 +75,33 @@ Test categories:
   - `@modelcontextprotocol/sdk`
   - `@openstreetmap/id-tagging-schema`
   - Development tools (BiomeJS, types)
-- [x] Set up project structure:
+- [x] Set up project structure with modular file organization:
   ```
   src/
-  ├── index.ts           # MCP server entry point
-  ├── tools/             # Tool implementations
-  │   ├── query.ts       # Tag query tools
-  │   ├── presets.ts     # Preset-related tools
-  │   ├── validation.ts  # Validation tools
-  │   └── schema.ts      # Schema exploration tools
-  ├── utils/             # Helper functions
+  ├── index.ts              # MCP server entry point
+  ├── tools/                # Tool implementations (one file per tool)
+  │   ├── types.ts          # Shared type definitions
+  │   ├── get-schema-stats.ts
+  │   ├── get-categories.ts
+  │   ├── get-category-tags.ts
+  │   ├── get-tag-values.ts
+  │   └── search-tags.ts
+  ├── utils/                # Helper functions
   │   ├── schema-loader.ts
   │   └── validators.ts
-  └── types/             # TypeScript type definitions
+  └── types/                # TypeScript type definitions
       └── index.ts
-  tests/                 # Test files (TDD)
+  tests/                    # Test files (TDD - one test file per tool)
   ├── tools/
-  └── utils/
+  │   ├── get-schema-stats.test.ts
+  │   ├── get-categories.test.ts
+  │   ├── get-category-tags.test.ts
+  │   ├── get-tag-values.test.ts
+  │   └── search-tags.test.ts
+  ├── utils/
+  │   └── schema-loader.test.ts
+  └── integration/
+      └── server.test.ts
   ```
 - [x] Configure build system (TypeScript compiler)
 - [x] Set up BiomeJS 2.3.4 for linting and formatting
@@ -103,7 +113,7 @@ Test categories:
 - [x] Implement caching mechanism for schema data
 - [x] Build indexing system for fast tag lookups
 - [x] Create type definitions for schema structures
-- [x] Write unit tests for schema loader (15 tests passing)
+- [x] Write unit tests for schema loader (19 tests passing)
 - [x] Create integration tests for MCP server
 - [x] Set up CI/CD pipeline for automated testing
 
@@ -160,14 +170,17 @@ Test categories:
 ### Phase 4: Testing (TDD Approach) - COMPLETED ✅
 - [x] Configure Node.js native test runner
 - [x] Write unit tests for schema loader (19 tests passing)
-- [x] Write unit tests for implemented tools (62 tests, 18 suites passing)
-- [x] Create integration tests for MCP server (16 tests, 4 suites passing)
+- [x] Write unit tests for all implemented tools (73 tests, 24 suites passing)
+- [x] Create integration tests for MCP server
 - [x] Test with real OpenStreetMap tag data
 - [x] Set up CI/CD pipeline with GitHub Actions
 - [x] **JSON Data Integrity Tests**: Verify all tool outputs match source JSON data
   - Unit tests validate against @openstreetmap/id-tagging-schema JSON files
   - Integration tests verify MCP tool responses match JSON data exactly
   - Tests ensure compatibility with schema package updates
+  - Provider pattern for comprehensive data validation
+  - Sample-based testing for large datasets (presets, fields)
+  - Bidirectional validation ensures complete data integrity
 - [x] Validate error handling for all implemented tools
 - [x] Achieve high test coverage across all modules (>90%)
 
