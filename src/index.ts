@@ -9,6 +9,7 @@ import { getCategoryTags } from "./tools/get-category-tags.js";
 import { getTagValues } from "./tools/get-tag-values.js";
 import { getTagInfo } from "./tools/get-tag-info.js";
 import { searchTags } from "./tools/search-tags.js";
+import { getRelatedTags } from "./tools/get-related-tags.js";
 
 /**
  * Create and configure the MCP server
@@ -116,6 +117,25 @@ export function createServer(): Server {
 					required: ["keyword"],
 				},
 			},
+			{
+				name: "get_related_tags",
+				description:
+					"Find tags commonly used together with a given tag. Returns tags sorted by frequency (how often they appear together).",
+				inputSchema: {
+					type: "object",
+					properties: {
+						tag: {
+							type: "string",
+							description: "Tag to find related tags for (format: 'key' or 'key=value', e.g., 'amenity' or 'amenity=restaurant')",
+						},
+						limit: {
+							type: "number",
+							description: "Maximum number of results to return (optional)",
+						},
+					},
+					required: ["tag"],
+				},
+			},
 		],
 	}));
 
@@ -200,6 +220,22 @@ export function createServer(): Server {
 				throw new Error("keyword parameter is required");
 			}
 			const results = await searchTags(schemaLoader, keyword, limit);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(results, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "get_related_tags") {
+			const { tag, limit } = args as { tag?: string; limit?: number };
+			if (!tag) {
+				throw new Error("tag parameter is required");
+			}
+			const results = await getRelatedTags(schemaLoader, tag, limit);
 			return {
 				content: [
 					{

@@ -38,3 +38,13 @@ export interface TagInfo {
 	type?: string;
 	hasFieldDefinition: boolean;
 }
+
+/**
+ * Related tag result interface
+ */
+export interface RelatedTag {
+	key: string;
+	value?: string;
+	frequency: number;
+	presetExamples?: string[];
+}

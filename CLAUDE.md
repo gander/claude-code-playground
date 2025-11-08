@@ -340,16 +340,17 @@ Phase 3 (Core Tool Implementation) is partially completed:
   - `get_schema_stats` - Get schema statistics
   - `get_categories` - List all tag categories
   - `get_category_tags` - Get tags in a specific category
-- ✅ Tag Query Tools (3.1 - 3/4 implemented):
+- ✅ Tag Query Tools (3.1 - COMPLETED ✅):
   - `get_tag_info` - Get comprehensive information about a tag key (values, type, field definition)
   - `get_tag_values` - Get all possible values for a tag key
   - `search_tags` - Search for tags by keyword
-- ⏳ Remaining tools: get_related_tags, all Preset Tools (3.2), all Validation Tools (3.3)
+  - `get_related_tags` - Find tags commonly used together (with frequency counts and examples)
+- ⏳ Remaining tools: all Preset Tools (3.2), all Validation Tools (3.3)
 
 Phase 4 (Testing) has been COMPLETED ✅:
 - ✅ Node.js test runner configured
-- ✅ Unit tests for all implemented tools (90 tests, 28 suites passing)
-- ✅ Integration tests for MCP server (25 tests, 19 suites passing)
+- ✅ Unit tests for all implemented tools (109 tests, 48 suites passing)
+- ✅ Integration tests for MCP server (33 tests, 22 suites passing)
   - Modular structure: One integration test file per tool
   - Shared test utilities in `helpers.ts`
   - Server initialization tests separated
@@ -378,7 +379,7 @@ Phase 4 (Testing) has been COMPLETED ✅:
 See README.md for the complete development plan covering:
 - Phase 1: Project Setup ✅
 - Phase 2: Schema Integration ✅
-- Phase 3: Core Tool Implementation ⏳ (In Progress - 6 of 13 tools implemented)
+- Phase 3: Core Tool Implementation ⏳ (In Progress - 7 of 13 tools implemented)
 - Phase 4: Testing ✅ (Completed)
 - Phase 5: Documentation (Next)
 - Phase 6: Optimization & Polish
