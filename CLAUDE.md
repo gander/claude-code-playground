@@ -365,13 +365,14 @@ Phase 4 (Testing) has been COMPLETED ✅:
 
 **Next Phase: Phase 3 - Continue Core Tool Implementation (Preset & Validation Tools)**
 
-See README.md for the complete 6-phase development plan covering:
+See README.md for the complete development plan covering:
 - Phase 1: Project Setup ✅
 - Phase 2: Schema Integration ✅
 - Phase 3: Core Tool Implementation ⏳ (In Progress - 6 of 13 tools implemented)
 - Phase 4: Testing ✅ (Completed)
 - Phase 5: Documentation (Next)
 - Phase 6: Optimization & Polish
+- Phase 7: Distribution & Deployment (Future - npm provenance, containers, additional transports, public deployment)
 
 ## Example Use Cases
 
@@ -398,6 +399,161 @@ GNU General Public License v3.0 (GPL-3.0)
 - MCP Documentation: https://modelcontextprotocol.io
 - OpenStreetMap Tagging Schema: https://github.com/openstreetmap/id-tagging-schema
 - OSM Wiki Tags: https://wiki.openstreetmap.org/wiki/Tags
+
+## Future Plans (Phase 7: Distribution & Deployment)
+
+### 1. NPM Publishing with Provenance
+
+**Goal**: Establish trust and transparency in package distribution through npm provenance signing.
+
+**Implementation**:
+- **GitHub Actions Workflow**: Automated publishing triggered by version tags
+- **NPM Provenance**: Enable build provenance attestations linking to GitHub Actions builds
+- **Trusted Publishing**: Configure npm to only accept packages from verified GitHub Actions workflows
+- **SLSA Compliance**: Achieve SLSA Level 2+ for supply chain security
+- **Verification**: Users can verify package authenticity with `npm audit signatures`
+
+**Benefits**:
+- Users can verify packages were built by GitHub Actions from this repository
+- Protection against supply chain attacks
+- Transparent build process
+- Industry standard for secure package distribution
+
+**Resources**:
+- npm provenance: https://docs.npmjs.com/generating-provenance-statements
+- GitHub Actions trusted publishing: https://docs.github.com/en/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds
+
+### 2. Container Image & GitHub Container Registry
+
+**Goal**: Provide containerized deployment option for isolated, reproducible environments.
+
+**Implementation**:
+- **Dockerfile**: Multi-stage build optimized for size and security
+  - Stage 1: Build TypeScript sources
+  - Stage 2: Production runtime with minimal dependencies
+  - Non-root user execution
+  - Health check support
+- **GitHub Container Registry (ghcr.io)**: Publish container images
+- **Multi-Architecture**: Support amd64 and arm64 (Apple Silicon, AWS Graviton)
+- **Image Scanning**: Automated vulnerability scanning with Trivy/Grype
+- **Versioning**: Semantic versioning + `latest` tag
+- **Image Signing**: Cosign signatures for image verification
+
+**Benefits**:
+- Portable deployment across environments
+- Isolated execution environment
+- Easy orchestration with Kubernetes/Docker Compose
+- Reproducible builds
+
+**Example Usage**:
+```bash
+docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+```
+
+### 3. Additional Transport Protocols
+
+**Goal**: Support multiple transport protocols beyond stdio for diverse deployment scenarios.
+
+**Planned Transports**:
+
+**a) Server-Sent Events (SSE)**
+- One-way server-to-client streaming
+- Web browser compatible
+- Long-polling fallback
+- Use case: Web dashboards, monitoring tools
+
+**b) HTTP/REST**
+- Request/response over HTTP
+- Standard REST endpoints
+- OpenAPI/Swagger documentation
+- Use case: Integration with web applications, API gateways
+
+**c) WebSocket**
+- Bidirectional real-time communication
+- Persistent connection
+- Lower latency than HTTP polling
+- Use case: Interactive web applications
+
+**Transport Configuration**:
+```typescript
+// Example configuration
+{
+  "transport": "sse" | "http" | "websocket" | "stdio",
+  "port": 3000,
+  "host": "0.0.0.0",
+  "cors": { ... },
+  "auth": { ... }
+}
+```
+
+**Benefits**:
+- Flexibility in deployment architecture
+- Web browser accessibility
+- Integration with existing infrastructure
+- Support for public-facing services
+
+### 4. Public Service Deployment Configuration
+
+**Goal**: Enable deployment as a publicly accessible service with proper security, monitoring, and scalability.
+
+**Deployment Options**:
+
+**a) Docker Compose**
+```yaml
+services:
+  osm-mcp:
+    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+    environment:
+      - TRANSPORT=http
+      - PORT=3000
+      - RATE_LIMIT=100
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+```
+
+**b) Kubernetes**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: osm-mcp-server
+spec:
+  replicas: 3  # Horizontal scaling
+  template:
+    spec:
+      containers:
+      - name: osm-mcp
+        image: ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+        resources:
+          limits: { cpu: "500m", memory: "512Mi" }
+```
+
+**Security & Operations**:
+- **Authentication**: API key, OAuth 2.0, JWT tokens
+- **Rate Limiting**: Per-IP, per-user limits
+- **Health Checks**: `/health` and `/ready` endpoints
+- **Metrics**: Prometheus metrics for monitoring
+  - Request count, latency, error rate
+  - Cache hit ratio
+  - Schema load time
+- **Logging**: Structured JSON logs for observability
+- **TLS/HTTPS**: Certificate management (Let's Encrypt)
+- **Horizontal Scaling**: Stateless design for load balancing
+
+**Monitoring Stack**:
+- Prometheus: Metrics collection
+- Grafana: Dashboards and visualization
+- Loki: Log aggregation
+- Alertmanager: Alert routing
+
+**Benefits**:
+- Production-ready deployment
+- Scalable architecture
+- Observability and debugging
+- Security best practices
+- Cost-effective resource usage
+
+**Timeline**: Phase 7 will be implemented after Phase 6 (Optimization & Polish) is completed.
 
 ## Development Workflow
 
