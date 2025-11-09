@@ -12,6 +12,7 @@ import { getTagInfo } from "./tools/get-tag-info.js";
 import { getTagValues } from "./tools/get-tag-values.js";
 import { searchPresets } from "./tools/search-presets.js";
 import { searchTags } from "./tools/search-tags.js";
+import { validateTag } from "./tools/validate-tag.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
 
 /**
@@ -194,6 +195,25 @@ export function createServer(): Server {
 					required: ["keyword"],
 				},
 			},
+			{
+				name: "validate_tag",
+				description:
+					"Validate a single OSM tag key-value pair. Checks for deprecated tags, unknown keys, and validates against field options.",
+				inputSchema: {
+					type: "object",
+					properties: {
+						key: {
+							type: "string",
+							description: "The tag key to validate (e.g., 'amenity', 'building')",
+						},
+						value: {
+							type: "string",
+							description: "The tag value to validate (e.g., 'restaurant', 'yes')",
+						},
+					},
+					required: ["key", "value"],
+				},
+			},
 		],
 	}));
 
@@ -351,6 +371,25 @@ export function createServer(): Server {
 					{
 						type: "text",
 						text: JSON.stringify(results, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "validate_tag") {
+			const { key, value } = args as { key?: string; value?: string };
+			if (key === undefined) {
+				throw new Error("key parameter is required");
+			}
+			if (value === undefined) {
+				throw new Error("value parameter is required");
+			}
+			const result = await validateTag(schemaLoader, key, value);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(result, null, 2),
 					},
 				],
 			};

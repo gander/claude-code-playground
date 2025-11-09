@@ -171,9 +171,9 @@ Test categories:
   - Output: required and optional tags
 
 #### 3.3 Validation Tools
-- [ ] `validate_tag`: Validate a single tag key-value pair
+- [x] `validate_tag`: Validate a single tag key-value pair ✅
   - Input: key and value
-  - Output: validation result with errors/warnings
+  - Output: validation result with errors/warnings, deprecation info
 - [ ] `validate_tag_collection`: Validate a collection of tags
   - Input: object with key-value pairs
   - Output: validation report with all issues
