@@ -9,6 +9,7 @@ import { getCategoryTags } from "./tools/get-category-tags.js";
 import { getTagValues } from "./tools/get-tag-values.js";
 import { getTagInfo } from "./tools/get-tag-info.js";
 import { searchTags } from "./tools/search-tags.js";
+import { searchPresets } from "./tools/search-presets.js";
 import { getRelatedTags } from "./tools/get-related-tags.js";
 
 /**
@@ -116,6 +117,29 @@ export function createServer(): Server {
 						},
 					},
 					required: ["tagKey"],
+				},
+			},
+			{
+				name: "search_presets",
+				description:
+					"Search for presets by keyword or tag. Searches preset IDs and tags. Supports filtering by geometry type and limiting results.",
+				inputSchema: {
+					type: "object",
+					properties: {
+						keyword: {
+							type: "string",
+							description: "Keyword to search for in preset IDs and tags (case-insensitive). Can be a simple keyword (e.g., 'restaurant') or a tag (e.g., 'amenity=restaurant')",
+						},
+						limit: {
+							type: "number",
+							description: "Maximum number of results to return (optional)",
+						},
+						geometry: {
+							type: "string",
+							description: "Filter by geometry type (point, vertex, line, area, relation) - optional",
+						},
+					},
+					required: ["keyword"],
 				},
 			},
 			{
@@ -237,6 +261,22 @@ export function createServer(): Server {
 				throw new Error("tag parameter is required");
 			}
 			const results = await getRelatedTags(schemaLoader, tag, limit);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(results, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "search_presets") {
+			const { keyword, limit, geometry } = args as { keyword?: string; limit?: number; geometry?: "point" | "vertex" | "line" | "area" | "relation" };
+			if (!keyword) {
+				throw new Error("keyword parameter is required");
+			}
+			const results = await searchPresets(schemaLoader, keyword, { limit, geometry });
 			return {
 				content: [
 					{
