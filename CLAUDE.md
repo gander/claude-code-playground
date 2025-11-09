@@ -617,6 +617,108 @@ spec:
 
 **Timeline**: Phase 7 will be implemented after Phase 6 (Optimization & Polish) is completed.
 
+## Future Enhancements (Schema-Builder Inspired)
+
+Based on analysis of [schema-builder](https://github.com/ideditor/schema-builder), the following enhancements are planned for future phases. These will extend validation capabilities and add advanced features while maintaining 100% compatibility with the current implementation.
+
+### 1. Enhanced Tag Validation (Phase 3.3 Extension)
+
+**Inspired by**: schema-builder's validation system and constraint checking
+
+**New validation capabilities**:
+- **Geometry Constraints**: Validate if a tag is appropriate for a geometry type (point/line/area/relation)
+  - Example: `amenity=parking` is typically for `area`, not `point`
+  - Tool: `validate_tag_for_geometry(tag, geometry) → { valid, warnings }`
+
+- **Prerequisite Tag Validation**: Check if required prerequisite tags are present
+  - Example: `toilets:wheelchair` requires `toilets≠no`
+  - Tool: `validate_prerequisites(tags, field) → { canDisplay, missingPrerequisites }`
+
+- **Field Type Constraints**: Validate values against field type rules
+  - Number fields: min/max values, increment constraints
+  - URL fields: pattern matching, URL format validation
+  - Combo fields: allowed values, custom values settings
+
+**Implementation approach**: Extend existing `validate_tag` and `validate_tag_collection` tools with additional constraint checks from field definitions.
+
+### 2. Field Inheritance Resolution
+
+**Inspired by**: schema-builder's preset field inheritance system (`{preset_name}` references)
+
+**Functionality**: Resolve complete field lists for presets including inherited fields from parent presets.
+
+**New tool**: `get_preset_all_fields(presetId) → { inherited, own, all }`
+- `inherited`: Fields from parent presets
+- `own`: Fields defined directly in the preset
+- `all`: Complete resolved field list
+
+**Use case**: When editing a feature, know all applicable fields including those inherited from broader categories.
+
+### 3. Conditional Field Analysis
+
+**Inspired by**: schema-builder's `prerequisiteTag` logic for conditional field display
+
+**Functionality**: Determine which fields should be displayed based on current tag values.
+
+**New tool**: `get_conditional_fields(tags) → [{ field, prerequisite, visible }]`
+- Evaluates prerequisite conditions
+- Returns field visibility status
+- Handles complex prerequisite logic (key existence, value matching, valueNot)
+
+**Use case**: Build dynamic forms that show/hide fields based on other field values.
+
+### 4. Advanced Deprecation Transformations
+
+**Inspired by**: schema-builder's deprecation mappings with placeholder transformations (`$1`, `$2`)
+
+**Enhanced deprecation handling**:
+- **Placeholder substitution**: Support transformations like `highway=crossing` → `highway=footway, footway=crossing`
+- **Multi-tag replacements**: One deprecated tag can map to multiple replacement tags
+- **Conditional replacements**: Different replacements based on additional tag context
+
+**Enhanced tool**: `check_deprecated(tag) → { deprecated, replacement, transformationRule }`
+- Returns structured replacement with transformation details
+- Supports complex tag splitting and recombination
+- Provides human-readable transformation explanation
+
+### 5. Tag Quality Scoring
+
+**Inspired by**: schema-builder's field importance and usage patterns
+
+**Functionality**: Score tag completeness and quality for a feature.
+
+**New tool**: `score_tag_quality(tags, presetId) → { score, missing, suggested }`
+- `score`: 0-100 quality score
+- `missing`: Required/important fields that are missing
+- `suggested`: Optional but commonly used fields
+
+**Scoring factors**:
+- Presence of required fields (from preset)
+- Inclusion of commonly used optional fields
+- Appropriate geometry type
+- No deprecated tags
+- Valid field values
+
+### Implementation Priority
+
+**Phase 3.3 (Validation Tools)**:
+- Implement enhanced validation (#1)
+- Basic deprecation improvements (#4)
+
+**Phase 5+ (Advanced Features)**:
+- Field inheritance resolution (#2)
+- Conditional field analysis (#3)
+- Tag quality scoring (#5)
+
+### Compatibility Notes
+
+- All enhancements are **additive** - existing tools remain unchanged
+- Current implementation is **100% compliant** with schema-builder data format
+- No breaking changes to existing tool APIs
+- New tools follow same naming conventions and error handling patterns
+
+**Reference**: Schema-builder documentation at https://github.com/ideditor/schema-builder/blob/main/README.md
+
 ## Development Workflow
 
 This project follows an **intent-based workflow** where development is organized around features, not individual commands.
