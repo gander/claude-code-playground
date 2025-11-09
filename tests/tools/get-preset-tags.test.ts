@@ -95,32 +95,28 @@ describe("get_preset_tags", () => {
 			}
 		});
 
-		it("should validate tags for multiple presets via provider pattern", async () => {
+		it("should validate tags for ALL presets via provider pattern (100% coverage)", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			const testPresets = [
-				"amenity/restaurant",
-				"amenity/cafe",
-				"building/house",
-				"highway/residential",
-				"natural/tree",
-				"shop/supermarket",
-			];
+			// CRITICAL: Test EVERY preset from JSON, not a sample
+			const allPresetIds = Object.keys(presets);
+			assert.ok(allPresetIds.length > 1500, "Should have all presets from JSON");
 
-			for (const presetId of testPresets) {
+			// Provider pattern: iterate through EVERY preset
+			for (const presetId of allPresetIds) {
 				const result = await getPresetTags(loader, presetId);
 				const expected = presets[presetId];
 
 				assert.ok(expected, `Preset ${presetId} should exist in JSON`);
 
-				// Verify tags
+				// Verify tags match EXACTLY
 				assert.deepStrictEqual(
 					result.tags,
 					expected.tags,
 					`Tags for ${presetId} should match JSON`,
 				);
 
-				// Verify addTags (if present)
+				// Verify addTags match EXACTLY (if present)
 				if (expected.addTags && Object.keys(expected.addTags).length > 0) {
 					assert.deepStrictEqual(
 						result.addTags,

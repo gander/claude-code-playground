@@ -124,42 +124,82 @@ describe("get_preset_details", () => {
 			}
 		});
 
-		it("should validate ALL preset details via provider pattern (sample-based)", async () => {
+		it("should validate ALL preset details via provider pattern (100% coverage)", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			// Test a representative sample of presets
-			const samplePresets = [
-				"amenity/restaurant",
-				"amenity/cafe",
-				"building/house",
-				"highway/residential",
-				"natural/tree",
-				"shop/supermarket",
-				"amenity/parking",
-				"building/commercial",
-			];
+			// CRITICAL: Test EVERY preset from JSON, not a sample
+			const allPresetIds = Object.keys(presets);
+			assert.ok(allPresetIds.length > 1500, "Should have all presets from JSON");
 
-			for (const presetId of samplePresets) {
+			// Provider pattern: iterate through EVERY preset
+			for (const presetId of allPresetIds) {
 				const result = await getPresetDetails(loader, presetId);
 				const expected = presets[presetId];
 
 				assert.ok(expected, `Preset ${presetId} should exist in JSON`);
-				assert.strictEqual(result.id, presetId);
-				assert.deepStrictEqual(result.tags, expected.tags);
-				assert.deepStrictEqual(result.geometry, expected.geometry);
+				assert.strictEqual(result.id, presetId, `ID should match for ${presetId}`);
+				assert.deepStrictEqual(
+					result.tags,
+					expected.tags,
+					`Tags should match for ${presetId}`,
+				);
+				assert.deepStrictEqual(
+					result.geometry,
+					expected.geometry,
+					`Geometry should match for ${presetId}`,
+				);
 
-				// Verify optional fields match
+				// Verify optional fields match EXACTLY
 				if (expected.fields !== undefined) {
-					assert.deepStrictEqual(result.fields, expected.fields);
+					assert.deepStrictEqual(
+						result.fields,
+						expected.fields,
+						`Fields should match for ${presetId}`,
+					);
+				} else {
+					assert.ok(
+						result.fields === undefined,
+						`Fields should be undefined for ${presetId}`,
+					);
 				}
+
 				if (expected.moreFields !== undefined) {
-					assert.deepStrictEqual(result.moreFields, expected.moreFields);
+					assert.deepStrictEqual(
+						result.moreFields,
+						expected.moreFields,
+						`MoreFields should match for ${presetId}`,
+					);
+				} else {
+					assert.ok(
+						result.moreFields === undefined,
+						`MoreFields should be undefined for ${presetId}`,
+					);
 				}
+
 				if (expected.icon !== undefined) {
-					assert.strictEqual(result.icon, expected.icon);
+					assert.strictEqual(
+						result.icon,
+						expected.icon,
+						`Icon should match for ${presetId}`,
+					);
+				} else {
+					assert.ok(
+						result.icon === undefined,
+						`Icon should be undefined for ${presetId}`,
+					);
 				}
+
 				if (expected.name !== undefined) {
-					assert.strictEqual(result.name, expected.name);
+					assert.strictEqual(
+						result.name,
+						expected.name,
+						`Name should match for ${presetId}`,
+					);
+				} else {
+					assert.ok(
+						result.name === undefined,
+						`Name should be undefined for ${presetId}`,
+					);
 				}
 			}
 		});

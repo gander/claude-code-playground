@@ -102,17 +102,18 @@ describe("get_preset_tags integration", () => {
 			}
 		});
 
-		it("should validate tags for multiple presets via MCP", async () => {
-			const testPresets = [
-				"amenity/restaurant",
-				"amenity/cafe",
-				"building/house",
-				"highway/residential",
-				"natural/tree",
-				"shop/supermarket",
-			];
+		it("should validate tags for representative sample via MCP (sample-based for performance)", async () => {
+			// Note: Testing ALL 1707 presets via MCP would be too slow
+			// We test a representative sample (every 20th preset)
+			const allPresetIds = Object.keys(presets);
+			const sampleIds = allPresetIds.filter((_, idx) => idx % 20 === 0);
 
-			for (const presetId of testPresets) {
+			assert.ok(
+				sampleIds.length >= 80,
+				`Should have representative sample (${sampleIds.length} presets)`,
+			);
+
+			for (const presetId of sampleIds) {
 				const response = await client.callTool({
 					name: "get_preset_tags",
 					arguments: { presetId },
@@ -123,14 +124,14 @@ describe("get_preset_tags integration", () => {
 
 				assert.ok(expected, `Preset ${presetId} should exist in JSON`);
 
-				// Verify tags
+				// Verify tags match EXACTLY
 				assert.deepStrictEqual(
 					result.tags,
 					expected.tags,
 					`Tags for ${presetId} should match JSON`,
 				);
 
-				// Verify addTags (if present)
+				// Verify addTags match EXACTLY (if present)
 				if (expected.addTags && Object.keys(expected.addTags).length > 0) {
 					assert.deepStrictEqual(
 						result.addTags,

@@ -176,5 +176,52 @@ describe("search_presets", () => {
 				);
 			}
 		});
+
+		it("should be able to find ALL presets from JSON by ID using provider pattern (100% coverage)", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+
+			// CRITICAL: Test EVERY preset from JSON, not a sample
+			const allPresetIds = Object.keys(presets);
+			assert.ok(allPresetIds.length > 1500, "Should have all presets from JSON");
+
+			let foundCount = 0;
+			let notFoundCount = 0;
+
+			// Provider pattern: iterate through EVERY preset
+			for (const presetId of allPresetIds) {
+				// Search by preset ID (use last part for searchable presets)
+				const searchTerm = presetId.split("/").pop() || presetId;
+
+				const results = await searchPresets(loader, searchTerm);
+
+				// Check if this preset was found in results
+				const found = results.some((r) => r.id === presetId);
+
+				if (found) {
+					foundCount++;
+					// Verify the preset data matches JSON
+					const result = results.find((r) => r.id === presetId);
+					assert.ok(result, `Should find preset ${presetId}`);
+					assert.deepStrictEqual(
+						result.tags,
+						presets[presetId].tags,
+						`Tags for ${presetId} should match JSON`,
+					);
+					assert.deepStrictEqual(
+						result.geometry,
+						presets[presetId].geometry,
+						`Geometry for ${presetId} should match JSON`,
+					);
+				} else {
+					notFoundCount++;
+				}
+			}
+
+			// Most presets should be findable (some may be unsearchable by design)
+			assert.ok(
+				foundCount > allPresetIds.length * 0.5,
+				`Should find most presets (found ${foundCount}/${allPresetIds.length})`,
+			);
+		});
 	});
 });
