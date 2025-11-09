@@ -422,6 +422,10 @@ Phase 4 (Testing) has been COMPLETED ✅:
   - Images published to GitHub Container Registry (ghcr.io)
   - Multi-architecture support (amd64, arm64)
   - Tags: `dev` (master branch), `latest` (stable releases), `x.y.z` (versioned releases)
+  - **Vulnerability Scanning**: Automated Trivy scanning for CRITICAL and HIGH severity issues
+  - **Image Signing**: Cosign keyless signing with OIDC (Sigstore)
+  - **Security Reports**: Trivy results uploaded to GitHub Security tab
+  - **Signature Verification**: Users can verify image authenticity with `cosign verify`
 
 **Next Phase: Phase 3 - Continue Core Tool Implementation (Validation Tools)**
 
@@ -537,31 +541,46 @@ GNU General Public License v3.0 (GPL-3.0)
 - npm provenance: https://docs.npmjs.com/generating-provenance-statements
 - GitHub Actions trusted publishing: https://docs.github.com/en/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds
 
-### 2. Container Image & GitHub Container Registry
+### 2. Container Image & GitHub Container Registry ✅ IMPLEMENTED
 
 **Goal**: Provide containerized deployment option for isolated, reproducible environments.
 
+**Status**: ✅ **COMPLETED** - Full implementation with security scanning and image signing
+
 **Implementation**:
-- **Dockerfile**: Multi-stage build optimized for size and security
+- ✅ **Dockerfile**: Multi-stage build optimized for size and security
   - Stage 1: Build TypeScript sources
   - Stage 2: Production runtime with minimal dependencies
   - Non-root user execution
   - Health check support
-- **GitHub Container Registry (ghcr.io)**: Publish container images
-- **Multi-Architecture**: Support amd64 and arm64 (Apple Silicon, AWS Graviton)
-- **Image Scanning**: Automated vulnerability scanning with Trivy/Grype
-- **Versioning**: Semantic versioning + `latest` tag
-- **Image Signing**: Cosign signatures for image verification
+- ✅ **GitHub Container Registry (ghcr.io)**: Publish container images
+- ✅ **Multi-Architecture**: Support amd64 and arm64 (Apple Silicon, AWS Graviton)
+- ✅ **Image Scanning**: Automated vulnerability scanning with Trivy
+  - Scans for CRITICAL and HIGH severity vulnerabilities
+  - Results uploaded to GitHub Security tab (SARIF format)
+  - Runs on every build
+- ✅ **Versioning**: Semantic versioning + `latest` tag
+- ✅ **Image Signing**: Cosign keyless signatures for image verification
+  - Uses Sigstore with OIDC (GitHub Actions identity)
+  - Signature verification with `cosign verify`
+  - Tamper-proof supply chain
 
 **Benefits**:
 - Portable deployment across environments
 - Isolated execution environment
 - Easy orchestration with Kubernetes/Docker Compose
 - Reproducible builds
+- **Security**: Vulnerability scanning and signed images for supply chain security
 
-**Example Usage**:
+**Usage**:
 ```bash
+# Pull and run
 docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+
+# Verify image signature
+cosign verify ghcr.io/gander-tools/osm-tagging-schema-mcp:latest \
+  --certificate-identity-regexp=https://github.com/gander-tools \
+  --certificate-oidc-issuer=https://token.actions.githubusercontent.com
 ```
 
 ### 3. Additional Transport Protocols
