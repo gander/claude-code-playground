@@ -241,6 +241,20 @@ Test categories:
   - Create deployment documentation
   - Plan for horizontal scaling
 
+### Future Enhancements
+
+**Schema-Builder Inspired Features** (planned for future phases):
+
+Based on analysis of [ideditor/schema-builder](https://github.com/ideditor/schema-builder), the following advanced features are planned:
+
+1. **Enhanced Tag Validation** - Geometry constraints, prerequisite tag checking, field type validation
+2. **Field Inheritance Resolution** - Complete field lists including inherited fields from parent presets
+3. **Conditional Field Analysis** - Determine field visibility based on tag values and prerequisites
+4. **Advanced Deprecation** - Complex tag transformations with placeholder substitution
+5. **Tag Quality Scoring** - Completeness and quality scoring for features
+
+These enhancements will extend validation capabilities while maintaining 100% compatibility with current implementation. See `CLAUDE.md` for detailed specifications.
+
 ## Installation
 
 ### From NPM (Recommended)
