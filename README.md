@@ -2,6 +2,7 @@
 
 [![Test](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/test.yml?branch=master&label=tests)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/test.yml)
 [![Docker](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/docker.yml?branch=master&label=docker)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/docker.yml)
+[![Security: Trivy](https://img.shields.io/badge/security-Trivy-blue?logo=aqua)](https://github.com/gander-tools/osm-tagging-schema-mcp/security/code-scanning)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![npm version](https://img.shields.io/npm/v/@gander-tools/osm-tagging-schema-mcp)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
@@ -294,6 +295,16 @@ docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
 - `dev` - Latest development build from master branch
 - `latest` - Latest stable release
 - `x.y.z` - Specific version (e.g., `0.1.0`)
+
+**Security Features:**
+- **Vulnerability Scanning**: All images scanned with Trivy for critical and high severity vulnerabilities
+- **Image Signing**: Images signed with Cosign using keyless signing (OIDC)
+- **Verification**: Verify image signatures with:
+  ```bash
+  cosign verify ghcr.io/gander-tools/osm-tagging-schema-mcp:latest \
+    --certificate-identity-regexp=https://github.com/gander-tools \
+    --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+  ```
 
 ## Usage
 

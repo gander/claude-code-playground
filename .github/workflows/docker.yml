@@ -21,6 +21,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write  # For Cosign keyless signing
+      attestations: write  # For build attestations
 
     steps:
       - name: Checkout repository
@@ -57,6 +59,7 @@ jobs:
             type=sha,prefix=sha-
 
       - name: Build and push Docker image
+        id: build-and-push
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
         with:
           context: .
@@ -69,3 +72,32 @@ jobs:
 
       - name: Image digest
         run: echo "Image pushed with digest ${{ steps.build-and-push.outputs.digest }}"
+
+      # Vulnerability Scanning with Trivy
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-and-push.outputs.digest }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@5d5cd550d3e189c569da8f16ea8de2d821c9bf7a # v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      # Image Signing with Cosign
+      - name: Install Cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+
+      - name: Sign container image with Cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: |
+          echo "Signing image with digest: ${DIGEST}"
+          cosign sign --yes --recursive \
+            "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
