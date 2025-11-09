@@ -87,7 +87,10 @@ Test categories:
   │   ├── get-tag-values.ts
   │   ├── get-tag-info.ts
   │   ├── get-related-tags.ts
-  │   └── search-tags.ts
+  │   ├── search-tags.ts
+  │   ├── search-presets.ts
+  │   ├── get-preset-details.ts
+  │   └── get-preset-tags.ts
   ├── utils/                # Helper functions
   │   ├── schema-loader.ts
   │   └── validators.ts
@@ -101,7 +104,10 @@ Test categories:
   │   ├── get-tag-values.test.ts
   │   ├── get-tag-info.test.ts
   │   ├── get-related-tags.test.ts
-  │   └── search-tags.test.ts
+  │   ├── search-tags.test.ts
+  │   ├── search-presets.test.ts
+  │   ├── get-preset-details.test.ts
+  │   └── get-preset-tags.test.ts
   ├── utils/
   │   └── schema-loader.test.ts
   └── integration/
@@ -113,7 +119,10 @@ Test categories:
       ├── get-tag-values.test.ts
       ├── get-tag-info.test.ts
       ├── get-related-tags.test.ts
-      └── search-tags.test.ts
+      ├── search-tags.test.ts
+      ├── search-presets.test.ts
+      ├── get-preset-details.test.ts
+      └── get-preset-tags.test.ts
   ```
 - [x] Configure build system (TypeScript compiler)
 - [x] Set up BiomeJS 2.3.4 for linting and formatting
@@ -146,13 +155,13 @@ Test categories:
   - Output: matching tags from fields and presets with key, value, and preset name
 
 #### 3.2 Preset Tools
-- [ ] `search_presets`: Search for presets by name or tags
+- [x] `search_presets`: Search for presets by name or tags ✅
   - Input: search query or tag filters
   - Output: matching presets with metadata
-- [ ] `get_preset_details`: Get complete preset information
+- [x] `get_preset_details`: Get complete preset information ✅
   - Input: preset ID or name
   - Output: preset configuration, tags, fields
-- [ ] `get_preset_tags`: Get recommended tags for a preset
+- [x] `get_preset_tags`: Get recommended tags for a preset ✅
   - Input: preset ID
   - Output: required and optional tags
 
@@ -182,8 +191,8 @@ Test categories:
 ### Phase 4: Testing (TDD Approach) - COMPLETED ✅
 - [x] Configure Node.js native test runner
 - [x] Write unit tests for schema loader (19 tests passing)
-- [x] Write unit tests for all implemented tools (110 tests, 48 suites passing)
-- [x] Create integration tests for MCP server (33 tests, 22 suites passing)
+- [x] Write unit tests for all implemented tools (170 tests, 66 suites passing)
+- [x] Create integration tests for MCP server (59 tests, 31 suites passing)
   - **Modular structure**: One integration test file per tool for clarity
   - **Shared utilities**: `helpers.ts` for common setup/teardown
   - **Order-independent tests**: Tools validated by existence, not array position
@@ -195,7 +204,7 @@ Test categories:
   - Integration tests verify MCP tool responses match JSON data exactly
   - Tests ensure compatibility with schema package updates
   - Provider pattern for comprehensive data validation
-  - 100% coverage: ALL tag keys validated (no hardcoded samples)
+  - 100% coverage: ALL tag keys (799) + ALL presets (1707) validated (no hardcoded samples)
   - Bidirectional validation ensures complete data integrity
 - [x] Validate error handling for all implemented tools
 - [x] Achieve high test coverage across all modules (>90%)
@@ -354,6 +363,30 @@ npm run build
 // and compatible tags (capacity, fee, operator, etc.)
 ```
 
+**Search for presets:**
+```typescript
+// Search for restaurant presets
+{
+  "tool": "search_presets",
+  "arguments": {
+    "keyword": "restaurant"
+  }
+}
+// Returns: amenity/restaurant, amenity/fast_food, and other matching presets
+```
+
+**Get preset details:**
+```typescript
+// Get complete information about a preset
+{
+  "tool": "get_preset_details",
+  "arguments": {
+    "presetId": "amenity/restaurant"
+  }
+}
+// Returns: id, tags, geometry types, fields, icon, and other metadata
+```
+
 **Validate tags:**
 ```typescript
 // Validate a collection of tags
@@ -403,7 +436,10 @@ src/tools/
 ├── get-tag-values.ts         # get_tag_values tool
 ├── get-tag-info.ts           # get_tag_info tool
 ├── get-related-tags.ts       # get_related_tags tool
-└── search-tags.ts            # search_tags tool
+├── search-tags.ts            # search_tags tool
+├── search-presets.ts         # search_presets tool
+├── get-preset-details.ts     # get_preset_details tool
+└── get-preset-tags.ts        # get_preset_tags tool
 
 tests/tools/
 ├── get-schema-stats.test.ts  # Tests for get_schema_stats
@@ -412,7 +448,10 @@ tests/tools/
 ├── get-tag-values.test.ts    # Tests for get_tag_values
 ├── get-tag-info.test.ts      # Tests for get_tag_info
 ├── get-related-tags.test.ts  # Tests for get_related_tags
-└── search-tags.test.ts       # Tests for search_tags
+├── search-tags.test.ts       # Tests for search_tags
+├── search-presets.test.ts    # Tests for search_presets
+├── get-preset-details.test.ts # Tests for get_preset_details
+└── get-preset-tags.test.ts   # Tests for get_preset_tags
 
 tests/integration/
 ├── helpers.ts                # Shared test utilities
@@ -423,7 +462,10 @@ tests/integration/
 ├── get-tag-values.test.ts    # get_tag_values integration
 ├── get-tag-info.test.ts      # get_tag_info integration
 ├── get-related-tags.test.ts  # get_related_tags integration
-└── search-tags.test.ts       # search_tags integration
+├── search-tags.test.ts       # search_tags integration
+├── search-presets.test.ts    # search_presets integration
+├── get-preset-details.test.ts # get_preset_details integration
+└── get-preset-tags.test.ts   # get_preset_tags integration
 ```
 
 ### Architectural Layers
