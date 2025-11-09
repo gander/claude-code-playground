@@ -57,3 +57,16 @@ export interface PresetSearchResult {
 	tags: Record<string, string>;
 	geometry: string[];
 }
+
+/**
+ * Preset details interface
+ */
+export interface PresetDetails {
+	id: string;
+	tags: Record<string, string>;
+	geometry: string[];
+	name?: string;
+	fields?: string[];
+	moreFields?: string[];
+	icon?: string;
+}
