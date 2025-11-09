@@ -17,20 +17,31 @@ export async function getTagValues(
 	const values = new Set<string>();
 
 	// First, check fields for predefined options
-	const field = schema.fields[tagKey];
-	if (field?.options && Array.isArray(field.options)) {
-		for (const option of field.options) {
-			if (typeof option === "string") {
-				values.add(option);
+	// Field map keys are FILE PATHS with slash (e.g., "toilets/wheelchair" → data/fields/toilets/wheelchair.json)
+	// To look up a field, convert OSM tag key's colons to slashes
+	const fieldKeyLookup = tagKey.replace(/:/g, "/");
+	const field = schema.fields[fieldKeyLookup];
+	let actualKey = tagKey; // The actual OSM key (with colon)
+
+	if (field) {
+		// Use the actual OSM tag key from field.key (e.g., "parking:both" not "parking/side/parking")
+		actualKey = field.key;
+
+		if (field.options && Array.isArray(field.options)) {
+			for (const option of field.options) {
+				if (typeof option === "string") {
+					values.add(option);
+				}
 			}
 		}
 	}
 
 	// Then iterate through all presets to find additional values
+	// Presets use the actual OSM key format (with colon)
 	for (const preset of Object.values(schema.presets)) {
 		// Check if this preset has the tag key
-		if (preset.tags[tagKey]) {
-			const value = preset.tags[tagKey];
+		if (preset.tags[actualKey]) {
+			const value = preset.tags[actualKey];
 			// Skip wildcards and complex patterns
 			if (value && value !== "*" && !value.includes("|")) {
 				values.add(value);
@@ -38,8 +49,8 @@ export async function getTagValues(
 		}
 
 		// Also check addTags if present
-		if (preset.addTags?.[tagKey]) {
-			const value = preset.addTags[tagKey];
+		if (preset.addTags?.[actualKey]) {
+			const value = preset.addTags[actualKey];
 			if (value && value !== "*" && !value.includes("|")) {
 				values.add(value);
 			}

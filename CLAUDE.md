@@ -385,6 +385,24 @@ Phase 4 (Testing) has been COMPLETED ✅:
   - **Fix**: Sorted tools alphabetically in ListToolsRequestSchema (src/index.ts)
   - **Test Improvement**: Refactored tests to check tool existence vs. collection (order-independent)
   - **Result**: Predictable tool listing, robust tests that won't break when adding new tools
+- ✅ **Tag key format: colon vs slash separator** (TDD approach):
+  - **Issue**: Tools returned tag keys with slash separator (e.g., `toilets/wheelchair`) instead of proper OSM format with colon (e.g., `toilets:wheelchair`)
+  - **Root Cause**: In @openstreetmap/id-tagging-schema, field map keys are **FILE PATHS** with slash separators (e.g., `fields["toilets/wheelchair"]` refers to `data/fields/toilets/wheelchair.json`), but the actual OSM tag key is stored in the `field.key` property with colon separators
+  - **Key Insight**: Slash-separated map keys are NOT tag names - they are file paths. The ONLY source of truth for OSM tags is the `field.key` property in the JSON
+  - **Examples**:
+    - File path: `parking/side/parking` → data/fields/parking/side/parking.json → **Actual OSM tag**: `parking:both`
+    - File path: `toilets/wheelchair` → data/fields/toilets/wheelchair.json → **Actual OSM tag**: `toilets:wheelchair`
+  - **Fix**:
+    - **get_tag_info**: Use `field.key` (actual OSM tag) instead of map key (file path); convert input `:` → `/` for field lookup; use actualKey for preset lookups
+    - **get_tag_values**: Same approach as get_tag_info
+    - **search_tags**: Use `field.key` for returned results instead of map key (file path); skip fields without `key` property
+  - **TDD RED**: Added failing tests in get-tag-info.test.ts, get-tag-values.test.ts, search-tags.test.ts
+  - **TDD GREEN**: Implemented fixes in src/tools/get-tag-info.ts, get-tag-values.ts, search-tags.ts
+  - **Test Updates**: Updated provider patterns in unit and integration tests to:
+    - Collect keys using `field.key` values (actual OSM tags) instead of `Object.keys(fields)` (file paths)
+    - Use reverse lookup (iterate field.values) for validation since file path → OSM tag mapping is not 1:1
+    - Handle non-trivial mappings (e.g., file path `parking/side/parking` → OSM tag `parking:both`)
+  - **Result**: All tools now return and accept proper OSM tag keys with colon separators; 113 tests passing
 
 **Next Phase: Phase 3 - Continue Core Tool Implementation (Preset & Validation Tools)**
 

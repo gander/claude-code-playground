@@ -72,10 +72,14 @@ describe("search_tags integration", () => {
 				let found = false;
 
 				// Check in fields.json
-				const field = fields[result.key];
-				if (field?.options && Array.isArray(field.options)) {
-					if (field.options.includes(result.value)) {
-						found = true;
+				// Note: field.key might not be a simple conversion from map key
+				// (e.g., "parking/side/parking" → "parking:both"), so we need to search by field.key
+				for (const field of Object.values(fields)) {
+					if (field.key === result.key && field.options && Array.isArray(field.options)) {
+						if (field.options.includes(result.value)) {
+							found = true;
+							break;
+						}
 					}
 				}
 
@@ -117,10 +121,14 @@ describe("search_tags integration", () => {
 					let found = false;
 
 					// Check in fields.json
-					const field = fields[result.key];
-					if (field?.options && Array.isArray(field.options)) {
-						if (field.options.includes(result.value)) {
-							found = true;
+					// Note: field.key might not be a simple conversion from map key
+					// (e.g., "parking/side/parking" → "parking:both"), so we need to search by field.key
+					for (const field of Object.values(fields)) {
+						if (field.key === result.key && field.options && Array.isArray(field.options)) {
+							if (field.options.includes(result.value)) {
+								found = true;
+								break;
+							}
 						}
 					}
 

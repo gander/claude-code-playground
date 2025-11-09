@@ -144,9 +144,12 @@ describe("get_tag_info integration", () => {
 			// CRITICAL: Collect ALL unique tag keys from JSON (100% coverage)
 			const allKeys = new Set<string>();
 
-			// Collect from fields
-			for (const key of Object.keys(fields)) {
-				allKeys.add(key);
+			// Collect from fields - use field.key (actual OSM key with colon)
+			// not the map key (which uses slash separator)
+			for (const field of Object.values(fields)) {
+				if (field.key) {
+					allKeys.add(field.key);
+				}
 			}
 
 			// Collect from presets
@@ -176,7 +179,9 @@ describe("get_tag_info integration", () => {
 				const expectedValues = new Set<string>();
 				let hasFieldDef = false;
 
-				const field = fields[key];
+				// Fields are stored with slash separator, so convert key
+				const fieldKeyLookup = key.replace(/:/g, "/");
+				const field = fields[fieldKeyLookup];
 				if (field) {
 					hasFieldDef = true;
 					if (field.options && Array.isArray(field.options)) {

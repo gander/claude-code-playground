@@ -60,6 +60,27 @@ describe("get_tag_values", () => {
 			assert.ok(Array.isArray(values), "Should handle tag keys");
 			// Should not throw error
 		});
+
+		it("should accept keys with colon separator (BUG FIX TEST)", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			// toilets:wheelchair is a field stored as "toilets/wheelchair" in fields map
+			// but should accept "toilets:wheelchair" as input (OSM format)
+			const values = await getTagValues(loader, "toilets:wheelchair");
+
+			assert.ok(Array.isArray(values), "Should return an array");
+			assert.ok(values.length > 0, "Should find values for colon-formatted key");
+
+			// Verify values match the field definition
+			const toiletsWheelchairField = fields["toilets/wheelchair"];
+			if (toiletsWheelchairField?.options) {
+				for (const value of values) {
+					assert.ok(
+						toiletsWheelchairField.options.includes(value),
+						`Value "${value}" should be in field options`,
+					);
+				}
+			}
+		});
 	});
 
 	describe("JSON Schema Validation", () => {
@@ -71,9 +92,12 @@ describe("get_tag_values", () => {
 			// CRITICAL: Collect ALL unique tag keys from JSON (fields + presets)
 			const allKeys = new Set<string>();
 
-			// Collect from fields
-			for (const key of Object.keys(fields)) {
-				allKeys.add(key);
+			// Collect from fields - use field.key (actual OSM key with colon)
+			// not the map key (which uses slash separator)
+			for (const field of Object.values(fields)) {
+				if (field.key) {
+					allKeys.add(field.key);
+				}
 			}
 
 			// Collect from presets
@@ -95,7 +119,9 @@ describe("get_tag_values", () => {
 				const expectedValues = new Set<string>();
 
 				// First, collect values from fields if available
-				const field = fields[key];
+				// Fields are stored with slash separator, so convert key
+				const fieldKeyLookup = key.replace(/:/g, "/");
+				const field = fields[fieldKeyLookup];
 				if (field?.options && Array.isArray(field.options)) {
 					for (const option of field.options) {
 						if (typeof option === "string") {

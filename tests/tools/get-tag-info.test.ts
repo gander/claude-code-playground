@@ -76,6 +76,42 @@ describe("get_tag_info", () => {
 			);
 		});
 
+		it("should accept keys with colon separator (BUG FIX TEST)", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			// toilets:wheelchair is a field stored as "toilets/wheelchair" in fields map
+			// but should accept "toilets:wheelchair" as input (OSM format)
+			const info = await getTagInfo(loader, "toilets:wheelchair");
+
+			assert.ok(info, "Should return tag info");
+			assert.strictEqual(
+				info.key,
+				"toilets:wheelchair",
+				"Should return key with colon separator",
+			);
+			assert.strictEqual(
+				info.hasFieldDefinition,
+				true,
+				"Should find field definition",
+			);
+			assert.ok(info.values.length > 0, "Should have values from field options");
+		});
+
+		it("should return keys with colon separator (BUG FIX TEST)", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			// Test that returned key uses colon, not slash
+			const info = await getTagInfo(loader, "toilets:wheelchair");
+
+			assert.ok(info, "Should return tag info");
+			assert.ok(
+				!info.key.includes("/"),
+				"Returned key should not contain slash separator",
+			);
+			assert.ok(
+				info.key.includes(":"),
+				"Returned key should contain colon separator",
+			);
+		});
+
 		it("should use cached data on subsequent calls", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
@@ -95,9 +131,12 @@ describe("get_tag_info", () => {
 			// CRITICAL: Collect ALL unique tag keys from JSON (fields + presets)
 			const allKeys = new Set<string>();
 
-			// Collect from fields
-			for (const key of Object.keys(fields)) {
-				allKeys.add(key);
+			// Collect from fields - use field.key (actual OSM key with colon)
+			// not the map key (which uses slash separator)
+			for (const field of Object.values(fields)) {
+				if (field.key) {
+					allKeys.add(field.key);
+				}
 			}
 
 			// Collect from presets
@@ -121,7 +160,9 @@ describe("get_tag_info", () => {
 				let fieldType: string | undefined;
 
 				// First, collect values from fields if available
-				const field = fields[key];
+				// Fields are stored with slash separator, so convert key
+				const fieldKeyLookup = key.replace(/:/g, "/");
+				const field = fields[fieldKeyLookup];
 				if (field) {
 					hasFieldDef = true;
 					fieldType = field.type;
