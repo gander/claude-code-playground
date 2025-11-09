@@ -70,3 +70,11 @@ export interface PresetDetails {
 	moreFields?: string[];
 	icon?: string;
 }
+
+/**
+ * Preset tags interface
+ */
+export interface PresetTags {
+	tags: Record<string, string>;
+	addTags?: Record<string, string>;
+}

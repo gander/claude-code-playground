@@ -11,6 +11,7 @@ import { getTagInfo } from "./tools/get-tag-info.js";
 import { searchTags } from "./tools/search-tags.js";
 import { searchPresets } from "./tools/search-presets.js";
 import { getPresetDetails } from "./tools/get-preset-details.js";
+import { getPresetTags } from "./tools/get-preset-tags.js";
 import { getRelatedTags } from "./tools/get-related-tags.js";
 
 /**
@@ -71,6 +72,21 @@ export function createServer(): Server {
 						presetId: {
 							type: "string",
 							description: "The preset ID to get details for (e.g., 'amenity/restaurant')",
+						},
+					},
+					required: ["presetId"],
+				},
+			},
+			{
+				name: "get_preset_tags",
+				description:
+					"Get recommended tags for a specific preset. Returns identifying tags and additional recommended tags.",
+				inputSchema: {
+					type: "object",
+					properties: {
+						presetId: {
+							type: "string",
+							description: "The preset ID to get tags for (e.g., 'amenity/restaurant')",
 						},
 					},
 					required: ["presetId"],
@@ -234,6 +250,22 @@ export function createServer(): Server {
 					{
 						type: "text",
 						text: JSON.stringify(details, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "get_preset_tags") {
+			const presetId = (args as { presetId?: string }).presetId;
+			if (!presetId) {
+				throw new Error("presetId parameter is required");
+			}
+			const tags = await getPresetTags(schemaLoader, presetId);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(tags, null, 2),
 					},
 				],
 			};
