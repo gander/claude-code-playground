@@ -1,9 +1,9 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
+import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { searchTags } from "../../src/tools/search-tags.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
-import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 
 describe("search_tags", () => {
 	describe("Basic Functionality", () => {
@@ -33,19 +33,12 @@ describe("search_tags", () => {
 
 			assert.ok(resultsLower.length > 0, "Should find results with lowercase");
 			assert.ok(resultsUpper.length > 0, "Should find results with uppercase");
-			assert.deepStrictEqual(
-				resultsLower,
-				resultsUpper,
-				"Case should not matter",
-			);
+			assert.deepStrictEqual(resultsLower, resultsUpper, "Case should not matter");
 		});
 
 		it("should return empty array for no matches", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchTags(
-				loader,
-				"nonexistentkeywordinosm12345xyz",
-			);
+			const results = await searchTags(loader, "nonexistentkeywordinosm12345xyz");
 
 			assert.ok(Array.isArray(results), "Should return an array");
 			assert.strictEqual(results.length, 0, "Should return empty array");
@@ -66,11 +59,7 @@ describe("search_tags", () => {
 			const results1 = await searchTags(loader, "school");
 			const results2 = await searchTags(loader, "school");
 
-			assert.deepStrictEqual(
-				results1,
-				results2,
-				"Results should be identical from cache",
-			);
+			assert.deepStrictEqual(results1, results2, "Results should be identical from cache");
 		});
 
 		it("should find tag keys from fields.json (BUG FIX TEST)", async () => {
@@ -82,17 +71,17 @@ describe("search_tags", () => {
 			assert.ok(results.length > 0, "Should find wheelchair tag from fields.json");
 
 			// Should return results like wheelchair=yes, wheelchair=limited, wheelchair=no
-			const hasWheelchairKey = results.some(r => r.key === "wheelchair");
+			const hasWheelchairKey = results.some((r) => r.key === "wheelchair");
 			assert.ok(hasWheelchairKey, "Should have results with wheelchair as key");
 
 			// Verify all returned values exist in fields.json options
 			const wheelchairField = fields.wheelchair;
 			assert.ok(wheelchairField, "wheelchair should exist in fields.json");
 
-			const wheelchairResults = results.filter(r => r.key === "wheelchair");
+			const wheelchairResults = results.filter((r) => r.key === "wheelchair");
 			for (const result of wheelchairResults) {
 				assert.ok(
-					wheelchairField.options && wheelchairField.options.includes(result.value),
+					wheelchairField.options?.includes(result.value),
 					`Value "${result.value}" should be in wheelchair field options`,
 				);
 			}
@@ -119,9 +108,7 @@ describe("search_tags", () => {
 			const toiletsWheelchairField = fields["toilets/wheelchair"];
 			if (toiletsWheelchairField) {
 				// Field exists in schema, so we should find it
-				const toiletsWheelchairResults = results.filter(
-					r => r.key === "toilets:wheelchair",
-				);
+				const toiletsWheelchairResults = results.filter((r) => r.key === "toilets:wheelchair");
 				assert.ok(
 					toiletsWheelchairResults.length > 0,
 					"Should find toilets:wheelchair (with colon, not slash)",
@@ -149,7 +136,8 @@ describe("search_tags", () => {
 					// Check tags
 					for (const [key, value] of Object.entries(preset.tags)) {
 						const keyMatch = key.toLowerCase().includes(keywordLower);
-						const valueMatch = typeof value === "string" && value.toLowerCase().includes(keywordLower);
+						const valueMatch =
+							typeof value === "string" && value.toLowerCase().includes(keywordLower);
 
 						if (keyMatch || valueMatch || presetName.includes(keywordLower)) {
 							if (value && value !== "*" && !value.includes("|")) {
@@ -162,7 +150,8 @@ describe("search_tags", () => {
 					if (preset.addTags) {
 						for (const [key, value] of Object.entries(preset.addTags)) {
 							const keyMatch = key.toLowerCase().includes(keywordLower);
-							const valueMatch = typeof value === "string" && value.toLowerCase().includes(keywordLower);
+							const valueMatch =
+								typeof value === "string" && value.toLowerCase().includes(keywordLower);
 
 							if (keyMatch || valueMatch || presetName.includes(keywordLower)) {
 								if (value && value !== "*" && !value.includes("|")) {

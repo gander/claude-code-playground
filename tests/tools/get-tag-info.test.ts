@@ -1,9 +1,9 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
+import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { getTagInfo } from "../../src/tools/get-tag-info.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
-import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 
 describe("get_tag_info", () => {
 	describe("Basic Functionality", () => {
@@ -15,11 +15,7 @@ describe("get_tag_info", () => {
 			assert.strictEqual(info.key, "parking", "Should return correct key");
 			assert.ok(Array.isArray(info.values), "Should return values array");
 			assert.ok(info.values.length > 0, "Should have at least one value");
-			assert.strictEqual(
-				info.hasFieldDefinition,
-				true,
-				"parking should have field definition",
-			);
+			assert.strictEqual(info.hasFieldDefinition, true, "parking should have field definition");
 			assert.ok(info.type, "Should have type from field definition");
 		});
 
@@ -38,11 +34,7 @@ describe("get_tag_info", () => {
 			const info = await getTagInfo(loader, "parking");
 
 			const sorted = [...info.values].sort();
-			assert.deepStrictEqual(
-				info.values,
-				sorted,
-				"Values should be sorted alphabetically",
-			);
+			assert.deepStrictEqual(info.values, sorted, "Values should be sorted alphabetically");
 		});
 
 		it("should return unique values only", async () => {
@@ -50,11 +42,7 @@ describe("get_tag_info", () => {
 			const info = await getTagInfo(loader, "building");
 
 			const uniqueValues = new Set(info.values);
-			assert.strictEqual(
-				info.values.length,
-				uniqueValues.size,
-				"Should return unique values only",
-			);
+			assert.strictEqual(info.values.length, uniqueValues.size, "Should return unique values only");
 		});
 
 		it("should handle non-existent tag key", async () => {
@@ -62,18 +50,10 @@ describe("get_tag_info", () => {
 			const info = await getTagInfo(loader, "nonexistent_tag_key_12345");
 
 			assert.ok(info, "Should return tag info even for non-existent key");
-			assert.strictEqual(
-				info.key,
-				"nonexistent_tag_key_12345",
-				"Should return correct key",
-			);
+			assert.strictEqual(info.key, "nonexistent_tag_key_12345", "Should return correct key");
 			assert.ok(Array.isArray(info.values), "Should return values array");
 			assert.strictEqual(info.values.length, 0, "Should have no values");
-			assert.strictEqual(
-				info.hasFieldDefinition,
-				false,
-				"Should not have field definition",
-			);
+			assert.strictEqual(info.hasFieldDefinition, false, "Should not have field definition");
 		});
 
 		it("should accept keys with colon separator (BUG FIX TEST)", async () => {
@@ -83,16 +63,8 @@ describe("get_tag_info", () => {
 			const info = await getTagInfo(loader, "toilets:wheelchair");
 
 			assert.ok(info, "Should return tag info");
-			assert.strictEqual(
-				info.key,
-				"toilets:wheelchair",
-				"Should return key with colon separator",
-			);
-			assert.strictEqual(
-				info.hasFieldDefinition,
-				true,
-				"Should find field definition",
-			);
+			assert.strictEqual(info.key, "toilets:wheelchair", "Should return key with colon separator");
+			assert.strictEqual(info.hasFieldDefinition, true, "Should find field definition");
 			assert.ok(info.values.length > 0, "Should have values from field options");
 		});
 
@@ -102,14 +74,8 @@ describe("get_tag_info", () => {
 			const info = await getTagInfo(loader, "toilets:wheelchair");
 
 			assert.ok(info, "Should return tag info");
-			assert.ok(
-				!info.key.includes("/"),
-				"Returned key should not contain slash separator",
-			);
-			assert.ok(
-				info.key.includes(":"),
-				"Returned key should contain colon separator",
-			);
+			assert.ok(!info.key.includes("/"), "Returned key should not contain slash separator");
+			assert.ok(info.key.includes(":"), "Returned key should contain colon separator");
 		});
 
 		it("should use cached data on subsequent calls", async () => {
@@ -250,10 +216,7 @@ describe("get_tag_info", () => {
 			// CRITICAL: Bidirectional validation - ALL JSON values should be returned
 			const returnedSet = new Set(info.values);
 			for (const expected of expectedValues) {
-				assert.ok(
-					returnedSet.has(expected),
-					`JSON value "${expected}" should be returned by tool`,
-				);
+				assert.ok(returnedSet.has(expected), `JSON value "${expected}" should be returned by tool`);
 			}
 
 			// Exact count match
@@ -322,15 +285,8 @@ describe("get_tag_info", () => {
 
 			// CRITICAL: Verify EACH value individually (NO wildcards, NO pipes)
 			for (const value of info.values) {
-				assert.notStrictEqual(
-					value,
-					"*",
-					`Should not include wildcard: ${value}`,
-				);
-				assert.ok(
-					!value.includes("|"),
-					`Should not include pipe-separated value: ${value}`,
-				);
+				assert.notStrictEqual(value, "*", `Should not include wildcard: ${value}`);
+				assert.ok(!value.includes("|"), `Should not include pipe-separated value: ${value}`);
 			}
 		});
 
@@ -342,16 +298,8 @@ describe("get_tag_info", () => {
 			const parkingField = fields.parking;
 
 			assert.ok(parkingField, "parking field should exist in fields.json");
-			assert.strictEqual(
-				info.hasFieldDefinition,
-				true,
-				"Should have field definition",
-			);
-			assert.strictEqual(
-				info.type,
-				parkingField.type,
-				"Type should match field definition",
-			);
+			assert.strictEqual(info.hasFieldDefinition, true, "Should have field definition");
+			assert.strictEqual(info.type, parkingField.type, "Type should match field definition");
 
 			// CRITICAL: Validate ALL field options are included
 			if (parkingField.options && Array.isArray(parkingField.options)) {

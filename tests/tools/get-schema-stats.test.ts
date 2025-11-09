@@ -1,10 +1,12 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
+import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
+import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with {
+	type: "json",
+};
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { getSchemaStats } from "../../src/tools/get-schema-stats.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
-import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
-import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with { type: "json" };
 
 describe("get_schema_stats", () => {
 	describe("Basic Functionality", () => {
@@ -37,14 +39,8 @@ describe("get_schema_stats", () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			const stats = await getSchemaStats(loader);
 
-			assert.ok(
-				typeof stats.deprecatedCount === "number",
-				"Should have deprecated count",
-			);
-			assert.ok(
-				stats.deprecatedCount >= 0,
-				"Deprecated count should be non-negative",
-			);
+			assert.ok(typeof stats.deprecatedCount === "number", "Should have deprecated count");
+			assert.ok(stats.deprecatedCount >= 0, "Deprecated count should be non-negative");
 		});
 
 		it("should use cached data on subsequent calls", async () => {

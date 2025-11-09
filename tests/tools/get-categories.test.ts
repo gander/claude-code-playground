@@ -1,8 +1,10 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
+import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with {
+	type: "json",
+};
 import { getCategories } from "../../src/tools/get-categories.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
-import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with { type: "json" };
 
 describe("get_categories", () => {
 	describe("Basic Functionality", () => {
@@ -45,11 +47,7 @@ describe("get_categories", () => {
 			const categories1 = await getCategories(loader);
 			const categories2 = await getCategories(loader);
 
-			assert.deepStrictEqual(
-				categories1,
-				categories2,
-				"Categories should be identical from cache",
-			);
+			assert.deepStrictEqual(categories1, categories2, "Categories should be identical from cache");
 		});
 	});
 

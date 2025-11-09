@@ -1,6 +1,6 @@
+import type { GeometryType } from "../types/index.js";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { PresetSearchResult } from "./types.js";
-import type { GeometryType } from "../types/index.js";
 
 /**
  * Options for searching presets
@@ -63,8 +63,7 @@ export async function searchPresets(
 				for (const [key, value] of Object.entries(preset.tags)) {
 					if (
 						key.toLowerCase().includes(normalizedKeyword) ||
-						(typeof value === "string" &&
-							value.toLowerCase().includes(normalizedKeyword))
+						(typeof value === "string" && value.toLowerCase().includes(normalizedKeyword))
 					) {
 						matches = true;
 						break;

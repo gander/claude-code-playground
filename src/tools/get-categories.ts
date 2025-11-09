@@ -11,12 +11,10 @@ export async function getCategories(loader: SchemaLoader): Promise<CategoryInfo[
 	const schema = await loader.loadSchema();
 
 	// Create array of categories with counts
-	const categories: CategoryInfo[] = Object.entries(schema.categories).map(
-		([name, category]) => ({
-			name,
-			count: category.members?.length || 0,
-		}),
-	);
+	const categories: CategoryInfo[] = Object.entries(schema.categories).map(([name, category]) => ({
+		name,
+		count: category.members?.length || 0,
+	}));
 
 	// Sort by name
 	return categories.sort((a, b) => a.name.localeCompare(b.name));

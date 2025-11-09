@@ -5,8 +5,8 @@
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { setupClientServer, teardownClientServer, type TestServer } from "./helpers.js";
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+import { setupClientServer, type TestServer, teardownClientServer } from "./helpers.js";
 
 describe("get_related_tags integration", () => {
 	let client: Client;
@@ -110,7 +110,7 @@ describe("get_related_tags integration", () => {
 
 				assert.ok(
 					found,
-					`Related tag ${result.key}${result.value ? "=" + result.value : ""} should exist in JSON presets via MCP`,
+					`Related tag ${result.key}${result.value ? `=${result.value}` : ""} should exist in JSON presets via MCP`,
 				);
 			}
 		});
@@ -130,8 +130,7 @@ describe("get_related_tags integration", () => {
 				// Count presets with BOTH amenity=restaurant AND the related tag
 				for (const preset of Object.values(presets)) {
 					const hasInputTag =
-						preset.tags?.amenity === "restaurant" ||
-						preset.addTags?.amenity === "restaurant";
+						preset.tags?.amenity === "restaurant" || preset.addTags?.amenity === "restaurant";
 
 					if (hasInputTag) {
 						const hasRelatedTag =
@@ -149,7 +148,7 @@ describe("get_related_tags integration", () => {
 				assert.strictEqual(
 					result.frequency,
 					actualCount,
-					`Frequency for ${result.key}${result.value ? "=" + result.value : ""} should match JSON data via MCP`,
+					`Frequency for ${result.key}${result.value ? `=${result.value}` : ""} should match JSON data via MCP`,
 				);
 			}
 		});
@@ -176,8 +175,7 @@ describe("get_related_tags integration", () => {
 
 					for (const preset of Object.values(presets)) {
 						const hasInputTag =
-							preset.tags?.[inputKey] === inputValue ||
-							preset.addTags?.[inputKey] === inputValue;
+							preset.tags?.[inputKey] === inputValue || preset.addTags?.[inputKey] === inputValue;
 
 						if (hasInputTag) {
 							const hasRelatedTag =
@@ -195,7 +193,7 @@ describe("get_related_tags integration", () => {
 
 					assert.ok(
 						foundCoOccurrence,
-						`Related tag ${result.key}${result.value ? "=" + result.value : ""} should co-occur with ${testCase.tag} in JSON via MCP`,
+						`Related tag ${result.key}${result.value ? `=${result.value}` : ""} should co-occur with ${testCase.tag} in JSON via MCP`,
 					);
 				}
 			}

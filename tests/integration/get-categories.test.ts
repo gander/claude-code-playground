@@ -5,8 +5,10 @@
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { setupClientServer, teardownClientServer, type TestServer } from "./helpers.js";
-import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with { type: "json" };
+import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with {
+	type: "json",
+};
+import { setupClientServer, type TestServer, teardownClientServer } from "./helpers.js";
 
 describe("get_categories integration", () => {
 	let client: Client;
@@ -75,10 +77,7 @@ describe("get_categories integration", () => {
 					(cat: { name: string; count: number }) => cat.name === name,
 				);
 
-				assert.ok(
-					returnedCategory,
-					`Category "${name}" should exist in MCP response`,
-				);
+				assert.ok(returnedCategory, `Category "${name}" should exist in MCP response`);
 				assert.strictEqual(
 					returnedCategory.count,
 					category.members?.length || 0,

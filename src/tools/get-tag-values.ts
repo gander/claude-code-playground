@@ -7,10 +7,7 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
  * @param tagKey - The tag key to get values for (e.g., "amenity", "building")
  * @returns Array of unique values for the tag key, sorted alphabetically
  */
-export async function getTagValues(
-	loader: SchemaLoader,
-	tagKey: string,
-): Promise<string[]> {
+export async function getTagValues(loader: SchemaLoader, tagKey: string): Promise<string[]> {
 	const schema = await loader.loadSchema();
 
 	// Collect all unique values for the tag key
