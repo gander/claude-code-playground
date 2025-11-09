@@ -53,8 +53,8 @@ jobs:
             type=semver,pattern={{major}}
             # Tag with "latest" for tagged releases
             type=raw,value=latest,enable={{is_default_branch}}
-            # Tag with commit SHA
-            type=sha,prefix={{branch}}-
+            # Tag with commit SHA (for all builds)
+            type=sha,prefix=sha-
 
       - name: Build and push Docker image
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
