@@ -48,3 +48,33 @@ export interface RelatedTag {
 	frequency: number;
 	presetExamples?: string[];
 }
+
+/**
+ * Preset search result interface
+ */
+export interface PresetSearchResult {
+	id: string;
+	tags: Record<string, string>;
+	geometry: string[];
+}
+
+/**
+ * Preset details interface
+ */
+export interface PresetDetails {
+	id: string;
+	tags: Record<string, string>;
+	geometry: string[];
+	name?: string;
+	fields?: string[];
+	moreFields?: string[];
+	icon?: string;
+}
+
+/**
+ * Preset tags interface
+ */
+export interface PresetTags {
+	tags: Record<string, string>;
+	addTags?: Record<string, string>;
+}

@@ -9,6 +9,9 @@ import { getCategoryTags } from "./tools/get-category-tags.js";
 import { getTagValues } from "./tools/get-tag-values.js";
 import { getTagInfo } from "./tools/get-tag-info.js";
 import { searchTags } from "./tools/search-tags.js";
+import { searchPresets } from "./tools/search-presets.js";
+import { getPresetDetails } from "./tools/get-preset-details.js";
+import { getPresetTags } from "./tools/get-preset-tags.js";
 import { getRelatedTags } from "./tools/get-related-tags.js";
 
 /**
@@ -57,6 +60,36 @@ export function createServer(): Server {
 						},
 					},
 					required: ["category"],
+				},
+			},
+			{
+				name: "get_preset_details",
+				description:
+					"Get complete details for a specific preset including tags, geometry, fields, and metadata",
+				inputSchema: {
+					type: "object",
+					properties: {
+						presetId: {
+							type: "string",
+							description: "The preset ID to get details for (e.g., 'amenity/restaurant')",
+						},
+					},
+					required: ["presetId"],
+				},
+			},
+			{
+				name: "get_preset_tags",
+				description:
+					"Get recommended tags for a specific preset. Returns identifying tags and additional recommended tags.",
+				inputSchema: {
+					type: "object",
+					properties: {
+						presetId: {
+							type: "string",
+							description: "The preset ID to get tags for (e.g., 'amenity/restaurant')",
+						},
+					},
+					required: ["presetId"],
 				},
 			},
 			{
@@ -116,6 +149,29 @@ export function createServer(): Server {
 						},
 					},
 					required: ["tagKey"],
+				},
+			},
+			{
+				name: "search_presets",
+				description:
+					"Search for presets by keyword or tag. Searches preset IDs and tags. Supports filtering by geometry type and limiting results.",
+				inputSchema: {
+					type: "object",
+					properties: {
+						keyword: {
+							type: "string",
+							description: "Keyword to search for in preset IDs and tags (case-insensitive). Can be a simple keyword (e.g., 'restaurant') or a tag (e.g., 'amenity=restaurant')",
+						},
+						limit: {
+							type: "number",
+							description: "Maximum number of results to return (optional)",
+						},
+						geometry: {
+							type: "string",
+							description: "Filter by geometry type (point, vertex, line, area, relation) - optional",
+						},
+					},
+					required: ["keyword"],
 				},
 			},
 			{
@@ -183,6 +239,38 @@ export function createServer(): Server {
 			};
 		}
 
+		if (name === "get_preset_details") {
+			const presetId = (args as { presetId?: string }).presetId;
+			if (!presetId) {
+				throw new Error("presetId parameter is required");
+			}
+			const details = await getPresetDetails(schemaLoader, presetId);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(details, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "get_preset_tags") {
+			const presetId = (args as { presetId?: string }).presetId;
+			if (!presetId) {
+				throw new Error("presetId parameter is required");
+			}
+			const tags = await getPresetTags(schemaLoader, presetId);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(tags, null, 2),
+					},
+				],
+			};
+		}
+
 		if (name === "get_tag_values") {
 			const tagKey = (args as { tagKey?: string }).tagKey;
 			if (!tagKey) {
@@ -237,6 +325,22 @@ export function createServer(): Server {
 				throw new Error("tag parameter is required");
 			}
 			const results = await getRelatedTags(schemaLoader, tag, limit);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(results, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "search_presets") {
+			const { keyword, limit, geometry } = args as { keyword?: string; limit?: number; geometry?: "point" | "vertex" | "line" | "area" | "relation" };
+			if (!keyword) {
+				throw new Error("keyword parameter is required");
+			}
+			const results = await searchPresets(schemaLoader, keyword, { limit, geometry });
 			return {
 				content: [
 					{
