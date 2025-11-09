@@ -5,8 +5,8 @@
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { setupClientServer, teardownClientServer, type TestServer } from "./helpers.js";
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+import { setupClientServer, type TestServer, teardownClientServer } from "./helpers.js";
 
 describe("get_preset_details integration", () => {
 	let client: Client;
@@ -145,10 +145,7 @@ describe("get_preset_details integration", () => {
 				if (expected.fields !== undefined) {
 					assert.deepStrictEqual(result.fields, expected.fields);
 				} else {
-					assert.ok(
-						result.fields === undefined,
-						`Preset ${presetId} should not have fields`,
-					);
+					assert.ok(result.fields === undefined, `Preset ${presetId} should not have fields`);
 				}
 
 				if (expected.moreFields !== undefined) {

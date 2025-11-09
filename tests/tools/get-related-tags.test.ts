@@ -1,8 +1,8 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { getRelatedTags } from "../../src/tools/get-related-tags.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
-import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 
 describe("get_related_tags", () => {
 	describe("Basic Functionality", () => {
@@ -60,18 +60,13 @@ describe("get_related_tags", () => {
 			const results = await getRelatedTags(loader, "amenity=restaurant");
 
 			// Should not include amenity=restaurant in the results
-			const hasSelf = results.some(
-				(r) => r.key === "amenity" && r.value === "restaurant",
-			);
+			const hasSelf = results.some((r) => r.key === "amenity" && r.value === "restaurant");
 			assert.ok(!hasSelf, "Should not include the input tag in results");
 		});
 
 		it("should return empty array for non-existent tag", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await getRelatedTags(
-				loader,
-				"nonexistent=fakeval12345xyz",
-			);
+			const results = await getRelatedTags(loader, "nonexistent=fakeval12345xyz");
 
 			assert.ok(Array.isArray(results), "Should return an array");
 			assert.strictEqual(results.length, 0, "Should return empty array");
@@ -83,11 +78,7 @@ describe("get_related_tags", () => {
 			const results1 = await getRelatedTags(loader, "amenity=hospital");
 			const results2 = await getRelatedTags(loader, "amenity=hospital");
 
-			assert.deepStrictEqual(
-				results1,
-				results2,
-				"Results should be identical from cache",
-			);
+			assert.deepStrictEqual(results1, results2, "Results should be identical from cache");
 		});
 
 		it("should handle tag key without specific value", async () => {
@@ -129,7 +120,7 @@ describe("get_related_tags", () => {
 
 				assert.ok(
 					found,
-					`Related tag ${result.key}${result.value ? "=" + result.value : ""} should exist in JSON presets`,
+					`Related tag ${result.key}${result.value ? `=${result.value}` : ""} should exist in JSON presets`,
 				);
 			}
 		});
@@ -145,9 +136,7 @@ describe("get_related_tags", () => {
 
 				// Count presets that have BOTH the input tag AND the related tag
 				for (const preset of Object.values(presets)) {
-					const hasInputTag =
-						preset.tags?.amenity === "cafe" ||
-						preset.addTags?.amenity === "cafe";
+					const hasInputTag = preset.tags?.amenity === "cafe" || preset.addTags?.amenity === "cafe";
 
 					if (hasInputTag) {
 						const hasRelatedTag =
@@ -165,7 +154,7 @@ describe("get_related_tags", () => {
 				assert.strictEqual(
 					result.frequency,
 					actualCount,
-					`Frequency for ${result.key}${result.value ? "=" + result.value : ""} should match actual count`,
+					`Frequency for ${result.key}${result.value ? `=${result.value}` : ""} should match actual count`,
 				);
 			}
 		});
@@ -181,8 +170,7 @@ describe("get_related_tags", () => {
 
 				for (const preset of Object.values(presets)) {
 					const hasParkingTag =
-						preset.tags?.amenity === "parking" ||
-						preset.addTags?.amenity === "parking";
+						preset.tags?.amenity === "parking" || preset.addTags?.amenity === "parking";
 
 					if (hasParkingTag) {
 						const hasRelatedTag =
@@ -200,7 +188,7 @@ describe("get_related_tags", () => {
 
 				assert.ok(
 					foundCoOccurrence,
-					`Related tag ${result.key}${result.value ? "=" + result.value : ""} should co-occur with amenity=parking in JSON`,
+					`Related tag ${result.key}${result.value ? `=${result.value}` : ""} should co-occur with amenity=parking in JSON`,
 				);
 			}
 		});

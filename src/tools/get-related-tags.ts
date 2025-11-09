@@ -17,9 +17,7 @@ export async function getRelatedTags(
 	const schema = await loader.loadSchema();
 
 	// Parse the input tag
-	const [inputKey, inputValue] = tag.includes("=")
-		? tag.split("=", 2)
-		: [tag, undefined];
+	const [inputKey, inputValue] = tag.includes("=") ? tag.split("=", 2) : [tag, undefined];
 
 	// Track related tags and their frequencies
 	const relatedTags = new Map<string, { count: number; presets: string[] }>();
@@ -32,13 +30,11 @@ export async function getRelatedTags(
 		if (inputValue !== undefined) {
 			// Looking for specific key=value
 			hasInputTag =
-				preset.tags?.[inputKey] === inputValue ||
-				preset.addTags?.[inputKey] === inputValue;
+				preset.tags?.[inputKey] === inputValue || preset.addTags?.[inputKey] === inputValue;
 		} else {
 			// Looking for any preset with this key
 			hasInputTag =
-				preset.tags?.[inputKey] !== undefined ||
-				preset.addTags?.[inputKey] !== undefined;
+				preset.tags?.[inputKey] !== undefined || preset.addTags?.[inputKey] !== undefined;
 		}
 
 		if (!hasInputTag) {
@@ -50,11 +46,7 @@ export async function getRelatedTags(
 
 		for (const [key, value] of Object.entries(allTags)) {
 			// Skip wildcards and complex patterns
-			if (
-				typeof value !== "string" ||
-				value === "*" ||
-				value.includes("|")
-			) {
+			if (typeof value !== "string" || value === "*" || value.includes("|")) {
 				continue;
 			}
 
@@ -96,8 +88,7 @@ export async function getRelatedTags(
 				key,
 				value: value || undefined,
 				frequency: data.count,
-				presetExamples:
-					data.presets.length > 0 ? data.presets : undefined,
+				presetExamples: data.presets.length > 0 ? data.presets : undefined,
 			};
 		})
 		.sort((a, b) => b.frequency - a.frequency);

@@ -277,6 +277,20 @@ npm install
 npm run build
 ```
 
+### Docker (Container)
+```bash
+# Pull the latest dev image
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+
+# Run the container
+docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+```
+
+**Available tags:**
+- `dev` - Latest development build from master branch
+- `latest` - Latest stable release
+- `x.y.z` - Specific version (e.g., `0.1.0`)
+
 ## Usage
 
 ### Running the MCP Server
@@ -289,6 +303,11 @@ npx @gander-tools/osm-tagging-schema-mcp
 **From source:**
 ```bash
 npm start
+```
+
+**Using Docker:**
+```bash
+docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
 ```
 
 ### Configuration
@@ -307,12 +326,30 @@ This will automatically configure the server in your Claude Code CLI environment
 
 Alternatively, you can manually add to your MCP client configuration:
 
+**Using npx:**
 ```json
 {
   "mcpServers": {
     "osm-tagging": {
       "command": "npx",
       "args": ["@gander-tools/osm-tagging-schema-mcp"]
+    }
+  }
+}
+```
+
+**Using Docker:**
+```json
+{
+  "mcpServers": {
+    "osm-tagging": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "ghcr.io/gander-tools/osm-tagging-schema-mcp:dev"
+      ]
     }
   }
 }

@@ -5,8 +5,10 @@
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { setupClientServer, teardownClientServer, type TestServer } from "./helpers.js";
-import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with { type: "json" };
+import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with {
+	type: "json",
+};
+import { setupClientServer, type TestServer, teardownClientServer } from "./helpers.js";
 
 describe("get_category_tags integration", () => {
 	let client: Client;
@@ -27,9 +29,7 @@ describe("get_category_tags integration", () => {
 				name: "get_categories",
 				arguments: {},
 			});
-			const categoriesData = JSON.parse(
-				(categoriesResponse.content[0] as { text: string }).text,
-			);
+			const categoriesData = JSON.parse((categoriesResponse.content[0] as { text: string }).text);
 			const categoryName = categoriesData[0]?.name;
 
 			// Now get tags for that category

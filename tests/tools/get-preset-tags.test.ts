@@ -1,8 +1,8 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { getPresetTags } from "../../src/tools/get-preset-tags.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
-import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 
 describe("get_preset_tags", () => {
 	describe("Basic Functionality", () => {

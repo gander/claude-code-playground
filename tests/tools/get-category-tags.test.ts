@@ -1,9 +1,11 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
+import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with {
+	type: "json",
+};
 import { getCategories } from "../../src/tools/get-categories.ts";
 import { getCategoryTags } from "../../src/tools/get-category-tags.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
-import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with { type: "json" };
 
 describe("get_category_tags", () => {
 	describe("Basic Functionality", () => {
@@ -78,10 +80,7 @@ describe("get_category_tags", () => {
 					(cat) => cat.name === testCase.name,
 				);
 
-				assert.ok(
-					returnedCategory,
-					`Category "${testCase.name}" should exist in returned data`,
-				);
+				assert.ok(returnedCategory, `Category "${testCase.name}" should exist in returned data`);
 				assert.strictEqual(
 					returnedCategory.count,
 					testCase.expectedCount,

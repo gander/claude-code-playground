@@ -5,9 +5,9 @@
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { setupClientServer, teardownClientServer, type TestServer } from "./helpers.js";
-import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+import { setupClientServer, type TestServer, teardownClientServer } from "./helpers.js";
 
 describe("get_tag_info integration", () => {
 	let client: Client;
@@ -112,19 +112,13 @@ describe("get_tag_info integration", () => {
 
 			// CRITICAL: Validate EACH returned value individually via MCP
 			for (const value of info.values) {
-				assert.ok(
-					expectedValues.has(value),
-					`Value "${value}" should exist in JSON data via MCP`,
-				);
+				assert.ok(expectedValues.has(value), `Value "${value}" should exist in JSON data via MCP`);
 			}
 
 			// CRITICAL: Bidirectional validation via MCP
 			const returnedSet = new Set(info.values);
 			for (const expected of expectedValues) {
-				assert.ok(
-					returnedSet.has(expected),
-					`JSON value "${expected}" should be returned via MCP`,
-				);
+				assert.ok(returnedSet.has(expected), `JSON value "${expected}" should be returned via MCP`);
 			}
 
 			// Verify field definition properties
@@ -133,11 +127,7 @@ describe("get_tag_info integration", () => {
 				true,
 				"parking should have field definition via MCP",
 			);
-			assert.strictEqual(
-				info.type,
-				field.type,
-				"Type should match field definition via MCP",
-			);
+			assert.strictEqual(info.type, field.type, "Type should match field definition via MCP");
 		});
 
 		it("should validate tag info for ALL keys via MCP using provider pattern", async () => {

@@ -48,9 +48,10 @@ The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tool
 - **Build Tool**: TypeScript compiler
 - **Testing**: Node.js native test runner with TDD methodology
 - **Code Quality**: BiomeJS 2.3.4 (linting & formatting)
-- **CI/CD**: GitHub Actions (automated testing)
+- **CI/CD**: GitHub Actions (automated testing, Docker builds)
 - **Dependencies**: Dependabot (automated updates)
-- **Distribution**: npm registry (via npx)
+- **Distribution**: npm registry (via npx), GitHub Container Registry (Docker images)
+- **Containerization**: Docker with multistage builds (Alpine Linux base)
 
 ## Development Methodology
 
@@ -408,6 +409,19 @@ Phase 4 (Testing) has been COMPLETED ✅:
     - Use reverse lookup (iterate field.values) for validation since file path → OSM tag mapping is not 1:1
     - Handle non-trivial mappings (e.g., file path `parking/side/parking` → OSM tag `parking:both`)
   - **Result**: All tools now return and accept proper OSM tag keys with colon separators; 113 tests passing
+
+**Infrastructure & Distribution**:
+- ✅ **Docker Support** (Containerization):
+  - Multistage Dockerfile with optimized builds
+  - Stage 1 (builder): Installs dependencies and compiles TypeScript
+  - Stage 2 (runtime): Minimal Alpine-based Node.js image with production dependencies only
+  - Non-root user execution for security
+  - Health checks configured
+  - .dockerignore for optimized build context
+  - GitHub Actions workflow for automated Docker builds
+  - Images published to GitHub Container Registry (ghcr.io)
+  - Multi-architecture support (amd64, arm64)
+  - Tags: `dev` (master branch), `latest` (stable releases), `x.y.z` (versioned releases)
 
 **Next Phase: Phase 3 - Continue Core Tool Implementation (Validation Tools)**
 

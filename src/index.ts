@@ -2,17 +2,17 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { SchemaLoader } from "./utils/schema-loader.js";
-import { getSchemaStats } from "./tools/get-schema-stats.js";
 import { getCategories } from "./tools/get-categories.js";
 import { getCategoryTags } from "./tools/get-category-tags.js";
-import { getTagValues } from "./tools/get-tag-values.js";
-import { getTagInfo } from "./tools/get-tag-info.js";
-import { searchTags } from "./tools/search-tags.js";
-import { searchPresets } from "./tools/search-presets.js";
 import { getPresetDetails } from "./tools/get-preset-details.js";
 import { getPresetTags } from "./tools/get-preset-tags.js";
 import { getRelatedTags } from "./tools/get-related-tags.js";
+import { getSchemaStats } from "./tools/get-schema-stats.js";
+import { getTagInfo } from "./tools/get-tag-info.js";
+import { getTagValues } from "./tools/get-tag-values.js";
+import { searchPresets } from "./tools/search-presets.js";
+import { searchTags } from "./tools/search-tags.js";
+import { SchemaLoader } from "./utils/schema-loader.js";
 
 /**
  * Create and configure the MCP server
@@ -49,8 +49,7 @@ export function createServer(): Server {
 			},
 			{
 				name: "get_category_tags",
-				description:
-					"Get all tags (preset IDs) belonging to a specific category",
+				description: "Get all tags (preset IDs) belonging to a specific category",
 				inputSchema: {
 					type: "object",
 					properties: {
@@ -101,7 +100,8 @@ export function createServer(): Server {
 					properties: {
 						tag: {
 							type: "string",
-							description: "Tag to find related tags for (format: 'key' or 'key=value', e.g., 'amenity' or 'amenity=restaurant')",
+							description:
+								"Tag to find related tags for (format: 'key' or 'key=value', e.g., 'amenity' or 'amenity=restaurant')",
 						},
 						limit: {
 							type: "number",
@@ -160,7 +160,8 @@ export function createServer(): Server {
 					properties: {
 						keyword: {
 							type: "string",
-							description: "Keyword to search for in preset IDs and tags (case-insensitive). Can be a simple keyword (e.g., 'restaurant') or a tag (e.g., 'amenity=restaurant')",
+							description:
+								"Keyword to search for in preset IDs and tags (case-insensitive). Can be a simple keyword (e.g., 'restaurant') or a tag (e.g., 'amenity=restaurant')",
 						},
 						limit: {
 							type: "number",
@@ -168,7 +169,8 @@ export function createServer(): Server {
 						},
 						geometry: {
 							type: "string",
-							description: "Filter by geometry type (point, vertex, line, area, relation) - optional",
+							description:
+								"Filter by geometry type (point, vertex, line, area, relation) - optional",
 						},
 					},
 					required: ["keyword"],
@@ -176,8 +178,7 @@ export function createServer(): Server {
 			},
 			{
 				name: "search_tags",
-				description:
-					"Search for tags by keyword in tag keys, values, and preset names",
+				description: "Search for tags by keyword in tag keys, values, and preset names",
 				inputSchema: {
 					type: "object",
 					properties: {
@@ -336,7 +337,11 @@ export function createServer(): Server {
 		}
 
 		if (name === "search_presets") {
-			const { keyword, limit, geometry } = args as { keyword?: string; limit?: number; geometry?: "point" | "vertex" | "line" | "area" | "relation" };
+			const { keyword, limit, geometry } = args as {
+				keyword?: string;
+				limit?: number;
+				geometry?: "point" | "vertex" | "line" | "area" | "relation";
+			};
 			if (!keyword) {
 				throw new Error("keyword parameter is required");
 			}

@@ -5,9 +5,9 @@
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { setupClientServer, teardownClientServer, type TestServer } from "./helpers.js";
-import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+import { setupClientServer, type TestServer, teardownClientServer } from "./helpers.js";
 
 describe("search_tags integration", () => {
 	let client: Client;

@@ -1,0 +1,52 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Dependencies (will be installed in container)
+node_modules/
+
+# Build output (will be generated in container)
+dist/
+build/
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Tests (not needed in production image)
+tests/
+
+# Environment variables
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Documentation (not needed in production image)
+*.md
+LICENSE
+
+# Docker files
+Dockerfile*
+.dockerignore
+docker-compose*.yml

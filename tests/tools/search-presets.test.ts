@@ -1,8 +1,8 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { searchPresets } from "../../src/tools/search-presets.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
-import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 
 describe("search_presets", () => {
 	describe("Basic Functionality", () => {
@@ -38,11 +38,7 @@ describe("search_presets", () => {
 
 			// All results should have amenity=restaurant tag
 			for (const result of results) {
-				assert.strictEqual(
-					result.tags.amenity,
-					"restaurant",
-					"Should have amenity=restaurant tag",
-				);
+				assert.strictEqual(result.tags.amenity, "restaurant", "Should have amenity=restaurant tag");
 			}
 		});
 
@@ -53,19 +49,12 @@ describe("search_presets", () => {
 
 			assert.ok(resultsLower.length > 0, "Should find results with lowercase");
 			assert.ok(resultsUpper.length > 0, "Should find results with uppercase");
-			assert.deepStrictEqual(
-				resultsLower,
-				resultsUpper,
-				"Case should not matter",
-			);
+			assert.deepStrictEqual(resultsLower, resultsUpper, "Case should not matter");
 		});
 
 		it("should return empty array for no matches", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchPresets(
-				loader,
-				"nonexistentpresetxyz12345",
-			);
+			const results = await searchPresets(loader, "nonexistentpresetxyz12345");
 
 			assert.ok(Array.isArray(results), "Should return an array");
 			assert.strictEqual(results.length, 0, "Should return empty array");
@@ -102,11 +91,7 @@ describe("search_presets", () => {
 			const results1 = await searchPresets(loader, "school");
 			const results2 = await searchPresets(loader, "school");
 
-			assert.deepStrictEqual(
-				results1,
-				results2,
-				"Results should be identical from cache",
-			);
+			assert.deepStrictEqual(results1, results2, "Results should be identical from cache");
 		});
 	});
 
@@ -121,11 +106,7 @@ describe("search_presets", () => {
 				assert.ok(preset, `Preset ${result.id} should exist in JSON`);
 
 				// Verify tags match
-				assert.deepStrictEqual(
-					result.tags,
-					preset.tags,
-					`Tags for ${result.id} should match JSON`,
-				);
+				assert.deepStrictEqual(result.tags, preset.tags, `Tags for ${result.id} should match JSON`);
 
 				// Verify geometry matches
 				assert.deepStrictEqual(
@@ -146,11 +127,7 @@ describe("search_presets", () => {
 			for (const result of results) {
 				const preset = presets[result.id];
 				assert.ok(preset, `Preset ${result.id} should exist`);
-				assert.strictEqual(
-					preset.tags.amenity,
-					"cafe",
-					`Should have amenity=cafe tag`,
-				);
+				assert.strictEqual(preset.tags.amenity, "cafe", `Should have amenity=cafe tag`);
 			}
 		});
 
@@ -185,7 +162,7 @@ describe("search_presets", () => {
 			assert.ok(allPresetIds.length > 1500, "Should have all presets from JSON");
 
 			let foundCount = 0;
-			let notFoundCount = 0;
+			let _notFoundCount = 0;
 
 			// Provider pattern: iterate through EVERY preset
 			for (const presetId of allPresetIds) {
@@ -213,7 +190,7 @@ describe("search_presets", () => {
 						`Geometry for ${presetId} should match JSON`,
 					);
 				} else {
-					notFoundCount++;
+					_notFoundCount++;
 				}
 			}
 

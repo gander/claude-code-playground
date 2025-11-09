@@ -5,8 +5,8 @@
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { setupClientServer, teardownClientServer, type TestServer } from "./helpers.js";
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+import { setupClientServer, type TestServer, teardownClientServer } from "./helpers.js";
 
 describe("search_presets integration", () => {
 	let client: Client;
@@ -64,11 +64,7 @@ describe("search_presets integration", () => {
 
 			// All results should have amenity=restaurant
 			for (const result of results) {
-				assert.strictEqual(
-					result.tags.amenity,
-					"restaurant",
-					"Should have amenity=restaurant tag",
-				);
+				assert.strictEqual(result.tags.amenity, "restaurant", "Should have amenity=restaurant tag");
 			}
 		});
 
@@ -123,11 +119,7 @@ describe("search_presets integration", () => {
 
 			assert.ok(resultsLower.length > 0, "Should find results with lowercase");
 			assert.ok(resultsUpper.length > 0, "Should find results with uppercase");
-			assert.deepStrictEqual(
-				resultsLower,
-				resultsUpper,
-				"Case should not matter",
-			);
+			assert.deepStrictEqual(resultsLower, resultsUpper, "Case should not matter");
 		});
 
 		it("should throw error for missing keyword parameter", async () => {
@@ -160,11 +152,7 @@ describe("search_presets integration", () => {
 				assert.ok(preset, `Preset ${result.id} should exist in JSON`);
 
 				// Verify tags match
-				assert.deepStrictEqual(
-					result.tags,
-					preset.tags,
-					`Tags for ${result.id} should match JSON`,
-				);
+				assert.deepStrictEqual(result.tags, preset.tags, `Tags for ${result.id} should match JSON`);
 
 				// Verify geometry matches
 				assert.deepStrictEqual(
@@ -188,11 +176,7 @@ describe("search_presets integration", () => {
 			for (const result of results) {
 				const preset = presets[result.id];
 				assert.ok(preset, `Preset ${result.id} should exist`);
-				assert.strictEqual(
-					preset.tags.amenity,
-					"cafe",
-					`Should have amenity=cafe tag`,
-				);
+				assert.strictEqual(preset.tags.amenity, "cafe", `Should have amenity=cafe tag`);
 			}
 		});
 

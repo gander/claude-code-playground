@@ -9,10 +9,7 @@ import type { PresetTags } from "./types.js";
  * @returns Preset tags including identifying tags and optional addTags
  * @throws Error if preset is not found
  */
-export async function getPresetTags(
-	loader: SchemaLoader,
-	presetId: string,
-): Promise<PresetTags> {
+export async function getPresetTags(loader: SchemaLoader, presetId: string): Promise<PresetTags> {
 	const schema = await loader.loadSchema();
 
 	// Look up the preset

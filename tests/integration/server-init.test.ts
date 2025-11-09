@@ -7,7 +7,7 @@
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { setupClientServer, teardownClientServer, type TestServer } from "./helpers.js";
+import { setupClientServer, type TestServer, teardownClientServer } from "./helpers.js";
 
 describe("MCP Server Initialization", () => {
 	let client: Client;
@@ -55,10 +55,7 @@ describe("MCP Server Initialization", () => {
 		];
 
 		for (const expectedTool of expectedTools) {
-			assert.ok(
-				toolNames.includes(expectedTool),
-				`Tool "${expectedTool}" should be available`,
-			);
+			assert.ok(toolNames.includes(expectedTool), `Tool "${expectedTool}" should be available`);
 		}
 	});
 

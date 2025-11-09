@@ -1,9 +1,9 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
+import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { getTagValues } from "../../src/tools/get-tag-values.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
-import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 
 describe("get_tag_values", () => {
 	describe("Basic Functionality", () => {
@@ -20,11 +20,7 @@ describe("get_tag_values", () => {
 			const values = await getTagValues(loader, "amenity");
 
 			const uniqueValues = new Set(values);
-			assert.strictEqual(
-				values.length,
-				uniqueValues.size,
-				"Should return unique values only",
-			);
+			assert.strictEqual(values.length, uniqueValues.size, "Should return unique values only");
 		});
 
 		it("should return sorted values", async () => {
@@ -200,10 +196,7 @@ describe("get_tag_values", () => {
 			// Verify all JSON values are returned (bidirectional validation)
 			const returnedSet = new Set(values);
 			for (const expected of expectedValues) {
-				assert.ok(
-					returnedSet.has(expected),
-					`JSON value "${expected}" should be returned`,
-				);
+				assert.ok(returnedSet.has(expected), `JSON value "${expected}" should be returned`);
 			}
 		});
 
@@ -249,10 +242,7 @@ describe("get_tag_values", () => {
 			// Verify no wildcards or pipe-separated values
 			for (const value of values) {
 				assert.notStrictEqual(value, "*", "Should not include wildcard values");
-				assert.ok(
-					!value.includes("|"),
-					`Should not include pipe-separated values: ${value}`,
-				);
+				assert.ok(!value.includes("|"), `Should not include pipe-separated values: ${value}`);
 			}
 		});
 

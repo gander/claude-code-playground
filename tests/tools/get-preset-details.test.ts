@@ -1,8 +1,8 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { getPresetDetails } from "../../src/tools/get-preset-details.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
-import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 
 describe("get_preset_details", () => {
 	describe("Basic Functionality", () => {
@@ -138,11 +138,7 @@ describe("get_preset_details", () => {
 
 				assert.ok(expected, `Preset ${presetId} should exist in JSON`);
 				assert.strictEqual(result.id, presetId, `ID should match for ${presetId}`);
-				assert.deepStrictEqual(
-					result.tags,
-					expected.tags,
-					`Tags should match for ${presetId}`,
-				);
+				assert.deepStrictEqual(result.tags, expected.tags, `Tags should match for ${presetId}`);
 				assert.deepStrictEqual(
 					result.geometry,
 					expected.geometry,
@@ -157,10 +153,7 @@ describe("get_preset_details", () => {
 						`Fields should match for ${presetId}`,
 					);
 				} else {
-					assert.ok(
-						result.fields === undefined,
-						`Fields should be undefined for ${presetId}`,
-					);
+					assert.ok(result.fields === undefined, `Fields should be undefined for ${presetId}`);
 				}
 
 				if (expected.moreFields !== undefined) {
@@ -177,29 +170,15 @@ describe("get_preset_details", () => {
 				}
 
 				if (expected.icon !== undefined) {
-					assert.strictEqual(
-						result.icon,
-						expected.icon,
-						`Icon should match for ${presetId}`,
-					);
+					assert.strictEqual(result.icon, expected.icon, `Icon should match for ${presetId}`);
 				} else {
-					assert.ok(
-						result.icon === undefined,
-						`Icon should be undefined for ${presetId}`,
-					);
+					assert.ok(result.icon === undefined, `Icon should be undefined for ${presetId}`);
 				}
 
 				if (expected.name !== undefined) {
-					assert.strictEqual(
-						result.name,
-						expected.name,
-						`Name should match for ${presetId}`,
-					);
+					assert.strictEqual(result.name, expected.name, `Name should match for ${presetId}`);
 				} else {
-					assert.ok(
-						result.name === undefined,
-						`Name should be undefined for ${presetId}`,
-					);
+					assert.ok(result.name === undefined, `Name should be undefined for ${presetId}`);
 				}
 			}
 		});

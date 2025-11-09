@@ -8,10 +8,7 @@ import type { TagInfo } from "./types.js";
  * @param tagKey - The tag key to get information for (e.g., "parking", "amenity")
  * @returns Tag information including all possible values, type, and field definition status
  */
-export async function getTagInfo(
-	loader: SchemaLoader,
-	tagKey: string,
-): Promise<TagInfo> {
+export async function getTagInfo(loader: SchemaLoader, tagKey: string): Promise<TagInfo> {
 	const schema = await loader.loadSchema();
 
 	// Collect all unique values for the tag key
