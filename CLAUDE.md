@@ -346,12 +346,16 @@ Phase 3 (Core Tool Implementation) is partially completed:
   - `get_tag_values` - Get all possible values for a tag key
   - `search_tags` - Search for tags by keyword
   - `get_related_tags` - Find tags commonly used together (with frequency counts and examples)
-- ⏳ Remaining tools: all Preset Tools (3.2), all Validation Tools (3.3)
+- ✅ Preset Tools (3.2 - COMPLETED ✅):
+  - `search_presets` - Search for presets by keyword or tag (with geometry filtering and limits)
+  - `get_preset_details` - Get complete preset information (tags, geometry, fields, metadata)
+  - `get_preset_tags` - Get recommended tags for a preset (identifying tags + addTags)
+- ⏳ Remaining tools: all Validation Tools (3.3)
 
 Phase 4 (Testing) has been COMPLETED ✅:
 - ✅ Node.js test runner configured
-- ✅ Unit tests for all implemented tools (110 tests, 48 suites passing)
-- ✅ Integration tests for MCP server (33 tests, 22 suites passing)
+- ✅ Unit tests for all implemented tools (170 tests, 66 suites passing)
+- ✅ Integration tests for MCP server (59 tests, 31 suites passing)
   - Modular structure: One integration test file per tool
   - Shared test utilities in `helpers.ts`
   - Server initialization tests separated
@@ -363,7 +367,8 @@ Phase 4 (Testing) has been COMPLETED ✅:
   - Tests verify exact match between tool outputs and JSON source data
   - Ensures compatibility when schema package updates
   - Provider pattern for comprehensive data validation
-  - 100% coverage: ALL 799 tag keys tested (no hardcoded values)
+  - **100% coverage for tag tools**: ALL 799 tag keys tested (no hardcoded values)
+  - **100% coverage for preset tools**: ALL 1707 presets tested (no hardcoded values)
   - Bidirectional validation ensures complete data integrity
 
 **Code Quality & Architecture**:
@@ -404,12 +409,12 @@ Phase 4 (Testing) has been COMPLETED ✅:
     - Handle non-trivial mappings (e.g., file path `parking/side/parking` → OSM tag `parking:both`)
   - **Result**: All tools now return and accept proper OSM tag keys with colon separators; 113 tests passing
 
-**Next Phase: Phase 3 - Continue Core Tool Implementation (Preset & Validation Tools)**
+**Next Phase: Phase 3 - Continue Core Tool Implementation (Validation Tools)**
 
 See README.md for the complete development plan covering:
 - Phase 1: Project Setup ✅
 - Phase 2: Schema Integration ✅
-- Phase 3: Core Tool Implementation ⏳ (In Progress - 7 of 13 tools implemented)
+- Phase 3: Core Tool Implementation ⏳ (In Progress - 10 of 13 tools implemented)
 - Phase 4: Testing ✅ (Completed)
 - Phase 5: Documentation (Next)
 - Phase 6: Optimization & Polish
@@ -441,6 +446,39 @@ See README.md for the complete development plan covering:
 // search_tags for "wheelchair"
 // Returns: wheelchair=yes, wheelchair=limited, wheelchair=no
 // Searches both fields.json and presets for comprehensive results
+```
+
+**Preset Search:**
+```typescript
+// search_presets for "restaurant"
+// Returns: amenity/restaurant, amenity/fast_food/*, cuisine-specific presets
+// Each with full tags, geometry types
+//
+// search_presets for "amenity=restaurant"
+// Returns: all presets with amenity=restaurant tag
+//
+// search_presets for "building" with geometry="area"
+// Returns: only presets supporting area geometry
+```
+
+**Preset Details:**
+```typescript
+// get_preset_details for "amenity/restaurant"
+// Returns:
+// - id: "amenity/restaurant"
+// - tags: { amenity: "restaurant" }
+// - geometry: ["point", "area"]
+// - fields: ["name", "cuisine", "diet_multi", "address", ...]
+// - moreFields: ["{@templates/internet_access}", "outdoor_seating", ...]
+// - icon: "maki-restaurant"
+```
+
+**Preset Tags:**
+```typescript
+// get_preset_tags for "amenity/restaurant"
+// Returns:
+// - tags: { amenity: "restaurant" } (identifying tags)
+// - addTags: {} (additional recommended tags, if any)
 ```
 
 **Category Exploration:**
