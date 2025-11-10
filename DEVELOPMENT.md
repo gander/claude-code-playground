@@ -66,12 +66,23 @@ osm-tagging-schema-mcp/
 │   │   ├── validate-tag-collection.ts
 │   │   ├── check-deprecated.ts
 │   │   └── suggest-improvements.ts
+│   ├── transports/               # Transport protocols
+│   │   ├── types.ts              # Transport configuration types
+│   │   ├── request-handler.ts    # MCP request handler
+│   │   ├── http.ts               # HTTP/REST transport
+│   │   ├── sse.ts                # Server-Sent Events transport
+│   │   └── websocket.ts          # WebSocket transport
 │   └── utils/                    # Utility functions
 │       ├── schema-loader.ts      # Schema loading and indexing
+│       ├── logger.ts             # Logging utility
 │       └── validators.ts         # Validation utilities
 ├── tests/                        # Test files
 │   ├── tools/                    # Unit tests (one per tool)
 │   ├── utils/                    # Utility tests
+│   ├── transports/               # Transport tests
+│   │   ├── http.test.ts          # HTTP transport tests
+│   │   ├── sse.test.ts           # SSE transport tests
+│   │   └── websocket.test.ts     # WebSocket transport tests
 │   └── integration/              # Integration tests
 │       ├── helpers.ts            # Shared test utilities
 │       └── *.test.ts             # One integration test per tool
@@ -364,6 +375,117 @@ LOG_LEVEL=SILENT npm start
 - Use `INFO` level (default) for normal operation
 - Use `ERROR` level in production to reduce noise
 - Logs are written to stderr to not interfere with MCP protocol (stdout)
+
+### Transport Configuration
+
+The server supports multiple transport protocols for different use cases. Configure the transport using environment variables:
+
+#### Available Transports
+
+1. **stdio** (default): Standard input/output for MCP protocol
+   - Use with Claude Code/Desktop
+   - No network configuration required
+   - Ideal for local development
+
+2. **http**: HTTP/REST transport
+   - Request/response over HTTP
+   - POST /message for MCP requests
+   - GET /health for health checks
+   - Suitable for web applications
+
+3. **sse**: Server-Sent Events
+   - One-way server-to-client streaming
+   - GET /events for event stream
+   - POST /message for requests
+   - Suitable for real-time updates
+
+4. **websocket**: WebSocket transport
+   - Bidirectional real-time communication
+   - Persistent connection
+   - Lower latency than HTTP
+   - Suitable for interactive web apps
+
+#### Environment Variables
+
+```bash
+# Transport type (default: stdio)
+TRANSPORT=stdio|http|sse|websocket
+
+# Server host (default: 0.0.0.0)
+# Only applies to http, sse, websocket
+HOST=0.0.0.0
+
+# Server port (default: 3000)
+# Only applies to http, sse, websocket
+PORT=3000
+
+# Enable CORS (default: true)
+# Only applies to http, sse, websocket
+CORS_ENABLED=true|false
+
+# CORS origin (default: *)
+# Only applies to http, sse, websocket
+CORS_ORIGIN=*|https://example.com
+```
+
+#### Examples
+
+**Run with HTTP transport:**
+```bash
+TRANSPORT=http PORT=3000 npm start
+```
+
+**Run with WebSocket on custom port:**
+```bash
+TRANSPORT=websocket PORT=8080 npm start
+```
+
+**Run with SSE and custom CORS:**
+```bash
+TRANSPORT=sse PORT=3000 CORS_ORIGIN=https://example.com npm start
+```
+
+**Run with HTTP and debug logging:**
+```bash
+TRANSPORT=http PORT=3000 LOG_LEVEL=DEBUG npm start
+```
+
+#### Testing Transports
+
+**HTTP Transport:**
+```bash
+# Start server
+TRANSPORT=http PORT=3000 npm start
+
+# Test with curl
+curl -X POST http://localhost:3000/message \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+**WebSocket Transport:**
+```bash
+# Start server
+TRANSPORT=websocket PORT=3000 npm start
+
+# Test with websocat or similar WebSocket client
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | \
+  websocat ws://localhost:3000
+```
+
+**SSE Transport:**
+```bash
+# Start server
+TRANSPORT=sse PORT=3000 npm start
+
+# Connect to event stream
+curl http://localhost:3000/events
+
+# In another terminal, send request
+curl -X POST http://localhost:3000/message \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
 
 ### Test Debugging
 

@@ -18,6 +18,10 @@ import { validateTag } from "./tools/validate-tag.js";
 import { validateTagCollection } from "./tools/validate-tag-collection.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
 import { logger } from "./utils/logger.js";
+import { parseTransportConfig } from "./transports/types.js";
+import { HttpTransport } from "./transports/http.js";
+import { SseTransport } from "./transports/sse.js";
+import { WebSocketTransport } from "./transports/websocket.js";
 
 /**
  * Create and configure the MCP server
@@ -528,13 +532,43 @@ export function createServer(): Server {
 async function main() {
 	logger.info("Starting OSM Tagging Schema MCP Server", "main");
 
-	const server = createServer();
-	const transport = new StdioServerTransport();
+	// Parse transport configuration from environment variables
+	const config = parseTransportConfig();
+	logger.info(`Transport type: ${config.type}`, "main");
 
-	await server.connect(transport);
+	// Start server based on transport type
+	switch (config.type) {
+		case "http": {
+			const httpTransport = new HttpTransport(config);
+			await httpTransport.start();
+			logger.info("OSM Tagging Schema MCP Server running on HTTP", "main");
+			break;
+		}
 
-	logger.info("OSM Tagging Schema MCP Server running on stdio", "main");
-	console.error("OSM Tagging Schema MCP Server running on stdio");
+		case "sse": {
+			const sseTransport = new SseTransport(config);
+			await sseTransport.start();
+			logger.info("OSM Tagging Schema MCP Server running on SSE", "main");
+			break;
+		}
+
+		case "websocket": {
+			const wsTransport = new WebSocketTransport(config);
+			await wsTransport.start();
+			logger.info("OSM Tagging Schema MCP Server running on WebSocket", "main");
+			break;
+		}
+
+		case "stdio":
+		default: {
+			const server = createServer();
+			const transport = new StdioServerTransport();
+			await server.connect(transport);
+			logger.info("OSM Tagging Schema MCP Server running on stdio", "main");
+			console.error("OSM Tagging Schema MCP Server running on stdio");
+			break;
+		}
+	}
 }
 
 // Run if this is the main module
