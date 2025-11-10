@@ -1,0 +1,58 @@
+name: CodeQL Security Scan
+
+on:
+  push:
+    branches: ["master", "main"]
+  pull_request:
+    branches: ["master", "main"]
+  schedule:
+    # Run weekly on Sundays at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  analyze:
+    name: Analyze Code
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['javascript-typescript']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v6.1.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Initialize CodeQL tools for scanning
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@0499de31b99561a6d14a36a5f662c2a54f91beee
+        with:
+          languages: ${{ matrix.language }}
+          # Query suites: default, security-extended, security-and-quality
+          queries: security-extended
+
+      # Build the project (CodeQL requires compiled code for analysis)
+      - name: Build project
+        run: npm run build
+
+      # Perform CodeQL Analysis
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@0499de31b99561a6d14a36a5f662c2a54f91beee
+        with:
+          category: "/language:${{matrix.language}}"
+          upload: true
