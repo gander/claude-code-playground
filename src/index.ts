@@ -559,7 +559,6 @@ async function main() {
 			break;
 		}
 
-		case "stdio":
 		default: {
 			const server = createServer();
 			const transport = new StdioServerTransport();

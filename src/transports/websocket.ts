@@ -5,7 +5,7 @@
 
 import express, { type Express, type Request, type Response } from "express";
 import cors from "cors";
-import { WebSocketServer, WebSocket } from "ws";
+import { type WebSocket, WebSocketServer } from "ws";
 import type { Server as HttpServer } from "node:http";
 import type { WebSocketTransportConfig } from "./types.js";
 import { logger } from "../utils/logger.js";

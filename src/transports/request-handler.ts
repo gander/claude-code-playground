@@ -350,7 +350,7 @@ export class McpRequestHandler {
 		const { name, arguments: args } = params;
 
 		try {
-			let result;
+			let result: { content: Array<{ type: string; text: string }> } | undefined;
 
 			switch (name) {
 				case "get_schema_stats": {
