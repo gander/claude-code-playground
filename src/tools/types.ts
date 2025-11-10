@@ -10,6 +10,8 @@ export interface SchemaStats {
 	fieldCount: number;
 	categoryCount: number;
 	deprecatedCount: number;
+	version?: string; // Schema package version
+	loadedAt?: number; // Timestamp when schema was loaded
 }
 
 /**

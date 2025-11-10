@@ -102,6 +102,14 @@ export interface DeprecatedTag {
 }
 
 /**
+ * Schema metadata for version tracking and update detection
+ */
+export interface SchemaMetadata {
+	version: string; // Package version (e.g., "6.13.4")
+	loadedAt: number; // Timestamp when schema was loaded
+}
+
+/**
  * Complete schema data structure
  */
 export interface SchemaData {
@@ -110,6 +118,7 @@ export interface SchemaData {
 	categories: Record<string, PresetCategory>;
 	deprecated: DeprecatedTag[];
 	defaults: Record<string, { area?: string[]; line?: string[]; point?: string[] }>;
+	metadata?: SchemaMetadata; // Schema version and load metadata
 }
 
 /**

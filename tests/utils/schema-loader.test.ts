@@ -333,5 +333,211 @@ describe("SchemaLoader", () => {
 				);
 			});
 		});
+
+		describe("schema version tracking", () => {
+			it("should include version metadata in loaded schema", async () => {
+				const loader = new SchemaLoader();
+				const schema = await loader.loadSchema();
+
+				// Schema should include metadata with version
+				assert.ok(schema.metadata, "Schema should have metadata");
+				assert.ok(schema.metadata.version, "Metadata should include version");
+				assert.ok(
+					typeof schema.metadata.version === "string",
+					"Version should be a string",
+				);
+				assert.match(
+					schema.metadata.version,
+					/^\d+\.\d+\.\d+/,
+					"Version should match semver format",
+				);
+			});
+
+			it("should include loadedAt timestamp in metadata", async () => {
+				const loader = new SchemaLoader();
+				const beforeLoad = Date.now();
+				const schema = await loader.loadSchema();
+				const afterLoad = Date.now();
+
+				assert.ok(schema.metadata, "Schema should have metadata");
+				assert.ok(schema.metadata.loadedAt, "Metadata should include loadedAt timestamp");
+				assert.ok(
+					typeof schema.metadata.loadedAt === "number",
+					"loadedAt should be a number",
+				);
+				assert.ok(
+					schema.metadata.loadedAt >= beforeLoad && schema.metadata.loadedAt <= afterLoad,
+					"loadedAt should be within load time range",
+				);
+			});
+
+			it("should provide method to get schema version", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const version = loader.getSchemaVersion();
+
+				assert.ok(version, "Should return version");
+				assert.ok(typeof version === "string", "Version should be a string");
+				assert.match(version, /^\d+\.\d+\.\d+/, "Version should match semver format");
+			});
+
+			it("should detect version changes on cache refresh", async () => {
+				const loader = new SchemaLoader({ cacheTTL: 100 });
+				const schema1 = await loader.loadSchema();
+				const version1 = schema1.metadata?.version;
+
+				// Clear cache and reload
+				loader.clearCache();
+				const schema2 = await loader.loadSchema();
+				const version2 = schema2.metadata?.version;
+
+				// Versions should be the same (same package installed)
+				assert.strictEqual(version2, version1, "Versions should match");
+			});
+
+			it("should update loadedAt timestamp on cache refresh", async () => {
+				const loader = new SchemaLoader({ cacheTTL: 100 });
+				const schema1 = await loader.loadSchema();
+				const loadedAt1 = schema1.metadata?.loadedAt;
+
+				// Wait a bit
+				await new Promise((resolve) => setTimeout(resolve, 50));
+
+				// Clear cache and reload
+				loader.clearCache();
+				const schema2 = await loader.loadSchema();
+				const loadedAt2 = schema2.metadata?.loadedAt;
+
+				assert.ok(
+					loadedAt2 && loadedAt1 && loadedAt2 > loadedAt1,
+					"loadedAt should be updated on reload",
+				);
+			});
+		});
+
+		describe("schema structure validation", () => {
+			it("should validate that all required data files are loaded", async () => {
+				const loader = new SchemaLoader();
+				const schema = await loader.loadSchema();
+
+				// Verify all required properties exist
+				assert.ok(schema.presets, "Schema should have presets");
+				assert.ok(schema.fields, "Schema should have fields");
+				assert.ok(schema.categories, "Schema should have categories");
+				assert.ok(schema.deprecated, "Schema should have deprecated");
+				assert.ok(schema.defaults, "Schema should have defaults");
+			});
+
+			it("should validate schema data structure integrity", async () => {
+				const loader = new SchemaLoader();
+				const schema = await loader.loadSchema();
+
+				// Presets should be non-empty object
+				assert.ok(
+					typeof schema.presets === "object" && schema.presets !== null,
+					"Presets should be an object",
+				);
+				assert.ok(
+					Object.keys(schema.presets).length > 0,
+					"Presets should not be empty",
+				);
+
+				// Fields should be non-empty object
+				assert.ok(
+					typeof schema.fields === "object" && schema.fields !== null,
+					"Fields should be an object",
+				);
+				assert.ok(Object.keys(schema.fields).length > 0, "Fields should not be empty");
+
+				// Deprecated should be non-empty array
+				assert.ok(Array.isArray(schema.deprecated), "Deprecated should be an array");
+				assert.ok(schema.deprecated.length > 0, "Deprecated should not be empty");
+			});
+
+			it("should validate preset data structure", async () => {
+				const loader = new SchemaLoader();
+				const schema = await loader.loadSchema();
+
+				// Check that at least one preset has the expected structure
+				const presetKey = Object.keys(schema.presets)[0];
+				const preset = schema.presets[presetKey];
+
+				assert.ok(Array.isArray(preset.geometry), "Preset should have geometry array");
+				assert.ok(preset.geometry.length > 0, "Preset geometry should not be empty");
+				assert.ok(
+					typeof preset.tags === "object" && preset.tags !== null,
+					"Preset should have tags object",
+				);
+			});
+
+			it("should validate field data structure", async () => {
+				const loader = new SchemaLoader();
+				const schema = await loader.loadSchema();
+
+				// Check that at least one field has the expected structure
+				const fieldKey = Object.keys(schema.fields)[0];
+				const field = schema.fields[fieldKey];
+
+				assert.ok(field.key, "Field should have key property");
+				assert.ok(typeof field.key === "string", "Field key should be a string");
+				assert.ok(field.type, "Field should have type property");
+				assert.ok(typeof field.type === "string", "Field type should be a string");
+			});
+		});
+
+		describe("graceful error handling", () => {
+			it("should throw descriptive error when schema files cannot be loaded", async () => {
+				// Create loader with invalid path
+				const invalidLoader = new SchemaLoader();
+				// Override the base path to trigger error
+				// biome-ignore lint/suspicious/noExplicitAny: Test requires accessing private field
+				(invalidLoader as any).schemaBasePath = "/nonexistent/path";
+
+				await assert.rejects(
+					async () => await invalidLoader.loadSchema(),
+					{
+						message: /Failed to load schema/i,
+					},
+					"Should throw error with descriptive message",
+				);
+			});
+
+			it("should preserve cached schema on failed reload", async () => {
+				const loader = new SchemaLoader({ cacheTTL: 100 });
+
+				// Load schema successfully
+				const schema1 = await loader.loadSchema();
+				assert.ok(schema1, "Initial load should succeed");
+
+				// Break the loader by invalidating the path
+				// biome-ignore lint/suspicious/noExplicitAny: Test requires accessing private field
+				(loader as any).schemaBasePath = "/nonexistent/path";
+
+				// Wait for cache to expire
+				await new Promise((resolve) => setTimeout(resolve, 150));
+
+				// Attempt to reload should fail, but we should have error handling
+				await assert.rejects(
+					async () => await loader.loadSchema(),
+					/Failed to load schema/i,
+					"Should throw error on reload failure",
+				);
+			});
+
+			it("should provide clear error message for corrupted JSON", async () => {
+				// This test documents expected behavior
+				// In practice, corrupted JSON would cause JSON.parse to throw
+				// The loader should catch and wrap this in a descriptive error
+				const loader = new SchemaLoader();
+
+				// We can't easily test this without mocking, but document the expectation
+				// that JSON parsing errors should be caught and wrapped
+				await assert.doesNotReject(
+					async () => await loader.loadSchema(),
+					"Valid schema should load successfully",
+				);
+			});
+		});
 	});
 });

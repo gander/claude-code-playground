@@ -9,8 +9,10 @@ import type {
 	PresetCategory,
 	SchemaData,
 	SchemaLoaderConfig,
+	SchemaMetadata,
 	TagIndex,
-} from "../types/index.ts";
+} from "../types/index.js";
+import { logger } from "./logger.js";
 
 /**
  * Schema loader for OpenStreetMap tagging schema
@@ -39,6 +41,7 @@ export class SchemaLoader {
 	/**
 	 * Load schema data from the id-tagging-schema package
 	 * Optimized: Builds indexes during load in a single pass
+	 * Includes version tracking and graceful error handling
 	 */
 	async loadSchema(): Promise<SchemaData> {
 		// Check cache validity
@@ -46,31 +49,70 @@ export class SchemaLoader {
 			return this.cache;
 		}
 
-		// Load all schema files in parallel
-		const [presets, fields, categories, deprecated, defaults] = await Promise.all([
-			this.loadJSON<Record<string, Preset>>("presets.json"),
-			this.loadJSON<Record<string, Field>>("fields.json"),
-			this.loadJSON<Record<string, PresetCategory>>("preset_categories.json"),
-			this.loadJSON<DeprecatedTag[]>("deprecated.json"),
-			this.loadJSON<Record<string, { area?: string[]; line?: string[]; point?: string[] }>>(
-				"preset_defaults.json",
-			),
-		]);
+		try {
+			// Load schema version first
+			const metadata = await this.loadSchemaMetadata();
 
-		this.cache = {
-			presets,
-			fields,
-			categories,
-			deprecated,
-			defaults,
-		};
+			// Log schema version
+			logger.info(
+				`Loading OSM tagging schema v${metadata.version}`,
+				"SchemaLoader",
+			);
 
-		this.cacheTimestamp = Date.now();
+			// Load all schema files in parallel
+			const [presets, fields, categories, deprecated, defaults] = await Promise.all([
+				this.loadJSON<Record<string, Preset>>("presets.json"),
+				this.loadJSON<Record<string, Field>>("fields.json"),
+				this.loadJSON<Record<string, PresetCategory>>("preset_categories.json"),
+				this.loadJSON<DeprecatedTag[]>("deprecated.json"),
+				this.loadJSON<Record<string, { area?: string[]; line?: string[]; point?: string[] }>>(
+					"preset_defaults.json",
+				),
+			]);
 
-		// Always build index during load (optimized: single pass)
-		this.buildIndex();
+			// Validate schema structure
+			this.validateSchemaStructure({
+				presets,
+				fields,
+				categories,
+				deprecated,
+				defaults,
+			});
 
-		return this.cache;
+			this.cache = {
+				presets,
+				fields,
+				categories,
+				deprecated,
+				defaults,
+				metadata,
+			};
+
+			this.cacheTimestamp = Date.now();
+
+			// Always build index during load (optimized: single pass)
+			this.buildIndex();
+
+			logger.info(
+				`Schema v${metadata.version} loaded successfully (${Object.keys(presets).length} presets, ${Object.keys(fields).length} fields)`,
+				"SchemaLoader",
+			);
+
+			return this.cache;
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			logger.error(
+				`Failed to load schema: ${errorMessage}`,
+				"SchemaLoader",
+				error instanceof Error ? error : undefined,
+			);
+
+			// Wrap error with descriptive message
+			throw new Error(
+				`Failed to load schema from ${this.schemaBasePath}: ${errorMessage}`,
+			);
+		}
 	}
 
 	/**
@@ -188,6 +230,17 @@ export class SchemaLoader {
 	}
 
 	/**
+	 * Get the loaded schema version
+	 * Returns the version of @openstreetmap/id-tagging-schema package
+	 */
+	getSchemaVersion(): string {
+		if (!this.cache?.metadata) {
+			throw new Error("Schema not loaded. Call loadSchema() first.");
+		}
+		return this.cache.metadata.version;
+	}
+
+	/**
 	 * Load JSON file from schema package
 	 */
 	private async loadJSON<T>(filename: string): Promise<T> {
@@ -261,5 +314,108 @@ export class SchemaLoader {
 				this.index.byGeometry.get(geometry)?.add(presetId);
 			}
 		}
+	}
+
+	/**
+	 * Load schema metadata including version information
+	 */
+	private async loadSchemaMetadata(): Promise<SchemaMetadata> {
+		try {
+			// Load package.json from schema package
+			const packageJson = await this.loadJSON<{ version: string }>(
+				"../package.json",
+			);
+
+			return {
+				version: packageJson.version,
+				loadedAt: Date.now(),
+			};
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			throw new Error(
+				`Failed to load schema metadata: ${errorMessage}`,
+			);
+		}
+	}
+
+	/**
+	 * Validate schema structure to detect breaking changes
+	 */
+	private validateSchemaStructure(data: Omit<SchemaData, "metadata">): void {
+		// Validate presets
+		if (!data.presets || typeof data.presets !== "object") {
+			throw new Error("Invalid schema: presets must be an object");
+		}
+		if (Object.keys(data.presets).length === 0) {
+			throw new Error("Invalid schema: presets cannot be empty");
+		}
+
+		// Validate fields
+		if (!data.fields || typeof data.fields !== "object") {
+			throw new Error("Invalid schema: fields must be an object");
+		}
+		if (Object.keys(data.fields).length === 0) {
+			throw new Error("Invalid schema: fields cannot be empty");
+		}
+
+		// Validate categories
+		if (!data.categories || typeof data.categories !== "object") {
+			throw new Error("Invalid schema: categories must be an object");
+		}
+
+		// Validate deprecated
+		if (!Array.isArray(data.deprecated)) {
+			throw new Error("Invalid schema: deprecated must be an array");
+		}
+
+		// Validate defaults
+		if (!data.defaults || typeof data.defaults !== "object") {
+			throw new Error("Invalid schema: defaults must be an object");
+		}
+
+		// Validate preset structure (spot check first preset)
+		const presetKeys = Object.keys(data.presets);
+		if (presetKeys.length > 0) {
+			// biome-ignore lint/style/noNonNullAssertion: Safe - array length > 0
+			const firstPresetKey = presetKeys[0]!;
+			const firstPreset = data.presets[firstPresetKey];
+			if (!firstPreset) {
+				throw new Error(`Invalid schema: preset '${firstPresetKey}' is undefined`);
+			}
+			if (!Array.isArray(firstPreset.geometry)) {
+				throw new Error(
+					`Invalid schema: preset '${firstPresetKey}' missing geometry array`,
+				);
+			}
+			if (!firstPreset.tags || typeof firstPreset.tags !== "object") {
+				throw new Error(
+					`Invalid schema: preset '${firstPresetKey}' missing tags object`,
+				);
+			}
+		}
+
+		// Validate field structure (spot check first field)
+		const fieldKeys = Object.keys(data.fields);
+		if (fieldKeys.length > 0) {
+			// biome-ignore lint/style/noNonNullAssertion: Safe - array length > 0
+			const firstFieldKey = fieldKeys[0]!;
+			const firstField = data.fields[firstFieldKey];
+			if (!firstField) {
+				throw new Error(`Invalid schema: field '${firstFieldKey}' is undefined`);
+			}
+			if (!firstField.key || typeof firstField.key !== "string") {
+				throw new Error(
+					`Invalid schema: field '${firstFieldKey}' missing key property`,
+				);
+			}
+			if (!firstField.type || typeof firstField.type !== "string") {
+				throw new Error(
+					`Invalid schema: field '${firstFieldKey}' missing type property`,
+				);
+			}
+		}
+
+		logger.debug("Schema structure validation passed", "SchemaLoader");
 	}
 }
