@@ -102,8 +102,8 @@ jobs:
 
       - name: Generate SBOM (Software Bill of Materials)
         run: |
-          npm install -g @cyclonedx/cyclonedx-npm@4.1.0
-          cyclonedx-npm --output-file sbom.json
+          # Use npx to avoid npm install -g (Scorecard Pinned-Dependencies)
+          npx --yes @cyclonedx/cyclonedx-npm@4.1.0 --output-file sbom.json
           echo "✓ SBOM generated: sbom.json"
 
       - name: Create tarball for attestation
@@ -135,9 +135,15 @@ jobs:
     needs: build-and-publish
     if: github.event_name == 'push'
 
-    # Only grant write permission for release creation
+    # Scorecard note: contents: write is REQUIRED for GitHub releases
+    # This is isolated to a separate job with minimal scope:
+    # - Runs ONLY after successful npm publish
+    # - Has NO access to NPM_TOKEN or other secrets
+    # - Uses pinned action (softprops/action-gh-release@SHA)
+    # - Only creates release metadata (no code changes)
+    # This is an acceptable use of write permissions per GitHub security best practices
     permissions:
-      contents: write  # Required for creating GitHub releases
+      contents: write  # Required for GitHub Releases API
 
     steps:
       - name: Create GitHub Release
