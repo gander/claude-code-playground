@@ -230,12 +230,68 @@ Every feature implementation MUST follow this workflow:
 - **Release**: Automated npm releases with semantic versioning
 - **Distribution**: Package available via `npx` command
 
-### Documentation Updates
-When completing work on a phase or major feature (according to the todo list):
-1. **CLAUDE.md**: Update the "Development Status" section to mark completed phases and list achievements
-2. **README.md**: Update the "Development Plan" section to mark completed phase items with `[x]`
+### Documentation Guidelines
 
-Both documentation files must be kept in sync to reflect the current project status. This ensures consistency across project documentation and helps track progress accurately.
+#### Documentation Structure
+
+The project maintains comprehensive documentation in multiple locations:
+
+**User-Facing Documentation (docs/):**
+- `docs/installation.md` - Installation instructions for all methods (npx, source, Docker)
+- `docs/configuration.md` - Configuration for Claude Code/Desktop and custom clients
+- `docs/usage.md` - Usage examples, workflows, and best practices
+- `docs/api/` - API reference for all 14 tools
+  - `docs/api/README.md` - API overview and quick reference
+  - `docs/api/{tool_name}.md` - Detailed documentation per tool (pattern established)
+  - `docs/api/NOTE.md` - Documentation pattern guide
+- `docs/troubleshooting.md` - Common issues and solutions
+
+**Developer Documentation (root):**
+- `README.md` - Compact overview with links to detailed docs
+- `CONTRIBUTING.md` - Contribution guidelines (TDD workflow, standards)
+- `DEVELOPMENT.md` - Development setup, commands, debugging
+- `ROADMAP.md` - Development plan and future features
+- `CHANGELOG.md` - Project history (Keep a Changelog format)
+- `CLAUDE.md` - Technical implementation notes (this file)
+
+#### Documentation Update Workflow
+
+When completing a phase or major feature:
+
+1. **Update docs/** (if user-facing changes):
+   - Installation changes → `docs/installation.md`
+   - New tools/features → `docs/usage.md` and `docs/api/`
+   - Configuration changes → `docs/configuration.md`
+   - New issues/solutions → `docs/troubleshooting.md`
+
+2. **Update root documentation**:
+   - README.md → Update "Project Status" section
+   - ROADMAP.md → Mark phase/tasks as complete
+   - CHANGELOG.md → Add entry in [Unreleased] section
+   - CLAUDE.md → Update "Development Status" section
+
+3. **API Documentation Pattern**:
+   All API docs follow this structure (see `docs/api/get_tag_info.md` as template):
+   - Description
+   - Category
+   - Input Parameters (table with details)
+   - Output (TypeScript schema)
+   - Examples (multiple scenarios)
+   - Error Scenarios
+   - Use Cases
+   - Related Tools
+   - Notes
+   - Data Source
+   - Version History
+
+#### Documentation Maintenance
+
+- Keep README.md compact - link to detailed docs in `docs/`
+- Update all documentation together to maintain consistency
+- Follow established patterns for new API documentation
+- Use markdown features: tables, code blocks, links, details/summary
+- Include practical examples with real OSM data
+- Cross-link related documentation
 
 ## Architecture
 
@@ -315,7 +371,7 @@ All layers are fully tested using Node.js native test runner with TDD approach.
 
 ## Development Status
 
-**Current Phase: Phase 3 - COMPLETED ✅**
+**Current Phase: Phase 5 - COMPLETED ✅**
 
 Phase 1 has been completed with the following achievements:
 - ✅ Project structure initialized with TypeScript 5.9
@@ -431,15 +487,37 @@ Phase 4 (Testing) has been COMPLETED ✅:
   - **Security Reports**: Trivy results uploaded to GitHub Security tab
   - **Signature Verification**: Users can verify image authenticity with `cosign verify`
 
-**Next Phase: Phase 5 - Documentation**
+Phase 5 (Documentation) has been COMPLETED ✅:
+- ✅ Comprehensive user documentation in `docs/` directory
+  - `docs/installation.md`: Complete installation guide (npx, source, Docker)
+  - `docs/configuration.md`: Configuration for Claude Code/Desktop and custom clients
+  - `docs/usage.md`: Usage examples, workflows, and best practices
+  - `docs/troubleshooting.md`: Common issues and solutions
+- ✅ Complete API documentation
+  - `docs/api/README.md`: API overview and quick reference for all 14 tools
+  - `docs/api/get_tag_info.md`: Complete example API documentation (pattern for other tools)
+  - `docs/api/NOTE.md`: Documentation pattern guide
+- ✅ Enhanced developer documentation
+  - `CONTRIBUTING.md`: Contribution guidelines with TDD workflow
+  - `DEVELOPMENT.md`: Development setup, commands, debugging, troubleshooting
+- ✅ Project documentation
+  - `ROADMAP.md`: Development roadmap without time estimates
+  - `CHANGELOG.md`: Project changelog (Keep a Changelog format)
+  - `CLAUDE.md`: Documentation guidelines and patterns (updated)
+- ✅ Compact README.md
+  - Removed redundant details (moved to `docs/`)
+  - Clear navigation to all documentation
+  - User and Developer documentation sections
 
-See README.md for the complete development plan covering:
+**Next Phase: Phase 6 - Optimization & Polish**
+
+See ROADMAP.md for the complete development plan covering:
 - Phase 1: Project Setup ✅
 - Phase 2: Schema Integration ✅
 - Phase 3: Core Tool Implementation ✅ (All 14 tools implemented)
-- Phase 4: Testing ✅
-- Phase 5: Documentation (Next)
-- Phase 6: Optimization & Polish
+- Phase 4: Testing ✅ (370 tests, >90% coverage)
+- Phase 5: Documentation ✅ (Installation, Usage, API, Troubleshooting)
+- Phase 6: Optimization & Polish (Next)
 - Phase 7: Distribution & Deployment (Future - npm provenance, containers, additional transports, public deployment)
 
 ## Example Use Cases

@@ -71,13 +71,34 @@ This document outlines the development phases for the OSM Tagging Schema MCP Ser
 - [x] Validate error handling for all implemented tools
 - [x] Achieve high test coverage across all modules (>90%)
 
-## Phase 5: Documentation
+## Phase 5: Documentation ✅
 
-- [ ] Write API documentation for each tool
-- [ ] Create usage examples
-- [ ] Document installation and setup
-- [ ] Add troubleshooting guide
-- [ ] Create contribution guidelines
+- [x] Write API documentation for each tool
+  - Complete API reference in `docs/api/` directory
+  - Overview with quick reference table (`docs/api/README.md`)
+  - Detailed tool documentation template established (`docs/api/get_tag_info.md`)
+  - Documentation pattern guide (`docs/api/NOTE.md`)
+- [x] Create usage examples
+  - Comprehensive usage guide (`docs/usage.md`)
+  - Common use cases with examples
+  - Complete workflow examples
+  - Best practices documentation
+- [x] Document installation and setup
+  - Installation guide (`docs/installation.md`) covering npx, source, and Docker
+  - Configuration guide (`docs/configuration.md`) for Claude Code/Desktop and custom clients
+  - System requirements and verification steps
+- [x] Add troubleshooting guide
+  - Comprehensive troubleshooting guide (`docs/troubleshooting.md`)
+  - Installation, configuration, runtime, and performance issues
+  - Error code reference table
+- [x] Create contribution guidelines
+  - Contribution guide (`CONTRIBUTING.md`) with TDD workflow
+  - Development guide (`DEVELOPMENT.md`) with setup and tasks
+- [x] Documentation structure
+  - User-facing documentation in `docs/` directory
+  - Developer documentation in root directory
+  - Compact README with clear navigation
+  - Documentation guidelines in `CLAUDE.md`
 
 ## Phase 6: Optimization & Polish
 
