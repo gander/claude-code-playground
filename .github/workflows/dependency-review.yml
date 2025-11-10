@@ -1,0 +1,39 @@
+name: Dependency Review
+
+on:
+  pull_request:
+    branches: ["master", "main"]
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    name: Review Dependencies
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@40c09b7dc99638e5ddb0bfd91c1673effc064d8a # v4.8.1
+        with:
+          # Fail the build on critical or high vulnerabilities
+          fail-on-severity: moderate
+          # Warn on new dependencies with known vulnerabilities
+          warn-on-severity: low
+          # Deny specific licenses (example: copyleft licenses if needed)
+          # deny-licenses: GPL-2.0, LGPL-2.0
+          # Allow specific licenses
+          # allow-licenses: MIT, Apache-2.0, BSD-3-Clause, ISC
+          # Deny packages from specific sources
+          deny-packages: ''
+          # Comment on PR with results
+          comment-summary-in-pr: always
+          # Show dependency changes
+          show-openssf-scorecard: true
+          warn-only: false
