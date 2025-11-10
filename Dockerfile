@@ -1,5 +1,5 @@
 # Stage 1: Builder
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -21,7 +21,7 @@ RUN npm run build
 RUN test -f dist/index.js || (echo "Build failed: dist/index.js not found" && exit 1)
 
 # Stage 2: Runtime
-FROM node:22-alpine
+FROM node:24-alpine
 
 # Set working directory
 WORKDIR /app
