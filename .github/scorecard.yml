@@ -1,0 +1,25 @@
+# OpenSSF Scorecard Configuration
+# Maintainer annotations for security decisions (Scorecard v5.0+)
+# https://github.com/ossf/scorecard/blob/main/docs/checks.md#maintainer-annotations
+
+checks:
+  Token-Permissions:
+    annotations:
+      - path: .github/workflows/publish.yml
+        job: create-release
+        reason: "GitHub Release API requires contents:write - no more granular permission exists. Job is isolated from build, runs after successful publish, uses pinned actions, and has no secrets access. This is GitHub's recommended pattern per https://docs.github.com/en/rest/releases/releases"
+        reviewer: "@gander"
+
+  Pinned-Dependencies:
+    annotations:
+      - path: .github/workflows/publish.yml
+        step: "Create tarball for attestation"
+        line: 112
+        reason: "npm pack uses npm bundled with Node.js 22, which is pinned via setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af (v6.1.0). npm version is deterministic per Node.js version. There is no npm@hash syntax for built-in commands."
+        reviewer: "@gander"
+
+      - path: .github/workflows/publish.yml
+        step: "Generate SBOM (Software Bill of Materials)"
+        line: 106
+        reason: "Uses npx with explicit version pinning (@cyclonedx/cyclonedx-npm@4.1.0). npx provides deterministic package resolution via package-lock.json. Replaced npm install -g in commit 895cff8 for better security."
+        reviewer: "@gander"
