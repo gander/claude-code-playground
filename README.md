@@ -2,6 +2,8 @@
 
 [![Test](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/test.yml?branch=master&label=tests)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/test.yml)
 [![Docker](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/docker.yml?branch=master&label=docker)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/docker.yml)
+[![NPM Provenance](https://img.shields.io/badge/provenance-npm-CB3837?logo=npm)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
+[![SLSA 3](https://img.shields.io/badge/SLSA-Level%203-green?logo=github)](docs/security.md#slsa-build-provenance)
 [![Security: Trivy](https://img.shields.io/badge/security-Trivy-blue?logo=aqua)](https://github.com/gander-tools/osm-tagging-schema-mcp/security/code-scanning)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org/)
@@ -174,6 +176,7 @@ Contributions are welcome! We follow a **Test-Driven Development (TDD)** approac
 - [docs/configuration.md](./docs/configuration.md) - Configuration for Claude Code/Desktop
 - [docs/usage.md](./docs/usage.md) - Usage examples and workflows
 - [docs/api/](./docs/api/) - Complete API reference for all 14 tools
+- [docs/security.md](./docs/security.md) - Security, provenance & supply chain
 - [docs/troubleshooting.md](./docs/troubleshooting.md) - Common issues and solutions
 
 ### Developer Documentation
