@@ -5,7 +5,9 @@
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with { type: "json" };
+import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
+	type: "json",
+};
 import { setupClientServer, type TestServer, teardownClientServer } from "./helpers.js";
 
 describe("Integration: check_deprecated", () => {
@@ -97,9 +99,7 @@ describe("Integration: check_deprecated", () => {
 
 		it("should return full replacement object", async () => {
 			// Find entry with multiple replacement tags
-			const entry = deprecated.find(
-				(e) => e.replace && Object.keys(e.replace).length > 1,
-			);
+			const entry = deprecated.find((e) => e.replace && Object.keys(e.replace).length > 1);
 			assert.ok(entry);
 
 			const key = Object.keys(entry.old)[0];
@@ -220,8 +220,7 @@ describe("Integration: check_deprecated", () => {
 				const value = entry.old[key as keyof typeof entry.old];
 
 				// Skip if replace doesn't exist
-				if (!entry.replace || Object.keys(entry.replace).length === 0)
-					continue;
+				if (!entry.replace || Object.keys(entry.replace).length === 0) continue;
 
 				const response = await client.callTool({
 					name: "check_deprecated",
@@ -234,15 +233,8 @@ describe("Integration: check_deprecated", () => {
 				assert.ok(response.content);
 				const result = JSON.parse((response.content[0] as { text: string }).text);
 
-				assert.strictEqual(
-					result.deprecated,
-					true,
-					`Tag ${key}=${value} should be deprecated`,
-				);
-				assert.ok(
-					result.replacement,
-					`Tag ${key}=${value} should have replacement`,
-				);
+				assert.strictEqual(result.deprecated, true, `Tag ${key}=${value} should be deprecated`);
+				assert.ok(result.replacement, `Tag ${key}=${value} should have replacement`);
 			}
 		});
 

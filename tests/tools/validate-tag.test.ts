@@ -3,7 +3,9 @@ import { describe, it } from "node:test";
 import { SchemaLoader } from "../../src/utils/schema-loader.js";
 import { validateTag } from "../../src/tools/validate-tag.js";
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
-import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with { type: "json" };
+import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
+	type: "json",
+};
 
 describe("validateTag", () => {
 	describe("Basic Functionality", () => {
@@ -46,18 +48,12 @@ describe("validateTag", () => {
 
 		it("should detect unknown key", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await validateTag(
-				loader,
-				"nonexistent_key_12345",
-				"some_value",
-			);
+			const result = await validateTag(loader, "nonexistent_key_12345", "some_value");
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, true); // Unknown keys are allowed in OSM
 			assert.ok(result.warnings.length > 0);
-			assert.ok(
-				result.warnings.some((w) => w.includes("not found in schema")),
-			);
+			assert.ok(result.warnings.some((w) => w.includes("not found in schema")));
 		});
 
 		it("should handle tag with no options field", async () => {
@@ -82,14 +78,8 @@ describe("validateTag", () => {
 
 			for (const [fieldPath, field] of fieldsWithOptions) {
 				assert.ok(field.options, `Field ${fieldPath} should have options`);
-				assert.ok(
-					Array.isArray(field.options),
-					`Field ${fieldPath} options should be array`,
-				);
-				assert.ok(
-					field.options.length > 0,
-					`Field ${fieldPath} should have at least one option`,
-				);
+				assert.ok(Array.isArray(field.options), `Field ${fieldPath} options should be array`);
+				assert.ok(field.options.length > 0, `Field ${fieldPath} should have at least one option`);
 			}
 		});
 
@@ -101,14 +91,8 @@ describe("validateTag", () => {
 			for (let i = 0; i < Math.min(50, deprecated.length); i++) {
 				const entry = deprecated[i];
 				assert.ok(entry.old, `Deprecated entry ${i} should have 'old'`);
-				assert.ok(
-					entry.replace,
-					`Deprecated entry ${i} should have 'replace'`,
-				);
-				assert.ok(
-					typeof entry.old === "object",
-					`Deprecated entry ${i} 'old' should be object`,
-				);
+				assert.ok(entry.replace, `Deprecated entry ${i} should have 'replace'`);
+				assert.ok(typeof entry.old === "object", `Deprecated entry ${i} 'old' should be object`);
 				assert.ok(
 					typeof entry.replace === "object",
 					`Deprecated entry ${i} 'replace' should be object`,

@@ -1,6 +1,8 @@
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
-import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with { type: "json" };
+import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
+	type: "json",
+};
 
 /**
  * Result of tag validation
