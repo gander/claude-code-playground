@@ -177,9 +177,9 @@ Test categories:
 - [x] `validate_tag_collection`: Validate a collection of tags ✅
   - Input: object with key-value pairs
   - Output: validation report with all issues, aggregated statistics
-- [ ] `check_deprecated`: Check if tags are deprecated
+- [x] `check_deprecated`: Check if tags are deprecated ✅
   - Input: tag key or key-value pair
-  - Output: deprecation status and suggested replacements
+  - Output: deprecation status, old tags, and suggested replacements
 - [ ] `suggest_improvements`: Suggest improvements for tag collection
   - Input: tag collection
   - Output: recommendations and warnings

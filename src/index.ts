@@ -12,6 +12,7 @@ import { getTagInfo } from "./tools/get-tag-info.js";
 import { getTagValues } from "./tools/get-tag-values.js";
 import { searchPresets } from "./tools/search-presets.js";
 import { searchTags } from "./tools/search-tags.js";
+import { checkDeprecated } from "./tools/check-deprecated.js";
 import { validateTag } from "./tools/validate-tag.js";
 import { validateTagCollection } from "./tools/validate-tag-collection.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
@@ -194,6 +195,26 @@ export function createServer(): Server {
 						},
 					},
 					required: ["keyword"],
+				},
+			},
+			{
+				name: "check_deprecated",
+				description:
+					"Check if an OSM tag is deprecated. Accepts tag key or key-value pair.",
+				inputSchema: {
+					type: "object",
+					properties: {
+						key: {
+							type: "string",
+							description: "The tag key to check (e.g., 'amenity', 'highway')",
+						},
+						value: {
+							type: "string",
+							description:
+								"Optional tag value. If not provided, checks if any value for this key is deprecated",
+						},
+					},
+					required: ["key"],
 				},
 			},
 			{
@@ -391,6 +412,22 @@ export function createServer(): Server {
 					{
 						type: "text",
 						text: JSON.stringify(results, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "check_deprecated") {
+			const { key, value } = args as { key?: string; value?: string };
+			if (key === undefined) {
+				throw new Error("key parameter is required");
+			}
+			const result = await checkDeprecated(schemaLoader, key, value);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(result, null, 2),
 					},
 				],
 			};
