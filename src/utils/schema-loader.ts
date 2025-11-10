@@ -15,19 +15,17 @@ import type {
 /**
  * Schema loader for OpenStreetMap tagging schema
  * Handles loading, caching, and indexing of schema data
+ * Optimized version: Always builds indexes, single-pass loading
  */
 export class SchemaLoader {
-	private config: Required<SchemaLoaderConfig>;
+	private cacheTTL: number;
 	private cache: SchemaData | null = null;
 	private cacheTimestamp: number = 0;
 	private index: TagIndex | null = null;
 	private schemaBasePath: string;
 
 	constructor(config: SchemaLoaderConfig = {}) {
-		this.config = {
-			cacheTTL: config.cacheTTL ?? Number.POSITIVE_INFINITY,
-			enableIndexing: config.enableIndexing ?? false,
-		};
+		this.cacheTTL = config.cacheTTL ?? Number.POSITIVE_INFINITY;
 
 		// Resolve path to node_modules/@openstreetmap/id-tagging-schema/dist
 		const __filename = fileURLToPath(import.meta.url);
@@ -40,6 +38,7 @@ export class SchemaLoader {
 
 	/**
 	 * Load schema data from the id-tagging-schema package
+	 * Optimized: Builds indexes during load in a single pass
 	 */
 	async loadSchema(): Promise<SchemaData> {
 		// Check cache validity
@@ -47,7 +46,7 @@ export class SchemaLoader {
 			return this.cache;
 		}
 
-		// Load all schema files
+		// Load all schema files in parallel
 		const [presets, fields, categories, deprecated, defaults] = await Promise.all([
 			this.loadJSON<Record<string, Preset>>("presets.json"),
 			this.loadJSON<Record<string, Field>>("fields.json"),
@@ -68,12 +67,18 @@ export class SchemaLoader {
 
 		this.cacheTimestamp = Date.now();
 
-		// Build index if enabled
-		if (this.config.enableIndexing) {
-			this.buildIndex();
-		}
+		// Always build index during load (optimized: single pass)
+		this.buildIndex();
 
 		return this.cache;
+	}
+
+	/**
+	 * Warmup method to preload schema and build indexes
+	 * Call this at server startup to eliminate initial latency
+	 */
+	async warmup(): Promise<void> {
+		await this.loadSchema();
 	}
 
 	/**
@@ -86,13 +91,25 @@ export class SchemaLoader {
 	}
 
 	/**
-	 * Get the tag index (requires indexing to be enabled)
+	 * Get the tag index
+	 * Index is always built during schema load
 	 */
 	getIndex(): TagIndex {
 		if (!this.index) {
-			throw new Error("Indexing is not enabled. Set enableIndexing: true in config.");
+			throw new Error("Schema not loaded. Call loadSchema() or warmup() first.");
 		}
 		return this.index;
+	}
+
+	/**
+	 * Find field by OSM tag key using the index
+	 * Optimized O(1) lookup using byFieldKey index
+	 */
+	findFieldByKey(key: string): Field | undefined {
+		if (!this.index) {
+			throw new Error("Schema not loaded. Call loadSchema() or warmup() first.");
+		}
+		return this.index.byFieldKey.get(key);
 	}
 
 	/**
@@ -100,7 +117,7 @@ export class SchemaLoader {
 	 */
 	findPresetsByKey(key: string): Preset[] {
 		if (!this.index) {
-			throw new Error("Indexing is not enabled. Set enableIndexing: true in config.");
+			throw new Error("Schema not loaded. Call loadSchema() or warmup() first.");
 		}
 
 		const presetIds = this.index.byKey.get(key);
@@ -118,7 +135,7 @@ export class SchemaLoader {
 	 */
 	findPresetsByTag(key: string, value: string): Preset[] {
 		if (!this.index) {
-			throw new Error("Indexing is not enabled. Set enableIndexing: true in config.");
+			throw new Error("Schema not loaded. Call loadSchema() or warmup() first.");
 		}
 
 		const tagKey = `${key}=${value}`;
@@ -137,7 +154,7 @@ export class SchemaLoader {
 	 */
 	findPresetsByGeometry(geometry: GeometryType): Preset[] {
 		if (!this.index) {
-			throw new Error("Indexing is not enabled. Set enableIndexing: true in config.");
+			throw new Error("Schema not loaded. Call loadSchema() or warmup() first.");
 		}
 
 		const presetIds = this.index.byGeometry.get(geometry);
@@ -183,15 +200,16 @@ export class SchemaLoader {
 	 * Check if cache is still valid
 	 */
 	private isCacheValid(): boolean {
-		if (this.config.cacheTTL === Number.POSITIVE_INFINITY) {
+		if (this.cacheTTL === Number.POSITIVE_INFINITY) {
 			return true;
 		}
 		const age = Date.now() - this.cacheTimestamp;
-		return age < this.config.cacheTTL;
+		return age < this.cacheTTL;
 	}
 
 	/**
 	 * Build index for fast lookups
+	 * Optimized: Single pass through data, builds all indexes at once
 	 */
 	private buildIndex(): void {
 		if (!this.cache) {
@@ -202,7 +220,16 @@ export class SchemaLoader {
 			byKey: new Map(),
 			byTag: new Map(),
 			byGeometry: new Map(),
+			byFieldKey: new Map(),
 		};
+
+		// Index all fields by OSM tag key
+		for (const field of Object.values(this.cache.fields)) {
+			// Index by the actual OSM tag key (field.key)
+			if (field.key) {
+				this.index.byFieldKey.set(field.key, field);
+			}
+		}
 
 		// Index all presets
 		for (const [presetId, preset] of Object.entries(this.cache.presets)) {

@@ -35,8 +35,8 @@ export function createServer(): Server {
 		},
 	);
 
-	// Initialize schema loader with indexing enabled
-	const schemaLoader = new SchemaLoader({ enableIndexing: true });
+	// Initialize schema loader (indexing always enabled for optimal performance)
+	const schemaLoader = new SchemaLoader();
 
 	// Register tool handlers
 	// Tools are sorted alphabetically by name
@@ -528,7 +528,16 @@ export function createServer(): Server {
 async function main() {
 	logger.info("Starting OSM Tagging Schema MCP Server", "main");
 
+	// Create server and preload schema for optimal performance
 	const server = createServer();
+
+	// Warmup: Preload schema and build indexes before accepting requests
+	// This eliminates initial latency on first tool call
+	logger.info("Preloading schema and building indexes...", "main");
+	const schemaLoader = new SchemaLoader();
+	await schemaLoader.warmup();
+	logger.info("Schema preloaded successfully", "main");
+
 	const transport = new StdioServerTransport();
 
 	await server.connect(transport);

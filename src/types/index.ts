@@ -119,14 +119,15 @@ export interface TagIndex {
 	byKey: Map<string, Set<string>>; // key -> Set of preset IDs
 	byTag: Map<string, Set<string>>; // "key=value" -> Set of preset IDs
 	byGeometry: Map<GeometryType, Set<string>>; // geometry -> Set of preset IDs
+	byFieldKey: Map<string, Field>; // OSM tag key -> Field definition
 }
 
 /**
  * Schema loader configuration
  */
 export interface SchemaLoaderConfig {
-	cacheTTL?: number; // Cache time-to-live in milliseconds
-	enableIndexing?: boolean; // Enable automatic indexing
+	cacheTTL?: number; // Cache time-to-live in milliseconds (default: infinite)
+	// Note: Indexing is always enabled for optimal performance
 }
 
 /**
