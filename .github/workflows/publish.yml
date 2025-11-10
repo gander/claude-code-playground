@@ -1,0 +1,126 @@
+name: Publish to NPM
+
+on:
+  # Automatically trigger on version tags
+  push:
+    tags:
+      - 'v*.*.*'
+
+  # Manual trigger with version tag input
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Version tag to publish (e.g., v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write  # Required for npm provenance
+
+jobs:
+  validate-and-publish:
+    name: Validate and Publish to NPM
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          # Fetch the specified tag for manual runs
+          ref: ${{ github.event.inputs.version_tag || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v6.1.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Validate version tag format
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.version_tag }}"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
+
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Invalid version tag format '$TAG'. Expected format: v1.2.3"
+            exit 1
+          fi
+
+          echo "Validated version tag: $TAG"
+          echo "VERSION_TAG=$TAG" >> $GITHUB_ENV
+          echo "VERSION=${TAG#v}" >> $GITHUB_ENV
+
+      - name: Verify package.json version matches tag
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          if [ "$PACKAGE_VERSION" != "${{ env.VERSION }}" ]; then
+            echo "Error: package.json version ($PACKAGE_VERSION) does not match tag version (${{ env.VERSION }})"
+            exit 1
+          fi
+          echo "✓ Version match confirmed: $PACKAGE_VERSION"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type check
+        run: npm run typecheck
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Build
+        run: npm run build
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Verify build artifacts
+        run: |
+          if [ ! -f "dist/index.js" ]; then
+            echo "Error: Build artifact dist/index.js not found"
+            exit 1
+          fi
+          echo "✓ Build artifacts verified"
+
+      - name: Publish to NPM with provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@b555064d6a617fa0b0e4ede6e3b9e06a01fbb011
+        if: github.event_name == 'push'
+        with:
+          tag_name: ${{ env.VERSION_TAG }}
+          name: Release ${{ env.VERSION_TAG }}
+          body: |
+            ## 📦 NPM Package Published
+
+            Version `${{ env.VERSION }}` has been published to npm:
+            - Package: [@gander-tools/osm-tagging-schema-mcp](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
+            - Install: `npx @gander-tools/osm-tagging-schema-mcp@${{ env.VERSION }}`
+
+            ## 🔐 Provenance & Security
+
+            This package was published with [npm provenance](https://docs.npmjs.com/generating-provenance-statements) enabled, providing:
+            - Verified build from GitHub Actions
+            - Tamper-proof supply chain
+            - SLSA Level 2+ compliance
+
+            Verify authenticity:
+            ```bash
+            npm audit signatures @gander-tools/osm-tagging-schema-mcp
+            ```
+
+            ## 📋 See CHANGELOG.md for details
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
