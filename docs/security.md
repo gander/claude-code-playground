@@ -216,9 +216,10 @@ trivy image ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 
 **DO NOT** open public GitHub issues for security vulnerabilities.
 
-Instead, please report security issues to:
-- **Email**: [security contact - to be configured]
-- **GitHub Security Advisories**: Use the "Security" tab
+Instead, please report security issues using:
+- **GitHub Security Advisories**: Navigate to the repository's "Security" tab and click "Report a vulnerability"
+  - URL: https://github.com/gander-tools/osm-tagging-schema-mcp/security/advisories/new
+- **Private Disclosure**: This ensures coordinated vulnerability disclosure
 
 We will respond within 48 hours and coordinate responsible disclosure.
 
@@ -266,6 +267,5 @@ Following [OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/
 ## Questions?
 
 For security questions or to report issues, please contact us through:
-- GitHub Security Advisories
-- GitHub Discussions (for general questions)
-- Email: [to be configured]
+- **GitHub Security Advisories** (for vulnerability reports): https://github.com/gander-tools/osm-tagging-schema-mcp/security/advisories/new
+- **GitHub Discussions** (for general security questions): https://github.com/gander-tools/osm-tagging-schema-mcp/discussions
