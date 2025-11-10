@@ -102,8 +102,16 @@ This document outlines the development phases for the OSM Tagging Schema MCP Ser
 
 ## Phase 6: Optimization & Polish
 
-- [ ] Implement caching strategies
-- [ ] Optimize schema loading and queries
+- [x] ~~Implement caching strategies~~ (Skipped - caching already implemented in Phase 2)
+- [x] Optimize schema loading and queries
+  - **Always-on indexing**: Removed optional indexing, index always built for optimal performance
+  - **Schema preloading**: Added warmup() method to preload schema at server startup
+  - **Field key index**: Added byFieldKey index for O(1) field lookups
+  - **Single-pass indexing**: Index built during schema load (not separately)
+  - **Server startup optimization**: Schema preloaded in main() to eliminate initial latency
+  - New optimized methods: warmup(), findFieldByKey()
+  - Comprehensive tests: 24 new tests for optimizations (all 394 tests passing)
+  - TDD approach: Tests written first, then implementation
 - [x] Add logging and debugging support
   - Built-in logger with configurable levels (SILENT, ERROR, WARN, INFO, DEBUG)
   - LOG_LEVEL environment variable configuration

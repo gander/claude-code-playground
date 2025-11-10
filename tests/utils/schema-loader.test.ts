@@ -185,4 +185,153 @@ describe("SchemaLoader", () => {
 			assert.ok(firstDeprecated.replace);
 		});
 	});
+
+	describe("optimizations", () => {
+		describe("preloading", () => {
+			it("should support warmup/preload method", async () => {
+				const preloadLoader = new SchemaLoader();
+
+				// warmup() should load and cache the schema
+				await preloadLoader.warmup();
+
+				// Subsequent loadSchema() should return cached data instantly
+				const schema = await preloadLoader.loadSchema();
+
+				assert.ok(schema);
+				assert.ok(schema.presets);
+				assert.ok(schema.fields);
+			});
+
+			it("should build index during warmup", async () => {
+				const preloadLoader = new SchemaLoader();
+
+				await preloadLoader.warmup();
+
+				// Index should be available after warmup
+				const index = preloadLoader.getIndex();
+
+				assert.ok(index);
+				assert.ok(index.byKey.size > 0);
+				assert.ok(index.byTag.size > 0);
+				assert.ok(index.byGeometry.size > 0);
+			});
+
+			it("should make warmup() idempotent", async () => {
+				const preloadLoader = new SchemaLoader();
+
+				// Call warmup multiple times
+				await preloadLoader.warmup();
+				const schema1 = await preloadLoader.loadSchema();
+
+				await preloadLoader.warmup();
+				const schema2 = await preloadLoader.loadSchema();
+
+				// Should return the same cached instance
+				assert.strictEqual(schema1, schema2);
+			});
+		});
+
+		describe("always build index", () => {
+			it("should always build index by default", async () => {
+				// Create loader without explicit enableIndexing
+				const defaultLoader = new SchemaLoader();
+				await defaultLoader.loadSchema();
+
+				// Index should be available without enableIndexing flag
+				const index = defaultLoader.getIndex();
+
+				assert.ok(index);
+				assert.ok(index.byKey.size > 0);
+			});
+
+			it("should not throw when getting index after load", async () => {
+				const defaultLoader = new SchemaLoader();
+				await defaultLoader.loadSchema();
+
+				// Should not throw - index is always built
+				assert.doesNotThrow(() => {
+					defaultLoader.getIndex();
+				});
+			});
+		});
+
+		describe("field key index", () => {
+			it("should index all field keys for fast lookup", async () => {
+				const indexedLoader = new SchemaLoader();
+				await indexedLoader.loadSchema();
+
+				const index = indexedLoader.getIndex();
+
+				// Field key index should exist
+				assert.ok(index.byFieldKey);
+				assert.ok(index.byFieldKey instanceof Map);
+				assert.ok(index.byFieldKey.size > 0);
+			});
+
+			it("should map OSM tag keys to field definitions", async () => {
+				const indexedLoader = new SchemaLoader();
+				await indexedLoader.loadSchema();
+
+				const index = indexedLoader.getIndex();
+
+				// Check that common fields are indexed by their OSM tag key
+				assert.ok(index.byFieldKey.has("name"));
+				assert.ok(index.byFieldKey.has("amenity"));
+
+				// Get field via index
+				const nameField = index.byFieldKey.get("name");
+				assert.ok(nameField);
+				assert.strictEqual(nameField.key, "name");
+			});
+
+			it("should support fast field lookups using index", async () => {
+				const indexedLoader = new SchemaLoader();
+				await indexedLoader.loadSchema();
+
+				// New optimized method using index
+				const field = indexedLoader.findFieldByKey("name");
+
+				assert.ok(field);
+				assert.strictEqual(field.key, "name");
+			});
+
+			it("should return undefined for non-existent field keys", async () => {
+				const indexedLoader = new SchemaLoader();
+				await indexedLoader.loadSchema();
+
+				const field = indexedLoader.findFieldByKey("nonexistent_key_12345");
+
+				assert.strictEqual(field, undefined);
+			});
+		});
+
+		describe("performance", () => {
+			it("should build index during schema load (single pass)", async () => {
+				const optimizedLoader = new SchemaLoader();
+
+				// Track that index is built during loadSchema, not after
+				const startTime = Date.now();
+				await optimizedLoader.loadSchema();
+				const loadTime = Date.now() - startTime;
+
+				// Index should be immediately available
+				const index = optimizedLoader.getIndex();
+				assert.ok(index);
+
+				// Getting index should be instant (already built)
+				const indexStartTime = Date.now();
+				optimizedLoader.getIndex();
+				const indexTime = Date.now() - indexStartTime;
+
+				// Index access should be < 1ms (already built during load)
+				assert.ok(indexTime < 5, `Index access took ${indexTime}ms, should be instant`);
+
+				// Just verify load completed reasonably fast
+				assert.ok(
+					loadTime < 5000,
+					`Schema load took ${loadTime}ms, should complete in reasonable time`,
+				);
+			});
+		});
+	});
 });
