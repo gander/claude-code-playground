@@ -351,12 +351,14 @@ Phase 3 (Core Tool Implementation) is partially completed:
   - `search_presets` - Search for presets by keyword or tag (with geometry filtering and limits)
   - `get_preset_details` - Get complete preset information (tags, geometry, fields, metadata)
   - `get_preset_tags` - Get recommended tags for a preset (identifying tags + addTags)
-- ⏳ Remaining tools: all Validation Tools (3.3)
+- ⏳ Validation Tools (3.3 - PARTIALLY COMPLETED):
+  - `validate_tag` - Validate single tag key-value pairs (checks deprecation, field options, empty values) ✅
+  - Remaining: `validate_tag_collection`, `check_deprecated`, `suggest_improvements`
 
 Phase 4 (Testing) has been COMPLETED ✅:
 - ✅ Node.js test runner configured
-- ✅ Unit tests for all implemented tools (170 tests, 66 suites passing)
-- ✅ Integration tests for MCP server (59 tests, 31 suites passing)
+- ✅ Unit tests for all implemented tools (181 tests, 70 suites passing)
+- ✅ Integration tests for MCP server (71 tests, 36 suites passing)
   - Modular structure: One integration test file per tool
   - Shared test utilities in `helpers.ts`
   - Server initialization tests separated
