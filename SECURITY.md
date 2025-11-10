@@ -16,9 +16,9 @@ We take the security of osm-tagging-schema-mcp seriously. If you discover a secu
 ### How to Report
 
 1. **DO NOT** create a public GitHub issue for security vulnerabilities
-2. Report vulnerabilities using one of these methods:
-   - **GitHub Security Advisories** (preferred): Navigate to the Security tab → Advisories → New draft security advisory
-   - **Email**: Contact the maintainers via GitHub profile email
+2. Report vulnerabilities using:
+   - **GitHub Security Advisories** (preferred): https://github.com/gander-tools/osm-tagging-schema-mcp/security/advisories/new
+   - Navigate to: Security tab → Advisories → "Report a vulnerability"
 
 ### What to Include
 

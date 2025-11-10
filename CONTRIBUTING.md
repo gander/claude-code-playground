@@ -9,6 +9,7 @@ Thank you for your interest in contributing! This document provides guidelines a
 - [Development Workflow](#development-workflow)
 - [Pull Request Process](#pull-request-process)
 - [Coding Standards](#coding-standards)
+- [Dependency Version Pinning Policy](#dependency-version-pinning-policy)
 - [Testing Requirements](#testing-requirements)
 - [Commit Message Guidelines](#commit-message-guidelines)
 - [Documentation](#documentation)
@@ -266,6 +267,71 @@ npm run format
 # Run specific test file
 node --import tsx --test tests/tools/my-tool.test.ts
 ```
+
+### Dependency Version Pinning Policy
+
+This project uses a **hybrid versioning strategy** to balance security, stability, and maintainability:
+
+**Production Dependencies** (tilde `~` range):
+```json
+"dependencies": {
+  "@modelcontextprotocol/sdk": "~1.21.1",        // Patch updates only
+  "@openstreetmap/id-tagging-schema": "~6.7.3"   // Patch updates only
+}
+```
+- **Tilde (~)**: Allows patch updates only (e.g., `~1.21.1` → `1.21.x`)
+- **Rationale**: Automatic security patches without breaking changes
+- **Behavior**: `1.21.1` → `1.21.2` ✅ | `1.21.1` → `1.22.0` ❌
+
+**Development Dependencies** (caret `^` range):
+```json
+"devDependencies": {
+  "@biomejs/biome": "^2.3.4",      // Minor + patch updates
+  "@types/node": "^24.10.0",       // Minor + patch updates
+  "tsx": "^4.19.2",                // Minor + patch updates
+  "typescript": "^5.7.2"           // Minor + patch updates
+}
+```
+- **Caret (^)**: Allows minor and patch updates (e.g., `^2.3.4` → `2.x.x`)
+- **Rationale**: Flexibility for tooling improvements, comprehensive test coverage catches issues
+- **Behavior**: `2.3.4` → `2.4.0` ✅ | `2.3.4` → `3.0.0` ❌
+
+**GitHub Actions** (SHA hash pinning):
+```yaml
+uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v4.3.0
+```
+- **SHA hashes**: Exact commit pinning for maximum security
+- **Rationale**: Prevents supply chain attacks via compromised action versions
+- **OpenSSF Best Practice**: Recommended by OpenSSF Scorecard
+
+**When adding new dependencies:**
+1. **Production deps**: Use tilde (`~`) for stability
+2. **Dev deps**: Use caret (`^`) for flexibility
+3. **Update package-lock.json**: Always commit the updated lockfile
+4. **Run tests**: Ensure `npm test` passes with new versions
+5. **Security check**: Run `npm audit` before committing
+
+**Updating dependencies:**
+```bash
+# Update patch versions only (production deps)
+npm update @modelcontextprotocol/sdk
+
+# Update to latest within range (dev deps)
+npm update @biomejs/biome
+
+# Update package-lock.json
+git add package-lock.json
+
+# Verify everything works
+npm test && npm run lint && npm run typecheck
+```
+
+**Rationale for this strategy:**
+- ✅ **Security**: Automatic patch updates fix vulnerabilities
+- ✅ **Stability**: No unexpected breaking changes from minor versions
+- ✅ **Maintainability**: Less manual update burden
+- ✅ **CI/CD Safety**: `npm ci` uses package-lock.json for reproducible builds
+- ✅ **Test Coverage**: 406 tests (>90% coverage) catch breaking changes
 
 ## Testing Requirements
 

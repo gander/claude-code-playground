@@ -53,8 +53,8 @@ This document outlines the development phases for the OSM Tagging Schema MCP Ser
 
 - [x] Configure Node.js native test runner
 - [x] Write unit tests for schema loader (19 tests passing)
-- [x] Write unit tests for all implemented tools (263 tests, 111 suites passing)
-- [x] Create integration tests for MCP server (107 tests, 55 suites passing)
+- [x] Write unit tests for all implemented tools (299 tests passing)
+- [x] Create integration tests for MCP server (107 tests passing)
   - Modular structure: One integration test file per tool
   - Shared utilities: `helpers.ts` for common setup/teardown
   - Order-independent tests: Tools validated by existence, not array position
@@ -100,7 +100,7 @@ This document outlines the development phases for the OSM Tagging Schema MCP Ser
   - Compact README with clear navigation
   - Documentation guidelines in `CLAUDE.md`
 
-## Phase 6: Optimization & Polish
+## Phase 6: Optimization & Polish ✅
 
 - [x] ~~Implement caching strategies~~ (Skipped - caching already implemented in Phase 2)
 - [x] Optimize schema loading and queries
@@ -139,14 +139,17 @@ This document outlines the development phases for the OSM Tagging Schema MCP Ser
 
 ## Phase 7: Distribution & Deployment
 
-### NPM Publishing with Provenance
-- [ ] Set up GitHub Actions workflow for npm publishing
-- [ ] Configure npm provenance signing (attestations)
-- [ ] Link package to GitHub repository with verified builds
-- [ ] Enable trusted publishing from GitHub Actions
-- [ ] Add package provenance badge to README
+### NPM Publishing with Provenance ✅
+- [x] Set up GitHub Actions workflow for npm publishing
+- [x] Configure npm provenance signing (attestations)
+- [x] Link package to GitHub repository with verified builds
+- [x] Enable trusted publishing from GitHub Actions
+- [x] Add package provenance badge to README
+- [x] SLSA Level 3 build provenance attestations
+- [x] SBOM generation (CycloneDX format)
+- [x] SBOM attestations for supply chain transparency
 
-### Container Image & Registry
+### Container Image & Registry ✅
 - [x] Create Dockerfile for containerized deployment
 - [x] Set up multi-stage builds for optimal image size
 - [x] Publish to GitHub Container Registry (ghcr.io)

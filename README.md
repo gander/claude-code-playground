@@ -93,9 +93,9 @@ This project follows **Test-Driven Development (TDD)** principles:
 4. Maintain high test coverage (>90%)
 
 ### Test Statistics
-- **Unit Tests**: 263 tests, 111 suites passing
-- **Integration Tests**: 107 tests, 55 suites passing
-- **Total**: 370 tests with 100% passing rate
+- **Unit Tests**: 299 tests passing
+- **Integration Tests**: 107 tests passing
+- **Total**: 406 tests with 100% passing rate
 
 ### JSON Data Integrity Testing
 
@@ -109,7 +109,7 @@ All tools are tested against the actual JSON data from `@openstreetmap/id-taggin
 
 - **Runtime**: Node.js 22+
 - **Language**: TypeScript 5.9
-- **MCP SDK**: @modelcontextprotocol/sdk ^1.0.4
+- **MCP SDK**: @modelcontextprotocol/sdk ^1.21.1
 - **Schema Library**: @openstreetmap/id-tagging-schema ^6.7.3
 - **Build Tool**: TypeScript compiler
 - **Testing**: Node.js native test runner (TDD methodology)
@@ -138,14 +138,14 @@ npm run build  # Build for production
 
 ## Project Status
 
-**Current Phase**: Phase 5 ✅ Complete (Comprehensive Documentation)
+**Current Phase**: Phase 6 ✅ Complete (Optimization & Polish)
 
 - ✅ Phase 1: Project Setup
 - ✅ Phase 2: Schema Integration
 - ✅ Phase 3: Core Tool Implementation (14 tools)
-- ✅ Phase 4: Testing (370 tests, >90% coverage)
+- ✅ Phase 4: Testing (406 tests, >90% coverage)
 - ✅ Phase 5: Documentation (Installation, Usage, API, Troubleshooting)
-- 📋 Phase 6: Optimization & Polish
+- ✅ Phase 6: Optimization & Polish (Logging, Schema Updates, Publication Prep)
 - 📋 Phase 7: Distribution & Deployment
 
 See [ROADMAP.md](./ROADMAP.md) for detailed development plan.
