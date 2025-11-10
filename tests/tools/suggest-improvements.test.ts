@@ -3,7 +3,9 @@ import { describe, it } from "node:test";
 import { SchemaLoader } from "../../src/utils/schema-loader.js";
 import { suggestImprovements } from "../../src/tools/suggest-improvements.js";
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with { type: "json" };
+import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
+	type: "json",
+};
 
 describe("suggestImprovements", () => {
 	describe("Basic Functionality", () => {
@@ -51,9 +53,7 @@ describe("suggestImprovements", () => {
 
 			assert.ok(result);
 			assert.ok(result.warnings.length > 0);
-			assert.ok(
-				result.warnings.some((w) => w.includes("deprecated")),
-			);
+			assert.ok(result.warnings.some((w) => w.includes("deprecated")));
 		});
 
 		it("should return empty suggestions for complete tag set", async () => {
@@ -221,9 +221,7 @@ describe("suggestImprovements", () => {
 				assert.ok(result);
 				assert.ok(result.matchedPresets);
 				// Should match the restaurant preset
-				const matched = result.matchedPresets.some((p) =>
-					p.includes("restaurant"),
-				);
+				const matched = result.matchedPresets.some((p) => p.includes("restaurant"));
 				assert.ok(matched || result.matchedPresets.length > 0);
 			}
 		});

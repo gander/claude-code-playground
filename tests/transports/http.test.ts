@@ -65,7 +65,6 @@ describe("HttpTransport", () => {
 
 	describe("Endpoints", () => {
 		beforeEach(async () => {
-			
 			transport = new HttpTransport({
 				type: "http",
 				port: 0,
@@ -130,7 +129,6 @@ describe("HttpTransport", () => {
 
 	describe("MCP Protocol", () => {
 		beforeEach(async () => {
-			
 			transport = new HttpTransport({
 				type: "http",
 				port: 0,
@@ -211,7 +209,6 @@ describe("HttpTransport", () => {
 
 	describe("Error Handling", () => {
 		beforeEach(async () => {
-			
 			transport = new HttpTransport({
 				type: "http",
 				port: 0,
@@ -262,7 +259,6 @@ describe("HttpTransport", () => {
 
 	describe("CORS Configuration", () => {
 		it("should disable CORS when configured", async () => {
-			
 			transport = new HttpTransport({
 				type: "http",
 				port: 0,
@@ -285,7 +281,7 @@ describe("HttpTransport", () => {
 
 		it("should use custom CORS origin when configured", async () => {
 			const customOrigin = "https://example.com";
-			
+
 			transport = new HttpTransport({
 				type: "http",
 				port: 0,

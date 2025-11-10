@@ -67,7 +67,7 @@ export class SseTransport {
 			logger.debug("SSE client connected", "SseTransport");
 
 			// Send initial connection message
-			res.write("data: {\"type\":\"connected\"}\n\n");
+			res.write('data: {"type":"connected"}\n\n');
 
 			// Remove client on disconnect
 			req.on("close", () => {
@@ -96,11 +96,11 @@ export class SseTransport {
 
 				const response = await this.requestHandler.handle(request);
 
-			// Also broadcast to all SSE clients
-			this.broadcast(JSON.stringify({ type: "response", data: response }));
+				// Also broadcast to all SSE clients
+				this.broadcast(JSON.stringify({ type: "response", data: response }));
 
-			// Send response via HTTP for immediate response
-			return res.json(response);
+				// Send response via HTTP for immediate response
+				return res.json(response);
 			} catch (error) {
 				logger.error(
 					"Error handling SSE request",

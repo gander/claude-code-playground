@@ -55,7 +55,7 @@ export class McpRequestHandler {
 	}
 
 	/**
- * Handle MCP request and return JSON-RPC response
+	 * Handle MCP request and return JSON-RPC response
 	 */
 	public async handle(request: JsonRpcRequest): Promise<JsonRpcResponse> {
 		try {
@@ -96,8 +96,7 @@ export class McpRequestHandler {
 				tools: [
 					{
 						name: "check_deprecated",
-						description:
-							"Check if an OSM tag is deprecated. Accepts tag key or key-value pair.",
+						description: "Check if an OSM tag is deprecated. Accepts tag key or key-value pair.",
 						inputSchema: {
 							type: "object",
 							properties: {
@@ -485,7 +484,13 @@ export class McpRequestHandler {
 				case "search_presets": {
 					const keyword = args.keyword as string;
 					const limit = args.limit as number | undefined;
-					const geometry = args.geometry as "point" | "vertex" | "line" | "area" | "relation" | undefined;
+					const geometry = args.geometry as
+						| "point"
+						| "vertex"
+						| "line"
+						| "area"
+						| "relation"
+						| undefined;
 					if (!keyword) {
 						throw new Error("keyword parameter is required");
 					}
