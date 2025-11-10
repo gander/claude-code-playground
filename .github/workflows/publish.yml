@@ -14,15 +14,20 @@ on:
         required: true
         type: string
 
+# Minimal permissions at workflow level (principle of least privilege)
 permissions:
-  contents: write  # Required for GitHub releases
-  id-token: write  # Required for npm provenance and SLSA attestations
-  attestations: write  # Required for build provenance attestations
+  contents: read
 
 jobs:
   validate-and-publish:
     name: Validate and Publish to NPM
     runs-on: ubuntu-latest
+
+    # Grant elevated permissions only to this job
+    permissions:
+      contents: write  # Required for GitHub releases
+      id-token: write  # Required for npm provenance and SLSA attestations
+      attestations: write  # Required for build provenance attestations
 
     steps:
       - name: Checkout repository
