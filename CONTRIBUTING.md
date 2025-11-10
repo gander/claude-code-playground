@@ -486,8 +486,11 @@ Before publishing a new version to npm:
    - GitHub Actions will automatically:
      - Run all tests and checks
      - Build the project
+     - Generate SBOM (Software Bill of Materials)
+     - Generate SLSA build provenance attestations
+     - Generate SLSA SBOM attestations
      - Publish to npm with provenance
-     - Create GitHub release
+     - Create GitHub release with security information
 
 ### Manual Publication (if needed)
 
@@ -505,12 +508,116 @@ npm run build
 npm publish --provenance --access public
 ```
 
+### NPM Provenance & Supply Chain Security
+
+This package is published with comprehensive supply chain security features. Understanding these helps maintain trust and security.
+
+#### What Gets Published
+
+When a version tag is pushed, the automated workflow:
+
+1. **Generates SBOM (Software Bill of Materials)**
+   - CycloneDX format
+   - Lists all dependencies with versions
+   - Includes license information
+   - Provides cryptographic hashes
+
+2. **Creates SLSA Attestations**
+   - **Build Provenance**: Links package to specific build
+   - **SBOM Attestation**: Attests to SBOM authenticity
+   - **SLSA Level 3**: Highest level of supply chain security
+   - Non-falsifiable (signed by GitHub Actions)
+
+3. **Publishes with NPM Provenance**
+   - `--provenance` flag enabled in `.npmrc`
+   - Cryptographic attestation linking package to source
+   - Verifiable on npm package page
+   - OIDC token from GitHub Actions
+
+#### Verification Commands
+
+After publication, verify everything worked correctly:
+
+**Check NPM Provenance:**
+```bash
+# View provenance on npm package page
+npm view @gander-tools/osm-tagging-schema-mcp dist.attestations
+
+# Verify signatures
+npm audit signatures
+```
+
+**Verify SLSA Attestations:**
+```bash
+# Install GitHub CLI if needed
+gh auth login
+
+# Verify attestations
+gh attestation verify \
+  oci://registry.npmjs.org/@gander-tools/osm-tagging-schema-mcp:0.1.0 \
+  --owner gander-tools
+```
+
+**Check SBOM:**
+```bash
+# Download SBOM from GitHub release
+gh release download v0.1.0 --pattern 'sbom.json'
+
+# View contents
+cat sbom.json | jq .
+```
+
+#### Security Requirements
+
+**For Maintainers:**
+
+- ✅ **2FA Enabled**: GitHub account must have 2FA
+- ✅ **NPM Token**: Stored as `NPM_TOKEN` secret in repository
+- ✅ **Write Access**: Only maintainers can push version tags
+- ✅ **Protected Master**: Master branch protected from force pushes
+- ✅ **OIDC Token**: GitHub Actions uses OIDC for npm authentication
+
+**For CI/CD:**
+
+- ✅ **Permissions**: Workflow uses minimal required permissions
+- ✅ **Pinned Actions**: All GitHub Actions pinned to specific SHA
+- ✅ **Isolated Build**: Runs on GitHub-hosted runners
+- ✅ **Attestations**: Signed with GitHub's OIDC token
+
+#### Troubleshooting Publication Issues
+
+**Provenance Generation Failed:**
+- Ensure `id-token: write` permission in workflow
+- Verify GitHub Actions OIDC provider is configured
+- Check npm token has automation permissions
+
+**SLSA Attestation Failed:**
+- Ensure `attestations: write` permission in workflow
+- Verify tarball was created successfully
+- Check SBOM generation completed
+
+**NPM Publish Failed:**
+- Verify `NPM_TOKEN` secret is set correctly
+- Check npm token hasn't expired
+- Ensure package version doesn't already exist
+- Verify package.json version matches git tag
+
+**For more details**, see [docs/security.md](./docs/security.md)
+
 ### Post-Publication
 
 1. **Verify Package**
    ```bash
    # Check package on npm
    npm view @gander-tools/osm-tagging-schema-mcp
+
+   # Verify provenance
+   npm audit signatures
+
+   # Verify SLSA attestations
+   gh attestation verify \
+     oci://registry.npmjs.org/@gander-tools/osm-tagging-schema-mcp:latest \
+     --owner gander-tools
 
    # Test installation
    npx @gander-tools/osm-tagging-schema-mcp@latest
