@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Phase 6: Optimization & Polish
+- **Schema Update Handling**:
+  - Schema version tracking from package metadata
+  - Schema metadata with version and loadedAt timestamp
+  - `get_schema_stats` tool enhanced with version information
+  - Schema structure validation to detect breaking changes
+  - Graceful error handling with descriptive error messages
+  - Version logging on schema load and reload
+  - Comprehensive tests for version tracking and error scenarios (298 tests passing)
+
 #### Phase 3: Core Tool Implementation ✅
 - **Tag Query Tools**:
   - `get_tag_info` - Get comprehensive information about a tag key
