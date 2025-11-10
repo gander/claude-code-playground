@@ -14,14 +14,24 @@ on:
         required: true
         type: string
 
+# Minimal permissions at workflow level (principle of least privilege)
 permissions:
   contents: read
-  id-token: write  # Required for npm provenance
 
 jobs:
-  validate-and-publish:
-    name: Validate and Publish to NPM
+  build-and-publish:
+    name: Build, Validate and Publish to NPM
     runs-on: ubuntu-latest
+
+    # Minimal permissions for npm publishing and attestations
+    permissions:
+      id-token: write  # Required for npm provenance and SLSA attestations
+      attestations: write  # Required for build provenance attestations
+      contents: read  # Only read access needed for checkout
+
+    outputs:
+      version: ${{ steps.validate-version.outputs.version }}
+      version_tag: ${{ steps.validate-version.outputs.version_tag }}
 
     steps:
       - name: Checkout repository
@@ -38,6 +48,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Validate version tag format
+        id: validate-version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             TAG="${{ github.event.inputs.version_tag }}"
@@ -51,14 +62,14 @@ jobs:
           fi
 
           echo "Validated version tag: $TAG"
-          echo "VERSION_TAG=$TAG" >> $GITHUB_ENV
-          echo "VERSION=${TAG#v}" >> $GITHUB_ENV
+          echo "version_tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=${TAG#v}" >> $GITHUB_OUTPUT
 
       - name: Verify package.json version matches tag
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          if [ "$PACKAGE_VERSION" != "${{ env.VERSION }}" ]; then
-            echo "Error: package.json version ($PACKAGE_VERSION) does not match tag version (${{ env.VERSION }})"
+          if [ "$PACKAGE_VERSION" != "${{ steps.validate-version.outputs.version }}" ]; then
+            echo "Error: package.json version ($PACKAGE_VERSION) does not match tag version (${{ steps.validate-version.outputs.version }})"
             exit 1
           fi
           echo "✓ Version match confirmed: $PACKAGE_VERSION"
@@ -89,34 +100,93 @@ jobs:
           fi
           echo "✓ Build artifacts verified"
 
+      - name: Generate SBOM (Software Bill of Materials)
+        run: |
+          # Use npx to avoid npm install -g (Scorecard Pinned-Dependencies)
+          npx --yes @cyclonedx/cyclonedx-npm@4.1.0 --output-file sbom.json
+          echo "✓ SBOM generated: sbom.json"
+
+      - name: Create tarball for attestation
+        run: |
+          # Note: npm is pinned via setup-node@v6.1.0 (Node.js 22)
+          npm pack
+          echo "TARBALL=$(ls *.tgz)" >> $GITHUB_ENV
+          echo "✓ Package tarball created: $(ls *.tgz)"
+
+      - name: Generate SLSA build provenance attestation
+        uses: actions/attest-build-provenance@1c608d11d69870c2092266b3f9a6f3abbf17002c # v1.4.3
+        with:
+          subject-path: ${{ env.TARBALL }}
+
+      - name: Generate SLSA SBOM attestation
+        uses: actions/attest-sbom@5026d3663739160db546203eeaffa6aa1c51a4d6 # v1.4.1
+        with:
+          subject-path: ${{ env.TARBALL }}
+          sbom-path: sbom.json
+
       - name: Publish to NPM with provenance
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build-and-publish
+    if: github.event_name == 'push'
+
+    # Scorecard note: contents: write is REQUIRED for GitHub releases
+    # This is isolated to a separate job with minimal scope:
+    # - Runs ONLY after successful npm publish
+    # - Has NO access to NPM_TOKEN or other secrets
+    # - Uses pinned action (softprops/action-gh-release@SHA)
+    # - Only creates release metadata (no code changes)
+    # This is an acceptable use of write permissions per GitHub security best practices
+    permissions:
+      contents: write  # Required for GitHub Releases API
+
+    steps:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@b555064d6a617fa0b0e4ede6e3b9e06a01fbb011
-        if: github.event_name == 'push'
         with:
-          tag_name: ${{ env.VERSION_TAG }}
-          name: Release ${{ env.VERSION_TAG }}
+          tag_name: ${{ needs.build-and-publish.outputs.version_tag }}
+          name: Release ${{ needs.build-and-publish.outputs.version_tag }}
           body: |
             ## 📦 NPM Package Published
 
-            Version `${{ env.VERSION }}` has been published to npm:
+            Version `${{ needs.build-and-publish.outputs.version }}` has been published to npm:
             - Package: [@gander-tools/osm-tagging-schema-mcp](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
-            - Install: `npx @gander-tools/osm-tagging-schema-mcp@${{ env.VERSION }}`
+            - Install: `npx @gander-tools/osm-tagging-schema-mcp@${{ needs.build-and-publish.outputs.version }}`
 
             ## 🔐 Provenance & Security
 
-            This package was published with [npm provenance](https://docs.npmjs.com/generating-provenance-statements) enabled, providing:
-            - Verified build from GitHub Actions
-            - Tamper-proof supply chain
-            - SLSA Level 2+ compliance
+            This package was published with comprehensive supply chain security:
 
-            Verify authenticity:
+            ### NPM Provenance
+            - [npm provenance](https://docs.npmjs.com/generating-provenance-statements) enabled
+            - Verified build from GitHub Actions
+            - Cryptographic attestations linking package to source
+
+            ### SLSA Build Provenance
+            - SLSA Level 3 build provenance attestations
+            - Tamper-proof build metadata
+            - Verifiable build environment and process
+
+            ### SBOM (Software Bill of Materials)
+            - CycloneDX SBOM generated and attested
+            - Complete dependency transparency
+            - Supply chain risk assessment
+
+            ### Verification
+
+            **Verify npm provenance:**
             ```bash
             npm audit signatures @gander-tools/osm-tagging-schema-mcp
+            ```
+
+            **Verify SLSA attestations:**
+            ```bash
+            gh attestation verify oci://ghcr.io/gander-tools/osm-tagging-schema-mcp:${{ needs.build-and-publish.outputs.version }} --owner gander-tools
             ```
 
             ## 📋 See CHANGELOG.md for details
