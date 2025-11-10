@@ -82,6 +82,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated repository reference and documentation structure
 - Improved test robustness with order-independent assertions
 - Enhanced tool registration with alphabetical ordering
+- **GitHub Actions dependencies**:
+  - `actions/checkout`: 4.3.0 → 5.0.0 (Node.js 24 runtime)
+  - `github/codeql-action`: 3.31.2 → 4.31.2 (Node.js 24 runtime)
+  - Removed version comments from workflow files for cleaner maintenance
+  - Standardized to commit hash pinning for security
+- **npm dependencies**:
+  - `@modelcontextprotocol/sdk`: 1.21.0 → 1.21.1 (bug fixes and deprecation annotations)
+- **README shields**: Updated MCP badge to show only minor version (1.21 instead of 1.21.1)
 
 ### Fixed
 - **search_tags fields.json coverage**: Now searches both fields.json and presets
