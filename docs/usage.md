@@ -1,0 +1,806 @@
+# Usage Guide
+
+This guide provides practical examples of using the OSM Tagging Schema MCP Server tools.
+
+## Table of Contents
+
+- [Getting Started](#getting-started)
+- [Common Use Cases](#common-use-cases)
+- [Tool Categories](#tool-categories)
+  - [Tag Query Tools](#tag-query-tools)
+  - [Preset Discovery Tools](#preset-discovery-tools)
+  - [Validation Tools](#validation-tools)
+  - [Schema Exploration Tools](#schema-exploration-tools)
+- [Workflow Examples](#workflow-examples)
+- [Best Practices](#best-practices)
+
+## Getting Started
+
+After installation and configuration (see [Installation](./installation.md) and [Configuration](./configuration.md)), you can use the tools through your MCP client.
+
+### Basic Tool Usage
+
+**In Claude Code CLI or Claude Desktop**, simply ask natural language questions:
+
+```
+"What tags are available for restaurants?"
+"Validate this OSM feature: amenity=restaurant, cuisine=italian"
+"What presets are available for buildings?"
+```
+
+**Programmatically** (using MCP SDK):
+
+```typescript
+const response = await client.callTool({
+  name: "get_tag_info",
+  arguments: {
+    tagKey: "amenity"
+  }
+});
+```
+
+## Common Use Cases
+
+### 1. Exploring Available Tags
+
+**Question:** "What tags can I use for a parking facility?"
+
+**Tool:** `get_tag_info`
+
+```json
+{
+  "name": "get_tag_info",
+  "arguments": {
+    "tagKey": "parking"
+  }
+}
+```
+
+**Response:** All possible values for `parking` tag (surface, underground, multi-storey, etc.)
+
+---
+
+### 2. Finding Related Tags
+
+**Question:** "What other tags are commonly used with amenity=restaurant?"
+
+**Tool:** `get_related_tags`
+
+```json
+{
+  "name": "get_related_tags",
+  "arguments": {
+    "tag": "amenity=restaurant",
+    "limit": 10
+  }
+}
+```
+
+**Response:** Top 10 related tags sorted by frequency (cuisine, opening_hours, wheelchair, etc.)
+
+---
+
+### 3. Searching for Presets
+
+**Question:** "Find all presets for hospitals"
+
+**Tool:** `search_presets`
+
+```json
+{
+  "name": "search_presets",
+  "arguments": {
+    "keyword": "hospital",
+    "limit": 20
+  }
+}
+```
+
+**Response:** All hospital-related presets (amenity/hospital, healthcare/hospital, etc.)
+
+---
+
+### 4. Validating Tags
+
+**Question:** "Is this tag combination valid?"
+
+**Tool:** `validate_tag_collection`
+
+```json
+{
+  "name": "validate_tag_collection",
+  "arguments": {
+    "tags": {
+      "amenity": "parking",
+      "parking": "surface",
+      "capacity": "50",
+      "fee": "yes",
+      "access": "customers"
+    }
+  }
+}
+```
+
+**Response:** Validation results with any errors or warnings
+
+---
+
+### 5. Checking for Deprecated Tags
+
+**Question:** "Is amenity=park_bench deprecated?"
+
+**Tool:** `check_deprecated`
+
+```json
+{
+  "name": "check_deprecated",
+  "arguments": {
+    "key": "amenity",
+    "value": "park_bench"
+  }
+}
+```
+
+**Response:** Deprecation status and suggested replacement (leisure=picnic_table)
+
+---
+
+### 6. Getting Improvement Suggestions
+
+**Question:** "What tags am I missing for my restaurant feature?"
+
+**Tool:** `suggest_improvements`
+
+```json
+{
+  "name": "suggest_improvements",
+  "arguments": {
+    "tags": {
+      "amenity": "restaurant",
+      "name": "Pizza Place"
+    }
+  }
+}
+```
+
+**Response:** Suggestions for missing tags (cuisine, opening_hours, phone, website, etc.)
+
+## Tool Categories
+
+### Tag Query Tools
+
+#### `get_tag_info`
+
+Get comprehensive information about a specific tag key.
+
+**Example 1:** Basic tag info
+```json
+{
+  "name": "get_tag_info",
+  "arguments": {
+    "tagKey": "building"
+  }
+}
+```
+
+**Returns:**
+- All possible values (yes, house, commercial, etc.)
+- Value type information
+- Field definition status
+
+**Example 2:** Complex tag with colons
+```json
+{
+  "name": "get_tag_info",
+  "arguments": {
+    "tagKey": "toilets:wheelchair"
+  }
+}
+```
+
+---
+
+#### `get_tag_values`
+
+Get all valid values for a tag key.
+
+**Example:**
+```json
+{
+  "name": "get_tag_values",
+  "arguments": {
+    "tagKey": "highway"
+  }
+}
+```
+
+**Returns:** Array of values sorted alphabetically (motorway, trunk, primary, secondary, etc.)
+
+**Use case:** Building a tag editor dropdown
+
+---
+
+#### `search_tags`
+
+Search for tags by keyword.
+
+**Example 1:** Search by keyword
+```json
+{
+  "name": "search_tags",
+  "arguments": {
+    "keyword": "wheelchair",
+    "limit": 20
+  }
+}
+```
+
+**Returns:** All tags containing "wheelchair" (wheelchair, toilets:wheelchair, etc.)
+
+**Example 2:** Find accessibility tags
+```json
+{
+  "name": "search_tags",
+  "arguments": {
+    "keyword": "access",
+    "limit": 50
+  }
+}
+```
+
+---
+
+#### `get_related_tags`
+
+Find tags commonly used together.
+
+**Example 1:** Related tags for a specific tag
+```json
+{
+  "name": "get_related_tags",
+  "arguments": {
+    "tag": "amenity=cafe"
+  }
+}
+```
+
+**Returns:** Tags sorted by frequency:
+- `cuisine=*` (80% frequency)
+- `opening_hours=*` (65% frequency)
+- `outdoor_seating=*` (45% frequency)
+
+**Example 2:** Related tags by key only
+```json
+{
+  "name": "get_related_tags",
+  "arguments": {
+    "tag": "shop",
+    "limit": 15
+  }
+}
+```
+
+### Preset Discovery Tools
+
+#### `search_presets`
+
+Search for presets by name or tag.
+
+**Example 1:** Search by keyword
+```json
+{
+  "name": "search_presets",
+  "arguments": {
+    "keyword": "restaurant"
+  }
+}
+```
+
+**Example 2:** Search by tag
+```json
+{
+  "name": "search_presets",
+  "arguments": {
+    "keyword": "amenity=restaurant"
+  }
+}
+```
+
+**Example 3:** Filter by geometry
+```json
+{
+  "name": "search_presets",
+  "arguments": {
+    "keyword": "building",
+    "geometry": "area",
+    "limit": 30
+  }
+}
+```
+
+**Returns:** Matching presets with IDs and basic info
+
+---
+
+#### `get_preset_details`
+
+Get complete information about a preset.
+
+**Example:**
+```json
+{
+  "name": "get_preset_details",
+  "arguments": {
+    "presetId": "amenity/restaurant"
+  }
+}
+```
+
+**Returns:**
+- Preset ID
+- Tags (amenity=restaurant)
+- Geometry types (point, area)
+- Fields (name, cuisine, diet_multi, etc.)
+- More fields (optional tags)
+- Icon name
+- Match score
+
+**Use case:** Building a feature editor
+
+---
+
+#### `get_preset_tags`
+
+Get recommended tags for a preset.
+
+**Example:**
+```json
+{
+  "name": "get_preset_tags",
+  "arguments": {
+    "presetId": "amenity/parking"
+  }
+}
+```
+
+**Returns:**
+- `tags`: Identifying tags (amenity=parking)
+- `addTags`: Additional recommended tags (if any)
+
+**Use case:** Auto-tagging features
+
+### Validation Tools
+
+#### `validate_tag`
+
+Validate a single tag key-value pair.
+
+**Example 1:** Valid tag
+```json
+{
+  "name": "validate_tag",
+  "arguments": {
+    "key": "amenity",
+    "value": "restaurant"
+  }
+}
+```
+
+**Returns:**
+```json
+{
+  "valid": true,
+  "errors": [],
+  "warnings": [],
+  "deprecated": false
+}
+```
+
+**Example 2:** Deprecated tag
+```json
+{
+  "name": "validate_tag",
+  "arguments": {
+    "key": "amenity",
+    "value": "park_bench"
+  }
+}
+```
+
+**Returns:**
+```json
+{
+  "valid": false,
+  "errors": ["Tag is deprecated"],
+  "warnings": [],
+  "deprecated": true,
+  "message": "Consider using: leisure=picnic_table"
+}
+```
+
+---
+
+#### `validate_tag_collection`
+
+Validate a complete set of tags.
+
+**Example:**
+```json
+{
+  "name": "validate_tag_collection",
+  "arguments": {
+    "tags": {
+      "amenity": "restaurant",
+      "name": "Pizza Place",
+      "cuisine": "pizza",
+      "opening_hours": "Mo-Su 11:00-22:00",
+      "wheelchair": "yes",
+      "outdoor_seating": "yes"
+    }
+  }
+}
+```
+
+**Returns:**
+```json
+{
+  "valid": true,
+  "tagResults": {
+    "amenity": { "valid": true, "errors": [], "warnings": [] },
+    "name": { "valid": true, "errors": [], "warnings": [] },
+    ...
+  },
+  "errors": [],
+  "warnings": [],
+  "deprecatedCount": 0,
+  "errorCount": 0,
+  "warningCount": 0
+}
+```
+
+**Use case:** Feature validation before saving
+
+---
+
+#### `check_deprecated`
+
+Check if a tag is deprecated.
+
+**Example 1:** Check key-value pair
+```json
+{
+  "name": "check_deprecated",
+  "arguments": {
+    "key": "highway",
+    "value": "incline"
+  }
+}
+```
+
+**Example 2:** Check key only
+```json
+{
+  "name": "check_deprecated",
+  "arguments": {
+    "key": "created_by"
+  }
+}
+```
+
+**Returns:**
+```json
+{
+  "deprecated": true,
+  "oldTags": { "created_by": "*" },
+  "replacement": {},
+  "message": "Tag created_by is deprecated. Should not be used."
+}
+```
+
+---
+
+#### `suggest_improvements`
+
+Get suggestions for improving a tag collection.
+
+**Example:**
+```json
+{
+  "name": "suggest_improvements",
+  "arguments": {
+    "tags": {
+      "amenity": "restaurant",
+      "name": "Pizza Place"
+    }
+  }
+}
+```
+
+**Returns:**
+```json
+{
+  "suggestions": [
+    "Consider adding 'cuisine' tag (common for amenity/restaurant)",
+    "Consider adding 'phone' tag (common for amenity/restaurant)",
+    "Consider adding 'opening_hours' tag (common for amenity/restaurant)",
+    "Optional: Consider adding 'website' tag",
+    "Optional: Consider adding 'outdoor_seating' tag"
+  ],
+  "warnings": [],
+  "matchedPresets": ["amenity/restaurant", "amenity/fast_food"]
+}
+```
+
+**Use case:** Quality improvement for OSM features
+
+### Schema Exploration Tools
+
+#### `get_categories`
+
+List all available tag categories.
+
+**Example:**
+```json
+{
+  "name": "get_categories",
+  "arguments": {}
+}
+```
+
+**Returns:** Array of categories sorted alphabetically:
+```json
+[
+  { "name": "Amenity", "count": 245 },
+  { "name": "Building", "count": 89 },
+  { "name": "Highway", "count": 67 },
+  ...
+]
+```
+
+---
+
+#### `get_category_tags`
+
+Get all tags in a specific category.
+
+**Example:**
+```json
+{
+  "name": "get_category_tags",
+  "arguments": {
+    "category": "Building"
+  }
+}
+```
+
+**Returns:** Array of preset IDs in that category
+
+---
+
+#### `get_schema_stats`
+
+Get statistics about the schema.
+
+**Example:**
+```json
+{
+  "name": "get_schema_stats",
+  "arguments": {}
+}
+```
+
+**Returns:**
+```json
+{
+  "presetCount": 1707,
+  "fieldCount": 799,
+  "categoryCount": 15,
+  "deprecatedCount": 245
+}
+```
+
+**Use case:** Schema overview, debugging
+
+## Workflow Examples
+
+### Workflow 1: Adding a New Restaurant
+
+**Step 1:** Search for restaurant presets
+```json
+{
+  "name": "search_presets",
+  "arguments": { "keyword": "restaurant" }
+}
+```
+
+**Step 2:** Get preset details
+```json
+{
+  "name": "get_preset_details",
+  "arguments": { "presetId": "amenity/restaurant" }
+}
+```
+
+**Step 3:** Check recommended tags
+```json
+{
+  "name": "get_preset_tags",
+  "arguments": { "presetId": "amenity/restaurant" }
+}
+```
+
+**Step 4:** Create initial tags
+```json
+{
+  "amenity": "restaurant",
+  "name": "La Trattoria",
+  "cuisine": "italian"
+}
+```
+
+**Step 5:** Get improvement suggestions
+```json
+{
+  "name": "suggest_improvements",
+  "arguments": { "tags": { ... } }
+}
+```
+
+**Step 6:** Validate final tags
+```json
+{
+  "name": "validate_tag_collection",
+  "arguments": { "tags": { ... } }
+}
+```
+
+### Workflow 2: Updating Old OSM Data
+
+**Step 1:** Check if tags are deprecated
+```json
+{
+  "name": "check_deprecated",
+  "arguments": {
+    "key": "amenity",
+    "value": "park_bench"
+  }
+}
+```
+
+**Step 2:** Get replacement tags
+(Returned in check_deprecated response)
+
+**Step 3:** Validate new tags
+```json
+{
+  "name": "validate_tag",
+  "arguments": {
+    "key": "leisure",
+    "value": "picnic_table"
+  }
+}
+```
+
+### Workflow 3: Building a Tag Editor
+
+**Step 1:** Get schema statistics (for UI)
+```json
+{
+  "name": "get_schema_stats",
+  "arguments": {}
+}
+```
+
+**Step 2:** List categories (for navigation)
+```json
+{
+  "name": "get_categories",
+  "arguments": {}
+}
+```
+
+**Step 3:** Get tags in category (for display)
+```json
+{
+  "name": "get_category_tags",
+  "arguments": { "category": "Amenity" }
+}
+```
+
+**Step 4:** Get tag values (for dropdown)
+```json
+{
+  "name": "get_tag_values",
+  "arguments": { "tagKey": "amenity" }
+}
+```
+
+**Step 5:** Validate user input (real-time)
+```json
+{
+  "name": "validate_tag",
+  "arguments": {
+    "key": "amenity",
+    "value": "restaurant"
+  }
+}
+```
+
+## Best Practices
+
+### 1. Use Specific Tools
+
+Choose the most specific tool for your task:
+- ✅ `get_tag_values` for dropdown lists
+- ❌ `search_tags` when you know the exact key
+
+### 2. Validate Early and Often
+
+```json
+// Validate single tag as user types
+{ "name": "validate_tag", "arguments": { "key": "...", "value": "..." } }
+
+// Validate collection before saving
+{ "name": "validate_tag_collection", "arguments": { "tags": { ... } } }
+```
+
+### 3. Use Suggestions to Improve Quality
+
+```json
+// After basic tagging
+{ "name": "suggest_improvements", "arguments": { "tags": { ... } } }
+
+// Apply suggestions
+// Validate again
+{ "name": "validate_tag_collection", "arguments": { "tags": { ... } } }
+```
+
+### 4. Check for Deprecation
+
+Before using old data:
+```json
+{ "name": "check_deprecated", "arguments": { "key": "...", "value": "..." } }
+```
+
+### 5. Limit Result Sizes
+
+For large queries, use `limit` parameter:
+```json
+{
+  "name": "search_presets",
+  "arguments": {
+    "keyword": "building",
+    "limit": 50
+  }
+}
+```
+
+### 6. Combine Tools for Rich Experiences
+
+```typescript
+// Get tag info
+const tagInfo = await client.callTool({
+  name: "get_tag_info",
+  arguments: { tagKey: "amenity" }
+});
+
+// For each value, get related tags
+for (const value of tagInfo.values) {
+  const related = await client.callTool({
+    name: "get_related_tags",
+    arguments: { tag: `amenity=${value}` }
+  });
+}
+```
+
+## Next Steps
+
+- [API Documentation](./api/) - Detailed tool reference
+- [Troubleshooting](./troubleshooting.md) - Common issues
+- [Examples](../README.md#example-queries) - More examples
+
+## Getting Help
+
+- **Issues**: Report problems on [GitHub Issues](https://github.com/gander-tools/osm-tagging-schema-mcp/issues)
+- **Questions**: Ask on [GitHub Discussions](https://github.com/gander-tools/osm-tagging-schema-mcp/discussions)
+- **Documentation**: See [README.md](../README.md)
