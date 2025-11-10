@@ -84,6 +84,27 @@ Ask Claude: "Validate these tags: amenity=parking, capacity=50"
 - [docs/usage.md](./docs/usage.md) - Complete usage examples and workflows
 - [docs/api/](./docs/api/) - API reference for all 14 tools
 
+## HTTP Transport
+
+The server supports HTTP transport with Server-Sent Events (SSE) in addition to the default stdio transport:
+
+```bash
+# Start with HTTP transport
+TRANSPORT=http npm start
+
+# Custom port and host
+TRANSPORT=http HTTP_PORT=8080 HTTP_HOST=0.0.0.0 npm start
+
+# Using Docker
+docker run -e TRANSPORT=http -p 3000:3000 ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+```
+
+📖 **For complete HTTP transport documentation**, see [docs/http-transport.md](./docs/http-transport.md) which covers:
+- Configuration options (port, host, CORS, session management)
+- API endpoints and usage
+- Integration examples (JavaScript, Python)
+- Security considerations
+
 ## Development Methodology
 
 This project follows **Test-Driven Development (TDD)** principles:

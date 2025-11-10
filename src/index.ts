@@ -18,6 +18,8 @@ import { validateTag } from "./tools/validate-tag.js";
 import { validateTagCollection } from "./tools/validate-tag-collection.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
 import { logger } from "./utils/logger.js";
+import { getTransportConfig } from "./utils/transport-config.js";
+import { startHttpServer, closeAllTransports } from "./transport/http.js";
 
 /**
  * Create and configure the MCP server
@@ -528,6 +530,10 @@ export function createServer(): Server {
 async function main() {
 	logger.info("Starting OSM Tagging Schema MCP Server", "main");
 
+	// Parse transport configuration from environment variables
+	const config = getTransportConfig();
+	logger.info(`Transport mode: ${config.transport}`, "main");
+
 	// Create server and preload schema for optimal performance
 	const server = createServer();
 
@@ -538,12 +544,33 @@ async function main() {
 	await schemaLoader.warmup();
 	logger.info("Schema preloaded successfully", "main");
 
-	const transport = new StdioServerTransport();
+	if (config.transport === "http") {
+		// Start HTTP server with SSE support
+		const httpServer = await startHttpServer(server, config.http);
 
-	await server.connect(transport);
+		logger.info("OSM Tagging Schema MCP Server running on HTTP", "main");
+		console.error(`OSM Tagging Schema MCP Server running on http://${config.http.host}:${config.http.port}`);
 
-	logger.info("OSM Tagging Schema MCP Server running on stdio", "main");
-	console.error("OSM Tagging Schema MCP Server running on stdio");
+		// Handle graceful shutdown
+		const shutdown = async () => {
+			logger.info("Shutting down HTTP server...", "main");
+			await closeAllTransports();
+			httpServer.close(() => {
+				logger.info("HTTP server closed", "main");
+				process.exit(0);
+			});
+		};
+
+		process.on("SIGINT", shutdown);
+		process.on("SIGTERM", shutdown);
+	} else {
+		// Use stdio transport (default)
+		const transport = new StdioServerTransport();
+		await server.connect(transport);
+
+		logger.info("OSM Tagging Schema MCP Server running on stdio", "main");
+		console.error("OSM Tagging Schema MCP Server running on stdio");
+	}
 }
 
 // Run if this is the main module
