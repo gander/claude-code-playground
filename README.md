@@ -344,20 +344,27 @@ See [ROADMAP.md](./ROADMAP.md) for detailed development plan.
 
 ## Contributing
 
-Contributions are welcome! Please follow these guidelines:
+Contributions are welcome! We follow a **Test-Driven Development (TDD)** approach.
 
-1. **Fork and clone** the repository
-2. **Install dependencies**: `npm install`
-3. **Create a branch**: `git checkout -b feature/your-feature`
-4. **Write tests first** (TDD): Add tests in `tests/` directory
-5. **Implement the feature**: Write code to make tests pass
-6. **Run tests**: `npm test` (ensure >90% coverage)
-7. **Lint and format**: `npm run lint && npm run format`
-8. **Commit changes**: Use conventional commit messages
-9. **Submit a PR**: Include description and test coverage
+**Quick Start:**
+1. Fork and clone the repository
+2. Install dependencies: `npm install`
+3. Create a feature branch: `git checkout -b feature/your-feature`
+4. Write tests first, then implement the feature
+5. Ensure all tests pass: `npm test`
+6. Submit a pull request
+
+**For detailed guidelines**, see [CONTRIBUTING.md](./CONTRIBUTING.md) which covers:
+- Development workflow (TDD process)
+- Code quality standards
+- Testing requirements (>90% coverage)
+- Commit message conventions
+- Pull request process
 
 ## Documentation
 
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines and workflow
+- [DEVELOPMENT.md](./DEVELOPMENT.md) - Development setup and common tasks
 - [ROADMAP.md](./ROADMAP.md) - Development roadmap and future plans
 - [CHANGELOG.md](./CHANGELOG.md) - Project changelog
 - [CLAUDE.md](./CLAUDE.md) - Technical project documentation and development notes
