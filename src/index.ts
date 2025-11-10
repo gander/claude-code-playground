@@ -17,6 +17,7 @@ import { suggestImprovements } from "./tools/suggest-improvements.js";
 import { validateTag } from "./tools/validate-tag.js";
 import { validateTagCollection } from "./tools/validate-tag-collection.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
+import { logger } from "./utils/logger.js";
 
 /**
  * Create and configure the MCP server
@@ -41,6 +42,26 @@ export function createServer(): Server {
 	// Tools are sorted alphabetically by name
 	server.setRequestHandler(ListToolsRequestSchema, async () => ({
 		tools: [
+			{
+				name: "check_deprecated",
+				description:
+					"Check if an OSM tag is deprecated. Accepts tag key or key-value pair.",
+				inputSchema: {
+					type: "object",
+					properties: {
+						key: {
+							type: "string",
+							description: "The tag key to check (e.g., 'amenity', 'highway')",
+						},
+						value: {
+							type: "string",
+							description:
+								"Optional tag value. If not provided, checks if any value for this key is deprecated",
+						},
+					},
+					required: ["key"],
+				},
+			},
 			{
 				name: "get_categories",
 				description:
@@ -218,26 +239,6 @@ export function createServer(): Server {
 				},
 			},
 			{
-				name: "check_deprecated",
-				description:
-					"Check if an OSM tag is deprecated. Accepts tag key or key-value pair.",
-				inputSchema: {
-					type: "object",
-					properties: {
-						key: {
-							type: "string",
-							description: "The tag key to check (e.g., 'amenity', 'highway')",
-						},
-						value: {
-							type: "string",
-							description:
-								"Optional tag value. If not provided, checks if any value for this key is deprecated",
-						},
-					},
-					required: ["key"],
-				},
-			},
-			{
 				name: "validate_tag",
 				description:
 					"Validate a single OSM tag key-value pair. Checks for deprecated tags, unknown keys, and validates against field options.",
@@ -281,7 +282,10 @@ export function createServer(): Server {
 	server.setRequestHandler(CallToolRequestSchema, async (request) => {
 		const { name, arguments: args } = request.params;
 
-		if (name === "get_schema_stats") {
+		logger.debug(`Tool call: ${name}`, "MCPServer");
+
+		try {
+			if (name === "get_schema_stats") {
 			const stats = await getSchemaStats(schemaLoader);
 			return {
 				content: [
@@ -504,7 +508,15 @@ export function createServer(): Server {
 			};
 		}
 
-		throw new Error(`Unknown tool: ${name}`);
+			throw new Error(`Unknown tool: ${name}`);
+		} catch (error) {
+			logger.error(
+				`Error executing tool: ${name}`,
+				"MCPServer",
+				error instanceof Error ? error : new Error(String(error)),
+			);
+			throw error;
+		}
 	});
 
 	return server;
@@ -514,11 +526,14 @@ export function createServer(): Server {
  * Main entry point
  */
 async function main() {
+	logger.info("Starting OSM Tagging Schema MCP Server", "main");
+
 	const server = createServer();
 	const transport = new StdioServerTransport();
 
 	await server.connect(transport);
 
+	logger.info("OSM Tagging Schema MCP Server running on stdio", "main");
 	console.error("OSM Tagging Schema MCP Server running on stdio");
 }
 
@@ -532,6 +547,11 @@ const isMainModule =
 
 if (isMainModule) {
 	main().catch((error) => {
+		logger.error(
+			"Fatal server error",
+			"main",
+			error instanceof Error ? error : new Error(String(error)),
+		);
 		console.error("Server error:", error);
 		process.exit(1);
 	});

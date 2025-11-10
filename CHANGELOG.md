@@ -78,6 +78,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clear navigation with links to all documentation
   - Comprehensive API documentation pattern established
 
+#### Phase 6: Optimization & Polish (Partial)
+- **Logging and Debugging Support**:
+  - Built-in logger with configurable log levels (SILENT, ERROR, WARN, INFO, DEBUG)
+  - `LOG_LEVEL` environment variable for runtime configuration
+  - Structured log output with timestamps, levels, and context
+  - Logging in MCP server operations (startup, tool calls, errors)
+  - Debug mode for detailed tool execution tracing
+  - Comprehensive logger unit tests (13 tests, 6 suites)
+  - Developer documentation in `DEVELOPMENT.md`
+
 ### Changed
 - Updated repository reference and documentation structure
 - Improved test robustness with order-independent assertions
@@ -94,6 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **search_tags fields.json coverage**: Now searches both fields.json and presets
 - **Alphabetical tool sorting**: Tools returned in predictable alphabetical order
+- **Tool ordering (Phase 6)**: Fixed `check_deprecated` position - moved to alphabetically correct position (1st, before `get_categories`)
 - **Tag key format**: Proper OSM colon separator format (e.g., `toilets:wheelchair`)
 - **Docker workflow**: Only runs after PR merge, not during PR review
 - **Empty preset tags**: Fixed preset matching to skip presets with empty tags

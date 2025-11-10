@@ -104,7 +104,13 @@ This document outlines the development phases for the OSM Tagging Schema MCP Ser
 
 - [ ] Implement caching strategies
 - [ ] Optimize schema loading and queries
-- [ ] Add logging and debugging support
+- [x] Add logging and debugging support
+  - Built-in logger with configurable levels (SILENT, ERROR, WARN, INFO, DEBUG)
+  - LOG_LEVEL environment variable configuration
+  - Structured log output with timestamps and context
+  - Logging in server lifecycle (startup, tool calls, errors)
+  - Comprehensive unit tests (13 tests, 6 suites)
+  - Developer documentation updated
 - [ ] Handle schema updates gracefully
 - [ ] Prepare for publication
 
