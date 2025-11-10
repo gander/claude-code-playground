@@ -97,7 +97,7 @@ jobs:
 
       - name: Generate SBOM (Software Bill of Materials)
         run: |
-          npm install -g @cyclonedx/cyclonedx-npm
+          npm install -g @cyclonedx/cyclonedx-npm@4.1.0
           cyclonedx-npm --output-file sbom.json
           echo "✓ SBOM generated: sbom.json"
 
