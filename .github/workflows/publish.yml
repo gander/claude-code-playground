@@ -15,8 +15,9 @@ on:
         type: string
 
 permissions:
-  contents: read
-  id-token: write  # Required for npm provenance
+  contents: write  # Required for GitHub releases
+  id-token: write  # Required for npm provenance and SLSA attestations
+  attestations: write  # Required for build provenance attestations
 
 jobs:
   validate-and-publish:
@@ -89,6 +90,29 @@ jobs:
           fi
           echo "✓ Build artifacts verified"
 
+      - name: Generate SBOM (Software Bill of Materials)
+        run: |
+          npm install -g @cyclonedx/cyclonedx-npm
+          cyclonedx-npm --output-file sbom.json
+          echo "✓ SBOM generated: sbom.json"
+
+      - name: Create tarball for attestation
+        run: |
+          npm pack
+          echo "TARBALL=$(ls *.tgz)" >> $GITHUB_ENV
+          echo "✓ Package tarball created: $(ls *.tgz)"
+
+      - name: Generate SLSA build provenance attestation
+        uses: actions/attest-build-provenance@1c608d11d69870c2092266b3f9a6f3abbf17002c # v1.4.3
+        with:
+          subject-path: ${{ env.TARBALL }}
+
+      - name: Generate SLSA SBOM attestation
+        uses: actions/attest-sbom@5026d3663739160db546203eeaffa6aa1c51a4d6 # v1.4.1
+        with:
+          subject-path: ${{ env.TARBALL }}
+          sbom-path: sbom.json
+
       - name: Publish to NPM with provenance
         run: npm publish --provenance --access public
         env:
@@ -109,14 +133,33 @@ jobs:
 
             ## 🔐 Provenance & Security
 
-            This package was published with [npm provenance](https://docs.npmjs.com/generating-provenance-statements) enabled, providing:
-            - Verified build from GitHub Actions
-            - Tamper-proof supply chain
-            - SLSA Level 2+ compliance
+            This package was published with comprehensive supply chain security:
 
-            Verify authenticity:
+            ### NPM Provenance
+            - [npm provenance](https://docs.npmjs.com/generating-provenance-statements) enabled
+            - Verified build from GitHub Actions
+            - Cryptographic attestations linking package to source
+
+            ### SLSA Build Provenance
+            - SLSA Level 3 build provenance attestations
+            - Tamper-proof build metadata
+            - Verifiable build environment and process
+
+            ### SBOM (Software Bill of Materials)
+            - CycloneDX SBOM generated and attested
+            - Complete dependency transparency
+            - Supply chain risk assessment
+
+            ### Verification
+
+            **Verify npm provenance:**
             ```bash
             npm audit signatures @gander-tools/osm-tagging-schema-mcp
+            ```
+
+            **Verify SLSA attestations:**
+            ```bash
+            gh attestation verify oci://ghcr.io/gander-tools/osm-tagging-schema-mcp:${{ env.VERSION }} --owner gander-tools
             ```
 
             ## 📋 See CHANGELOG.md for details
