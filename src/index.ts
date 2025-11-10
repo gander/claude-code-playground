@@ -13,6 +13,7 @@ import { getTagValues } from "./tools/get-tag-values.js";
 import { searchPresets } from "./tools/search-presets.js";
 import { searchTags } from "./tools/search-tags.js";
 import { checkDeprecated } from "./tools/check-deprecated.js";
+import { suggestImprovements } from "./tools/suggest-improvements.js";
 import { validateTag } from "./tools/validate-tag.js";
 import { validateTagCollection } from "./tools/validate-tag-collection.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
@@ -195,6 +196,25 @@ export function createServer(): Server {
 						},
 					},
 					required: ["keyword"],
+				},
+			},
+			{
+				name: "suggest_improvements",
+				description:
+					"Suggest improvements for an OSM tag collection. Analyzes tags and provides suggestions for missing fields, warnings about deprecated tags, and recommendations based on matched presets.",
+				inputSchema: {
+					type: "object",
+					properties: {
+						tags: {
+							type: "object",
+							description:
+								"Object containing tag key-value pairs to analyze (e.g., { 'amenity': 'restaurant' })",
+							additionalProperties: {
+								type: "string",
+							},
+						},
+					},
+					required: ["tags"],
 				},
 			},
 			{
@@ -412,6 +432,22 @@ export function createServer(): Server {
 					{
 						type: "text",
 						text: JSON.stringify(results, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "suggest_improvements") {
+			const { tags } = args as { tags?: Record<string, string> };
+			if (!tags) {
+				throw new Error("tags parameter is required");
+			}
+			const result = await suggestImprovements(schemaLoader, tags);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(result, null, 2),
 					},
 				],
 			};
