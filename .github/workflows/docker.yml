@@ -20,6 +20,7 @@ jobs:
       packages: write
       id-token: write  # For Cosign keyless signing
       attestations: write  # For build attestations
+      security-events: write  # For uploading Trivy SARIF results
 
     steps:
       - name: Checkout repository
