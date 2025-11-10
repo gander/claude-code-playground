@@ -12,6 +12,7 @@ Thank you for your interest in contributing! This document provides guidelines a
 - [Testing Requirements](#testing-requirements)
 - [Commit Message Guidelines](#commit-message-guidelines)
 - [Documentation](#documentation)
+- [Release and Publishing](#release-and-publishing)
 
 ## Code of Conduct
 
@@ -430,6 +431,98 @@ For significant features, update `CLAUDE.md`:
 - Development Status section
 - Test counts
 - Phase completion status
+
+## Release and Publishing
+
+This section is for maintainers preparing a new release.
+
+### Pre-Publication Checklist
+
+Before publishing a new version to npm:
+
+1. **Ensure All Tests Pass**
+   ```bash
+   npm run test:unit        # Unit tests
+   npm run test:integration # Integration tests
+   npm run lint             # Code quality
+   npm run typecheck        # TypeScript types
+   npm run build            # Compile TypeScript
+   ```
+
+2. **Verify Package Contents**
+   ```bash
+   npm pack --dry-run       # Preview package contents
+   ```
+
+   Expected contents:
+   - ✅ `dist/` directory (compiled code)
+   - ✅ `docs/` directory (user documentation)
+   - ✅ LICENSE, README.md, CHANGELOG.md
+   - ✅ CONTRIBUTING.md, SECURITY.md
+   - ❌ No `src/` directory (source code)
+   - ❌ No `tests/` directory (test files)
+   - ❌ No dev config files (biome.json, tsconfig.json)
+
+3. **Update Version Number**
+   ```bash
+   # Update package.json version (manually or with npm version)
+   npm version patch   # 0.1.0 → 0.1.1
+   npm version minor   # 0.1.0 → 0.2.0
+   npm version major   # 0.1.0 → 1.0.0
+   ```
+
+4. **Update CHANGELOG.md**
+   - Move changes from [Unreleased] to new version section
+   - Follow [Keep a Changelog](https://keepachangelog.com/) format
+   - Add release date
+
+5. **Create Git Tag**
+   ```bash
+   git tag -a v0.1.0 -m "Release v0.1.0"
+   git push origin v0.1.0
+   ```
+
+6. **Trigger Automated Publication**
+   - GitHub Actions will automatically:
+     - Run all tests and checks
+     - Build the project
+     - Publish to npm with provenance
+     - Create GitHub release
+
+### Manual Publication (if needed)
+
+If automated publishing fails:
+
+```bash
+# Ensure you're on master branch with latest changes
+git checkout master
+git pull origin master
+
+# Build the project
+npm run build
+
+# Publish with provenance
+npm publish --provenance --access public
+```
+
+### Post-Publication
+
+1. **Verify Package**
+   ```bash
+   # Check package on npm
+   npm view @gander-tools/osm-tagging-schema-mcp
+
+   # Test installation
+   npx @gander-tools/osm-tagging-schema-mcp@latest
+   ```
+
+2. **Update Documentation**
+   - Ensure README.md badges show correct version
+   - Update docs/ if needed for version-specific changes
+
+3. **Announce Release**
+   - GitHub release notes (auto-generated)
+   - Optional: Social media announcement
 
 ## Questions?
 
