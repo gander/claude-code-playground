@@ -49,194 +49,38 @@ This MCP server exposes OpenStreetMap's tagging schema as a set of queryable too
 
 ## Installation
 
-### From NPM (Recommended)
+**Quick Start:**
 ```bash
+# Using npx (recommended - no installation needed)
 npx @gander-tools/osm-tagging-schema-mcp
-```
 
-### From Source
-```bash
-npm install
-npm run build
-```
-
-### Docker (Container)
-```bash
-# Pull the latest dev image
-docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
-
-# Run the container
+# Using Docker
 docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
 ```
 
-**Available tags:**
-- `dev` - Latest development build from master branch
-- `latest` - Latest stable release
-- `x.y.z` - Specific version (e.g., `0.1.0`)
+📖 **For detailed installation instructions**, see [docs/installation.md](./docs/installation.md) which covers:
+- System requirements
+- Installation from source
+- Docker usage and security features
+- Verification and troubleshooting
 
-**Security Features:**
-- **Vulnerability Scanning**: All images scanned with Trivy for critical and high severity vulnerabilities
-- **Image Signing**: Images signed with Cosign using keyless signing (OIDC)
-- **Verification**: Verify image signatures with:
-  ```bash
-  cosign verify ghcr.io/gander-tools/osm-tagging-schema-mcp:latest \
-    --certificate-identity-regexp=https://github.com/gander-tools \
-    --certificate-oidc-issuer=https://token.actions.githubusercontent.com
-  ```
+## Quick Start
 
-## Usage
-
-### Running the MCP Server
-
-**Using npx:**
-```bash
-npx @gander-tools/osm-tagging-schema-mcp
-```
-
-**From source:**
-```bash
-npm start
-```
-
-**Using Docker:**
-```bash
-docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
-```
-
-### Configuration
-
-#### Quick Setup with Claude Code CLI
-
-The easiest way to add this MCP server to Claude Code CLI is using the built-in command:
-
+**1. Add to Claude Code CLI:**
 ```bash
 claude mcp add @gander-tools/osm-tagging-schema-mcp
 ```
 
-This will automatically configure the server in your Claude Code CLI environment.
-
-#### Manual Configuration
-
-Alternatively, you can manually add to your MCP client configuration:
-
-**Using npx:**
-```json
-{
-  "mcpServers": {
-    "osm-tagging": {
-      "command": "npx",
-      "args": ["@gander-tools/osm-tagging-schema-mcp"]
-    }
-  }
-}
+**2. Use in conversations:**
+```
+Ask Claude: "What OSM tags are available for restaurants?"
+Ask Claude: "Validate these tags: amenity=parking, capacity=50"
 ```
 
-**Using Docker:**
-```json
-{
-  "mcpServers": {
-    "osm-tagging": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "ghcr.io/gander-tools/osm-tagging-schema-mcp:dev"
-      ]
-    }
-  }
-}
-```
-
-**Configuration file locations:**
-- **Claude Code CLI:** `~/.config/claude-code/config.json`
-- **Claude Desktop (macOS):** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Claude Desktop (Windows):** `%APPDATA%\Claude\claude_desktop_config.json`
-
-### Example Queries
-
-<details>
-<summary><b>Query tag information</b></summary>
-
-```typescript
-// Get information about the "parking" tag
-{
-  "tool": "get_tag_info",
-  "arguments": {
-    "key": "parking"
-  }
-}
-// Returns: all possible values (surface, underground, multi-storey, etc.)
-// and compatible tags (capacity, fee, operator, etc.)
-```
-</details>
-
-<details>
-<summary><b>Search for presets</b></summary>
-
-```typescript
-// Search for restaurant presets
-{
-  "tool": "search_presets",
-  "arguments": {
-    "keyword": "restaurant"
-  }
-}
-// Returns: amenity/restaurant, amenity/fast_food, and other matching presets
-```
-</details>
-
-<details>
-<summary><b>Get preset details</b></summary>
-
-```typescript
-// Get complete information about a preset
-{
-  "tool": "get_preset_details",
-  "arguments": {
-    "presetId": "amenity/restaurant"
-  }
-}
-// Returns: id, tags, geometry types, fields, icon, and other metadata
-```
-</details>
-
-<details>
-<summary><b>Validate tags</b></summary>
-
-```typescript
-// Validate a collection of tags
-{
-  "tool": "validate_tag_collection",
-  "arguments": {
-    "tags": {
-      "amenity": "parking",
-      "parking": "surface",
-      "capacity": "50",
-      "fee": "yes"
-    }
-  }
-}
-// Returns: validation result with any errors or warnings
-```
-</details>
-
-<details>
-<summary><b>Suggest improvements</b></summary>
-
-```typescript
-// Get suggestions for a tag collection
-{
-  "tool": "suggest_improvements",
-  "arguments": {
-    "tags": {
-      "amenity": "restaurant"
-    }
-  }
-}
-// Returns: suggestions for missing fields, deprecation warnings, matched presets
-```
-</details>
+📖 **For detailed usage**, see:
+- [docs/configuration.md](./docs/configuration.md) - Setup for Claude Code/Desktop and custom clients
+- [docs/usage.md](./docs/usage.md) - Complete usage examples and workflows
+- [docs/api/](./docs/api/) - API reference for all 14 tools
 
 ## Development Methodology
 
@@ -275,68 +119,30 @@ All tools are tested against the actual JSON data from `@openstreetmap/id-taggin
 
 ## Architecture
 
-### Modular File Organization
+**Modular Design**: One tool per file, clear separation of concerns (Schema/Tool/Validation/Server layers).
 
-**One Tool, One File**: Each MCP tool is implemented in a separate file with a corresponding test file. This modular approach ensures:
-- **Clarity**: Easy to locate and understand individual tool implementations
-- **Maintainability**: Changes to one tool don't affect others
-- **Scalability**: New tools can be added without modifying existing files
-- **Testability**: Each tool has dedicated tests that can run independently
-
-### Architectural Layers
-
-The server follows a modular architecture with distinct layers:
-
-1. **Schema Layer**: Loads and indexes the tagging schema
-2. **Tool Layer**: Implements MCP tools that query the schema (one file per tool)
-3. **Validation Layer**: Provides tag validation logic
-4. **Server Layer**: MCP server setup and tool registration
+📖 **For architecture details**, see [DEVELOPMENT.md](./DEVELOPMENT.md)
 
 ## Development
 
 ```bash
-# Install dependencies
-npm install
-
-# Run tests (TDD)
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run linter
-npm run lint
-
-# Run formatter
-npm run format
-
-# Type check
-npm run typecheck
-
-# Build for production
-npm run build
+npm install    # Install dependencies
+npm test       # Run tests (TDD)
+npm run lint   # Check code quality
+npm run build  # Build for production
 ```
 
-## CI/CD Pipeline
-
-This project uses GitHub Actions for continuous integration and delivery:
-
-- **Automated Testing**: Runs on every push and pull request
-- **Code Quality**: BiomeJS checks for linting and formatting issues
-- **TypeScript Validation**: Ensures compilation succeeds
-- **Dependabot**: Automated dependency updates and security patches
-- **Docker Builds**: Automated container builds with Trivy scanning and Cosign signing
-- **Release Process**: Automated releases to npm registry with semantic versioning
+📖 **For development guide**, see [DEVELOPMENT.md](./DEVELOPMENT.md)
 
 ## Project Status
 
-**Current Phase**: Phase 3 ✅ Complete (All 14 tools implemented)
+**Current Phase**: Phase 5 ✅ Complete (Comprehensive Documentation)
 
 - ✅ Phase 1: Project Setup
 - ✅ Phase 2: Schema Integration
-- ✅ Phase 3: Core Tool Implementation
-- ✅ Phase 4: Testing
-- 🚧 Phase 5: Documentation (In Progress)
+- ✅ Phase 3: Core Tool Implementation (14 tools)
+- ✅ Phase 4: Testing (370 tests, >90% coverage)
+- ✅ Phase 5: Documentation (Installation, Usage, API, Troubleshooting)
 - 📋 Phase 6: Optimization & Polish
 - 📋 Phase 7: Distribution & Deployment
 
@@ -363,11 +169,19 @@ Contributions are welcome! We follow a **Test-Driven Development (TDD)** approac
 
 ## Documentation
 
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines and workflow
-- [DEVELOPMENT.md](./DEVELOPMENT.md) - Development setup and common tasks
-- [ROADMAP.md](./ROADMAP.md) - Development roadmap and future plans
+### User Documentation
+- [docs/installation.md](./docs/installation.md) - Installation guide (npx, source, Docker)
+- [docs/configuration.md](./docs/configuration.md) - Configuration for Claude Code/Desktop
+- [docs/usage.md](./docs/usage.md) - Usage examples and workflows
+- [docs/api/](./docs/api/) - Complete API reference for all 14 tools
+- [docs/troubleshooting.md](./docs/troubleshooting.md) - Common issues and solutions
+
+### Developer Documentation
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines (TDD workflow)
+- [DEVELOPMENT.md](./DEVELOPMENT.md) - Development setup and tasks
+- [ROADMAP.md](./ROADMAP.md) - Development roadmap
 - [CHANGELOG.md](./CHANGELOG.md) - Project changelog
-- [CLAUDE.md](./CLAUDE.md) - Technical project documentation and development notes
+- [CLAUDE.md](./CLAUDE.md) - Technical implementation notes
 
 ## License
 
