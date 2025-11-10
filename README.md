@@ -180,9 +180,9 @@ Test categories:
 - [x] `check_deprecated`: Check if tags are deprecated ✅
   - Input: tag key or key-value pair
   - Output: deprecation status, old tags, and suggested replacements
-- [ ] `suggest_improvements`: Suggest improvements for tag collection
+- [x] `suggest_improvements`: Suggest improvements for tag collection ✅
   - Input: tag collection
-  - Output: recommendations and warnings
+  - Output: recommendations, warnings, and matched presets
 
 #### 3.4 Schema Exploration Tools
 - [x] `get_categories`: List all tag categories ✅
