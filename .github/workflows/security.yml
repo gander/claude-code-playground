@@ -12,14 +12,13 @@ on:
 
 permissions:
   contents: read
-  security-events: write
-  actions: read
-  id-token: write
 
 jobs:
   npm-audit:
     name: NPM Audit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -44,6 +43,8 @@ jobs:
   sbom-generation:
     name: Generate SBOM
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -104,6 +105,8 @@ jobs:
   license-check:
     name: License Compliance
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
