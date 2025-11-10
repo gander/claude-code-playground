@@ -330,6 +330,41 @@ console.log("Debug:", JSON.stringify(data, null, 2));
 DEBUG=* npm start
 ```
 
+### Log Level Configuration
+
+The server includes a built-in logger with configurable levels. Control logging verbosity using the `LOG_LEVEL` environment variable:
+
+```bash
+# Available log levels (in order of verbosity):
+# - SILENT: No logging
+# - ERROR: Only errors
+# - WARN: Errors and warnings
+# - INFO: Errors, warnings, and info (default)
+# - DEBUG: All messages including debug
+
+# Run with debug logging
+LOG_LEVEL=DEBUG npm start
+
+# Run with minimal logging
+LOG_LEVEL=ERROR npm start
+
+# Run with no logging
+LOG_LEVEL=SILENT npm start
+```
+
+**Log Output Format:**
+```
+2025-11-10T12:34:56.789Z [INFO] [main] Starting OSM Tagging Schema MCP Server
+2025-11-10T12:34:56.890Z [DEBUG] [MCPServer] Tool call: get_schema_stats
+2025-11-10T12:34:56.950Z [ERROR] [MCPServer] Error executing tool: invalid_tool
+```
+
+**Development Tips:**
+- Use `DEBUG` level during development to see all tool calls
+- Use `INFO` level (default) for normal operation
+- Use `ERROR` level in production to reduce noise
+- Logs are written to stderr to not interfere with MCP protocol (stdout)
+
 ### Test Debugging
 
 ```bash
