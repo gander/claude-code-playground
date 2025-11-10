@@ -42,6 +42,15 @@
 		"url": "https://github.com/gander-tools/osm-tagging-schema-mcp/issues"
 	},
 	"homepage": "https://github.com/gander-tools/osm-tagging-schema-mcp#readme",
+	"files": [
+		"dist/**/*",
+		"docs/**/*",
+		"LICENSE",
+		"README.md",
+		"CHANGELOG.md",
+		"CONTRIBUTING.md",
+		"SECURITY.md"
+	],
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.21.1",
 		"@openstreetmap/id-tagging-schema": "^6.7.3"
