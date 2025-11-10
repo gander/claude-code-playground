@@ -13,6 +13,7 @@ import { getTagValues } from "./tools/get-tag-values.js";
 import { searchPresets } from "./tools/search-presets.js";
 import { searchTags } from "./tools/search-tags.js";
 import { validateTag } from "./tools/validate-tag.js";
+import { validateTagCollection } from "./tools/validate-tag-collection.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
 
 /**
@@ -214,6 +215,25 @@ export function createServer(): Server {
 					required: ["key", "value"],
 				},
 			},
+			{
+				name: "validate_tag_collection",
+				description:
+					"Validate a collection of OSM tags. Returns validation results for each tag and aggregated statistics.",
+				inputSchema: {
+					type: "object",
+					properties: {
+						tags: {
+							type: "object",
+							description:
+								"Object containing tag key-value pairs to validate (e.g., { 'amenity': 'parking', 'parking': 'surface' })",
+							additionalProperties: {
+								type: "string",
+							},
+						},
+					},
+					required: ["tags"],
+				},
+			},
 		],
 	}));
 
@@ -385,6 +405,22 @@ export function createServer(): Server {
 				throw new Error("value parameter is required");
 			}
 			const result = await validateTag(schemaLoader, key, value);
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(result, null, 2),
+					},
+				],
+			};
+		}
+
+		if (name === "validate_tag_collection") {
+			const { tags } = args as { tags?: Record<string, string> };
+			if (!tags) {
+				throw new Error("tags parameter is required");
+			}
+			const result = await validateTagCollection(schemaLoader, tags);
 			return {
 				content: [
 					{

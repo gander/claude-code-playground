@@ -1,0 +1,208 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import { SchemaLoader } from "../../src/utils/schema-loader.js";
+import { validateTagCollection } from "../../src/tools/validate-tag-collection.js";
+import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with { type: "json" };
+
+describe("validateTagCollection", () => {
+	describe("Basic Functionality", () => {
+		it("should validate a collection of valid tags", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const tags = {
+				amenity: "parking",
+				parking: "surface",
+				capacity: "50",
+			};
+
+			const result = await validateTagCollection(loader, tags);
+
+			assert.ok(result);
+			assert.strictEqual(result.valid, true);
+			assert.strictEqual(result.errorCount, 0);
+			assert.strictEqual(result.deprecatedCount, 0);
+			assert.ok(result.tagResults);
+			assert.strictEqual(Object.keys(result.tagResults).length, 3);
+		});
+
+		it("should detect errors in individual tags", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const tags = {
+				amenity: "",
+				parking: "surface",
+			};
+
+			const result = await validateTagCollection(loader, tags);
+
+			assert.ok(result);
+			assert.strictEqual(result.valid, false);
+			assert.ok(result.errorCount > 0);
+			assert.ok(result.tagResults.amenity);
+			assert.strictEqual(result.tagResults.amenity.valid, false);
+		});
+
+		it("should detect deprecated tags in collection", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+
+			// Use first deprecated entry
+			const deprecatedEntry = deprecated[0];
+			const oldKey = Object.keys(deprecatedEntry.old)[0];
+			if (!oldKey) return;
+			const oldValue = deprecatedEntry.old[oldKey as keyof typeof deprecatedEntry.old];
+
+			const tags = {
+				[oldKey]: oldValue as string,
+				amenity: "parking",
+			};
+
+			const result = await validateTagCollection(loader, tags);
+
+			assert.ok(result);
+			assert.strictEqual(result.deprecatedCount, 1);
+			assert.ok(result.tagResults[oldKey]);
+			assert.strictEqual(result.tagResults[oldKey].deprecated, true);
+		});
+
+		it("should handle empty tag collection", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const tags = {};
+
+			const result = await validateTagCollection(loader, tags);
+
+			assert.ok(result);
+			assert.strictEqual(result.valid, true);
+			assert.strictEqual(result.errorCount, 0);
+			assert.strictEqual(result.warningCount, 0);
+			assert.strictEqual(Object.keys(result.tagResults).length, 0);
+		});
+
+		it("should aggregate warnings from individual tags", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const tags = {
+				unknown_tag_key_12345: "value1",
+				another_unknown_key_67890: "value2",
+			};
+
+			const result = await validateTagCollection(loader, tags);
+
+			assert.ok(result);
+			assert.strictEqual(result.valid, true);
+			assert.ok(result.warningCount >= 2);
+		});
+	});
+
+	describe("Result Structure", () => {
+		it("should return correct result structure", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const tags = {
+				amenity: "parking",
+			};
+
+			const result = await validateTagCollection(loader, tags);
+
+			assert.ok(result);
+			assert.ok("valid" in result);
+			assert.ok("tagResults" in result);
+			assert.ok("errors" in result);
+			assert.ok("warnings" in result);
+			assert.ok("deprecatedCount" in result);
+			assert.ok("errorCount" in result);
+			assert.ok("warningCount" in result);
+			assert.strictEqual(typeof result.valid, "boolean");
+			assert.ok(typeof result.tagResults === "object");
+			assert.ok(Array.isArray(result.errors));
+			assert.ok(Array.isArray(result.warnings));
+			assert.strictEqual(typeof result.deprecatedCount, "number");
+			assert.strictEqual(typeof result.errorCount, "number");
+			assert.strictEqual(typeof result.warningCount, "number");
+		});
+
+		it("should include individual tag validation results", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const tags = {
+				amenity: "parking",
+				access: "yes",
+			};
+
+			const result = await validateTagCollection(loader, tags);
+
+			assert.ok(result);
+			assert.ok(result.tagResults.amenity);
+			assert.ok(result.tagResults.access);
+			assert.ok("valid" in result.tagResults.amenity);
+			assert.ok("deprecated" in result.tagResults.amenity);
+			assert.ok("errors" in result.tagResults.amenity);
+			assert.ok("warnings" in result.tagResults.amenity);
+		});
+	});
+
+	describe("JSON Schema Validation", () => {
+		it("should validate collection with deprecated tags from JSON", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+
+			// Test first 10 deprecated entries
+			for (let i = 0; i < Math.min(10, deprecated.length); i++) {
+				const entry = deprecated[i];
+				const oldKeys = Object.keys(entry.old);
+				if (oldKeys.length !== 1) continue;
+
+				const oldKey = oldKeys[0];
+				if (!oldKey) continue;
+				const oldValue = entry.old[oldKey as keyof typeof entry.old];
+
+				// Skip if replace doesn't exist or is empty
+				if (!entry.replace || Object.keys(entry.replace).length === 0) continue;
+
+				// Create tags with the deprecated tag plus a non-conflicting tag
+				const tags: Record<string, string> = {
+					[oldKey]: oldValue as string,
+				};
+
+				// Add a second tag that won't conflict with oldKey
+				if (oldKey !== "name") {
+					tags.name = "Test Name";
+				} else {
+					tags.ref = "Test Ref";
+				}
+
+				const result = await validateTagCollection(loader, tags);
+
+				assert.ok(result, `Should validate collection for ${oldKey}=${oldValue}`);
+				assert.strictEqual(
+					result.deprecatedCount,
+					1,
+					`Should detect deprecated tag ${oldKey}=${oldValue}`,
+				);
+			}
+		});
+	});
+
+	describe("Error Handling", () => {
+		it("should handle tags with empty keys", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const tags = {
+				"": "value",
+				amenity: "parking",
+			};
+
+			const result = await validateTagCollection(loader, tags);
+
+			assert.ok(result);
+			assert.strictEqual(result.valid, false);
+			assert.ok(result.errorCount > 0);
+		});
+
+		it("should handle tags with empty values", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+			const tags = {
+				amenity: "",
+				parking: "surface",
+			};
+
+			const result = await validateTagCollection(loader, tags);
+
+			assert.ok(result);
+			assert.strictEqual(result.valid, false);
+			assert.ok(result.errorCount > 0);
+		});
+	});
+});
