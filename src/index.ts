@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import {
+	CallToolRequestSchema,
+	ListToolsRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
 import { getCategories } from "./tools/get-categories.js";
 import { getCategoryTags } from "./tools/get-category-tags.js";
 import { getPresetDetails } from "./tools/get-preset-details.js";
