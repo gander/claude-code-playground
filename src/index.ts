@@ -286,7 +286,14 @@ export function createServer(): Server {
 	}));
 
 	server.setRequestHandler(CallToolRequestSchema, async (request) => {
-		const { name, arguments: args } = request.params;
+		const { name, arguments: _args } = request.params;
+
+		// Sanitize arguments to prevent property injection attacks
+		const DANGEROUS_PROPS = new Set(["__proto__", "constructor", "prototype"]);
+		const args = _args && typeof _args === "object" ?
+			Object.fromEntries(
+				Object.entries(_args).filter(([key]) => !DANGEROUS_PROPS.has(key))
+			) : {};
 
 		logger.debug(`Tool call: ${name}`, "MCPServer");
 

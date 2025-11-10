@@ -12,6 +12,23 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
 };
 
 /**
+ * Sanitize user input for safe logging
+ * Prevents log injection attacks by removing control characters and newlines
+ */
+function sanitizeForLog(value: unknown): string {
+	if (value === null || value === undefined) {
+		return String(value);
+	}
+
+	// Convert to string and remove control characters, newlines, and tabs
+	// Using Unicode property escapes to match control characters (biome-ignore lint/suspicious/noControlCharactersInRegex: security sanitization)
+	return String(value)
+		.replace(/[\r\n\t]/g, " ")  // Replace newlines and tabs with spaces
+		// biome-ignore lint/suspicious/noControlCharactersInRegex: removing control characters for log injection prevention
+		.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");  // Remove control characters
+}
+
+/**
  * Simple logger with configurable log levels
  * Supports filtering by severity and custom output writers
  */
@@ -56,19 +73,19 @@ export class Logger {
 		// Log level
 		parts.push(`[${level}]`);
 
-		// Context (if provided)
+		// Context (if provided) - sanitize to prevent log injection
 		if (context) {
-			parts.push(`[${context}]`);
+			parts.push(`[${sanitizeForLog(context)}]`);
 		}
 
-		// Message
-		parts.push(message);
+		// Message - sanitize to prevent log injection
+		parts.push(sanitizeForLog(message));
 
 		// Error details (if provided)
 		if (error) {
-			parts.push(`\nError: ${error.message}`);
+			parts.push(`\nError: ${sanitizeForLog(error.message)}`);
 			if (error.stack) {
-				parts.push(`\nStack: ${error.stack}`);
+				parts.push(`\nStack: ${sanitizeForLog(error.stack)}`);
 			}
 		}
 

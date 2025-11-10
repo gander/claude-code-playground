@@ -20,6 +20,32 @@ import { validateTag } from "../tools/validate-tag.js";
 import { validateTagCollection } from "../tools/validate-tag-collection.js";
 
 /**
+ * Dangerous property names that should be filtered from user input
+ * to prevent prototype pollution and property injection attacks
+ */
+const DANGEROUS_PROPERTIES = new Set([
+	"__proto__",
+	"constructor",
+	"prototype",
+]);
+
+/**
+ * Sanitize object by removing dangerous properties
+ * Prevents prototype pollution and property injection attacks
+ */
+function sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
+	if (obj === null || typeof obj !== "object") {
+		return obj;
+	}
+
+	const sanitized = { ...obj };
+	for (const key of DANGEROUS_PROPERTIES) {
+		delete sanitized[key];
+	}
+	return sanitized;
+}
+
+/**
  * JSON-RPC request
  */
 export interface JsonRpcRequest {
@@ -346,7 +372,10 @@ export class McpRequestHandler {
 			};
 		}
 
-		const { name, arguments: args } = params;
+		const { name, arguments: _args } = params;
+
+		// Sanitize arguments to prevent property injection attacks
+		const sanitizedArgs = _args ? sanitizeObject(_args) : {};
 
 		try {
 			let result: { content: Array<{ type: string; text: string }> } | undefined;
@@ -379,7 +408,7 @@ export class McpRequestHandler {
 				}
 
 				case "get_category_tags": {
-					const category = args.category as string;
+					const category = sanitizedArgs.category as string;
 					if (!category) {
 						throw new Error("category parameter is required");
 					}
@@ -396,7 +425,7 @@ export class McpRequestHandler {
 				}
 
 				case "get_preset_details": {
-					const presetId = args.presetId as string;
+					const presetId = sanitizedArgs.presetId as string;
 					if (!presetId) {
 						throw new Error("presetId parameter is required");
 					}
@@ -413,7 +442,7 @@ export class McpRequestHandler {
 				}
 
 				case "get_preset_tags": {
-					const presetId = args.presetId as string;
+					const presetId = sanitizedArgs.presetId as string;
 					if (!presetId) {
 						throw new Error("presetId parameter is required");
 					}
@@ -430,8 +459,8 @@ export class McpRequestHandler {
 				}
 
 				case "get_related_tags": {
-					const tag = args.tag as string;
-					const limit = args.limit as number | undefined;
+					const tag = sanitizedArgs.tag as string;
+					const limit = sanitizedArgs.limit as number | undefined;
 					if (!tag) {
 						throw new Error("tag parameter is required");
 					}
@@ -448,7 +477,7 @@ export class McpRequestHandler {
 				}
 
 				case "get_tag_info": {
-					const tagKey = args.tagKey as string;
+					const tagKey = sanitizedArgs.tagKey as string;
 					if (!tagKey) {
 						throw new Error("tagKey parameter is required");
 					}
@@ -465,7 +494,7 @@ export class McpRequestHandler {
 				}
 
 				case "get_tag_values": {
-					const tagKey = args.tagKey as string;
+					const tagKey = sanitizedArgs.tagKey as string;
 					if (!tagKey) {
 						throw new Error("tagKey parameter is required");
 					}
@@ -482,9 +511,9 @@ export class McpRequestHandler {
 				}
 
 				case "search_presets": {
-					const keyword = args.keyword as string;
-					const limit = args.limit as number | undefined;
-					const geometry = args.geometry as
+					const keyword = sanitizedArgs.keyword as string;
+					const limit = sanitizedArgs.limit as number | undefined;
+					const geometry = sanitizedArgs.geometry as
 						| "point"
 						| "vertex"
 						| "line"
@@ -507,8 +536,8 @@ export class McpRequestHandler {
 				}
 
 				case "search_tags": {
-					const keyword = args.keyword as string;
-					const limit = args.limit as number | undefined;
+					const keyword = sanitizedArgs.keyword as string;
+					const limit = sanitizedArgs.limit as number | undefined;
 					if (!keyword) {
 						throw new Error("keyword parameter is required");
 					}
@@ -525,8 +554,8 @@ export class McpRequestHandler {
 				}
 
 				case "check_deprecated": {
-					const key = args.key as string;
-					const value = args.value as string | undefined;
+					const key = sanitizedArgs.key as string;
+					const value = sanitizedArgs.value as string | undefined;
 					if (!key) {
 						throw new Error("key parameter is required");
 					}
@@ -543,7 +572,7 @@ export class McpRequestHandler {
 				}
 
 				case "suggest_improvements": {
-					const tags = args.tags as Record<string, string>;
+					const tags = sanitizedArgs.tags as Record<string, string>;
 					if (!tags) {
 						throw new Error("tags parameter is required");
 					}
@@ -560,8 +589,8 @@ export class McpRequestHandler {
 				}
 
 				case "validate_tag": {
-					const key = args.key as string;
-					const value = args.value as string;
+					const key = sanitizedArgs.key as string;
+					const value = sanitizedArgs.value as string;
 					if (!key || !value) {
 						throw new Error("key and value parameters are required");
 					}
@@ -578,7 +607,7 @@ export class McpRequestHandler {
 				}
 
 				case "validate_tag_collection": {
-					const tags = args.tags as Record<string, string>;
+					const tags = sanitizedArgs.tags as Record<string, string>;
 					if (!tags) {
 						throw new Error("tags parameter is required");
 					}
