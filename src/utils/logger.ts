@@ -47,12 +47,7 @@ export class Logger {
 		return messagePriority <= currentPriority;
 	}
 
-	private formatMessage(
-		level: LogLevel,
-		message: string,
-		context?: string,
-		error?: Error,
-	): string {
+	private formatMessage(level: LogLevel, message: string, context?: string, error?: Error): string {
 		const parts: string[] = [];
 
 		// Timestamp
@@ -80,12 +75,7 @@ export class Logger {
 		return parts.join(" ");
 	}
 
-	private log(
-		level: LogLevel,
-		message: string,
-		context?: string,
-		error?: Error,
-	): void {
+	private log(level: LogLevel, message: string, context?: string, error?: Error): void {
 		if (!this.shouldLog(level)) {
 			return;
 		}

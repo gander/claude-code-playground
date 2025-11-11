@@ -58,6 +58,41 @@ This project follows standard open-source etiquette:
    git remote add upstream https://github.com/gander-tools/osm-tagging-schema-mcp.git
    ```
 
+### Git Hooks (Automated Code Quality)
+
+This project uses [Lefthook](https://github.com/evilmartians/lefthook) to automatically run code quality checks before commits and pushes. Hooks are installed automatically when you run `npm install`.
+
+**Pre-commit hooks** (fast checks before committing):
+- **Format**: Auto-format code with BiomeJS (`npm run format`)
+- **Lint**: Auto-fix linting issues with BiomeJS (`npm run check`)
+- Changes are automatically staged if fixed
+
+**Pre-push hooks** (comprehensive checks before pushing):
+- **Type checking**: Verify TypeScript types (`npm run typecheck`)
+- **Unit tests**: Run fast unit tests (`npm run test:unit`)
+- **Integration tests**: Run integration tests (`npm run test:integration`)
+- **Build**: Verify project builds successfully (`npm run build`)
+
+**Manual hook execution:**
+```bash
+# Test pre-commit hooks manually
+npx lefthook run pre-commit
+
+# Test pre-push hooks manually
+npx lefthook run pre-push
+```
+
+**Skipping hooks** (discouraged):
+```bash
+# Skip pre-commit hooks (not recommended)
+git commit --no-verify
+
+# Skip pre-push hooks (not recommended)
+git push --no-verify
+```
+
+**Note**: All hooks must pass before your changes can be merged. If hooks fail, fix the issues and try again.
+
 ## Development Workflow
 
 This project follows **Test-Driven Development (TDD)**. Always write tests first!

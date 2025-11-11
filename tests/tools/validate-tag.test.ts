@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { SchemaLoader } from "../../src/utils/schema-loader.js";
-import { validateTag } from "../../src/tools/validate-tag.js";
+import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
+	type: "json",
+};
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
-import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with { type: "json" };
+import { validateTag } from "../../src/tools/validate-tag.js";
+import { SchemaLoader } from "../../src/utils/schema-loader.js";
 
 describe("validateTag", () => {
 	describe("Basic Functionality", () => {
@@ -46,18 +48,12 @@ describe("validateTag", () => {
 
 		it("should detect unknown key", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await validateTag(
-				loader,
-				"nonexistent_key_12345",
-				"some_value",
-			);
+			const result = await validateTag(loader, "nonexistent_key_12345", "some_value");
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, true); // Unknown keys are allowed in OSM
 			assert.ok(result.warnings.length > 0);
-			assert.ok(
-				result.warnings.some((w) => w.includes("not found in schema")),
-			);
+			assert.ok(result.warnings.some((w) => w.includes("not found in schema")));
 		});
 
 		it("should handle tag with no options field", async () => {
@@ -74,8 +70,9 @@ describe("validateTag", () => {
 	describe("JSON Schema Validation", () => {
 		it("should validate against ALL fields with options (100% coverage)", () => {
 			// CRITICAL: Find ALL fields with options - no slicing, no sampling
-			const fieldsWithOptions = Object.entries(fields)
-				.filter(([_, field]) => field.options && field.options.length > 0);
+			const fieldsWithOptions = Object.entries(fields).filter(
+				([_, field]) => field.options && field.options.length > 0,
+			);
 
 			assert.ok(fieldsWithOptions.length > 0, "Should have fields with options");
 
@@ -83,14 +80,8 @@ describe("validateTag", () => {
 			let validatedCount = 0;
 			for (const [fieldPath, field] of fieldsWithOptions) {
 				assert.ok(field.options, `Field ${fieldPath} should have options`);
-				assert.ok(
-					Array.isArray(field.options),
-					`Field ${fieldPath} options should be array`,
-				);
-				assert.ok(
-					field.options.length > 0,
-					`Field ${fieldPath} should have at least one option`,
-				);
+				assert.ok(Array.isArray(field.options), `Field ${fieldPath} options should be array`);
+				assert.ok(field.options.length > 0, `Field ${fieldPath} should have at least one option`);
 				validatedCount++;
 			}
 
@@ -115,10 +106,7 @@ describe("validateTag", () => {
 
 				// Every entry MUST have 'old'
 				assert.ok(entry.old, `Deprecated entry ${i} should have 'old'`);
-				assert.ok(
-					typeof entry.old === "object",
-					`Deprecated entry ${i} 'old' should be object`,
-				);
+				assert.ok(typeof entry.old === "object", `Deprecated entry ${i} 'old' should be object`);
 
 				// Some entries may not have 'replace' (edge cases in JSON data)
 				if (entry.replace) {

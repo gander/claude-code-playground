@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { SchemaLoader } from "../../src/utils/schema-loader.js";
-import { suggestImprovements } from "../../src/tools/suggest-improvements.js";
+import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
+	type: "json",
+};
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with { type: "json" };
+import { suggestImprovements } from "../../src/tools/suggest-improvements.js";
+import { SchemaLoader } from "../../src/utils/schema-loader.js";
 
 describe("suggestImprovements", () => {
 	describe("Basic Functionality", () => {
@@ -51,9 +53,7 @@ describe("suggestImprovements", () => {
 
 			assert.ok(result);
 			assert.ok(result.warnings.length > 0);
-			assert.ok(
-				result.warnings.some((w) => w.includes("deprecated")),
-			);
+			assert.ok(result.warnings.some((w) => w.includes("deprecated")));
 		});
 
 		it("should return empty suggestions for complete tag set", async () => {
@@ -213,10 +213,7 @@ describe("suggestImprovements", () => {
 				const result = await suggestImprovements(loader, tags);
 
 				assert.ok(result, `Should return result for deprecated tag ${key}=${value}`);
-				assert.ok(
-					result.warnings.length >= 1,
-					`Should warn about deprecated tag ${key}=${value}`,
-				);
+				assert.ok(result.warnings.length >= 1, `Should warn about deprecated tag ${key}=${value}`);
 				assert.ok(
 					result.warnings.some((w) => w.includes("deprecated")),
 					`Warning should mention 'deprecated' for ${key}=${value}`,
@@ -253,9 +250,7 @@ describe("suggestImprovements", () => {
 				assert.ok(result);
 				assert.ok(result.matchedPresets);
 				// Should match the restaurant preset
-				const matched = result.matchedPresets.some((p) =>
-					p.includes("restaurant"),
-				);
+				const matched = result.matchedPresets.some((p) => p.includes("restaurant"));
 				assert.ok(matched || result.matchedPresets.length > 0);
 			}
 		});

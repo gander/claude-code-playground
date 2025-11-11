@@ -342,10 +342,7 @@ describe("SchemaLoader", () => {
 				// Schema should include metadata with version
 				assert.ok(schema.metadata, "Schema should have metadata");
 				assert.ok(schema.metadata.version, "Metadata should include version");
-				assert.ok(
-					typeof schema.metadata.version === "string",
-					"Version should be a string",
-				);
+				assert.ok(typeof schema.metadata.version === "string", "Version should be a string");
 				assert.match(
 					schema.metadata.version,
 					/^\d+\.\d+\.\d+/,
@@ -361,10 +358,7 @@ describe("SchemaLoader", () => {
 
 				assert.ok(schema.metadata, "Schema should have metadata");
 				assert.ok(schema.metadata.loadedAt, "Metadata should include loadedAt timestamp");
-				assert.ok(
-					typeof schema.metadata.loadedAt === "number",
-					"loadedAt should be a number",
-				);
+				assert.ok(typeof schema.metadata.loadedAt === "number", "loadedAt should be a number");
 				assert.ok(
 					schema.metadata.loadedAt >= beforeLoad && schema.metadata.loadedAt <= afterLoad,
 					"loadedAt should be within load time range",
@@ -438,10 +432,7 @@ describe("SchemaLoader", () => {
 					typeof schema.presets === "object" && schema.presets !== null,
 					"Presets should be an object",
 				);
-				assert.ok(
-					Object.keys(schema.presets).length > 0,
-					"Presets should not be empty",
-				);
+				assert.ok(Object.keys(schema.presets).length > 0, "Presets should not be empty");
 
 				// Fields should be non-empty object
 				assert.ok(

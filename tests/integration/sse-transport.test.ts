@@ -1,6 +1,6 @@
 import assert from "node:assert";
-import { describe, it, beforeEach, afterEach } from "node:test";
 import http from "node:http";
+import { afterEach, beforeEach, describe, it } from "node:test";
 
 describe("SSE Transport Integration Tests", () => {
 	describe("Environment Configuration", () => {

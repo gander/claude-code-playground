@@ -1,0 +1,39 @@
+# Lefthook Configuration
+# Git hooks automation for code quality checks
+# Documentation: https://lefthook.dev/configuration/
+
+# Pre-commit: Fast checks before committing
+pre-commit:
+  parallel: true
+  commands:
+    # BiomeJS formatting check (auto-fix)
+    format:
+      glob: "*.{ts,js,json,md}"
+      run: npm run format
+      stage_fixed: true
+
+    # BiomeJS linting check (auto-fix)
+    lint:
+      glob: "*.{ts,js}"
+      run: npm run check
+      stage_fixed: true
+
+# Pre-push: Comprehensive checks before pushing
+pre-push:
+  parallel: true
+  commands:
+    # TypeScript type checking
+    typecheck:
+      run: npm run typecheck
+
+    # Unit tests (fast)
+    test-unit:
+      run: npm run test:unit
+
+    # Integration tests (slower)
+    test-integration:
+      run: npm run test:integration
+
+    # Build verification
+    build:
+      run: npm run build
