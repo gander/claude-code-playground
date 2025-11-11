@@ -23,7 +23,10 @@
 		"format": "biome format --write .",
 		"check": "biome check --write .",
 		"typecheck": "tsc --noEmit",
-		"postinstall": "lefthook install"
+		"postinstall": "lefthook install",
+		"release:dry": "cliff-jumper --dry-run",
+		"release": "cliff-jumper",
+		"release:push": "cliff-jumper --push-tag"
 	},
 	"keywords": [
 		"mcp",
@@ -62,7 +65,9 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.4",
+		"@favware/cliff-jumper": "^6.0.0",
 		"@types/node": "^24.10.0",
+		"git-cliff": "^2.10.1",
 		"lefthook": "^2.0.3",
 		"tsx": "^4.19.2",
 		"typescript": "^5.7.2"
