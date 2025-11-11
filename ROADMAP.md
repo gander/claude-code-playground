@@ -1,210 +1,201 @@
 # Development Roadmap
 
-This document outlines the development phases for the OSM Tagging Schema MCP Server.
+## TL;DR
 
-## Phase 1: Project Setup ✅
+**Current Status:** ✅ Production Ready (Phase 6 Complete)
 
-- [x] Initialize TypeScript 5.9 project with Node.js 22+
-- [x] Install dependencies:
-  - `@modelcontextprotocol/sdk`
-  - `@openstreetmap/id-tagging-schema`
-  - Development tools (BiomeJS, types)
-- [x] Set up project structure with modular file organization
-- [x] Configure build system (TypeScript compiler)
-- [x] Set up BiomeJS 2.3.4 for linting and formatting
-- [x] Configure test framework (Node.js native test runner)
-- [x] Set up GitHub Actions CI/CD
+**What's Done:**
+- ✅ 14 fully functional MCP tools for OSM tagging (query, presets, validation, exploration)
+- ✅ Comprehensive testing: 406 tests with 100% pass rate, full JSON data integrity validation
+- ✅ Multiple deployment options: npx, Docker, source installation
+- ✅ Security: npm provenance (SLSA Level 3), Docker image signing, SBOM generation
+- ✅ Transport protocols: stdio (default), HTTP/SSE for web clients
+- ✅ Complete documentation: installation, configuration, usage, API reference, troubleshooting
 
-## Phase 2: Schema Integration ✅
+**What's Next (Phase 7):**
+- Service infrastructure: Authentication, rate limiting
+- Advanced validation: Geometry constraints, field inheritance, quality scoring
+- Additional tools based on community feedback
 
-- [x] Create schema loader utility
-- [x] Implement caching mechanism for schema data
-- [x] Build indexing system for fast tag lookups
-- [x] Create type definitions for schema structures
-- [x] Write unit tests for schema loader (19 tests passing)
-- [x] Create integration tests for MCP server
-- [x] Set up CI/CD pipeline for automated testing
+**Quick Links:**
+- [Installation](./docs/installation.md) - Get started in 2 minutes with npx
+- [API Reference](./docs/api/) - Explore all 14 tools
+- [Contributing](./CONTRIBUTING.md) - Join the project
 
-## Phase 3: Core Tool Implementation ✅
+---
 
-### 3.1 Tag Query Tools
-- [x] `get_tag_info` - Get information about a specific tag key
-- [x] `get_tag_values` - Get all possible values for a tag key
-- [x] `get_related_tags` - Find tags commonly used together
-- [x] `search_tags` - Search for tags by keyword
+## Development Phases
 
-### 3.2 Preset Tools
-- [x] `search_presets` - Search for presets by name or tags
-- [x] `get_preset_details` - Get complete preset information
-- [x] `get_preset_tags` - Get recommended tags for a preset
+### Phase 1: Project Setup ✅
 
-### 3.3 Validation Tools
-- [x] `validate_tag` - Validate a single tag key-value pair
-- [x] `validate_tag_collection` - Validate a collection of tags
-- [x] `check_deprecated` - Check if tags are deprecated
-- [x] `suggest_improvements` - Suggest improvements for tag collection
+**Status:** Complete
 
-### 3.4 Schema Exploration Tools
-- [x] `get_categories` - List all tag categories
-- [x] `get_category_tags` - Get tags in a specific category
-- [x] `get_schema_stats` - Get schema statistics
+**Achievements:**
+- TypeScript 5.9 project with Node.js 22+
+- MCP SDK and OSM tagging schema integration
+- BiomeJS for code quality
+- Node.js native test runner
+- GitHub Actions CI/CD pipeline
 
-## Phase 4: Testing ✅
+### Phase 2: Schema Integration ✅
 
-- [x] Configure Node.js native test runner
-- [x] Write unit tests for schema loader (19 tests passing)
-- [x] Write unit tests for all implemented tools (299 tests passing)
-- [x] Create integration tests for MCP server (107 tests passing)
-  - Modular structure: One integration test file per tool
-  - Shared utilities: `helpers.ts` for common setup/teardown
-  - Order-independent tests: Tools validated by existence, not array position
-  - Alphabetical ordering: Tools returned in predictable alphabetical order
-- [x] Test with real OpenStreetMap tag data
-- [x] Set up CI/CD pipeline with GitHub Actions
-- [x] **JSON Data Integrity Tests**: Verify all tool outputs match source JSON data
-  - Unit tests validate against @openstreetmap/id-tagging-schema JSON files
-  - Integration tests verify MCP tool responses match JSON data exactly
-  - Tests ensure compatibility with schema package updates
-  - Provider pattern for comprehensive data validation
-  - 100% coverage: ALL tag keys (799) + ALL presets (1707) validated (no hardcoded samples)
-  - Bidirectional validation ensures complete data integrity
-- [x] Validate error handling for all implemented tools
-- [x] Achieve high test coverage across all modules (>90%)
+**Status:** Complete
 
-## Phase 5: Documentation ✅
+**Achievements:**
+- Schema loader with caching and indexing
+- Type definitions for schema structures
+- Fast lookup system (byKey, byTag, byGeometry, byFieldKey)
+- 19 unit tests passing
+- Integration tests for MCP server
 
-- [x] Write API documentation for each tool
-  - Complete API reference in `docs/api/` directory
-  - Overview with quick reference table (`docs/api/README.md`)
-  - Detailed tool documentation template established (`docs/api/get_tag_info.md`)
-  - Documentation pattern guide (`docs/api/NOTE.md`)
-- [x] Create usage examples
-  - Comprehensive usage guide (`docs/usage.md`)
-  - Common use cases with examples
-  - Complete workflow examples
-  - Best practices documentation
-- [x] Document installation and setup
-  - Installation guide (`docs/installation.md`) covering npx, source, and Docker
-  - Configuration guide (`docs/configuration.md`) for Claude Code/Desktop and custom clients
-  - System requirements and verification steps
-- [x] Add troubleshooting guide
-  - Comprehensive troubleshooting guide (`docs/troubleshooting.md`)
-  - Installation, configuration, runtime, and performance issues
-  - Error code reference table
-- [x] Create contribution guidelines
-  - Contribution guide (`CONTRIBUTING.md`) with TDD workflow
-  - Development guide (`DEVELOPMENT.md`) with setup and tasks
-- [x] Documentation structure
-  - User-facing documentation in `docs/` directory
-  - Developer documentation in root directory
-  - Compact README with clear navigation
-  - Documentation guidelines in `CLAUDE.md`
+### Phase 3: Core Tool Implementation ✅
 
-## Phase 6: Optimization & Polish ✅
+**Status:** Complete - All 14 Tools Implemented
 
-- [x] ~~Implement caching strategies~~ (Skipped - caching already implemented in Phase 2)
-- [x] Optimize schema loading and queries
-  - **Always-on indexing**: Removed optional indexing, index always built for optimal performance
-  - **Schema preloading**: Added warmup() method to preload schema at server startup
-  - **Field key index**: Added byFieldKey index for O(1) field lookups
-  - **Single-pass indexing**: Index built during schema load (not separately)
-  - **Server startup optimization**: Schema preloaded in main() to eliminate initial latency
-  - New optimized methods: warmup(), findFieldByKey()
-  - Comprehensive tests: 24 new tests for optimizations (all 394 tests passing)
-  - TDD approach: Tests written first, then implementation
-- [x] Add logging and debugging support
-  - Built-in logger with configurable levels (SILENT, ERROR, WARN, INFO, DEBUG)
-  - LOG_LEVEL environment variable configuration
-  - Structured log output with timestamps and context
-  - Logging in server lifecycle (startup, tool calls, errors)
-  - Comprehensive unit tests (13 tests, 6 suites)
-  - Developer documentation updated
-- [x] Handle schema updates gracefully
-  - Schema version tracking from package metadata
-  - Schema metadata includes version and loadedAt timestamp
-  - get_schema_stats tool returns version information
-  - Schema structure validation detects breaking changes
-  - Graceful error handling with descriptive messages
-  - Version logging on schema load
-  - Comprehensive tests (298 tests passing)
-- [x] Prepare for publication
-  - Added `files` field to package.json for package content control
-  - Package size optimization: 597KB → 245KB unpacked (59% reduction)
-  - Package file count optimization: 155 → 89 files
-  - Publication checklist added to CONTRIBUTING.md
-  - Pre-publication verification workflow documented
-  - Package includes only essential files (dist/, docs/, LICENSE, README, CHANGELOG, etc.)
-  - All tests passing: 299 unit tests, 107 integration tests (406 total)
-  - Ready for npm publishing with provenance support
+**Tag Query Tools:**
+- ✅ `get_tag_info` - Comprehensive tag key information
+- ✅ `get_tag_values` - All possible values for a tag
+- ✅ `get_related_tags` - Find commonly used tag combinations
+- ✅ `search_tags` - Search tags by keyword
 
-## Phase 7: Distribution & Deployment
+**Preset Tools:**
+- ✅ `search_presets` - Search presets by keyword/tag
+- ✅ `get_preset_details` - Complete preset configuration
+- ✅ `get_preset_tags` - Recommended tags for presets
 
-### NPM Publishing with Provenance ✅
-- [x] Set up GitHub Actions workflow for npm publishing
-- [x] Configure npm provenance signing (attestations)
-- [x] Link package to GitHub repository with verified builds
-- [x] Enable trusted publishing from GitHub Actions
-- [x] Add package provenance badge to README
-- [x] SLSA Level 3 build provenance attestations
-- [x] SBOM generation (CycloneDX format)
-- [x] SBOM attestations for supply chain transparency
+**Validation Tools:**
+- ✅ `validate_tag` - Single tag validation
+- ✅ `validate_tag_collection` - Collection validation with statistics
+- ✅ `check_deprecated` - Deprecation checking with replacements
+- ✅ `suggest_improvements` - Tag collection improvement suggestions
 
-### Container Image & Registry ✅
-- [x] Create Dockerfile for containerized deployment
-- [x] Set up multi-stage builds for optimal image size
-- [x] Publish to GitHub Container Registry (ghcr.io)
-- [x] Add container image scanning for security (Trivy)
-- [x] Support for multiple architectures (amd64, arm64)
-- [x] Image signing with Cosign (keyless OIDC)
-- [x] SARIF security reports uploaded to GitHub
+**Schema Exploration Tools:**
+- ✅ `get_categories` - List all categories
+- ✅ `get_category_tags` - Tags in specific categories
+- ✅ `get_schema_stats` - Schema statistics with version info
 
-### Additional Transport Protocols ✅
-- [x] Implement Server-Sent Events (SSE) transport
-- [x] Implement HTTP streamable transport for web clients
-- [x] Create transport configuration system (environment variables)
-- [x] Document transport selection and use cases
+### Phase 4: Testing ✅
 
-### Public Service Deployment
-- [x] Create deployment configurations (Docker Compose)
-  - Production configuration: `docker-compose.yml`
-  - Development configuration: `docker-compose.dev.yml`
-  - Test configuration: `docker-compose.test.yml`
-- [x] Set up health check endpoints
-  - Liveness probe: `/health` endpoint
-  - Readiness probe: `/ready` endpoint (validates schema loaded)
-  - Docker health check integrated with HTTP transport
-- [x] Create deployment documentation
-  - Comprehensive deployment guide: `docs/deployment.md`
-  - Docker Compose quick start in `docs/configuration.md`
-  - Health check documentation and monitoring
-- [ ] Configure authentication (API key, JWT, OAuth 2.0)
-- [ ] Configure rate limiting (per-IP, per-user quotas)
+**Status:** Complete
 
-## Future Enhancements
+**Achievements:**
+- 299 unit tests passing
+- 107 integration tests passing
+- JSON Data Integrity Tests against source schema data
+- 100% coverage: ALL 799 tag keys + ALL 1707 presets validated
+- Bidirectional validation for complete data integrity
+- Order-independent test assertions
+- Modular test structure (one file per tool)
 
-Based on analysis of [ideditor/schema-builder](https://github.com/ideditor/schema-builder), the following advanced features are planned:
+### Phase 5: Documentation ✅
 
-### Enhanced Tag Validation
-- Geometry constraints validation
-- Prerequisite tag checking
-- Field type constraints validation
+**Status:** Complete
 
-### Field Inheritance Resolution
-- Complete field lists including inherited fields from parent presets
-- Preset inheritance chain resolution
+**User Documentation:**
+- ✅ Installation guide (npx, Docker, source)
+- ✅ Configuration guide (Claude Code/Desktop, custom clients)
+- ✅ Usage guide (examples, workflows, best practices)
+- ✅ Complete API reference for all 14 tools
+- ✅ Troubleshooting guide
+- ✅ Deployment guide (Docker Compose)
+- ✅ Security documentation (provenance, SLSA, SBOM)
 
-### Conditional Field Analysis
-- Determine field visibility based on tag values
-- Handle complex prerequisite logic
+**Developer Documentation:**
+- ✅ Contribution guidelines with TDD workflow
+- ✅ Development guide with setup and debugging
+- ✅ Development roadmap (this file)
+- ✅ Changelog with version history
+- ✅ Technical implementation notes
 
-### Advanced Deprecation Transformations
-- Placeholder substitution support (`$1`, `$2`)
-- Multi-tag replacements
-- Conditional replacements based on additional context
+### Phase 6: Optimization & Polish ✅
 
-### Tag Quality Scoring
-- Completeness and quality scoring for features
-- Missing required/important field detection
-- Common optional field suggestions
+**Status:** Complete
 
-These enhancements will extend validation capabilities while maintaining 100% compatibility with current implementation.
+**Schema Optimization:**
+- ✅ Always-on indexing (removed optional indexing)
+- ✅ Schema preloading at server startup (warmup method)
+- ✅ Field key index for O(1) lookups
+- ✅ Single-pass indexing during schema load
+
+**Logging & Debugging:**
+- ✅ Configurable log levels (SILENT, ERROR, WARN, INFO, DEBUG)
+- ✅ LOG_LEVEL environment variable
+- ✅ Structured output with timestamps
+- ✅ Comprehensive server lifecycle logging
+
+**Schema Updates:**
+- ✅ Version tracking from package metadata
+- ✅ Version information in get_schema_stats
+- ✅ Schema structure validation
+- ✅ Graceful error handling
+- ✅ Version logging on load/reload
+
+**Publication:**
+- ✅ Package content optimization (59% size reduction)
+- ✅ Files whitelist in package.json
+- ✅ Pre-publication verification workflow
+- ✅ npm publishing with provenance (SLSA Level 3)
+- ✅ SBOM generation (CycloneDX format)
+
+### Phase 7 & Future Enhancements
+
+**Status:** Partially Complete
+
+#### Completed Features ✅
+
+**Distribution & Security:**
+- ✅ npm publishing with provenance (SLSA Level 3)
+- ✅ SBOM generation and attestations
+- ✅ Multi-stage Docker images (Alpine Linux)
+- ✅ Multi-architecture support (amd64, arm64)
+- ✅ Trivy vulnerability scanning
+- ✅ Cosign image signing (keyless OIDC)
+- ✅ GitHub Container Registry publishing
+
+**Transport & Deployment:**
+- ✅ stdio transport (default for CLI/desktop)
+- ✅ HTTP Streamable transport (web clients)
+- ✅ SSE transport (legacy alias)
+- ✅ Docker Compose configurations
+- ✅ Health check endpoints (/health, /ready)
+- ✅ Resource limits and security hardening
+- ✅ Comprehensive deployment documentation
+
+#### Pending Features ⏳
+
+**Service Infrastructure:**
+- ⏳ Authentication (API key, JWT, OAuth 2.0)
+- ⏳ Rate limiting (per-IP, per-user quotas)
+
+**Advanced Validation** (based on [ideditor/schema-builder](https://github.com/ideditor/schema-builder)):
+- ⏳ Geometry constraints validation
+- ⏳ Prerequisite tag validation
+- ⏳ Field type constraints (number ranges, URL patterns)
+- ⏳ Field inheritance resolution - `get_preset_all_fields(presetId)`
+- ⏳ Conditional field analysis - `get_conditional_fields(tags)`
+- ⏳ Advanced deprecation transformations (placeholder substitution)
+- ⏳ Tag quality scoring - `score_tag_quality(tags, presetId)`
+
+**Implementation Priority:**
+1. Service infrastructure (authentication, rate limiting)
+2. Advanced validation features
+3. Additional tools based on community feedback
+
+**Note:** All enhancements will maintain 100% backward compatibility with existing tools.
+
+---
+
+## Contributing
+
+Want to help? See [CONTRIBUTING.md](./CONTRIBUTING.md) for:
+- TDD workflow and coding standards
+- Testing requirements (>90% coverage)
+- Pull request process
+- Development setup
+
+## Project Information
+
+- **Repository:** https://github.com/gander-tools/osm-tagging-schema-mcp
+- **npm Package:** https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp
+- **Docker Images:** https://github.com/gander-tools/osm-tagging-schema-mcp/pkgs/container/osm-tagging-schema-mcp
+- **License:** GNU General Public License v3.0
