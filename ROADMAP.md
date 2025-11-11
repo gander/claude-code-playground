@@ -12,9 +12,10 @@
 - ✅ Transport protocols: stdio (default), HTTP/SSE for web clients
 - ✅ Complete documentation: installation, configuration, usage, API reference, troubleshooting
 
-**What's Next:**
-- Phase 7: Authentication, rate limiting, public service deployment enhancements
-- Future: Advanced validation features (geometry constraints, field inheritance, quality scoring)
+**What's Next (Phase 7):**
+- Service infrastructure: Authentication, rate limiting
+- Advanced validation: Geometry constraints, field inheritance, quality scoring
+- Additional tools based on community feedback
 
 **Quick Links:**
 - [Installation](./docs/installation.md) - Get started in 2 minutes with npx
@@ -136,99 +137,51 @@
 - ✅ npm publishing with provenance (SLSA Level 3)
 - ✅ SBOM generation (CycloneDX format)
 
-### Phase 7: Distribution & Deployment
+### Phase 7 & Future Enhancements
 
 **Status:** Partially Complete
 
-#### NPM Publishing with Provenance ✅
+#### Completed Features ✅
 
-**Status:** Complete
-
-- ✅ Automated publishing workflow (GitHub Actions)
-- ✅ npm provenance signing
-- ✅ SLSA Level 3 build attestations
+**Distribution & Security:**
+- ✅ npm publishing with provenance (SLSA Level 3)
 - ✅ SBOM generation and attestations
-- ✅ Security documentation
-- ✅ Package verification methods
-
-#### Container Image & Registry ✅
-
-**Status:** Complete
-
-- ✅ Multi-stage Dockerfile (optimized for size and security)
-- ✅ GitHub Container Registry publishing (ghcr.io)
+- ✅ Multi-stage Docker images (Alpine Linux)
 - ✅ Multi-architecture support (amd64, arm64)
 - ✅ Trivy vulnerability scanning
 - ✅ Cosign image signing (keyless OIDC)
-- ✅ SARIF security reports to GitHub
+- ✅ GitHub Container Registry publishing
 
-#### Additional Transport Protocols ✅
-
-**Status:** Complete
-
+**Transport & Deployment:**
 - ✅ stdio transport (default for CLI/desktop)
 - ✅ HTTP Streamable transport (web clients)
-- ✅ SSE transport (legacy alias for HTTP)
-- ✅ Environment variable configuration
-- ✅ Session management with UUID session IDs
-- ✅ Documentation and usage examples
-
-#### Public Service Deployment ✅
-
-**Status:** Partially Complete
-
-**Completed:**
-- ✅ Docker Compose configurations (production, development, test)
+- ✅ SSE transport (legacy alias)
+- ✅ Docker Compose configurations
 - ✅ Health check endpoints (/health, /ready)
 - ✅ Resource limits and security hardening
-- ✅ Read-only filesystem, non-root user
 - ✅ Comprehensive deployment documentation
 
-**Pending:**
+#### Pending Features ⏳
+
+**Service Infrastructure:**
 - ⏳ Authentication (API key, JWT, OAuth 2.0)
 - ⏳ Rate limiting (per-IP, per-user quotas)
 
----
+**Advanced Validation** (based on [ideditor/schema-builder](https://github.com/ideditor/schema-builder)):
+- ⏳ Geometry constraints validation
+- ⏳ Prerequisite tag validation
+- ⏳ Field type constraints (number ranges, URL patterns)
+- ⏳ Field inheritance resolution - `get_preset_all_fields(presetId)`
+- ⏳ Conditional field analysis - `get_conditional_fields(tags)`
+- ⏳ Advanced deprecation transformations (placeholder substitution)
+- ⏳ Tag quality scoring - `score_tag_quality(tags, presetId)`
 
-## Future Enhancements
+**Implementation Priority:**
+1. Service infrastructure (authentication, rate limiting)
+2. Advanced validation features
+3. Additional tools based on community feedback
 
-### Advanced Validation Features
-
-Based on [ideditor/schema-builder](https://github.com/ideditor/schema-builder) analysis:
-
-**Enhanced Tag Validation:**
-- Geometry constraints (validate if tag is appropriate for geometry type)
-- Prerequisite tag validation (check required prerequisite tags)
-- Field type constraints (number ranges, URL patterns, etc.)
-
-**Field Inheritance Resolution:**
-- Complete field lists including inherited fields from parent presets
-- Preset inheritance chain resolution
-- Tool: `get_preset_all_fields(presetId)`
-
-**Conditional Field Analysis:**
-- Determine field visibility based on tag values
-- Complex prerequisite logic handling
-- Tool: `get_conditional_fields(tags)`
-
-**Advanced Deprecation Transformations:**
-- Placeholder substitution (`$1`, `$2` transformations)
-- Multi-tag replacements
-- Conditional replacements based on context
-
-**Tag Quality Scoring:**
-- Feature completeness and quality scoring (0-100)
-- Missing required/important field detection
-- Common optional field suggestions
-- Tool: `score_tag_quality(tags, presetId)`
-
-### Implementation Priority
-
-**Current Focus:** Phase 7 completion (authentication, rate limiting)
-
-**Next Phase:** Advanced validation features
-
-**Timeline:** These enhancements will be implemented based on community feedback and use cases. All features will maintain 100% backward compatibility with existing tools.
+**Note:** All enhancements will maintain 100% backward compatibility with existing tools.
 
 ---
 
