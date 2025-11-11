@@ -160,18 +160,16 @@ This document outlines the development phases for the OSM Tagging Schema MCP Ser
 
 ### Additional Transport Protocols
 - [ ] Implement Server-Sent Events (SSE) transport
-- [ ] Implement HTTP/REST transport for web clients
-- [ ] Add WebSocket transport support
+- [ ] Implement HTTP streamable transport for web clients
 - [ ] Create transport configuration system
 - [ ] Document transport selection and use cases
 
 ### Public Service Deployment
-- [ ] Create deployment configurations (Docker Compose, Kubernetes)
+- [ ] Create deployment configurations (Docker Compose)
 - [ ] Set up health check endpoints
-- [ ] Configure rate limiting and authentication
-- [ ] Add metrics and monitoring (Prometheus/Grafana)
+- [ ] Configure authentication (API key, JWT, OAuth 2.0)
+- [ ] Configure rate limiting (per-IP, per-user quotas)
 - [ ] Create deployment documentation
-- [ ] Plan for horizontal scaling
 
 ## Future Enhancements
 
