@@ -1,5 +1,5 @@
 import type { SchemaLoader } from "../utils/schema-loader.js";
-import { validateTag, type ValidationResult } from "./validate-tag.js";
+import { type ValidationResult, validateTag } from "./validate-tag.js";
 
 /**
  * Result of tag collection validation

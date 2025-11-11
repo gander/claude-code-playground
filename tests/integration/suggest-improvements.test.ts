@@ -5,8 +5,10 @@
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
+	type: "json",
+};
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with { type: "json" };
 import { setupClientServer, type TestServer, teardownClientServer } from "./helpers.js";
 
 describe("Integration: suggest_improvements", () => {
@@ -94,9 +96,7 @@ describe("Integration: suggest_improvements", () => {
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			assert.ok(result.warnings.length > 0);
-			assert.ok(
-				result.warnings.some((w: string) => w.includes("deprecated")),
-			);
+			assert.ok(result.warnings.some((w: string) => w.includes("deprecated")));
 		});
 
 		it("should handle empty tag collection", async () => {
@@ -257,9 +257,7 @@ describe("Integration: suggest_improvements", () => {
 
 				assert.ok(result.matchedPresets);
 				// Should match the restaurant preset
-				const matched = result.matchedPresets.some((p: string) =>
-					p.includes("restaurant"),
-				);
+				const matched = result.matchedPresets.some((p: string) => p.includes("restaurant"));
 				assert.ok(matched || result.matchedPresets.length > 0);
 			}
 		});

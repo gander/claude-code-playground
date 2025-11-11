@@ -5,6 +5,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { checkDeprecated } from "./tools/check-deprecated.js";
 import { getCategories } from "./tools/get-categories.js";
 import { getCategoryTags } from "./tools/get-category-tags.js";
 import { getPresetDetails } from "./tools/get-preset-details.js";
@@ -15,12 +16,11 @@ import { getTagInfo } from "./tools/get-tag-info.js";
 import { getTagValues } from "./tools/get-tag-values.js";
 import { searchPresets } from "./tools/search-presets.js";
 import { searchTags } from "./tools/search-tags.js";
-import { checkDeprecated } from "./tools/check-deprecated.js";
 import { suggestImprovements } from "./tools/suggest-improvements.js";
 import { validateTag } from "./tools/validate-tag.js";
 import { validateTagCollection } from "./tools/validate-tag-collection.js";
-import { SchemaLoader } from "./utils/schema-loader.js";
 import { logger } from "./utils/logger.js";
+import { SchemaLoader } from "./utils/schema-loader.js";
 
 /**
  * Create and configure the MCP server
@@ -47,8 +47,7 @@ export function createServer(): Server {
 		tools: [
 			{
 				name: "check_deprecated",
-				description:
-					"Check if an OSM tag is deprecated. Accepts tag key or key-value pair.",
+				description: "Check if an OSM tag is deprecated. Accepts tag key or key-value pair.",
 				inputSchema: {
 					type: "object",
 					properties: {
@@ -289,227 +288,227 @@ export function createServer(): Server {
 
 		try {
 			if (name === "get_schema_stats") {
-			const stats = await getSchemaStats(schemaLoader);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(stats, null, 2),
-					},
-				],
-			};
-		}
-
-		if (name === "get_categories") {
-			const categories = await getCategories(schemaLoader);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(categories, null, 2),
-					},
-				],
-			};
-		}
-
-		if (name === "get_category_tags") {
-			const category = (args as { category?: string }).category;
-			if (!category) {
-				throw new Error("category parameter is required");
+				const stats = await getSchemaStats(schemaLoader);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(stats, null, 2),
+						},
+					],
+				};
 			}
-			const tags = await getCategoryTags(schemaLoader, category);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(tags, null, 2),
-					},
-				],
-			};
-		}
 
-		if (name === "get_preset_details") {
-			const presetId = (args as { presetId?: string }).presetId;
-			if (!presetId) {
-				throw new Error("presetId parameter is required");
+			if (name === "get_categories") {
+				const categories = await getCategories(schemaLoader);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(categories, null, 2),
+						},
+					],
+				};
 			}
-			const details = await getPresetDetails(schemaLoader, presetId);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(details, null, 2),
-					},
-				],
-			};
-		}
 
-		if (name === "get_preset_tags") {
-			const presetId = (args as { presetId?: string }).presetId;
-			if (!presetId) {
-				throw new Error("presetId parameter is required");
+			if (name === "get_category_tags") {
+				const category = (args as { category?: string }).category;
+				if (!category) {
+					throw new Error("category parameter is required");
+				}
+				const tags = await getCategoryTags(schemaLoader, category);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(tags, null, 2),
+						},
+					],
+				};
 			}
-			const tags = await getPresetTags(schemaLoader, presetId);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(tags, null, 2),
-					},
-				],
-			};
-		}
 
-		if (name === "get_tag_values") {
-			const tagKey = (args as { tagKey?: string }).tagKey;
-			if (!tagKey) {
-				throw new Error("tagKey parameter is required");
+			if (name === "get_preset_details") {
+				const presetId = (args as { presetId?: string }).presetId;
+				if (!presetId) {
+					throw new Error("presetId parameter is required");
+				}
+				const details = await getPresetDetails(schemaLoader, presetId);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(details, null, 2),
+						},
+					],
+				};
 			}
-			const values = await getTagValues(schemaLoader, tagKey);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(values, null, 2),
-					},
-				],
-			};
-		}
 
-		if (name === "get_tag_info") {
-			const tagKey = (args as { tagKey?: string }).tagKey;
-			if (!tagKey) {
-				throw new Error("tagKey parameter is required");
+			if (name === "get_preset_tags") {
+				const presetId = (args as { presetId?: string }).presetId;
+				if (!presetId) {
+					throw new Error("presetId parameter is required");
+				}
+				const tags = await getPresetTags(schemaLoader, presetId);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(tags, null, 2),
+						},
+					],
+				};
 			}
-			const info = await getTagInfo(schemaLoader, tagKey);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(info, null, 2),
-					},
-				],
-			};
-		}
 
-		if (name === "search_tags") {
-			const { keyword, limit } = args as { keyword?: string; limit?: number };
-			if (!keyword) {
-				throw new Error("keyword parameter is required");
+			if (name === "get_tag_values") {
+				const tagKey = (args as { tagKey?: string }).tagKey;
+				if (!tagKey) {
+					throw new Error("tagKey parameter is required");
+				}
+				const values = await getTagValues(schemaLoader, tagKey);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(values, null, 2),
+						},
+					],
+				};
 			}
-			const results = await searchTags(schemaLoader, keyword, limit);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(results, null, 2),
-					},
-				],
-			};
-		}
 
-		if (name === "get_related_tags") {
-			const { tag, limit } = args as { tag?: string; limit?: number };
-			if (!tag) {
-				throw new Error("tag parameter is required");
+			if (name === "get_tag_info") {
+				const tagKey = (args as { tagKey?: string }).tagKey;
+				if (!tagKey) {
+					throw new Error("tagKey parameter is required");
+				}
+				const info = await getTagInfo(schemaLoader, tagKey);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(info, null, 2),
+						},
+					],
+				};
 			}
-			const results = await getRelatedTags(schemaLoader, tag, limit);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(results, null, 2),
-					},
-				],
-			};
-		}
 
-		if (name === "search_presets") {
-			const { keyword, limit, geometry } = args as {
-				keyword?: string;
-				limit?: number;
-				geometry?: "point" | "vertex" | "line" | "area" | "relation";
-			};
-			if (!keyword) {
-				throw new Error("keyword parameter is required");
+			if (name === "search_tags") {
+				const { keyword, limit } = args as { keyword?: string; limit?: number };
+				if (!keyword) {
+					throw new Error("keyword parameter is required");
+				}
+				const results = await searchTags(schemaLoader, keyword, limit);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(results, null, 2),
+						},
+					],
+				};
 			}
-			const results = await searchPresets(schemaLoader, keyword, { limit, geometry });
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(results, null, 2),
-					},
-				],
-			};
-		}
 
-		if (name === "suggest_improvements") {
-			const { tags } = args as { tags?: Record<string, string> };
-			if (!tags) {
-				throw new Error("tags parameter is required");
+			if (name === "get_related_tags") {
+				const { tag, limit } = args as { tag?: string; limit?: number };
+				if (!tag) {
+					throw new Error("tag parameter is required");
+				}
+				const results = await getRelatedTags(schemaLoader, tag, limit);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(results, null, 2),
+						},
+					],
+				};
 			}
-			const result = await suggestImprovements(schemaLoader, tags);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(result, null, 2),
-					},
-				],
-			};
-		}
 
-		if (name === "check_deprecated") {
-			const { key, value } = args as { key?: string; value?: string };
-			if (key === undefined) {
-				throw new Error("key parameter is required");
+			if (name === "search_presets") {
+				const { keyword, limit, geometry } = args as {
+					keyword?: string;
+					limit?: number;
+					geometry?: "point" | "vertex" | "line" | "area" | "relation";
+				};
+				if (!keyword) {
+					throw new Error("keyword parameter is required");
+				}
+				const results = await searchPresets(schemaLoader, keyword, { limit, geometry });
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(results, null, 2),
+						},
+					],
+				};
 			}
-			const result = await checkDeprecated(schemaLoader, key, value);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(result, null, 2),
-					},
-				],
-			};
-		}
 
-		if (name === "validate_tag") {
-			const { key, value } = args as { key?: string; value?: string };
-			if (key === undefined) {
-				throw new Error("key parameter is required");
+			if (name === "suggest_improvements") {
+				const { tags } = args as { tags?: Record<string, string> };
+				if (!tags) {
+					throw new Error("tags parameter is required");
+				}
+				const result = await suggestImprovements(schemaLoader, tags);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(result, null, 2),
+						},
+					],
+				};
 			}
-			if (value === undefined) {
-				throw new Error("value parameter is required");
-			}
-			const result = await validateTag(schemaLoader, key, value);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(result, null, 2),
-					},
-				],
-			};
-		}
 
-		if (name === "validate_tag_collection") {
-			const { tags } = args as { tags?: Record<string, string> };
-			if (!tags) {
-				throw new Error("tags parameter is required");
+			if (name === "check_deprecated") {
+				const { key, value } = args as { key?: string; value?: string };
+				if (key === undefined) {
+					throw new Error("key parameter is required");
+				}
+				const result = await checkDeprecated(schemaLoader, key, value);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(result, null, 2),
+						},
+					],
+				};
 			}
-			const result = await validateTagCollection(schemaLoader, tags);
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(result, null, 2),
-					},
-				],
-			};
-		}
+
+			if (name === "validate_tag") {
+				const { key, value } = args as { key?: string; value?: string };
+				if (key === undefined) {
+					throw new Error("key parameter is required");
+				}
+				if (value === undefined) {
+					throw new Error("value parameter is required");
+				}
+				const result = await validateTag(schemaLoader, key, value);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(result, null, 2),
+						},
+					],
+				};
+			}
+
+			if (name === "validate_tag_collection") {
+				const { tags } = args as { tags?: Record<string, string> };
+				if (!tags) {
+					throw new Error("tags parameter is required");
+				}
+				const result = await validateTagCollection(schemaLoader, tags);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(result, null, 2),
+						},
+					],
+				};
+			}
 
 			throw new Error(`Unknown tool: ${name}`);
 		} catch (error) {
@@ -541,7 +540,10 @@ function getTransportConfig(): TransportConfig {
 	const transportEnv = process.env.TRANSPORT?.toLowerCase() || "stdio";
 	// Support both 'sse' and 'http' for StreamableHTTPServerTransport
 	// 'sse' is kept for backward compatibility
-	const type = (transportEnv === "sse" || transportEnv === "http" ? transportEnv : "stdio") as "stdio" | "sse" | "http";
+	const type = (transportEnv === "sse" || transportEnv === "http" ? transportEnv : "stdio") as
+		| "stdio"
+		| "sse"
+		| "http";
 	const port = Number.parseInt(process.env.PORT || "3000", 10);
 	const host = process.env.HOST || "0.0.0.0";
 
@@ -551,7 +553,11 @@ function getTransportConfig(): TransportConfig {
 /**
  * Create and start HTTP server with SSE transport
  */
-async function startHttpServer(server: Server, config: TransportConfig, schemaLoader: SchemaLoader): Promise<void> {
+async function startHttpServer(
+	server: Server,
+	config: TransportConfig,
+	schemaLoader: SchemaLoader,
+): Promise<void> {
 	return new Promise((resolve, reject) => {
 		// Session management: track transports by session ID
 		const transports = new Map<string, StreamableHTTPServerTransport>();
@@ -562,11 +568,13 @@ async function startHttpServer(server: Server, config: TransportConfig, schemaLo
 				if (req.url === "/health" && req.method === "GET") {
 					// Liveness probe - is the server running?
 					res.writeHead(200, { "Content-Type": "application/json" });
-					res.end(JSON.stringify({
-						status: "ok",
-						service: "osm-tagging-schema-mcp",
-						timestamp: new Date().toISOString()
-					}));
+					res.end(
+						JSON.stringify({
+							status: "ok",
+							service: "osm-tagging-schema-mcp",
+							timestamp: new Date().toISOString(),
+						}),
+					);
 					return;
 				}
 
@@ -576,32 +584,37 @@ async function startHttpServer(server: Server, config: TransportConfig, schemaLo
 						// Check if schema is loaded by attempting a quick operation
 						const schema = await schemaLoader.loadSchema();
 						res.writeHead(200, { "Content-Type": "application/json" });
-						res.end(JSON.stringify({
-							status: "ready",
-							service: "osm-tagging-schema-mcp",
-							schema: {
-								presets: Object.keys(schema.presets).length,
-								fields: Object.keys(schema.fields).length,
-								categories: Object.keys(schema.categories).length,
-								version: schema.metadata?.version
-							},
-							timestamp: new Date().toISOString()
-						}));
+						res.end(
+							JSON.stringify({
+								status: "ready",
+								service: "osm-tagging-schema-mcp",
+								schema: {
+									presets: Object.keys(schema.presets).length,
+									fields: Object.keys(schema.fields).length,
+									categories: Object.keys(schema.categories).length,
+									version: schema.metadata?.version,
+								},
+								timestamp: new Date().toISOString(),
+							}),
+						);
 					} catch (_error) {
 						res.writeHead(503, { "Content-Type": "application/json" });
-						res.end(JSON.stringify({
-							status: "not_ready",
-							error: "Schema not loaded",
-							timestamp: new Date().toISOString()
-						}));
+						res.end(
+							JSON.stringify({
+								status: "not_ready",
+								error: "Schema not loaded",
+								timestamp: new Date().toISOString(),
+							}),
+						);
 					}
 					return;
 				}
 
 				// Get session ID from header if present
-				const sessionId = typeof req.headers["mcp-session-id"] === "string"
-					? req.headers["mcp-session-id"]
-					: undefined;
+				const sessionId =
+					typeof req.headers["mcp-session-id"] === "string"
+						? req.headers["mcp-session-id"]
+						: undefined;
 
 				let transport: StreamableHTTPServerTransport;
 
@@ -651,8 +664,13 @@ async function startHttpServer(server: Server, config: TransportConfig, schemaLo
 		});
 
 		httpServer.listen(config.port, config.host, () => {
-			logger.info(`OSM Tagging Schema MCP Server running on http://${config.host}:${config.port}`, "main");
-			console.error(`OSM Tagging Schema MCP Server running on http://${config.host}:${config.port}`);
+			logger.info(
+				`OSM Tagging Schema MCP Server running on http://${config.host}:${config.port}`,
+				"main",
+			);
+			console.error(
+				`OSM Tagging Schema MCP Server running on http://${config.host}:${config.port}`,
+			);
 			resolve();
 		});
 	});

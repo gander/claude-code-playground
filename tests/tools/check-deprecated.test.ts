@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { SchemaLoader } from "../../src/utils/schema-loader.js";
+import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
+	type: "json",
+};
 import { checkDeprecated } from "../../src/tools/check-deprecated.js";
-import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with { type: "json" };
+import { SchemaLoader } from "../../src/utils/schema-loader.js";
 
 describe("checkDeprecated", () => {
 	describe("Basic Functionality", () => {
@@ -52,9 +54,7 @@ describe("checkDeprecated", () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
 			// Find entry with multiple replacement tags
-			const entry = deprecated.find(
-				(e) => e.replace && Object.keys(e.replace).length > 1,
-			);
+			const entry = deprecated.find((e) => e.replace && Object.keys(e.replace).length > 1);
 			assert.ok(entry);
 
 			const key = Object.keys(entry.old)[0];
@@ -73,10 +73,7 @@ describe("checkDeprecated", () => {
 		it("should handle key with no deprecated entries", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			const result = await checkDeprecated(
-				loader,
-				"nonexistent_key_xyz_12345",
-			);
+			const result = await checkDeprecated(loader, "nonexistent_key_xyz_12345");
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
@@ -99,11 +96,7 @@ describe("checkDeprecated", () => {
 			const entry = deprecated[0];
 			const key = Object.keys(entry.old)[0];
 
-			const result = await checkDeprecated(
-				loader,
-				key,
-				"definitely_not_deprecated_value_xyz",
-			);
+			const result = await checkDeprecated(loader, key, "definitely_not_deprecated_value_xyz");
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
@@ -187,15 +180,8 @@ describe("checkDeprecated", () => {
 
 				const result = await checkDeprecated(loader, key, value as string);
 
-				assert.strictEqual(
-					result.deprecated,
-					true,
-					`Tag ${key}=${value} should be deprecated`,
-				);
-				assert.ok(
-					result.replacement,
-					`Tag ${key}=${value} should have replacement`,
-				);
+				assert.strictEqual(result.deprecated, true, `Tag ${key}=${value} should be deprecated`);
+				assert.ok(result.replacement, `Tag ${key}=${value} should have replacement`);
 				testedCount++;
 			}
 

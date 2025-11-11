@@ -85,6 +85,7 @@ osm-tagging-schema-mcp/
 ├── package.json                  # Project metadata
 ├── tsconfig.json                 # TypeScript configuration
 ├── biome.json                    # Biome configuration
+├── lefthook.yml                  # Git hooks configuration
 ├── README.md                     # User documentation
 ├── ROADMAP.md                    # Development roadmap
 ├── CHANGELOG.md                  # Project changelog
@@ -140,6 +141,35 @@ npm run format
 # Type check (TypeScript)
 npm run typecheck
 ```
+
+### Git Hooks
+
+This project uses [Lefthook](https://github.com/evilmartians/lefthook) for automated code quality checks.
+
+```bash
+# Install hooks (done automatically by npm install)
+npx lefthook install
+
+# Run pre-commit hooks manually
+npx lefthook run pre-commit
+
+# Run pre-push hooks manually
+npx lefthook run pre-push
+
+# Skip hooks (not recommended)
+git commit --no-verify  # Skip pre-commit
+git push --no-verify    # Skip pre-push
+```
+
+**Pre-commit hooks** (auto-run before commits):
+- Code formatting (BiomeJS)
+- Linting with auto-fix (BiomeJS)
+
+**Pre-push hooks** (auto-run before pushes):
+- Type checking (TypeScript)
+- Unit tests
+- Integration tests
+- Build verification
 
 ### Build & Run
 

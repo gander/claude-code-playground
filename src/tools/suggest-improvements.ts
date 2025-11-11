@@ -1,7 +1,7 @@
+import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
+import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import { checkDeprecated } from "./check-deprecated.js";
-import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 
 /**
  * Result of improvement suggestions
@@ -45,9 +45,7 @@ export async function suggestImprovements(
 	for (const [key, value] of Object.entries(tags)) {
 		const deprecationResult = await checkDeprecated(loader, key, value);
 		if (deprecationResult.deprecated) {
-			result.warnings.push(
-				`Tag ${key}=${value} is deprecated. ${deprecationResult.message}`,
-			);
+			result.warnings.push(`Tag ${key}=${value} is deprecated. ${deprecationResult.message}`);
 		}
 	}
 
@@ -70,9 +68,7 @@ export async function suggestImprovements(
 					const fieldKey = getFieldKey(fieldId);
 					if (fieldKey && !tags[fieldKey] && !suggestedFields.has(fieldKey)) {
 						suggestedFields.add(fieldKey);
-						result.suggestions.push(
-							`Consider adding '${fieldKey}' tag (common for ${presetId})`,
-						);
+						result.suggestions.push(`Consider adding '${fieldKey}' tag (common for ${presetId})`);
 					}
 				}
 			}
@@ -84,9 +80,7 @@ export async function suggestImprovements(
 					const fieldKey = getFieldKey(fieldId);
 					if (fieldKey && !tags[fieldKey] && !suggestedFields.has(fieldKey)) {
 						suggestedFields.add(fieldKey);
-						result.suggestions.push(
-							`Optional: Consider adding '${fieldKey}' tag`,
-						);
+						result.suggestions.push(`Optional: Consider adding '${fieldKey}' tag`);
 					}
 				}
 			}

@@ -22,7 +22,8 @@
 		"lint": "biome lint .",
 		"format": "biome format --write .",
 		"check": "biome check --write .",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"postinstall": "lefthook install"
 	},
 	"keywords": [
 		"mcp",
@@ -62,6 +63,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.4",
 		"@types/node": "^24.10.0",
+		"lefthook": "^2.0.3",
 		"tsx": "^4.19.2",
 		"typescript": "^5.7.2"
 	},

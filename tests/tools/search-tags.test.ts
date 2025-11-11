@@ -136,7 +136,8 @@ describe("search_tags", () => {
 					// Extract words from preset names (e.g., "Fast Food Restaurant" → ["fast", "food", "restaurant"])
 					const words = preset.name.toLowerCase().split(/\s+/);
 					for (const word of words) {
-						if (word.length >= 4) { // Skip very short words
+						if (word.length >= 4) {
+							// Skip very short words
 							presetNames.add(word);
 						}
 					}

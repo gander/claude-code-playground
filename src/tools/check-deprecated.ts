@@ -1,5 +1,7 @@
+import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
+	type: "json",
+};
 import type { SchemaLoader } from "../utils/schema-loader.js";
-import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with { type: "json" };
 
 /**
  * Result of deprecation check
@@ -39,7 +41,7 @@ export async function checkDeprecated(
 	}
 
 	// Find deprecated entry
-	let deprecatedEntry: typeof deprecated[0] | undefined;
+	let deprecatedEntry: (typeof deprecated)[0] | undefined;
 
 	if (value !== undefined) {
 		// Check for exact key-value match

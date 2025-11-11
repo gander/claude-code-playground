@@ -54,10 +54,7 @@ export class SchemaLoader {
 			const metadata = await this.loadSchemaMetadata();
 
 			// Log schema version
-			logger.info(
-				`Loading OSM tagging schema v${metadata.version}`,
-				"SchemaLoader",
-			);
+			logger.info(`Loading OSM tagging schema v${metadata.version}`, "SchemaLoader");
 
 			// Load all schema files in parallel
 			const [presets, fields, categories, deprecated, defaults] = await Promise.all([
@@ -100,8 +97,7 @@ export class SchemaLoader {
 
 			return this.cache;
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : String(error);
+			const errorMessage = error instanceof Error ? error.message : String(error);
 			logger.error(
 				`Failed to load schema: ${errorMessage}`,
 				"SchemaLoader",
@@ -109,9 +105,7 @@ export class SchemaLoader {
 			);
 
 			// Wrap error with descriptive message
-			throw new Error(
-				`Failed to load schema from ${this.schemaBasePath}: ${errorMessage}`,
-			);
+			throw new Error(`Failed to load schema from ${this.schemaBasePath}: ${errorMessage}`);
 		}
 	}
 
@@ -322,20 +316,15 @@ export class SchemaLoader {
 	private async loadSchemaMetadata(): Promise<SchemaMetadata> {
 		try {
 			// Load package.json from schema package
-			const packageJson = await this.loadJSON<{ version: string }>(
-				"../package.json",
-			);
+			const packageJson = await this.loadJSON<{ version: string }>("../package.json");
 
 			return {
 				version: packageJson.version,
 				loadedAt: Date.now(),
 			};
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : String(error);
-			throw new Error(
-				`Failed to load schema metadata: ${errorMessage}`,
-			);
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			throw new Error(`Failed to load schema metadata: ${errorMessage}`);
 		}
 	}
 
@@ -384,14 +373,10 @@ export class SchemaLoader {
 				throw new Error(`Invalid schema: preset '${firstPresetKey}' is undefined`);
 			}
 			if (!Array.isArray(firstPreset.geometry)) {
-				throw new Error(
-					`Invalid schema: preset '${firstPresetKey}' missing geometry array`,
-				);
+				throw new Error(`Invalid schema: preset '${firstPresetKey}' missing geometry array`);
 			}
 			if (!firstPreset.tags || typeof firstPreset.tags !== "object") {
-				throw new Error(
-					`Invalid schema: preset '${firstPresetKey}' missing tags object`,
-				);
+				throw new Error(`Invalid schema: preset '${firstPresetKey}' missing tags object`);
 			}
 		}
 
@@ -405,14 +390,10 @@ export class SchemaLoader {
 				throw new Error(`Invalid schema: field '${firstFieldKey}' is undefined`);
 			}
 			if (!firstField.key || typeof firstField.key !== "string") {
-				throw new Error(
-					`Invalid schema: field '${firstFieldKey}' missing key property`,
-				);
+				throw new Error(`Invalid schema: field '${firstFieldKey}' missing key property`);
 			}
 			if (!firstField.type || typeof firstField.type !== "string") {
-				throw new Error(
-					`Invalid schema: field '${firstFieldKey}' missing type property`,
-				);
+				throw new Error(`Invalid schema: field '${firstFieldKey}' missing type property`);
 			}
 		}
 

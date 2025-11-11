@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { SchemaLoader } from "../../src/utils/schema-loader.js";
+import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
+	type: "json",
+};
 import { validateTagCollection } from "../../src/tools/validate-tag-collection.js";
-import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with { type: "json" };
+import { SchemaLoader } from "../../src/utils/schema-loader.js";
 
 describe("validateTagCollection", () => {
 	describe("Basic Functionality", () => {
