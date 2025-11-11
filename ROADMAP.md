@@ -165,11 +165,20 @@ This document outlines the development phases for the OSM Tagging Schema MCP Ser
 - [x] Document transport selection and use cases
 
 ### Public Service Deployment
-- [ ] Create deployment configurations (Docker Compose)
-- [ ] Set up health check endpoints
+- [x] Create deployment configurations (Docker Compose)
+  - Production configuration: `docker-compose.yml`
+  - Development configuration: `docker-compose.dev.yml`
+  - Test configuration: `docker-compose.test.yml`
+- [x] Set up health check endpoints
+  - Liveness probe: `/health` endpoint
+  - Readiness probe: `/ready` endpoint (validates schema loaded)
+  - Docker health check integrated with HTTP transport
+- [x] Create deployment documentation
+  - Comprehensive deployment guide: `docs/deployment.md`
+  - Docker Compose quick start in `docs/configuration.md`
+  - Health check documentation and monitoring
 - [ ] Configure authentication (API key, JWT, OAuth 2.0)
 - [ ] Configure rate limiting (per-IP, per-user quotas)
-- [ ] Create deployment documentation
 
 ## Future Enhancements
 

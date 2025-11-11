@@ -529,7 +529,7 @@ See ROADMAP.md for the complete development plan covering:
 - Phase 4: Testing ✅ (406 tests, >90% coverage)
 - Phase 5: Documentation ✅ (Installation, Usage, API, Troubleshooting)
 - Phase 6: Optimization & Polish ✅ (COMPLETED - optimization, logging, schema updates, publication preparation)
-- Phase 7: Distribution & Deployment (Next - npm publishing, additional transports, public deployment)
+- Phase 7: Distribution & Deployment (PARTIALLY COMPLETED - npm publishing ✅, transports ✅, Docker Compose deployment ✅, authentication & rate limiting pending)
 
 ## Example Use Cases
 
@@ -779,56 +779,72 @@ docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
 - Support for public-facing services
 - Backward compatibility with stdio transport
 
-### 4. Public Service Deployment Configuration
+### 4. Public Service Deployment Configuration ✅ IMPLEMENTED
 
 **Goal**: Enable deployment as a publicly accessible service with proper security and operations.
 
-**Deployment Option**:
+**Status**: ✅ **COMPLETED** - Production-ready Docker Compose deployment with health checks
 
-**Docker Compose**
-```yaml
-services:
-  osm-mcp:
-    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - TRANSPORT=http
-      - PORT=3000
-      - LOG_LEVEL=info
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-```
+**Implementation**:
 
-**Security & Operations**:
+**Health Check Endpoints** ✅:
+- **Liveness probe**: `/health` endpoint returns server status
+  - Simple check: Is the server running?
+  - Response: `{ status: "ok", service: "osm-tagging-schema-mcp", timestamp: "..." }`
+- **Readiness probe**: `/ready` endpoint validates schema loaded
+  - Complex check: Is the server ready to handle requests?
+  - Response includes schema stats: presets count, fields count, version
+  - Returns 503 if schema not loaded yet
+- **Docker integration**: Health checks work with both stdio and HTTP transports
+  - HTTP: Uses `/health` endpoint
+  - stdio: Falls back to Node.js check
 
-**Authentication**:
-- API key authentication
-- JWT token support
-- OAuth 2.0 integration
-- Per-client access control
+**Docker Compose Configurations** ✅:
+- **Production**: `docker-compose.yml`
+  - Latest stable image
+  - HTTP transport on port 3000
+  - Resource limits: 512MB RAM, 1 CPU
+  - Read-only filesystem for security
+  - Automated health checks
+  - Network isolation
+- **Development**: `docker-compose.dev.yml`
+  - Development image with debug logging
+  - Higher resource limits (1GB RAM, 2 CPU)
+  - Hot reload support
+- **Testing**: `docker-compose.test.yml`
+  - Local build configuration
+  - Debug logging enabled
 
-**Rate Limiting**:
-- Per-IP request limits
-- Per-user quotas
-- Configurable time windows
-- Graceful degradation under load
+**Documentation** ✅:
+- Comprehensive deployment guide: `docs/deployment.md`
+  - Quick start instructions
+  - Production deployment checklist
+  - Configuration options (environment variables, ports, resources)
+  - Health check documentation
+  - Monitoring and logging
+  - Scaling strategies (vertical and horizontal)
+  - Security best practices
+  - Troubleshooting guide
+- Docker Compose quick start in `docs/configuration.md`
+- Updated README.md with deployment link
 
-**Additional Features**:
-- **Health Checks**: `/health` and `/ready` endpoints
-- **Logging**: Structured JSON logs for observability
+**Security Features** ✅:
+- **No new privileges**: Security option enabled
+- **Read-only filesystem**: Immutable runtime
+- **Non-root user**: Container runs as unprivileged user
+- **Network isolation**: Bridge network with optional custom configuration
+
+**Future Security Enhancements** (not yet implemented):
+- **Authentication**: API key, JWT, OAuth 2.0
+- **Rate Limiting**: Per-IP and per-user quotas
 - **TLS/HTTPS**: Certificate management (Let's Encrypt)
 
-**Benefits**:
+**Benefits** ✅:
 - Production-ready deployment with Docker Compose
-- Security best practices (authentication, rate limiting)
+- Automated health monitoring and recovery
 - Easy configuration and management
 - Reproducible deployments
-
-**Timeline**: Phase 7 will be implemented after Phase 6 (Optimization & Polish) is completed.
+- Security-hardened containers
 
 ## Future Enhancements (Schema-Builder Inspired)
 

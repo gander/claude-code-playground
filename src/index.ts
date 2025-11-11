@@ -551,13 +551,53 @@ function getTransportConfig(): TransportConfig {
 /**
  * Create and start HTTP server with SSE transport
  */
-async function startHttpServer(server: Server, config: TransportConfig): Promise<void> {
+async function startHttpServer(server: Server, config: TransportConfig, schemaLoader: SchemaLoader): Promise<void> {
 	return new Promise((resolve, reject) => {
 		// Session management: track transports by session ID
 		const transports = new Map<string, StreamableHTTPServerTransport>();
 
 		const httpServer = http.createServer(async (req, res) => {
 			try {
+				// Health check endpoints
+				if (req.url === "/health" && req.method === "GET") {
+					// Liveness probe - is the server running?
+					res.writeHead(200, { "Content-Type": "application/json" });
+					res.end(JSON.stringify({
+						status: "ok",
+						service: "osm-tagging-schema-mcp",
+						timestamp: new Date().toISOString()
+					}));
+					return;
+				}
+
+				if (req.url === "/ready" && req.method === "GET") {
+					// Readiness probe - is the server ready to handle requests?
+					try {
+						// Check if schema is loaded by attempting a quick operation
+						const schema = await schemaLoader.loadSchema();
+						res.writeHead(200, { "Content-Type": "application/json" });
+						res.end(JSON.stringify({
+							status: "ready",
+							service: "osm-tagging-schema-mcp",
+							schema: {
+								presets: Object.keys(schema.presets).length,
+								fields: Object.keys(schema.fields).length,
+								categories: Object.keys(schema.categories).length,
+								version: schema.metadata?.version
+							},
+							timestamp: new Date().toISOString()
+						}));
+					} catch (_error) {
+						res.writeHead(503, { "Content-Type": "application/json" });
+						res.end(JSON.stringify({
+							status: "not_ready",
+							error: "Schema not loaded",
+							timestamp: new Date().toISOString()
+						}));
+					}
+					return;
+				}
+
 				// Get session ID from header if present
 				const sessionId = typeof req.headers["mcp-session-id"] === "string"
 					? req.headers["mcp-session-id"]
@@ -639,7 +679,7 @@ async function main() {
 
 	// Start appropriate transport
 	if (config.type === "sse" || config.type === "http") {
-		await startHttpServer(server, config);
+		await startHttpServer(server, config, schemaLoader);
 	} else {
 		const transport = new StdioServerTransport();
 		await server.connect(transport);

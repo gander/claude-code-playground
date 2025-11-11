@@ -175,6 +175,7 @@ Contributions are welcome! We follow a **Test-Driven Development (TDD)** approac
 ### User Documentation
 - [docs/installation.md](./docs/installation.md) - Installation guide (npx, source, Docker)
 - [docs/configuration.md](./docs/configuration.md) - Configuration for Claude Code/Desktop
+- [docs/deployment.md](./docs/deployment.md) - Production deployment with Docker Compose
 - [docs/usage.md](./docs/usage.md) - Usage examples and workflows
 - [docs/api/](./docs/api/) - Complete API reference for all 14 tools
 - [docs/security.md](./docs/security.md) - Security, provenance & supply chain
