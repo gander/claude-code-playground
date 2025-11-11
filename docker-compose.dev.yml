@@ -1,0 +1,53 @@
+# Docker Compose configuration for development
+# This configuration uses the latest development image with debug logging
+
+services:
+  osm-tagging-mcp-dev:
+    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+    container_name: osm-tagging-mcp-dev
+    restart: unless-stopped
+
+    # Environment configuration
+    environment:
+      # Transport protocol
+      TRANSPORT: http
+
+      # HTTP server configuration
+      PORT: 3000
+      HOST: 0.0.0.0
+
+      # Debug logging for development
+      LOG_LEVEL: debug
+
+      # Node.js configuration
+      NODE_ENV: development
+
+    # Port mapping - expose MCP server on host
+    ports:
+      - "3000:3000"
+
+    # Higher resource limits for development
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+
+    # Health check using /health endpoint
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+
+    # Network configuration
+    networks:
+      - mcp-network
+
+networks:
+  mcp-network:
+    driver: bridge

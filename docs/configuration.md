@@ -244,41 +244,52 @@ docker run -i --rm \
 
 ### Docker Compose
 
-For complex deployments:
+For production deployments with Docker Compose, see the [Deployment Guide](./deployment.md).
+
+**Quick example:**
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
-
 services:
   osm-tagging-mcp:
-    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
     container_name: osm-tagging-mcp
-    stdin_open: true
-    tty: true
     restart: unless-stopped
-    networks:
-      - mcp-network
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '1.0'
+    environment:
+      TRANSPORT: http
+      PORT: 3000
+      LOG_LEVEL: info
+    ports:
+      - "3000:3000"
     healthcheck:
-      test: ["CMD", "node", "--version"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
+      start_period: 10s
       retries: 3
+    networks:
+      - mcp-network
 
 networks:
   mcp-network:
     driver: bridge
 ```
 
-Run with:
+**Deploy:**
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
+
+**Verify:**
+```bash
+# Check health
+curl http://localhost:3000/health
+
+# Check readiness
+curl http://localhost:3000/ready
+```
+
+For complete deployment documentation including production configuration, health checks, monitoring, and troubleshooting, see the [Deployment Guide](./deployment.md).
 
 ## Environment Variables
 
@@ -457,6 +468,7 @@ echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx @gander-tools/o
 
 ## Next Steps
 
+- [Deployment Guide](./deployment.md) - Production deployment with Docker Compose
 - [Usage Guide](./usage.md) - Learn how to use the tools
 - [API Documentation](./api/) - Detailed tool reference
 - [Troubleshooting](./troubleshooting.md) - Common issues and solutions

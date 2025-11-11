@@ -47,12 +47,17 @@ USER mcp
 # Set Node.js environment to production
 ENV NODE_ENV=production
 
-# Expose port (if needed for future HTTP transport)
+# Expose port for HTTP transport
 EXPOSE 3000
 
-# Health check (exit code 0 if server can start)
+# Health check - uses /health endpoint when HTTP transport is enabled
+# For stdio transport, falls back to basic node check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "console.log('OK')" || exit 1
+    CMD if [ "$TRANSPORT" = "http" ] || [ "$TRANSPORT" = "sse" ]; then \
+        node -e "require('http').get('http://localhost:' + (process.env.PORT || '3000') + '/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"; \
+    else \
+        node -e "console.log('OK')" || exit 1; \
+    fi
 
 # Set entrypoint
 ENTRYPOINT ["node", "dist/index.js"]
