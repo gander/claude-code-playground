@@ -111,7 +111,7 @@ All tools are tested against the actual JSON data from `@openstreetmap/id-taggin
 - **Language**: TypeScript 5.9
 - **MCP SDK**: @modelcontextprotocol/sdk ^1.21.1
 - **Schema Library**: @openstreetmap/id-tagging-schema ^6.7.3
-- **Transport Protocols**: stdio (default), SSE/HTTP (Server-Sent Events)
+- **Transport Protocols**: stdio (default), HTTP (Streamable HTTP), SSE (legacy alias)
 - **Build Tool**: TypeScript compiler
 - **Testing**: Node.js native test runner (TDD methodology)
 - **Code Quality**: BiomeJS 2.3.4 (linting & formatting)

@@ -529,7 +529,7 @@ export function createServer(): Server {
  * Configuration for transport selection
  */
 interface TransportConfig {
-	type: "stdio" | "sse";
+	type: "stdio" | "sse" | "http";
 	port: number;
 	host: string;
 }
@@ -538,7 +538,10 @@ interface TransportConfig {
  * Parse transport configuration from environment variables
  */
 function getTransportConfig(): TransportConfig {
-	const type = (process.env.TRANSPORT?.toLowerCase() || "stdio") as "stdio" | "sse";
+	const transportEnv = process.env.TRANSPORT?.toLowerCase() || "stdio";
+	// Support both 'sse' and 'http' for StreamableHTTPServerTransport
+	// 'sse' is kept for backward compatibility
+	const type = (transportEnv === "sse" || transportEnv === "http" ? transportEnv : "stdio") as "stdio" | "sse" | "http";
 	const port = Number.parseInt(process.env.PORT || "3000", 10);
 	const host = process.env.HOST || "0.0.0.0";
 
@@ -635,7 +638,7 @@ async function main() {
 	logger.info("Schema preloaded successfully", "main");
 
 	// Start appropriate transport
-	if (config.type === "sse") {
+	if (config.type === "sse" || config.type === "http") {
 		await startHttpServer(server, config);
 	} else {
 		const transport = new StdioServerTransport();
