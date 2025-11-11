@@ -704,33 +704,31 @@ cosign verify ghcr.io/gander-tools/osm-tagging-schema-mcp:latest \
 
 **Planned Transports**:
 
-**a) Server-Sent Events (SSE)**
+**a) stdio (Standard Input/Output)**
+- Current default transport
+- Process-based communication
+- Use case: CLI tools, Claude Desktop integration
+
+**b) Server-Sent Events (SSE)**
 - One-way server-to-client streaming
 - Web browser compatible
 - Long-polling fallback
 - Use case: Web dashboards, monitoring tools
 
-**b) HTTP/REST**
-- Request/response over HTTP
-- Standard REST endpoints
-- OpenAPI/Swagger documentation
-- Use case: Integration with web applications, API gateways
-
-**c) WebSocket**
-- Bidirectional real-time communication
-- Persistent connection
-- Lower latency than HTTP polling
-- Use case: Interactive web applications
+**c) HTTP Streamable**
+- HTTP-based streaming responses
+- Server-Sent Events over HTTP
+- Compatible with standard HTTP infrastructure
+- Use case: Web applications, API gateways, scalable deployments
 
 **Transport Configuration**:
 ```typescript
 // Example configuration
 {
-  "transport": "sse" | "http" | "websocket" | "stdio",
+  "transport": "stdio" | "sse" | "http",
   "port": 3000,
   "host": "0.0.0.0",
-  "cors": { ... },
-  "auth": { ... }
+  "cors": { ... }
 }
 ```
 
@@ -742,64 +740,52 @@ cosign verify ghcr.io/gander-tools/osm-tagging-schema-mcp:latest \
 
 ### 4. Public Service Deployment Configuration
 
-**Goal**: Enable deployment as a publicly accessible service with proper security, monitoring, and scalability.
+**Goal**: Enable deployment as a publicly accessible service with proper security and operations.
 
-**Deployment Options**:
+**Deployment Option**:
 
-**a) Docker Compose**
+**Docker Compose**
 ```yaml
 services:
   osm-mcp:
     image: ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+    ports:
+      - "3000:3000"
     environment:
       - TRANSPORT=http
       - PORT=3000
-      - RATE_LIMIT=100
+      - LOG_LEVEL=info
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-```
-
-**b) Kubernetes**
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: osm-mcp-server
-spec:
-  replicas: 3  # Horizontal scaling
-  template:
-    spec:
-      containers:
-      - name: osm-mcp
-        image: ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
-        resources:
-          limits: { cpu: "500m", memory: "512Mi" }
+      interval: 30s
+      timeout: 10s
+      retries: 3
 ```
 
 **Security & Operations**:
-- **Authentication**: API key, OAuth 2.0, JWT tokens
-- **Rate Limiting**: Per-IP, per-user limits
+
+**Authentication**:
+- API key authentication
+- JWT token support
+- OAuth 2.0 integration
+- Per-client access control
+
+**Rate Limiting**:
+- Per-IP request limits
+- Per-user quotas
+- Configurable time windows
+- Graceful degradation under load
+
+**Additional Features**:
 - **Health Checks**: `/health` and `/ready` endpoints
-- **Metrics**: Prometheus metrics for monitoring
-  - Request count, latency, error rate
-  - Cache hit ratio
-  - Schema load time
 - **Logging**: Structured JSON logs for observability
 - **TLS/HTTPS**: Certificate management (Let's Encrypt)
-- **Horizontal Scaling**: Stateless design for load balancing
-
-**Monitoring Stack**:
-- Prometheus: Metrics collection
-- Grafana: Dashboards and visualization
-- Loki: Log aggregation
-- Alertmanager: Alert routing
 
 **Benefits**:
-- Production-ready deployment
-- Scalable architecture
-- Observability and debugging
-- Security best practices
-- Cost-effective resource usage
+- Production-ready deployment with Docker Compose
+- Security best practices (authentication, rate limiting)
+- Easy configuration and management
+- Reproducible deployments
 
 **Timeline**: Phase 7 will be implemented after Phase 6 (Optimization & Polish) is completed.
 
