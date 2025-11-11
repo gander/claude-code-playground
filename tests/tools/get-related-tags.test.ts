@@ -93,6 +93,39 @@ describe("get_related_tags", () => {
 	});
 
 	describe("JSON Schema Validation", () => {
+		/**
+		 * Provider pattern: Generates tag combinations DYNAMICALLY from JSON presets
+		 * CRITICAL: NO hardcoded tags - all tags extracted from actual JSON
+		 * Selects a representative sample of presets with their tags for systematic testing
+		 */
+		function* tagCombinationProvider() {
+			const presetEntries = Object.entries(presets);
+
+			// Sample presets systematically (every 50th preset for performance)
+			const step = Math.max(1, Math.floor(presetEntries.length / 50));
+			for (let i = 0; i < presetEntries.length; i += step) {
+				const [presetId, preset] = presetEntries[i];
+
+				// Only test presets that have tags
+				if (!preset.tags || Object.keys(preset.tags).length === 0) continue;
+
+				// Get first tag from preset as test input
+				const firstKey = Object.keys(preset.tags)[0];
+				const firstValue = preset.tags[firstKey];
+
+				// Skip wildcards and complex values
+				if (!firstValue || firstValue === "*" || firstValue.includes("|")) continue;
+				if (typeof firstValue !== "string") continue;
+
+				yield {
+					presetId,
+					tag: `${firstKey}=${firstValue}`,
+					key: firstKey,
+					value: firstValue,
+				};
+			}
+		}
+
 		it("should return related tags that exist in JSON presets", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			const results = await getRelatedTags(loader, "amenity=restaurant", 20);
@@ -123,6 +156,48 @@ describe("get_related_tags", () => {
 					`Related tag ${result.key}${result.value ? `=${result.value}` : ""} should exist in JSON presets`,
 				);
 			}
+		});
+
+		it("should systematically test related tags for dynamic preset samples (100% data-driven)", async () => {
+			const loader = new SchemaLoader({ enableIndexing: true });
+
+			// CRITICAL: Test dynamically sampled tags from JSON - NO hardcoded values
+			let testedCount = 0;
+			for (const testCase of tagCombinationProvider()) {
+				const results = await getRelatedTags(loader, testCase.tag, 10);
+
+				// Verify each related tag exists in JSON presets
+				for (const result of results) {
+					let found = false;
+
+					// Check if this tag exists in any preset
+					for (const preset of Object.values(presets)) {
+						if (preset.tags?.[result.key] === result.value) {
+							found = true;
+							break;
+						}
+						if (preset.addTags?.[result.key] === result.value) {
+							found = true;
+							break;
+						}
+						// Also check for key-only matches (when value is undefined)
+						if (result.value === undefined && preset.tags?.[result.key]) {
+							found = true;
+							break;
+						}
+					}
+
+					assert.ok(
+						found,
+						`Related tag ${result.key}${result.value ? `=${result.value}` : ""} for input ${testCase.tag} should exist in JSON presets`,
+					);
+				}
+
+				testedCount++;
+			}
+
+			// Verify we tested a reasonable sample
+			assert.ok(testedCount > 0, "Should have tested at least some tag combinations from JSON");
 		});
 
 		it("should verify frequency counts match actual preset occurrences", async () => {
