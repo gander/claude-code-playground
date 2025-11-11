@@ -158,11 +158,11 @@ This document outlines the development phases for the OSM Tagging Schema MCP Ser
 - [x] Image signing with Cosign (keyless OIDC)
 - [x] SARIF security reports uploaded to GitHub
 
-### Additional Transport Protocols
-- [ ] Implement Server-Sent Events (SSE) transport
-- [ ] Implement HTTP streamable transport for web clients
-- [ ] Create transport configuration system
-- [ ] Document transport selection and use cases
+### Additional Transport Protocols ✅
+- [x] Implement Server-Sent Events (SSE) transport
+- [x] Implement HTTP streamable transport for web clients
+- [x] Create transport configuration system (environment variables)
+- [x] Document transport selection and use cases
 
 ### Public Service Deployment
 - [ ] Create deployment configurations (Docker Compose)

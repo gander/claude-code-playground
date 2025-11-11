@@ -282,15 +282,65 @@ docker-compose up -d
 
 ## Environment Variables
 
-Currently, the server doesn't use environment variables for configuration. All settings are internal.
+The server supports the following environment variables for configuration:
 
-**For development**, you can use standard Node.js environment variables:
+### Transport Configuration
+
+**`TRANSPORT`** - Select transport protocol (default: `stdio`)
+- `stdio`: Standard input/output (default, for MCP clients like Claude Code/Desktop)
+- `sse`: Server-Sent Events over HTTP (for web applications and HTTP clients)
+
+**`PORT`** - HTTP server port when using SSE transport (default: `3000`)
+
+**`HOST`** - HTTP server host when using SSE transport (default: `0.0.0.0`)
+
+**Examples:**
+
+```bash
+# Run with stdio (default)
+npx @gander-tools/osm-tagging-schema-mcp
+
+# Run with SSE transport
+TRANSPORT=sse npx @gander-tools/osm-tagging-schema-mcp
+
+# Run with SSE on custom port and host
+TRANSPORT=sse PORT=8080 HOST=127.0.0.1 npx @gander-tools/osm-tagging-schema-mcp
+```
+
+**Using with npm scripts:**
+```bash
+npm run start:sse       # Start with SSE transport (port 3000)
+npm run dev:sse         # Development mode with SSE transport
+```
+
+**Docker with SSE transport:**
+```bash
+docker run -e TRANSPORT=sse -e PORT=3000 -p 3000:3000 \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+```
+
+### Logging Configuration
+
+**`LOG_LEVEL`** - Set logging verbosity (default: `info`)
+- `debug`: Verbose logging
+- `info`: Standard logging
+- `warn`: Warnings only
+- `error`: Errors only
+
+```bash
+LOG_LEVEL=debug npx @gander-tools/osm-tagging-schema-mcp
+```
+
+### Node.js Configuration
+
+**For development**, you can also use standard Node.js environment variables:
 
 ```bash
 # Set Node.js options
 NODE_OPTIONS="--max-old-space-size=512" npx @gander-tools/osm-tagging-schema-mcp
 
-# Enable debug logging (if implemented)
+# Combine with transport configuration
+TRANSPORT=sse PORT=3000 NODE_OPTIONS="--max-old-space-size=512" \
 DEBUG="mcp:*" npx @gander-tools/osm-tagging-schema-mcp
 ```
 
