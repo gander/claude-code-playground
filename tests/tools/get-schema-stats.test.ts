@@ -55,30 +55,24 @@ describe("get_schema_stats", () => {
 
 	describe("JSON Schema Validation", () => {
 		/**
-		 * Provider pattern: Samples preset keys from JSON for validation
-		 * Samples 10% of presets to verify actual data, not just counts
+		 * Provider pattern: Returns ALL preset keys from JSON for validation
+		 * CRITICAL: Tests 100% of presets, not samples or subsets
 		 */
-		function* presetKeySampleProvider() {
+		function* presetKeyProvider() {
 			const presetKeys = Object.keys(presets);
-			const sampleSize = Math.max(10, Math.floor(presetKeys.length * 0.1));
-			const step = Math.floor(presetKeys.length / sampleSize);
-
-			for (let i = 0; i < presetKeys.length; i += step) {
-				yield presetKeys[i];
+			for (const key of presetKeys) {
+				yield key;
 			}
 		}
 
 		/**
-		 * Provider pattern: Samples field keys from JSON for validation
-		 * Samples 10% of fields to verify actual data, not just counts
+		 * Provider pattern: Returns ALL field keys from JSON for validation
+		 * CRITICAL: Tests 100% of fields, not samples or subsets
 		 */
-		function* fieldKeySampleProvider() {
+		function* fieldKeyProvider() {
 			const fieldKeys = Object.keys(fields);
-			const sampleSize = Math.max(10, Math.floor(fieldKeys.length * 0.1));
-			const step = Math.floor(fieldKeys.length / sampleSize);
-
-			for (let i = 0; i < fieldKeys.length; i += step) {
-				yield fieldKeys[i];
+			for (const key of fieldKeys) {
+				yield key;
 			}
 		}
 
@@ -111,40 +105,52 @@ describe("get_schema_stats", () => {
 			);
 		});
 
-		it("should verify actual preset keys exist in schema (sample-based)", async () => {
+		it("should verify ALL preset keys exist in schema (100% coverage)", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			const schema = await loader.loadSchema();
 			const schemaPresetKeys = Object.keys(schema.presets);
 
-			// Sample and verify preset keys exist in both JSON and loaded schema
-			let sampleCount = 0;
-			for (const presetKey of presetKeySampleProvider()) {
+			// CRITICAL: Verify EVERY preset key exists in both JSON and loaded schema
+			let validatedCount = 0;
+			for (const presetKey of presetKeyProvider()) {
 				assert.ok(
 					schemaPresetKeys.includes(presetKey as string),
 					`Preset key "${presetKey}" from JSON should exist in loaded schema`,
 				);
-				sampleCount++;
+				validatedCount++;
 			}
 
-			assert.ok(sampleCount > 0, "Should have sampled at least one preset key");
+			// Verify we tested ALL presets, not a sample
+			const expectedCount = Object.keys(presets).length;
+			assert.strictEqual(
+				validatedCount,
+				expectedCount,
+				`Should have validated ALL ${expectedCount} preset keys`,
+			);
 		});
 
-		it("should verify actual field keys exist in schema (sample-based)", async () => {
+		it("should verify ALL field keys exist in schema (100% coverage)", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			const schema = await loader.loadSchema();
 			const schemaFieldKeys = Object.keys(schema.fields);
 
-			// Sample and verify field keys exist in both JSON and loaded schema
-			let sampleCount = 0;
-			for (const fieldKey of fieldKeySampleProvider()) {
+			// CRITICAL: Verify EVERY field key exists in both JSON and loaded schema
+			let validatedCount = 0;
+			for (const fieldKey of fieldKeyProvider()) {
 				assert.ok(
 					schemaFieldKeys.includes(fieldKey as string),
 					`Field key "${fieldKey}" from JSON should exist in loaded schema`,
 				);
-				sampleCount++;
+				validatedCount++;
 			}
 
-			assert.ok(sampleCount > 0, "Should have sampled at least one field key");
+			// Verify we tested ALL fields, not a sample
+			const expectedCount = Object.keys(fields).length;
+			assert.strictEqual(
+				validatedCount,
+				expectedCount,
+				`Should have validated ALL ${expectedCount} field keys`,
+			);
 		});
 	});
 });

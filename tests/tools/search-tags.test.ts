@@ -119,13 +119,69 @@ describe("search_tags", () => {
 
 	describe("JSON Schema Validation", () => {
 		/**
-		 * Provider pattern: Generates search keywords with expected result validation
-		 * Tests incremental collection of search results
+		 * Provider pattern: Generates search keywords DYNAMICALLY from JSON data
+		 * CRITICAL: NO hardcoded keywords - all keywords extracted from actual JSON
+		 * Collects a representative sample of keywords from different sources:
+		 * - Preset names (amenity, building, etc.)
+		 * - Field keys (wheelchair, access, etc.)
+		 * - Common tag values (yes, no, etc.)
 		 */
 		function* searchKeywordProvider() {
-			const keywords = ["parking", "restaurant", "school", "park", "hospital"];
+			const keywords = new Set<string>();
 
-			for (const keyword of keywords) {
+			// DYNAMIC: Extract keywords from preset names
+			const presetNames = new Set<string>();
+			for (const preset of Object.values(presets)) {
+				if (preset.name) {
+					// Extract words from preset names (e.g., "Fast Food Restaurant" → ["fast", "food", "restaurant"])
+					const words = preset.name.toLowerCase().split(/\s+/);
+					for (const word of words) {
+						if (word.length >= 4) { // Skip very short words
+							presetNames.add(word);
+						}
+					}
+				}
+			}
+
+			// DYNAMIC: Extract keywords from field keys
+			const fieldKeys = new Set<string>();
+			for (const field of Object.values(fields)) {
+				if (field.key) {
+					// Extract base key (before colon)
+					const baseKey = field.key.split(":")[0];
+					if (baseKey && baseKey.length >= 4) {
+						fieldKeys.add(baseKey);
+					}
+				}
+			}
+
+			// DYNAMIC: Extract keywords from tag keys in presets
+			const tagKeys = new Set<string>();
+			for (const preset of Object.values(presets)) {
+				if (preset.tags) {
+					for (const key of Object.keys(preset.tags)) {
+						if (key.length >= 4) {
+							tagKeys.add(key);
+						}
+					}
+				}
+			}
+
+			// Combine keywords from all sources
+			for (const word of presetNames) keywords.add(word);
+			for (const key of fieldKeys) keywords.add(key);
+			for (const key of tagKeys) keywords.add(key);
+
+			// Convert to array and sample systematically (every 10th keyword for performance)
+			const allKeywords = Array.from(keywords);
+			const sampledKeywords: string[] = [];
+			const step = Math.max(1, Math.floor(allKeywords.length / 20)); // Sample ~20 keywords
+			for (let i = 0; i < allKeywords.length; i += step) {
+				sampledKeywords.push(allKeywords[i]);
+			}
+
+			// Test each sampled keyword
+			for (const keyword of sampledKeywords) {
 				// Build expected results from JSON
 				const expectedTags = new Set<string>();
 

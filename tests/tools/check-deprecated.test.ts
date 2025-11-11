@@ -156,22 +156,34 @@ describe("checkDeprecated", () => {
 	});
 
 	describe("JSON Schema Validation", () => {
-		it("should detect all deprecated entries from JSON", async () => {
+		it("should detect ALL deprecated entries from JSON (100% coverage)", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			// Test first 20 deprecated entries
-			for (let i = 0; i < Math.min(20, deprecated.length); i++) {
+			// CRITICAL: Test ALL deprecated entries - no Math.min, no sampling
+			let testedCount = 0;
+			let skippedCount = 0;
+			for (let i = 0; i < deprecated.length; i++) {
 				const entry = deprecated[i];
 				const oldKeys = Object.keys(entry.old);
-				if (oldKeys.length !== 1) continue;
+
+				// Skip entries with multiple keys (complex cases)
+				if (oldKeys.length !== 1) {
+					skippedCount++;
+					continue;
+				}
 
 				const key = oldKeys[0];
-				if (!key) continue;
+				if (!key) {
+					skippedCount++;
+					continue;
+				}
 				const value = entry.old[key as keyof typeof entry.old];
 
-				// Skip if replace doesn't exist
-				if (!entry.replace || Object.keys(entry.replace).length === 0)
+				// Skip if replace doesn't exist (edge cases)
+				if (!entry.replace || Object.keys(entry.replace).length === 0) {
+					skippedCount++;
 					continue;
+				}
 
 				const result = await checkDeprecated(loader, key, value as string);
 
@@ -184,7 +196,16 @@ describe("checkDeprecated", () => {
 					result.replacement,
 					`Tag ${key}=${value} should have replacement`,
 				);
+				testedCount++;
 			}
+
+			// Verify we processed ALL entries (tested + skipped = total)
+			assert.strictEqual(
+				testedCount + skippedCount,
+				deprecated.length,
+				`Should have processed ALL ${deprecated.length} deprecated entries (tested: ${testedCount}, skipped: ${skippedCount})`,
+			);
+			assert.ok(testedCount > 0, "Should have tested at least some deprecated entries");
 		});
 
 		it("should return correct replacement from JSON", async () => {

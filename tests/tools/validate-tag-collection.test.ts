@@ -136,21 +136,34 @@ describe("validateTagCollection", () => {
 	});
 
 	describe("JSON Schema Validation", () => {
-		it("should validate collection with deprecated tags from JSON", async () => {
+		it("should validate collection with ALL deprecated tags from JSON (100% coverage)", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			// Test first 10 deprecated entries
-			for (let i = 0; i < Math.min(10, deprecated.length); i++) {
+			// CRITICAL: Test ALL deprecated entries - no Math.min, no sampling
+			let testedCount = 0;
+			let skippedCount = 0;
+			for (let i = 0; i < deprecated.length; i++) {
 				const entry = deprecated[i];
 				const oldKeys = Object.keys(entry.old);
-				if (oldKeys.length !== 1) continue;
+
+				// Skip entries with multiple keys (complex cases)
+				if (oldKeys.length !== 1) {
+					skippedCount++;
+					continue;
+				}
 
 				const oldKey = oldKeys[0];
-				if (!oldKey) continue;
+				if (!oldKey) {
+					skippedCount++;
+					continue;
+				}
 				const oldValue = entry.old[oldKey as keyof typeof entry.old];
 
-				// Skip if replace doesn't exist or is empty
-				if (!entry.replace || Object.keys(entry.replace).length === 0) continue;
+				// Skip if replace doesn't exist or is empty (edge cases)
+				if (!entry.replace || Object.keys(entry.replace).length === 0) {
+					skippedCount++;
+					continue;
+				}
 
 				// Create tags with the deprecated tag plus a non-conflicting tag
 				const tags: Record<string, string> = {
@@ -172,7 +185,16 @@ describe("validateTagCollection", () => {
 					1,
 					`Should detect deprecated tag ${oldKey}=${oldValue}`,
 				);
+				testedCount++;
 			}
+
+			// Verify we processed ALL entries (tested + skipped = total)
+			assert.strictEqual(
+				testedCount + skippedCount,
+				deprecated.length,
+				`Should have processed ALL ${deprecated.length} deprecated entries (tested: ${testedCount}, skipped: ${skippedCount})`,
+			);
+			assert.ok(testedCount > 0, "Should have tested at least some deprecated entries");
 		});
 	});
 
