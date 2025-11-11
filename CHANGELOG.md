@@ -7,136 +7,134 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+No unreleased changes.
+
+## [0.1.0] - 2025-01-15
+
+Initial release of the OpenStreetMap Tagging Schema MCP Server.
+
 ### Added
 
-#### Phase 6: Optimization & Polish
-- **Schema Update Handling**:
-  - Schema version tracking from package metadata
-  - Schema metadata with version and loadedAt timestamp
-  - `get_schema_stats` tool enhanced with version information
-  - Schema structure validation to detect breaking changes
-  - Graceful error handling with descriptive error messages
-  - Version logging on schema load and reload
-  - Comprehensive tests for version tracking and error scenarios (298 tests passing)
+#### Core Features (14 MCP Tools)
 
-#### Phase 3: Core Tool Implementation ✅
-- **Tag Query Tools**:
-  - `get_tag_info` - Get comprehensive information about a tag key
-  - `get_tag_values` - Get all possible values for a tag key
-  - `get_related_tags` - Find tags commonly used together with frequency counts
-  - `search_tags` - Search for tags by keyword in fields and presets
+**Tag Query Tools:**
+- `get_tag_info` - Get comprehensive information about a tag key (values, type, field definition)
+- `get_tag_values` - Get all possible values for a tag key
+- `get_related_tags` - Find tags commonly used together with frequency counts
+- `search_tags` - Search for tags by keyword in fields and presets
 
-- **Preset Tools**:
-  - `search_presets` - Search presets by keyword or tag with geometry filtering
-  - `get_preset_details` - Get complete preset configuration
-  - `get_preset_tags` - Get recommended tags for a preset
+**Preset Tools:**
+- `search_presets` - Search presets by keyword or tag with geometry filtering
+- `get_preset_details` - Get complete preset configuration
+- `get_preset_tags` - Get recommended tags for a preset
 
-- **Validation Tools**:
-  - `validate_tag` - Validate single tag key-value pairs
-  - `validate_tag_collection` - Validate complete tag collections
-  - `check_deprecated` - Check for deprecated tags with replacement suggestions
-  - `suggest_improvements` - Suggest improvements for tag collections
+**Validation Tools:**
+- `validate_tag` - Validate single tag key-value pairs
+- `validate_tag_collection` - Validate complete tag collections
+- `check_deprecated` - Check for deprecated tags with replacement suggestions
+- `suggest_improvements` - Suggest improvements for tag collections
 
-- **Schema Exploration Tools**:
-  - `get_categories` - List all tag categories
-  - `get_category_tags` - Get tags in a specific category
-  - `get_schema_stats` - Get schema statistics
+**Schema Exploration Tools:**
+- `get_categories` - List all tag categories
+- `get_category_tags` - Get tags in a specific category
+- `get_schema_stats` - Get schema statistics with version information
 
-#### Infrastructure & Security
-- Docker support with multi-stage builds
-- GitHub Container Registry (ghcr.io) publishing
-- Trivy vulnerability scanning
-- Cosign keyless image signing
-- Multi-architecture support (amd64, arm64)
-- SARIF security reports to GitHub Security tab
-- Comprehensive test coverage (263 unit tests, 107 integration tests)
+#### Infrastructure
 
-#### Testing
-- JSON Data Integrity Tests against actual schema data
-- 100% coverage validation (799 tag keys, 1707 presets)
-- Bidirectional validation
-- Provider pattern for comprehensive data validation
+**Schema Integration:**
+- Schema loader with caching and indexing for fast lookups
+- Always-on indexing with preloading at server startup
+- Field key index for O(1) field lookups
+- Schema version tracking from package metadata
+- Schema structure validation to detect breaking changes
+- Graceful error handling with descriptive messages
+
+**Testing (TDD Methodology):**
+- 299 unit tests with comprehensive coverage
+- 107 integration tests for MCP server
+- JSON Data Integrity Tests validating all tools against source data
+- 100% coverage: ALL 799 tag keys + ALL 1707 presets validated
+- Bidirectional validation for complete data integrity
 - Order-independent test assertions
-- Alphabetical tool ordering
+
+**Distribution & Security:**
+- npm publishing with provenance (SLSA Level 3)
+- Build provenance attestations linking to GitHub Actions
+- SBOM (Software Bill of Materials) in CycloneDX format
+- Docker images with multi-stage builds (Alpine Linux)
+- Multi-architecture support (amd64, arm64)
+- Trivy vulnerability scanning
+- Cosign keyless image signing with OIDC
+- Package published to npm registry (via npx)
+- Container images published to GitHub Container Registry
+
+**Transport Protocols:**
+- stdio transport (default for CLI/desktop integration)
+- HTTP Streamable transport for web clients
+- SSE transport (legacy alias for HTTP)
+- Configurable via environment variables (TRANSPORT, PORT, HOST)
+
+**Deployment:**
+- Docker Compose configurations (production, development, test)
+- Health check endpoints (/health, /ready)
+- Resource limits and security hardening
+- Read-only filesystem, non-root user execution
+
+**Logging & Debugging:**
+- Built-in logger with configurable levels (SILENT, ERROR, WARN, INFO, DEBUG)
+- LOG_LEVEL environment variable configuration
+- Structured log output with timestamps and context
+- Comprehensive logging in server lifecycle
 
 #### Documentation
-- Comprehensive README with badges
-- TDD methodology documentation
-- Docker usage examples
-- Security verification instructions
 
-#### Phase 5: Documentation ✅
-- **User Documentation** (`docs/` directory):
-  - `docs/installation.md` - Complete installation guide (npx, source, Docker)
-  - `docs/configuration.md` - Configuration for Claude Code/Desktop and custom MCP clients
-  - `docs/usage.md` - Usage examples, workflows, and best practices
-  - `docs/troubleshooting.md` - Common issues and solutions across all components
-  - `docs/api/README.md` - API overview with quick reference table for all 14 tools
-  - `docs/api/get_tag_info.md` - Complete example API documentation (template pattern)
-  - `docs/api/NOTE.md` - Documentation pattern guide for future tool docs
+**User Documentation:**
+- Installation guide (npx, source, Docker)
+- Configuration guide for Claude Code/Desktop and custom clients
+- Usage guide with examples and workflows
+- Complete API reference for all 14 tools
+- Troubleshooting guide
+- Deployment guide with Docker Compose
+- Security documentation (provenance, SLSA, SBOM)
 
-- **Developer Documentation**:
-  - `CONTRIBUTING.md` - Contribution guidelines with TDD workflow
-  - `DEVELOPMENT.md` - Development setup, commands, and debugging
-  - `ROADMAP.md` - Development roadmap with completed phases
-  - `CHANGELOG.md` - Project changelog (Keep a Changelog format)
-  - `CLAUDE.md` - Documentation guidelines and technical implementation notes
+**Developer Documentation:**
+- Contribution guidelines with TDD workflow
+- Development guide with setup and debugging
+- Development roadmap
+- Technical implementation notes (CLAUDE.md)
 
-- **Documentation Structure**:
-  - Two-tier system: User docs in `docs/`, developer docs in root
-  - Compact README (reduced from ~374 to ~195 lines)
-  - Clear navigation with links to all documentation
-  - Comprehensive API documentation pattern established
+#### Code Quality
 
-#### Phase 6: Optimization & Polish (Partial)
-- **Logging and Debugging Support**:
-  - Built-in logger with configurable log levels (SILENT, ERROR, WARN, INFO, DEBUG)
-  - `LOG_LEVEL` environment variable for runtime configuration
-  - Structured log output with timestamps, levels, and context
-  - Logging in MCP server operations (startup, tool calls, errors)
-  - Debug mode for detailed tool execution tracing
-  - Comprehensive logger unit tests (13 tests, 6 suites)
-  - Developer documentation in `DEVELOPMENT.md`
-
-- **Publication Preparation**:
-  - Added `files` field to package.json to control npm package contents
-  - Package size optimization: 597KB → 245KB unpacked (59% reduction)
-  - Package file count optimization: 155 → 89 files
-  - Publication checklist in CONTRIBUTING.md (release workflow)
-  - Pre-publication verification with `npm pack --dry-run`
-  - Package includes only essential files: dist/, docs/, LICENSE, README.md, CHANGELOG.md, CONTRIBUTING.md, SECURITY.md
-  - Automated npm publishing workflow with provenance enabled
-  - All tests passing: 299 unit tests, 107 integration tests (406 total)
-
-### Changed
-- Updated repository reference and documentation structure
-- Improved test robustness with order-independent assertions
-- Enhanced tool registration with alphabetical ordering
-- **GitHub Actions dependencies**:
-  - `actions/checkout`: 4.3.0 → 5.0.0 (Node.js 24 runtime)
-  - `github/codeql-action`: 3.31.2 → 4.31.2 (Node.js 24 runtime)
-  - Removed version comments from workflow files for cleaner maintenance
-  - Standardized to commit hash pinning for security
-- **npm dependencies**:
-  - `@modelcontextprotocol/sdk`: 1.21.0 → 1.21.1 (bug fixes and deprecation annotations)
-- **README shields**: Updated MCP badge to show only minor version (1.21 instead of 1.21.1)
+- BiomeJS 2.3.4 for linting and formatting
+- TypeScript 5.9 with strict type checking
+- GitHub Actions CI/CD (testing, Docker builds, npm publishing)
+- Dependabot for automated dependency updates
+- Modular architecture (one tool per file)
+- Alphabetical tool ordering for predictable API
 
 ### Fixed
-- **search_tags fields.json coverage**: Now searches both fields.json and presets
-- **Alphabetical tool sorting**: Tools returned in predictable alphabetical order
-- **Tool ordering (Phase 6)**: Fixed `check_deprecated` position - moved to alphabetically correct position (1st, before `get_categories`)
-- **Tag key format**: Proper OSM colon separator format (e.g., `toilets:wheelchair`)
-- **Docker workflow**: Only runs after PR merge, not during PR review
-- **Empty preset tags**: Fixed preset matching to skip presets with empty tags
 
-## [0.1.0] - Initial Development
+**Bug Fixes:**
+- Fixed `search_tags` to search both fields.json and presets for complete coverage
+- Fixed tag key format to use proper OSM colon separator (e.g., `toilets:wheelchair` instead of `toilets/wheelchair`)
+- Fixed alphabetical tool sorting for predictable API responses
+- Fixed preset matching to skip presets with empty tags
+- Fixed Docker workflow to only run after PR merge
 
-### Added
-- Initial project setup with TypeScript 5.9
-- MCP SDK integration
-- @openstreetmap/id-tagging-schema integration
-- Schema loader with caching and indexing
-- BiomeJS 2.3.4 for code quality
-- GitHub Actions CI/CD pipeline
-- Dependabot for automated dependency updates
-- Node.js native test runner with TDD approach
+### Security
+
+- Package files whitelist for minimal npm package size (59% reduction)
+- Non-root user execution in Docker containers
+- Read-only filesystem in production deployments
+- No new privileges security option
+- Network isolation with bridge networks
+- Vulnerability scanning in CI/CD pipeline
+- Image signing for supply chain security
+- SBOM for transparency in dependencies
+
+## Project Information
+
+- **Repository**: https://github.com/gander-tools/osm-tagging-schema-mcp
+- **npm Package**: https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp
+- **Docker Images**: https://github.com/gander-tools/osm-tagging-schema-mcp/pkgs/container/osm-tagging-schema-mcp
+- **License**: GNU General Public License v3.0

@@ -726,6 +726,216 @@ Get statistics about the schema.
 }
 ```
 
+## Advanced Deployment
+
+### HTTP Transport
+
+For web clients and API integrations, use HTTP transport instead of stdio:
+
+**Using npx:**
+```bash
+TRANSPORT=http PORT=3000 npx @gander-tools/osm-tagging-schema-mcp
+```
+
+**Using npm scripts:**
+```bash
+npm run start:http  # Start with HTTP transport on port 3000
+npm run dev:http    # Development mode with hot reload
+```
+
+**Using Docker:**
+```bash
+docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+```
+
+**Environment Variables:**
+- `TRANSPORT` - Transport type: `stdio` (default), `http`, or `sse`
+- `PORT` - HTTP server port (default: 3000)
+- `HOST` - HTTP server host (default: 0.0.0.0)
+- `LOG_LEVEL` - Logging level: `SILENT`, `ERROR`, `WARN`, `INFO`, `DEBUG`
+
+**HTTP Endpoints:**
+- `GET /sse` - Server-Sent Events stream for MCP messages
+- `POST /sse` - Send JSON-RPC messages to MCP server
+- `DELETE /sse/:sessionId` - Close a session
+- `GET /health` - Liveness probe (server status)
+- `GET /ready` - Readiness probe (schema loaded status)
+
+### SSE Transport (Legacy)
+
+SSE transport is a legacy alias for HTTP transport. Use `TRANSPORT=http` for new deployments:
+
+```bash
+# Legacy SSE transport (same as http)
+TRANSPORT=sse PORT=3000 npx @gander-tools/osm-tagging-schema-mcp
+
+# Recommended: Use http instead
+TRANSPORT=http PORT=3000 npx @gander-tools/osm-tagging-schema-mcp
+```
+
+### Docker Compose Deployment
+
+For production deployments, use Docker Compose for orchestration:
+
+**Production Configuration (`docker-compose.yml`):**
+```yaml
+version: '3.8'
+
+services:
+  osm-tagging-schema-mcp:
+    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+    container_name: osm-tagging-schema-mcp
+    restart: unless-stopped
+
+    environment:
+      TRANSPORT: http
+      PORT: 3000
+      LOG_LEVEL: INFO
+
+    ports:
+      - "3000:3000"
+
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    security_opt:
+      - no-new-privileges:true
+
+    read_only: true
+
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+```
+
+**Start the service:**
+```bash
+# Start in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Check health
+curl http://localhost:3000/health
+curl http://localhost:3000/ready
+
+# Stop the service
+docker-compose down
+```
+
+**Development Configuration (`docker-compose.dev.yml`):**
+```yaml
+version: '3.8'
+
+services:
+  osm-tagging-schema-mcp:
+    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+    container_name: osm-tagging-schema-mcp-dev
+
+    environment:
+      TRANSPORT: http
+      PORT: 3000
+      LOG_LEVEL: DEBUG
+
+    ports:
+      - "3000:3000"
+
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2'
+```
+
+**Start development service:**
+```bash
+docker-compose -f docker-compose.dev.yml up
+```
+
+### Health Checks
+
+**Liveness Probe (`/health`):**
+```bash
+# Check if server is running
+curl http://localhost:3000/health
+
+# Response:
+# {
+#   "status": "ok",
+#   "service": "osm-tagging-schema-mcp",
+#   "timestamp": "2025-01-15T10:30:00.000Z"
+# }
+```
+
+**Readiness Probe (`/ready`):**
+```bash
+# Check if schema is loaded and ready
+curl http://localhost:3000/ready
+
+# Response (ready):
+# {
+#   "status": "ready",
+#   "schemaLoaded": true,
+#   "stats": {
+#     "presets": 1707,
+#     "fields": 799,
+#     "categories": 15,
+#     "version": "6.7.3"
+#   }
+# }
+
+# Response (not ready):
+# HTTP 503
+# {
+#   "status": "not_ready",
+#   "schemaLoaded": false,
+#   "error": "Schema not loaded yet"
+# }
+```
+
+### Monitoring and Logging
+
+**View Logs:**
+```bash
+# Docker
+docker logs osm-tagging-schema-mcp
+
+# Docker Compose
+docker-compose logs -f
+
+# Filter by log level
+docker logs osm-tagging-schema-mcp 2>&1 | grep ERROR
+```
+
+**Log Levels:**
+- `SILENT` - No logs (not recommended for production)
+- `ERROR` - Only errors
+- `WARN` - Errors and warnings (recommended for production)
+- `INFO` - Errors, warnings, and info (good for troubleshooting)
+- `DEBUG` - All logs including debug details (development only)
+
+**Example:**
+```bash
+# Production: minimal logging
+TRANSPORT=http LOG_LEVEL=WARN npx @gander-tools/osm-tagging-schema-mcp
+
+# Development: detailed logging
+TRANSPORT=http LOG_LEVEL=DEBUG npm run dev:http
+```
+
+📖 **For production deployment guide**, see [deployment.md](./deployment.md)
+
 ## Best Practices
 
 ### 1. Use Specific Tools
