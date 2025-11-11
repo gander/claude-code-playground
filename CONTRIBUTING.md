@@ -537,6 +537,52 @@ For significant features, update `CLAUDE.md`:
 
 This section is for maintainers preparing a new release.
 
+### Quick Release with Cliff Jumper
+
+This project uses [@favware/cliff-jumper](https://github.com/favware/cliff-jumper) and [git-cliff](https://git-cliff.org/) for automated releases.
+
+**Cliff-jumper** automatically:
+1. Analyzes commits since last release (using Conventional Commits)
+2. Determines version bump (major/minor/patch)
+3. Updates `package.json` version
+4. Generates/updates `CHANGELOG.md` using git-cliff
+5. Creates git commit and tag
+6. Optionally pushes to remote
+
+**Quick release workflow:**
+
+```bash
+# 1. Dry-run to preview changes (no modifications)
+npm run release:dry
+
+# 2. Create release locally (commit + tag)
+npm run release
+
+# 3. Push release to trigger automated publishing
+npm run release:push
+# OR manually push:
+git push && git push --tags
+```
+
+**What happens next:**
+- Git tag triggers GitHub Actions workflow (`.github/workflows/publish.yml`)
+- Automated pipeline: tests → build → SBOM → attestations → npm publish
+- GitHub release created automatically with security information
+
+**How versioning works:**
+
+Cliff-jumper determines version bump based on your commit messages:
+
+- **Patch** (0.1.0 → 0.1.1): `fix:`, `chore:`, `docs:`, `style:`, `refactor:`
+- **Minor** (0.1.0 → 0.2.0): `feat:`, `add:`
+- **Major** (0.1.0 → 1.0.0): Any commit with `BREAKING CHANGE:` in body/footer
+
+**Configuration files:**
+- `.cliff-jumperrc.json` - Cliff-jumper settings
+- `cliff.toml` - git-cliff changelog configuration
+
+**Tip**: Always run `npm run release:dry` first to verify the version bump is correct!
+
 ### Pre-Publication Checklist
 
 Before publishing a new version to npm:

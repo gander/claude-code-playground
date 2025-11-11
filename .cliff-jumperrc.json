@@ -1,0 +1,15 @@
+{
+	"$schema": "https://raw.githubusercontent.com/favware/cliff-jumper/main/assets/cliff-jumper.schema.json",
+	"name": "osm-tagging-schema-mcp",
+	"packagePath": ".",
+	"org": "gander-tools",
+	"commitMessageTemplate": "chore(release): release {{full-name}}@{{new-version}}",
+	"tagTemplate": "v{{new-version}}",
+	"install": false,
+	"changelogPrependFile": "./CHANGELOG.md",
+	"pushTag": false,
+	"githubRelease": false,
+	"skipChangelog": false,
+	"skipTag": false,
+	"verbose": false
+}
