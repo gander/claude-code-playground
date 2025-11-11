@@ -288,11 +288,12 @@ The server supports the following environment variables for configuration:
 
 **`TRANSPORT`** - Select transport protocol (default: `stdio`)
 - `stdio`: Standard input/output (default, for MCP clients like Claude Code/Desktop)
-- `sse`: Server-Sent Events over HTTP (for web applications and HTTP clients)
+- `http`: HTTP Streamable transport (recommended for web applications and HTTP clients)
+- `sse`: Server-Sent Events transport (alias for `http`, kept for backward compatibility)
 
-**`PORT`** - HTTP server port when using SSE transport (default: `3000`)
+**`PORT`** - HTTP server port when using HTTP/SSE transport (default: `3000`)
 
-**`HOST`** - HTTP server host when using SSE transport (default: `0.0.0.0`)
+**`HOST`** - HTTP server host when using HTTP/SSE transport (default: `0.0.0.0`)
 
 **Examples:**
 
@@ -300,22 +301,27 @@ The server supports the following environment variables for configuration:
 # Run with stdio (default)
 npx @gander-tools/osm-tagging-schema-mcp
 
-# Run with SSE transport
+# Run with HTTP transport (recommended)
+TRANSPORT=http npx @gander-tools/osm-tagging-schema-mcp
+
+# Run with SSE transport (legacy, same as http)
 TRANSPORT=sse npx @gander-tools/osm-tagging-schema-mcp
 
-# Run with SSE on custom port and host
-TRANSPORT=sse PORT=8080 HOST=127.0.0.1 npx @gander-tools/osm-tagging-schema-mcp
+# Run with HTTP on custom port and host
+TRANSPORT=http PORT=8080 HOST=127.0.0.1 npx @gander-tools/osm-tagging-schema-mcp
 ```
 
 **Using with npm scripts:**
 ```bash
-npm run start:sse       # Start with SSE transport (port 3000)
-npm run dev:sse         # Development mode with SSE transport
+npm run start:http      # Start with HTTP transport (port 3000)
+npm run start:sse       # Start with SSE transport (port 3000, legacy)
+npm run dev:http        # Development mode with HTTP transport
+npm run dev:sse         # Development mode with SSE transport (legacy)
 ```
 
-**Docker with SSE transport:**
+**Docker with HTTP transport:**
 ```bash
-docker run -e TRANSPORT=sse -e PORT=3000 -p 3000:3000 \
+docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
   ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
 ```
 

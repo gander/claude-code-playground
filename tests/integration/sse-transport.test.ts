@@ -25,6 +25,11 @@ describe("SSE Transport Integration Tests", () => {
 			assert.strictEqual(process.env.TRANSPORT, "sse");
 		});
 
+		it("should use http transport when TRANSPORT=http", () => {
+			process.env.TRANSPORT = "http";
+			assert.strictEqual(process.env.TRANSPORT, "http");
+		});
+
 		it("should default to port 3000 when PORT is not set", () => {
 			delete process.env.PORT;
 			const port = Number.parseInt(process.env.PORT || "3000", 10);

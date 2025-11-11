@@ -702,7 +702,7 @@ cosign verify ghcr.io/gander-tools/osm-tagging-schema-mcp:latest \
 
 **Goal**: Support multiple transport protocols beyond stdio for diverse deployment scenarios.
 
-**Status**: ✅ **COMPLETED** - SSE/HTTP Streamable transport implemented
+**Status**: ✅ **COMPLETED** - HTTP Streamable transport implemented with SSE support
 
 **Supported Transports**:
 
@@ -712,19 +712,25 @@ cosign verify ghcr.io/gander-tools/osm-tagging-schema-mcp:latest \
 - Use case: CLI tools, Claude Desktop integration
 - **Configuration**: No environment variables needed (default)
 
-**b) SSE/HTTP Streamable** ✅
-- HTTP-based streaming using Server-Sent Events
+**b) HTTP Streamable** ✅
+- HTTP-based streaming with Server-Sent Events
 - Full MCP Streamable HTTP transport specification
 - Stateful session management with UUID session IDs
 - Compatible with web browsers and HTTP clients
 - Use case: Web applications, API gateways, scalable deployments
+- **Configuration**: `TRANSPORT=http` (recommended)
+
+**c) SSE (Server-Sent Events)** ✅
+- Alias for HTTP transport (backward compatibility)
+- Same implementation as HTTP transport
+- **Configuration**: `TRANSPORT=sse` (legacy, kept for compatibility)
 
 **Transport Configuration** ✅:
 ```bash
 # Environment variables
-TRANSPORT=stdio|sse    # Default: stdio
-PORT=3000              # Default: 3000 (SSE only)
-HOST=0.0.0.0           # Default: 0.0.0.0 (SSE only)
+TRANSPORT=stdio|http|sse    # Default: stdio
+PORT=3000                   # Default: 3000 (HTTP/SSE only)
+HOST=0.0.0.0                # Default: 0.0.0.0 (HTTP/SSE only)
 ```
 
 **Usage Examples** ✅:
@@ -732,18 +738,23 @@ HOST=0.0.0.0           # Default: 0.0.0.0 (SSE only)
 # stdio transport (default)
 npx @gander-tools/osm-tagging-schema-mcp
 
-# SSE transport
+# HTTP transport (recommended)
+TRANSPORT=http npx @gander-tools/osm-tagging-schema-mcp
+
+# SSE transport (legacy, same as http)
 TRANSPORT=sse npx @gander-tools/osm-tagging-schema-mcp
 
-# SSE with custom port
-TRANSPORT=sse PORT=8080 npx @gander-tools/osm-tagging-schema-mcp
+# HTTP with custom port
+TRANSPORT=http PORT=8080 npx @gander-tools/osm-tagging-schema-mcp
 
 # npm scripts
-npm run start:sse  # Start with SSE on port 3000
-npm run dev:sse    # Development mode with SSE
+npm run start:http  # Start with HTTP transport on port 3000
+npm run start:sse   # Start with SSE transport on port 3000 (legacy)
+npm run dev:http    # Development mode with HTTP transport
+npm run dev:sse     # Development mode with SSE transport (legacy)
 
-# Docker with SSE
-docker run -e TRANSPORT=sse -e PORT=3000 -p 3000:3000 \
+# Docker with HTTP
+docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
   ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
 ```
 
