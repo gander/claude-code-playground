@@ -131,6 +131,6 @@ export async function handler(args: { tag: string; limit?: number }, loader: Sch
 				text: JSON.stringify(results, null, 2),
 			},
 		],
-		structuredContent: results,
+		structuredContent: { relatedTags: results },
 	};
 }

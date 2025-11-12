@@ -82,6 +82,6 @@ export async function handler(args: { tagKey: string }, loader: SchemaLoader) {
 				text: JSON.stringify(values, null, 2),
 			},
 		],
-		structuredContent: values,
+		structuredContent: { values: values },
 	};
 }

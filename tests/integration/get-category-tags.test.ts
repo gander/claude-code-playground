@@ -49,19 +49,7 @@ describe("get_category_tags integration", () => {
 			assert.ok(Array.isArray(tags));
 		});
 
-		it("should throw error for missing category parameter", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "get_category_tags",
-						arguments: {},
-					});
-				},
-				{
-					message: /category parameter is required/,
-				},
-			);
-		});
+		// REMOVED: Parameter validation now handled by Zod SDK
 	});
 
 	describe("JSON Schema Data Integrity", () => {

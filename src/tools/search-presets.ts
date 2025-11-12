@@ -141,6 +141,6 @@ export async function handler(
 				text: JSON.stringify(results, null, 2),
 			},
 		],
-		structuredContent: results,
+		structuredContent: { presets: results },
 	};
 }

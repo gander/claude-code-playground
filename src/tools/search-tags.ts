@@ -144,6 +144,6 @@ export async function handler(args: { keyword: string; limit?: number }, loader:
 				text: JSON.stringify(results, null, 2),
 			},
 		],
-		structuredContent: results,
+		structuredContent: { results: results },
 	};
 }

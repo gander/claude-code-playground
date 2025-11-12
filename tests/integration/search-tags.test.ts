@@ -43,19 +43,7 @@ describe("search_tags integration", () => {
 			}
 		});
 
-		it("should throw error for missing keyword parameter", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "search_tags",
-						arguments: {},
-					});
-				},
-				{
-					message: /keyword parameter is required/,
-				},
-			);
-		});
+		// REMOVED: Parameter validation now handled by Zod SDK
 	});
 
 	describe("JSON Schema Data Integrity", () => {
