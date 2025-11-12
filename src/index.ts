@@ -61,7 +61,7 @@ export function createServer(): McpServer {
 
 	for (const toolModule of toolModules) {
 		mcpServer.registerTool(
-			toolModule.definition.name,
+			toolModule.name,
 			{
 				description: toolModule.definition.description,
 				// biome-ignore lint/suspicious/noExplicitAny: Dynamic tool registration requires any

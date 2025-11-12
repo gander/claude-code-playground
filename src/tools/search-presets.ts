@@ -4,10 +4,14 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { PresetSearchResult } from "./types.js";
 
 /**
- * Tool definition for search_presets
+ * Tool name
+ */
+export const name = "search_presets";
+
+/**
+ * Tool definition
  */
 export const definition = {
-	name: "search_presets",
 	description:
 		"Search for presets by keyword or tag. Searches preset IDs and tags. Supports filtering by geometry type and limiting results.",
 	inputSchema: {
@@ -25,27 +29,21 @@ export const definition = {
 } as const;
 
 /**
- * Options for searching presets
+ * Handler for search_presets tool
  */
-export interface SearchPresetsOptions {
-	limit?: number;
-	geometry?: GeometryType;
-}
-
-/**
- * Search for presets by keyword or tag
- *
- * @param loader - Schema loader instance
- * @param keyword - Keyword to search for in preset IDs and tags
- * @param options - Optional search options (limit, geometry filter)
- * @returns Array of matching presets with id, tags, and geometry
- */
-export async function searchPresets(
+export async function handler(
+	args: {
+		keyword: string;
+		limit?: number;
+		geometry?: GeometryType;
+	},
 	loader: SchemaLoader,
-	keyword: string,
-	options?: SearchPresetsOptions,
-): Promise<PresetSearchResult[]> {
+) {
 	const schema = await loader.loadSchema();
+	const keyword = args.keyword;
+	const limit = args.limit;
+	const geometry = args.geometry;
+
 	const results: PresetSearchResult[] = [];
 
 	// Normalize keyword for case-insensitive search
@@ -95,8 +93,8 @@ export async function searchPresets(
 		}
 
 		// Apply geometry filter if specified
-		if (matches && options?.geometry) {
-			if (!preset.geometry.includes(options.geometry)) {
+		if (matches && geometry) {
+			if (!preset.geometry.includes(geometry)) {
 				matches = false;
 			}
 		}
@@ -110,48 +108,19 @@ export async function searchPresets(
 			});
 
 			// Stop if we reached the limit
-			if (options?.limit !== undefined && results.length >= options.limit) {
+			if (limit !== undefined && results.length >= limit) {
 				break;
 			}
 		}
 	}
 
-	return results;
-}
-
-/**
- * Handler for search_presets tool
- */
-export async function handler(
-	args: {
-		keyword: string;
-		limit?: number;
-		geometry?: "point" | "vertex" | "line" | "area" | "relation";
-	},
-	loader: SchemaLoader,
-) {
-	const { logger } = await import("../utils/logger.js");
-	logger.debug("Tool call: search_presets", "MCPServer");
-	try {
-		const results = await searchPresets(loader, args.keyword, {
-			limit: args.limit,
-			geometry: args.geometry,
-		});
-		return {
-			content: [
-				{
-					type: "text" as const,
-					text: JSON.stringify(results, null, 2),
-				},
-			],
-			structuredContent: { presets: results },
-		};
-	} catch (error) {
-		logger.error(
-			"Error executing tool: search_presets",
-			"MCPServer",
-			error instanceof Error ? error : new Error(String(error)),
-		);
-		throw error;
-	}
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(results, null, 2),
+			},
+		],
+		structuredContent: { presets: results },
+	};
 }
