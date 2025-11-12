@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { randomUUID } from "node:crypto";
 import http from "node:http";
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
@@ -12,8 +12,8 @@ import { SchemaLoader } from "./utils/schema-loader.js";
 /**
  * Create and configure the MCP server
  */
-export function createServer(): Server {
-	const server = new Server(
+export function createServer(): McpServer {
+	const mcpServer = new McpServer(
 		{
 			name: "osm-tagging-schema",
 			version: "0.1.0",
@@ -27,6 +27,10 @@ export function createServer(): Server {
 
 	// Initialize schema loader (indexing always enabled for optimal performance)
 	const schemaLoader = new SchemaLoader();
+
+	// Access underlying Server for advanced use case (dynamic tool registration with JSON Schema)
+	// McpServer's high-level API expects Zod schemas, but we use JSON Schema for tool definitions
+	const server = mcpServer.server;
 
 	// Register tool handlers
 	// Tools are loaded from src/tools/index.ts and sorted alphabetically by name
@@ -58,7 +62,7 @@ export function createServer(): Server {
 		}
 	});
 
-	return server;
+	return mcpServer;
 }
 
 /**
@@ -91,7 +95,7 @@ function getTransportConfig(): TransportConfig {
  * Create and start HTTP server with SSE transport
  */
 async function startHttpServer(
-	server: Server,
+	server: McpServer,
 	config: TransportConfig,
 	schemaLoader: SchemaLoader,
 ): Promise<void> {
