@@ -1,6 +1,7 @@
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import { checkDeprecated } from "./check-deprecated.js";
 
 /**
@@ -181,12 +182,12 @@ function getFieldKey(fieldId: string): string | null {
 /**
  * Handler for suggest_improvements tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const { tags } = args as { tags?: Record<string, string> };
 	if (!tags) {
 		throw new Error("tags parameter is required");
 	}
-	const result = await suggestImprovements(loader, tags);
+	const result = await suggestImprovements(schemaLoader, tags);
 	return {
 		content: [
 			{

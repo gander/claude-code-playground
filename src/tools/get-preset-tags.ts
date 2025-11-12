@@ -1,4 +1,5 @@
 import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import type { PresetTags } from "./types.js";
 
 /**
@@ -54,12 +55,12 @@ export async function getPresetTags(loader: SchemaLoader, presetId: string): Pro
 /**
  * Handler for get_preset_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const presetId = (args as { presetId?: string }).presetId;
 	if (!presetId) {
 		throw new Error("presetId parameter is required");
 	}
-	const tags = await getPresetTags(loader, presetId);
+	const tags = await getPresetTags(schemaLoader, presetId);
 	return {
 		content: [
 			{

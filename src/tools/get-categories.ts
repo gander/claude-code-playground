@@ -1,4 +1,5 @@
 import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import type { CategoryInfo } from "./types.js";
 
 /**
@@ -37,8 +38,8 @@ export async function getCategories(loader: SchemaLoader): Promise<CategoryInfo[
 /**
  * Handler for get_categories tool
  */
-export async function handler(loader: SchemaLoader, _args: unknown) {
-	const categories = await getCategories(loader);
+export async function handler(_args: unknown) {
+	const categories = await getCategories(schemaLoader);
 	return {
 		content: [
 			{

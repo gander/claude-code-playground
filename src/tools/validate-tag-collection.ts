@@ -1,4 +1,5 @@
 import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import { type ValidationResult, validateTag } from "./validate-tag.js";
 
 /**
@@ -95,12 +96,12 @@ export async function validateTagCollection(
 /**
  * Handler for validate_tag_collection tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const { tags } = args as { tags?: Record<string, string> };
 	if (!tags) {
 		throw new Error("tags parameter is required");
 	}
-	const result = await validateTagCollection(loader, tags);
+	const result = await validateTagCollection(schemaLoader, tags);
 	return {
 		content: [
 			{

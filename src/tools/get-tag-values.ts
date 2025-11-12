@@ -1,4 +1,5 @@
 import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 
 /**
  * Tool definition for get_tag_values
@@ -79,12 +80,12 @@ export async function getTagValues(loader: SchemaLoader, tagKey: string): Promis
 /**
  * Handler for get_tag_values tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const tagKey = (args as { tagKey?: string }).tagKey;
 	if (!tagKey) {
 		throw new Error("tagKey parameter is required");
 	}
-	const values = await getTagValues(loader, tagKey);
+	const values = await getTagValues(schemaLoader, tagKey);
 	return {
 		content: [
 			{

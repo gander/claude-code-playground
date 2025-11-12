@@ -1,4 +1,5 @@
 import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import type { TagSearchResult } from "./types.js";
 
 /**
@@ -144,12 +145,12 @@ export async function searchTags(
 /**
  * Handler for search_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const { keyword, limit } = args as { keyword?: string; limit?: number };
 	if (!keyword) {
 		throw new Error("keyword parameter is required");
 	}
-	const results = await searchTags(loader, keyword, limit);
+	const results = await searchTags(schemaLoader, keyword, limit);
 	return {
 		content: [
 			{

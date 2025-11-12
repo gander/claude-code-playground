@@ -1,4 +1,5 @@
 import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 
 /**
  * Tool definition for get_category_tags
@@ -41,12 +42,12 @@ export async function getCategoryTags(
 /**
  * Handler for get_category_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const category = (args as { category?: string }).category;
 	if (!category) {
 		throw new Error("category parameter is required");
 	}
-	const tags = await getCategoryTags(loader, category);
+	const tags = await getCategoryTags(schemaLoader, category);
 	return {
 		content: [
 			{

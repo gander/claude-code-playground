@@ -1,4 +1,5 @@
 import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import type { SchemaStats } from "./types.js";
 
 /**
@@ -37,8 +38,8 @@ export async function getSchemaStats(loader: SchemaLoader): Promise<SchemaStats>
 /**
  * Handler for get_schema_stats tool
  */
-export async function handler(loader: SchemaLoader, _args: unknown) {
-	const stats = await getSchemaStats(loader);
+export async function handler(_args: unknown) {
+	const stats = await getSchemaStats(schemaLoader);
 	return {
 		content: [
 			{

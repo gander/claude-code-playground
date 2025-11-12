@@ -1,4 +1,5 @@
 import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import type { PresetDetails } from "./types.js";
 
 /**
@@ -71,12 +72,12 @@ export async function getPresetDetails(
 /**
  * Handler for get_preset_details tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const presetId = (args as { presetId?: string }).presetId;
 	if (!presetId) {
 		throw new Error("presetId parameter is required");
 	}
-	const details = await getPresetDetails(loader, presetId);
+	const details = await getPresetDetails(schemaLoader, presetId);
 	return {
 		content: [
 			{

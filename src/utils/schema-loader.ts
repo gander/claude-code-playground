@@ -400,3 +400,9 @@ export class SchemaLoader {
 		logger.debug("Schema structure validation passed", "SchemaLoader");
 	}
 }
+
+/**
+ * Singleton instance of SchemaLoader for use across the application
+ * Import this instance in tool handlers instead of receiving it as a parameter
+ */
+export const schemaLoader = new SchemaLoader();

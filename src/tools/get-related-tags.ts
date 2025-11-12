@@ -1,4 +1,5 @@
 import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import type { RelatedTag } from "./types.js";
 
 /**
@@ -128,12 +129,12 @@ export async function getRelatedTags(
 /**
  * Handler for get_related_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const { tag, limit } = args as { tag?: string; limit?: number };
 	if (!tag) {
 		throw new Error("tag parameter is required");
 	}
-	const results = await getRelatedTags(loader, tag, limit);
+	const results = await getRelatedTags(schemaLoader, tag, limit);
 	return {
 		content: [
 			{
