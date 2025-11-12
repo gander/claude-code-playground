@@ -124,10 +124,22 @@ jobs:
           subject-path: ${{ env.TARBALL }}
           sbom-path: sbom.json
 
-      - name: Publish to NPM with provenance
+      - name: Ensure npm >= 11.5.1 for Trusted Publishers
+        run: |
+          CURRENT_NPM=$(npm --version)
+          echo "Current npm version: $CURRENT_NPM"
+          if [ "$(printf '%s\n' "11.5.1" "$CURRENT_NPM" | sort -V | head -n1)" = "11.5.1" ]; then
+            echo "✓ npm version $CURRENT_NPM is sufficient (>= 11.5.1)"
+          else
+            echo "Updating npm to latest version..."
+            npm install -g npm@latest
+            echo "✓ npm updated to $(npm --version)"
+          fi
+
+      - name: Publish to NPM with provenance (Trusted Publishers)
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # Note: No NODE_AUTH_TOKEN needed - npm uses OIDC authentication automatically
+        # Requires: id-token: write permission and npm >= 11.5.1
 
   create-release:
     name: Create GitHub Release
