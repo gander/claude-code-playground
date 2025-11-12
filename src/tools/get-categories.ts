@@ -1,4 +1,4 @@
-import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import type { CategoryInfo } from "./types.js";
 
 /**
@@ -18,11 +18,10 @@ export const definition = {
 /**
  * Get all tag categories with counts of presets in each category
  *
- * @param loader - Schema loader instance
  * @returns Array of categories sorted by name, each with name and preset count
  */
-export async function getCategories(loader: SchemaLoader): Promise<CategoryInfo[]> {
-	const schema = await loader.loadSchema();
+export async function getCategories(): Promise<CategoryInfo[]> {
+	const schema = await schemaLoader.loadSchema();
 
 	// Create array of categories with counts
 	const categories: CategoryInfo[] = Object.entries(schema.categories).map(([name, category]) => ({
@@ -37,8 +36,8 @@ export async function getCategories(loader: SchemaLoader): Promise<CategoryInfo[
 /**
  * Handler for get_categories tool
  */
-export async function handler(loader: SchemaLoader, _args: unknown) {
-	const categories = await getCategories(loader);
+export async function handler(_args: unknown) {
+	const categories = await getCategories();
 	return {
 		content: [
 			{

@@ -1,4 +1,4 @@
-import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import type { TagSearchResult } from "./types.js";
 
 /**
@@ -26,17 +26,12 @@ export const definition = {
 /**
  * Search for tags by keyword
  *
- * @param loader - Schema loader instance
  * @param keyword - Keyword to search for in tag keys (from fields), values, and preset names
  * @param limit - Maximum number of results to return (optional, returns all by default)
  * @returns Array of matching tags with key, value, and optional preset name
  */
-export async function searchTags(
-	loader: SchemaLoader,
-	keyword: string,
-	limit?: number,
-): Promise<TagSearchResult[]> {
-	const schema = await loader.loadSchema();
+export async function searchTags(keyword: string, limit?: number): Promise<TagSearchResult[]> {
+	const schema = await schemaLoader.loadSchema();
 	const results: TagSearchResult[] = [];
 	const seen = new Set<string>(); // Track unique key-value pairs
 
@@ -144,12 +139,12 @@ export async function searchTags(
 /**
  * Handler for search_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const { keyword, limit } = args as { keyword?: string; limit?: number };
 	if (!keyword) {
 		throw new Error("keyword parameter is required");
 	}
-	const results = await searchTags(loader, keyword, limit);
+	const results = await searchTags(keyword, limit);
 	return {
 		content: [
 			{

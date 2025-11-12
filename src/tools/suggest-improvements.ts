@@ -1,6 +1,5 @@
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import type { SchemaLoader } from "../utils/schema-loader.js";
 import { checkDeprecated } from "./check-deprecated.js";
 
 /**
@@ -45,12 +44,10 @@ export interface ImprovementResult {
  * warnings about deprecated tags, and recommendations based on
  * matched presets.
  *
- * @param loader - Schema loader instance
  * @param tags - Tag collection to analyze
  * @returns Improvement suggestions and warnings
  */
 export async function suggestImprovements(
-	loader: SchemaLoader,
 	tags: Record<string, string>,
 ): Promise<ImprovementResult> {
 	const result: ImprovementResult = {
@@ -66,7 +63,7 @@ export async function suggestImprovements(
 
 	// Check for deprecated tags
 	for (const [key, value] of Object.entries(tags)) {
-		const deprecationResult = await checkDeprecated(loader, key, value);
+		const deprecationResult = await checkDeprecated(key, value);
 		if (deprecationResult.deprecated) {
 			result.warnings.push(`Tag ${key}=${value} is deprecated. ${deprecationResult.message}`);
 		}
@@ -181,12 +178,12 @@ function getFieldKey(fieldId: string): string | null {
 /**
  * Handler for suggest_improvements tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const { tags } = args as { tags?: Record<string, string> };
 	if (!tags) {
 		throw new Error("tags parameter is required");
 	}
-	const result = await suggestImprovements(loader, tags);
+	const result = await suggestImprovements(tags);
 	return {
 		content: [
 			{

@@ -4,19 +4,16 @@ import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" w
 	type: "json",
 };
 import { checkDeprecated } from "../../src/tools/check-deprecated.js";
-import { SchemaLoader } from "../../src/utils/schema-loader.js";
 
 describe("checkDeprecated", () => {
 	describe("Basic Functionality", () => {
 		it("should check if a tag key-value pair is deprecated", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// Use first deprecated entry
 			const entry = deprecated[0];
 			const key = Object.keys(entry.old)[0];
 			const value = entry.old[key as keyof typeof entry.old];
 
-			const result = await checkDeprecated(loader, key, value as string);
+			const result = await checkDeprecated(key, value as string);
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
@@ -25,9 +22,7 @@ describe("checkDeprecated", () => {
 		});
 
 		it("should return not deprecated for valid non-deprecated tag", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
-			const result = await checkDeprecated(loader, "amenity", "parking");
+			const result = await checkDeprecated("amenity", "parking");
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
@@ -35,15 +30,13 @@ describe("checkDeprecated", () => {
 		});
 
 		it("should check tag by key only (any value)", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// Find a deprecated entry
 			const entry = deprecated.find((e) => Object.keys(e.old).length === 1);
 			assert.ok(entry);
 
 			const key = Object.keys(entry.old)[0];
 
-			const result = await checkDeprecated(loader, key);
+			const result = await checkDeprecated(key);
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
@@ -51,8 +44,6 @@ describe("checkDeprecated", () => {
 		});
 
 		it("should return full replacement object", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// Find entry with multiple replacement tags
 			const entry = deprecated.find((e) => e.replace && Object.keys(e.replace).length > 1);
 			assert.ok(entry);
@@ -60,7 +51,7 @@ describe("checkDeprecated", () => {
 			const key = Object.keys(entry.old)[0];
 			const value = entry.old[key as keyof typeof entry.old];
 
-			const result = await checkDeprecated(loader, key, value as string);
+			const result = await checkDeprecated(key, value as string);
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
@@ -71,9 +62,7 @@ describe("checkDeprecated", () => {
 
 	describe("Edge Cases", () => {
 		it("should handle key with no deprecated entries", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
-			const result = await checkDeprecated(loader, "nonexistent_key_xyz_12345");
+			const result = await checkDeprecated("nonexistent_key_xyz_12345");
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
@@ -81,22 +70,18 @@ describe("checkDeprecated", () => {
 		});
 
 		it("should handle empty key", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
-			const result = await checkDeprecated(loader, "");
+			const result = await checkDeprecated("");
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
 		});
 
 		it("should handle key with value that is not deprecated", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// Use a key that exists in deprecated but with different value
 			const entry = deprecated[0];
 			const key = Object.keys(entry.old)[0];
 
-			const result = await checkDeprecated(loader, key, "definitely_not_deprecated_value_xyz");
+			const result = await checkDeprecated(key, "definitely_not_deprecated_value_xyz");
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
@@ -105,9 +90,7 @@ describe("checkDeprecated", () => {
 
 	describe("Result Structure", () => {
 		it("should return correct result structure", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
-			const result = await checkDeprecated(loader, "amenity", "parking");
+			const result = await checkDeprecated("amenity", "parking");
 
 			assert.ok(result);
 			assert.ok("deprecated" in result);
@@ -118,13 +101,11 @@ describe("checkDeprecated", () => {
 		});
 
 		it("should include old tags in result when deprecated", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			const entry = deprecated[0];
 			const key = Object.keys(entry.old)[0];
 			const value = entry.old[key as keyof typeof entry.old];
 
-			const result = await checkDeprecated(loader, key, value as string);
+			const result = await checkDeprecated(key, value as string);
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
@@ -133,13 +114,11 @@ describe("checkDeprecated", () => {
 		});
 
 		it("should include helpful message", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			const entry = deprecated[0];
 			const key = Object.keys(entry.old)[0];
 			const value = entry.old[key as keyof typeof entry.old];
 
-			const result = await checkDeprecated(loader, key, value as string);
+			const result = await checkDeprecated(key, value as string);
 
 			assert.ok(result);
 			assert.ok(result.message);
@@ -150,8 +129,6 @@ describe("checkDeprecated", () => {
 
 	describe("JSON Schema Validation", () => {
 		it("should detect ALL deprecated entries from JSON (100% coverage)", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// CRITICAL: Test ALL deprecated entries - no Math.min, no sampling
 			let testedCount = 0;
 			let skippedCount = 0;
@@ -178,7 +155,7 @@ describe("checkDeprecated", () => {
 					continue;
 				}
 
-				const result = await checkDeprecated(loader, key, value as string);
+				const result = await checkDeprecated(key, value as string);
 
 				assert.strictEqual(result.deprecated, true, `Tag ${key}=${value} should be deprecated`);
 				assert.ok(result.replacement, `Tag ${key}=${value} should have replacement`);
@@ -195,13 +172,11 @@ describe("checkDeprecated", () => {
 		});
 
 		it("should return correct replacement from JSON", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			const entry = deprecated[0];
 			const key = Object.keys(entry.old)[0];
 			const value = entry.old[key as keyof typeof entry.old];
 
-			const result = await checkDeprecated(loader, key, value as string);
+			const result = await checkDeprecated(key, value as string);
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);

@@ -1,5 +1,5 @@
 import type { GeometryType } from "../types/index.js";
-import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import type { PresetSearchResult } from "./types.js";
 
 /**
@@ -41,17 +41,15 @@ export interface SearchPresetsOptions {
 /**
  * Search for presets by keyword or tag
  *
- * @param loader - Schema loader instance
  * @param keyword - Keyword to search for in preset IDs and tags
  * @param options - Optional search options (limit, geometry filter)
  * @returns Array of matching presets with id, tags, and geometry
  */
 export async function searchPresets(
-	loader: SchemaLoader,
 	keyword: string,
 	options?: SearchPresetsOptions,
 ): Promise<PresetSearchResult[]> {
-	const schema = await loader.loadSchema();
+	const schema = await schemaLoader.loadSchema();
 	const results: PresetSearchResult[] = [];
 
 	// Normalize keyword for case-insensitive search
@@ -128,7 +126,7 @@ export async function searchPresets(
 /**
  * Handler for search_presets tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const { keyword, limit, geometry } = args as {
 		keyword?: string;
 		limit?: number;
@@ -137,7 +135,7 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 	if (!keyword) {
 		throw new Error("keyword parameter is required");
 	}
-	const results = await searchPresets(loader, keyword, { limit, geometry });
+	const results = await searchPresets(keyword, { limit, geometry });
 	return {
 		content: [
 			{

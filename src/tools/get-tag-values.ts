@@ -1,4 +1,4 @@
-import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 
 /**
  * Tool definition for get_tag_values
@@ -21,12 +21,11 @@ export const definition = {
 /**
  * Get all possible values for a given tag key
  *
- * @param loader - Schema loader instance
  * @param tagKey - The tag key to get values for (e.g., "amenity", "building")
  * @returns Array of unique values for the tag key, sorted alphabetically
  */
-export async function getTagValues(loader: SchemaLoader, tagKey: string): Promise<string[]> {
-	const schema = await loader.loadSchema();
+export async function getTagValues(tagKey: string): Promise<string[]> {
+	const schema = await schemaLoader.loadSchema();
 
 	// Collect all unique values for the tag key
 	const values = new Set<string>();
@@ -79,12 +78,12 @@ export async function getTagValues(loader: SchemaLoader, tagKey: string): Promis
 /**
  * Handler for get_tag_values tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const tagKey = (args as { tagKey?: string }).tagKey;
 	if (!tagKey) {
 		throw new Error("tagKey parameter is required");
 	}
-	const values = await getTagValues(loader, tagKey);
+	const values = await getTagValues(tagKey);
 	return {
 		content: [
 			{

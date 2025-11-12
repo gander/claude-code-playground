@@ -7,7 +7,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { tools } from "./tools/index.js";
 import { logger } from "./utils/logger.js";
-import { SchemaLoader } from "./utils/schema-loader.js";
+import { schemaLoader } from "./utils/schema-loader.js";
 
 /**
  * Create and configure the MCP server
@@ -24,9 +24,6 @@ export function createServer(): McpServer {
 			},
 		},
 	);
-
-	// Initialize schema loader (indexing always enabled for optimal performance)
-	const schemaLoader = new SchemaLoader();
 
 	// Access underlying Server for advanced use case (dynamic tool registration with JSON Schema)
 	// McpServer's high-level API expects Zod schemas, but we use JSON Schema for tool definitions
@@ -51,7 +48,7 @@ export function createServer(): McpServer {
 			}
 
 			// Call the tool handler
-			return await tool.handler(schemaLoader, args);
+			return await tool.handler(args);
 		} catch (error) {
 			logger.error(
 				`Error executing tool: ${name}`,
@@ -94,11 +91,7 @@ function getTransportConfig(): TransportConfig {
 /**
  * Create and start HTTP server with SSE transport
  */
-async function startHttpServer(
-	server: McpServer,
-	config: TransportConfig,
-	schemaLoader: SchemaLoader,
-): Promise<void> {
+async function startHttpServer(server: McpServer, config: TransportConfig): Promise<void> {
 	return new Promise((resolve, reject) => {
 		// Session management: track transports by session ID
 		const transports = new Map<string, StreamableHTTPServerTransport>();
@@ -232,13 +225,12 @@ async function main() {
 	// Warmup: Preload schema and build indexes before accepting requests
 	// This eliminates initial latency on first tool call
 	logger.info("Preloading schema and building indexes...", "main");
-	const schemaLoader = new SchemaLoader();
 	await schemaLoader.warmup();
 	logger.info("Schema preloaded successfully", "main");
 
 	// Start appropriate transport
 	if (config.type === "sse" || config.type === "http") {
-		await startHttpServer(server, config, schemaLoader);
+		await startHttpServer(server, config);
 	} else {
 		const transport = new StdioServerTransport();
 		await server.connect(transport);

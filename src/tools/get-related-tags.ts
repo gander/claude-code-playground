@@ -1,4 +1,4 @@
-import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import type { RelatedTag } from "./types.js";
 
 /**
@@ -28,17 +28,12 @@ export const definition = {
 /**
  * Find tags commonly used together with a given tag
  *
- * @param loader - Schema loader instance
  * @param tag - Tag to find related tags for (format: "key" or "key=value")
  * @param limit - Maximum number of results to return (optional)
  * @returns Array of related tags sorted by frequency (descending)
  */
-export async function getRelatedTags(
-	loader: SchemaLoader,
-	tag: string,
-	limit?: number,
-): Promise<RelatedTag[]> {
-	const schema = await loader.loadSchema();
+export async function getRelatedTags(tag: string, limit?: number): Promise<RelatedTag[]> {
+	const schema = await schemaLoader.loadSchema();
 
 	// Parse the input tag
 	const [inputKey, inputValue] = tag.includes("=") ? tag.split("=", 2) : [tag, undefined];
@@ -128,12 +123,12 @@ export async function getRelatedTags(
 /**
  * Handler for get_related_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const { tag, limit } = args as { tag?: string; limit?: number };
 	if (!tag) {
 		throw new Error("tag parameter is required");
 	}
-	const results = await getRelatedTags(loader, tag, limit);
+	const results = await getRelatedTags(tag, limit);
 	return {
 		content: [
 			{

@@ -2,13 +2,11 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { getPresetTags } from "../../src/tools/get-preset-tags.ts";
-import { SchemaLoader } from "../../src/utils/schema-loader.ts";
 
 describe("get_preset_tags", () => {
 	describe("Basic Functionality", () => {
 		it("should return tags for a valid preset ID", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetTags(loader, "amenity/restaurant");
+			const result = await getPresetTags("amenity/restaurant");
 
 			assert.ok(result, "Should return a result");
 			assert.ok(result.tags, "Should have tags property");
@@ -16,16 +14,13 @@ describe("get_preset_tags", () => {
 		});
 
 		it("should return the correct identifying tags", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetTags(loader, "amenity/restaurant");
+			const result = await getPresetTags("amenity/restaurant");
 
 			assert.ok(result.tags);
 			assert.strictEqual(result.tags.amenity, "restaurant");
 		});
 
 		it("should include addTags if present in preset", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// Find a preset with addTags
 			let presetWithAddTags: string | null = null;
 			for (const [id, preset] of Object.entries(presets)) {
@@ -36,15 +31,14 @@ describe("get_preset_tags", () => {
 			}
 
 			if (presetWithAddTags) {
-				const result = await getPresetTags(loader, presetWithAddTags);
+				const result = await getPresetTags(presetWithAddTags);
 				assert.ok(result.addTags, "Should have addTags for preset with addTags");
 				assert.strictEqual(typeof result.addTags, "object");
 			}
 		});
 
 		it("should not include addTags if not present in preset", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetTags(loader, "amenity/restaurant");
+			const result = await getPresetTags("amenity/restaurant");
 
 			const preset = presets["amenity/restaurant"];
 			if (!preset.addTags || Object.keys(preset.addTags).length === 0) {
@@ -56,11 +50,9 @@ describe("get_preset_tags", () => {
 		});
 
 		it("should throw error for non-existent preset", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			await assert.rejects(
 				async () => {
-					await getPresetTags(loader, "nonexistent/preset");
+					await getPresetTags("nonexistent/preset");
 				},
 				{
 					message: /Preset .* not found/,
@@ -69,10 +61,8 @@ describe("get_preset_tags", () => {
 		});
 
 		it("should use cached data on subsequent calls", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
-			const result1 = await getPresetTags(loader, "amenity/cafe");
-			const result2 = await getPresetTags(loader, "amenity/cafe");
+			const result1 = await getPresetTags("amenity/cafe");
+			const result2 = await getPresetTags("amenity/cafe");
 
 			assert.deepStrictEqual(result1, result2, "Results should be identical from cache");
 		});
@@ -80,8 +70,7 @@ describe("get_preset_tags", () => {
 
 	describe("JSON Schema Validation", () => {
 		it("should return tags matching JSON data exactly", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetTags(loader, "amenity/restaurant");
+			const result = await getPresetTags("amenity/restaurant");
 
 			const expected = presets["amenity/restaurant"];
 			assert.ok(expected, "Preset should exist in JSON");
@@ -96,15 +85,13 @@ describe("get_preset_tags", () => {
 		});
 
 		it("should validate tags for ALL presets via provider pattern (100% coverage)", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// CRITICAL: Test EVERY preset from JSON, not a sample
 			const allPresetIds = Object.keys(presets);
 			assert.ok(allPresetIds.length > 1500, "Should have all presets from JSON");
 
 			// Provider pattern: iterate through EVERY preset
 			for (const presetId of allPresetIds) {
-				const result = await getPresetTags(loader, presetId);
+				const result = await getPresetTags(presetId);
 				const expected = presets[presetId];
 
 				assert.ok(expected, `Preset ${presetId} should exist in JSON`);
@@ -133,8 +120,7 @@ describe("get_preset_tags", () => {
 		});
 
 		it("should return tags as key-value pairs", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetTags(loader, "amenity/restaurant");
+			const result = await getPresetTags("amenity/restaurant");
 
 			assert.ok(result.tags);
 			assert.strictEqual(typeof result.tags, "object");

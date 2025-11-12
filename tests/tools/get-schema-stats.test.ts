@@ -6,13 +6,12 @@ import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.
 };
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { getSchemaStats } from "../../src/tools/get-schema-stats.ts";
-import { SchemaLoader } from "../../src/utils/schema-loader.ts";
+import { schemaLoader } from "../../src/utils/schema-loader.ts";
 
 describe("get_schema_stats", () => {
 	describe("Basic Functionality", () => {
 		it("should return schema statistics with preset count", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const stats = await getSchemaStats(loader);
+			const stats = await getSchemaStats();
 
 			assert.ok(stats, "Stats should be returned");
 			assert.ok(typeof stats.presetCount === "number", "Should have preset count");
@@ -20,34 +19,29 @@ describe("get_schema_stats", () => {
 		});
 
 		it("should return schema statistics with field count", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const stats = await getSchemaStats(loader);
+			const stats = await getSchemaStats();
 
 			assert.ok(typeof stats.fieldCount === "number", "Should have field count");
 			assert.ok(stats.fieldCount > 0, "Field count should be greater than 0");
 		});
 
 		it("should return schema statistics with category count", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const stats = await getSchemaStats(loader);
+			const stats = await getSchemaStats();
 
 			assert.ok(typeof stats.categoryCount === "number", "Should have category count");
 			assert.ok(stats.categoryCount > 0, "Category count should be greater than 0");
 		});
 
 		it("should return schema statistics with deprecated tag count", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const stats = await getSchemaStats(loader);
+			const stats = await getSchemaStats();
 
 			assert.ok(typeof stats.deprecatedCount === "number", "Should have deprecated count");
 			assert.ok(stats.deprecatedCount >= 0, "Deprecated count should be non-negative");
 		});
 
 		it("should use cached data on subsequent calls", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
-			const stats1 = await getSchemaStats(loader);
-			const stats2 = await getSchemaStats(loader);
+			const stats1 = await getSchemaStats();
+			const stats2 = await getSchemaStats();
 
 			assert.deepStrictEqual(stats1, stats2, "Stats should be identical from cache");
 		});
@@ -77,8 +71,7 @@ describe("get_schema_stats", () => {
 		}
 
 		it("should return stats matching actual JSON data counts", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const stats = await getSchemaStats(loader);
+			const stats = await getSchemaStats();
 
 			// Verify preset count matches JSON data
 			const actualPresetCount = Object.keys(presets).length;
@@ -106,7 +99,7 @@ describe("get_schema_stats", () => {
 		});
 
 		it("should verify ALL preset keys exist in schema (100% coverage)", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
+			const loader = schemaLoader;
 			const schema = await loader.loadSchema();
 			const schemaPresetKeys = Object.keys(schema.presets);
 
@@ -130,7 +123,7 @@ describe("get_schema_stats", () => {
 		});
 
 		it("should verify ALL field keys exist in schema (100% coverage)", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
+			const loader = schemaLoader;
 			const schema = await loader.loadSchema();
 			const schemaFieldKeys = Object.keys(schema.fields);
 
