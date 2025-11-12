@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { PresetDetails } from "./types.js";
 
@@ -9,16 +10,9 @@ export const definition = {
 	description:
 		"Get complete details for a specific preset including tags, geometry, fields, and metadata",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			presetId: {
-				type: "string",
-				description: "The preset ID to get details for (e.g., 'amenity/restaurant')",
-			},
-		},
-		required: ["presetId"],
+		presetId: z.string().describe("The preset ID to get details for (e.g., 'amenity/restaurant')"),
 	},
-};
+} as const;
 
 /**
  * Get complete details for a specific preset
@@ -71,12 +65,8 @@ export async function getPresetDetails(
 /**
  * Handler for get_preset_details tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const presetId = (args as { presetId?: string }).presetId;
-	if (!presetId) {
-		throw new Error("presetId parameter is required");
-	}
-	const details = await getPresetDetails(loader, presetId);
+export async function handler(args: { presetId: string }, loader: SchemaLoader) {
+	const details = await getPresetDetails(loader, args.presetId);
 	return {
 		content: [
 			{
@@ -84,5 +74,6 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 				text: JSON.stringify(details, null, 2),
 			},
 		],
+		structuredContent: details,
 	};
 }

@@ -8,12 +8,8 @@ export const definition = {
 	name: "get_schema_stats",
 	description:
 		"Get statistics about the OpenStreetMap tagging schema, including counts of presets, fields, categories, and deprecated items",
-	inputSchema: {
-		type: "object" as const,
-		properties: {},
-		required: [],
-	},
-};
+	inputSchema: {},
+} as const;
 
 /**
  * Get statistics about the OSM tagging schema
@@ -37,7 +33,7 @@ export async function getSchemaStats(loader: SchemaLoader): Promise<SchemaStats>
 /**
  * Handler for get_schema_stats tool
  */
-export async function handler(loader: SchemaLoader, _args: unknown) {
+export async function handler(_args: unknown, loader: SchemaLoader) {
 	const stats = await getSchemaStats(loader);
 	return {
 		content: [

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import { type ValidationResult, validateTag } from "./validate-tag.js";
 
@@ -9,20 +10,13 @@ export const definition = {
 	description:
 		"Validate a collection of OSM tags. Returns validation results for each tag and aggregated statistics.",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			tags: {
-				type: "object",
-				description:
-					"Object containing tag key-value pairs to validate (e.g., { 'amenity': 'parking', 'parking': 'surface' })",
-				additionalProperties: {
-					type: "string",
-				},
-			},
-		},
-		required: ["tags"],
+		tags: z
+			.record(z.string())
+			.describe(
+				"Object containing tag key-value pairs to validate (e.g., { 'amenity': 'parking', 'parking': 'surface' })",
+			),
 	},
-};
+} as const;
 
 /**
  * Result of tag collection validation
@@ -95,12 +89,8 @@ export async function validateTagCollection(
 /**
  * Handler for validate_tag_collection tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const { tags } = args as { tags?: Record<string, string> };
-	if (!tags) {
-		throw new Error("tags parameter is required");
-	}
-	const result = await validateTagCollection(loader, tags);
+export async function handler(args: { tags: Record<string, string> }, loader: SchemaLoader) {
+	const result = await validateTagCollection(loader, args.tags);
 	return {
 		content: [
 			{
@@ -108,5 +98,6 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 				text: JSON.stringify(result, null, 2),
 			},
 		],
+		structuredContent: result,
 	};
 }

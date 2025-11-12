@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { TagInfo } from "./types.js";
 
@@ -9,16 +10,9 @@ export const definition = {
 	description:
 		"Get comprehensive information about a specific tag key, including all possible values, type, and field definition status",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			tagKey: {
-				type: "string",
-				description: "The tag key to get information for (e.g., 'parking', 'amenity')",
-			},
-		},
-		required: ["tagKey"],
+		tagKey: z.string().describe("The tag key to get information for (e.g., 'parking', 'amenity')"),
 	},
-};
+} as const;
 
 /**
  * Get comprehensive information about a specific tag key
@@ -90,12 +84,8 @@ export async function getTagInfo(loader: SchemaLoader, tagKey: string): Promise<
 /**
  * Handler for get_tag_info tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const tagKey = (args as { tagKey?: string }).tagKey;
-	if (!tagKey) {
-		throw new Error("tagKey parameter is required");
-	}
-	const info = await getTagInfo(loader, tagKey);
+export async function handler(args: { tagKey: string }, loader: SchemaLoader) {
+	const info = await getTagInfo(loader, args.tagKey);
 	return {
 		content: [
 			{
@@ -103,5 +93,6 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 				text: JSON.stringify(info, null, 2),
 			},
 		],
+		structuredContent: info,
 	};
 }

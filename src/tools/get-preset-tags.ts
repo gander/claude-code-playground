@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { PresetTags } from "./types.js";
 
@@ -9,16 +10,9 @@ export const definition = {
 	description:
 		"Get recommended tags for a specific preset. Returns identifying tags and additional recommended tags.",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			presetId: {
-				type: "string",
-				description: "The preset ID to get tags for (e.g., 'amenity/restaurant')",
-			},
-		},
-		required: ["presetId"],
+		presetId: z.string().describe("The preset ID to get tags for (e.g., 'amenity/restaurant')"),
 	},
-};
+} as const;
 
 /**
  * Get recommended tags for a specific preset
@@ -54,12 +48,8 @@ export async function getPresetTags(loader: SchemaLoader, presetId: string): Pro
 /**
  * Handler for get_preset_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const presetId = (args as { presetId?: string }).presetId;
-	if (!presetId) {
-		throw new Error("presetId parameter is required");
-	}
-	const tags = await getPresetTags(loader, presetId);
+export async function handler(args: { presetId: string }, loader: SchemaLoader) {
+	const tags = await getPresetTags(loader, args.presetId);
 	return {
 		content: [
 			{
@@ -67,5 +57,6 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 				text: JSON.stringify(tags, null, 2),
 			},
 		],
+		structuredContent: tags,
 	};
 }

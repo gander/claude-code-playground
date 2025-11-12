@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 
 /**
@@ -7,16 +8,9 @@ export const definition = {
 	name: "get_category_tags",
 	description: "Get all tags (preset IDs) belonging to a specific category",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			category: {
-				type: "string",
-				description: "Name of the category",
-			},
-		},
-		required: ["category"],
+		category: z.string().describe("Name of the category"),
 	},
-};
+} as const;
 
 /**
  * Get all tags (preset IDs) belonging to a specific category
@@ -41,7 +35,7 @@ export async function getCategoryTags(
 /**
  * Handler for get_category_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown, loader: SchemaLoader) {
 	const category = (args as { category?: string }).category;
 	if (!category) {
 		throw new Error("category parameter is required");

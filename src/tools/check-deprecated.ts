@@ -1,6 +1,7 @@
 import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
 	type: "json",
 };
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 
 /**
@@ -10,21 +11,15 @@ export const definition = {
 	name: "check_deprecated",
 	description: "Check if an OSM tag is deprecated. Accepts tag key or key-value pair.",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			key: {
-				type: "string",
-				description: "The tag key to check (e.g., 'amenity', 'highway')",
-			},
-			value: {
-				type: "string",
-				description:
-					"Optional tag value. If not provided, checks if any value for this key is deprecated",
-			},
-		},
-		required: ["key"],
+		key: z.string().describe("The tag key to check (e.g., 'amenity', 'highway')"),
+		value: z
+			.string()
+			.optional()
+			.describe(
+				"Optional tag value. If not provided, checks if any value for this key is deprecated",
+			),
 	},
-};
+} as const;
 
 /**
  * Result of deprecation check
@@ -144,12 +139,8 @@ export async function checkDeprecated(
 /**
  * Handler for check_deprecated tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const { key, value } = args as { key?: string; value?: string };
-	if (key === undefined) {
-		throw new Error("key parameter is required");
-	}
-	const result = await checkDeprecated(loader, key, value);
+export async function handler(args: { key: string; value?: string }, loader: SchemaLoader) {
+	const result = await checkDeprecated(loader, args.key, args.value);
 	return {
 		content: [
 			{
@@ -157,5 +148,6 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 				text: JSON.stringify(result, null, 2),
 			},
 		],
+		structuredContent: result,
 	};
 }

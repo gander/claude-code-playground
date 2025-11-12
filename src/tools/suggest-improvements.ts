@@ -1,5 +1,6 @@
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import { checkDeprecated } from "./check-deprecated.js";
 
@@ -11,20 +12,13 @@ export const definition = {
 	description:
 		"Suggest improvements for an OSM tag collection. Analyzes tags and provides suggestions for missing fields, warnings about deprecated tags, and recommendations based on matched presets.",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			tags: {
-				type: "object",
-				description:
-					"Object containing tag key-value pairs to analyze (e.g., { 'amenity': 'restaurant' })",
-				additionalProperties: {
-					type: "string",
-				},
-			},
-		},
-		required: ["tags"],
+		tags: z
+			.record(z.string())
+			.describe(
+				"Object containing tag key-value pairs to analyze (e.g., { 'amenity': 'restaurant' })",
+			),
 	},
-};
+} as const;
 
 /**
  * Result of improvement suggestions
@@ -181,12 +175,8 @@ function getFieldKey(fieldId: string): string | null {
 /**
  * Handler for suggest_improvements tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const { tags } = args as { tags?: Record<string, string> };
-	if (!tags) {
-		throw new Error("tags parameter is required");
-	}
-	const result = await suggestImprovements(loader, tags);
+export async function handler(args: { tags: Record<string, string> }, loader: SchemaLoader) {
+	const result = await suggestImprovements(loader, args.tags);
 	return {
 		content: [
 			{
@@ -194,5 +184,6 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 				text: JSON.stringify(result, null, 2),
 			},
 		],
+		structuredContent: result,
 	};
 }

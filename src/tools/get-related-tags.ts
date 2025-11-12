@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { RelatedTag } from "./types.js";
 
@@ -9,21 +10,14 @@ export const definition = {
 	description:
 		"Find tags commonly used together with a given tag. Returns tags sorted by frequency (how often they appear together).",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			tag: {
-				type: "string",
-				description:
-					"Tag to find related tags for (format: 'key' or 'key=value', e.g., 'amenity' or 'amenity=restaurant')",
-			},
-			limit: {
-				type: "number",
-				description: "Maximum number of results to return (optional)",
-			},
-		},
-		required: ["tag"],
+		tag: z
+			.string()
+			.describe(
+				"Tag to find related tags for (format: 'key' or 'key=value', e.g., 'amenity' or 'amenity=restaurant')",
+			),
+		limit: z.number().optional().describe("Maximum number of results to return (optional)"),
 	},
-};
+} as const;
 
 /**
  * Find tags commonly used together with a given tag
@@ -128,12 +122,8 @@ export async function getRelatedTags(
 /**
  * Handler for get_related_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const { tag, limit } = args as { tag?: string; limit?: number };
-	if (!tag) {
-		throw new Error("tag parameter is required");
-	}
-	const results = await getRelatedTags(loader, tag, limit);
+export async function handler(args: { tag: string; limit?: number }, loader: SchemaLoader) {
+	const results = await getRelatedTags(loader, args.tag, args.limit);
 	return {
 		content: [
 			{
@@ -141,5 +131,6 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 				text: JSON.stringify(results, null, 2),
 			},
 		],
+		structuredContent: results,
 	};
 }

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { TagSearchResult } from "./types.js";
 
@@ -8,20 +9,10 @@ export const definition = {
 	name: "search_tags",
 	description: "Search for tags by keyword in tag keys, values, and preset names",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			keyword: {
-				type: "string",
-				description: "Keyword to search for (case-insensitive)",
-			},
-			limit: {
-				type: "number",
-				description: "Maximum number of results to return (default: 100)",
-			},
-		},
-		required: ["keyword"],
+		keyword: z.string().describe("Keyword to search for (case-insensitive)"),
+		limit: z.number().optional().describe("Maximum number of results to return (default: 100)"),
 	},
-};
+} as const;
 
 /**
  * Search for tags by keyword
@@ -144,12 +135,8 @@ export async function searchTags(
 /**
  * Handler for search_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const { keyword, limit } = args as { keyword?: string; limit?: number };
-	if (!keyword) {
-		throw new Error("keyword parameter is required");
-	}
-	const results = await searchTags(loader, keyword, limit);
+export async function handler(args: { keyword: string; limit?: number }, loader: SchemaLoader) {
+	const results = await searchTags(loader, args.keyword, args.limit);
 	return {
 		content: [
 			{
@@ -157,5 +144,6 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 				text: JSON.stringify(results, null, 2),
 			},
 		],
+		structuredContent: results,
 	};
 }

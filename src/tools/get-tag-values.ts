@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 
 /**
@@ -7,16 +8,9 @@ export const definition = {
 	name: "get_tag_values",
 	description: "Get all possible values for a given tag key (e.g., all values for 'amenity' tag)",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			tagKey: {
-				type: "string",
-				description: "The tag key to get values for (e.g., 'amenity', 'building')",
-			},
-		},
-		required: ["tagKey"],
+		tagKey: z.string().describe("The tag key to get values for (e.g., 'amenity', 'building')"),
 	},
-};
+} as const;
 
 /**
  * Get all possible values for a given tag key
@@ -79,12 +73,8 @@ export async function getTagValues(loader: SchemaLoader, tagKey: string): Promis
 /**
  * Handler for get_tag_values tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const tagKey = (args as { tagKey?: string }).tagKey;
-	if (!tagKey) {
-		throw new Error("tagKey parameter is required");
-	}
-	const values = await getTagValues(loader, tagKey);
+export async function handler(args: { tagKey: string }, loader: SchemaLoader) {
+	const values = await getTagValues(loader, args.tagKey);
 	return {
 		content: [
 			{
@@ -92,5 +82,6 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 				text: JSON.stringify(values, null, 2),
 			},
 		],
+		structuredContent: values,
 	};
 }

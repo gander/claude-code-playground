@@ -8,12 +8,8 @@ export const definition = {
 	name: "get_categories",
 	description:
 		"Get all available tag categories with counts of presets in each category, sorted by name",
-	inputSchema: {
-		type: "object" as const,
-		properties: {},
-		required: [],
-	},
-};
+	inputSchema: {},
+} as const;
 
 /**
  * Get all tag categories with counts of presets in each category
@@ -37,7 +33,7 @@ export async function getCategories(loader: SchemaLoader): Promise<CategoryInfo[
 /**
  * Handler for get_categories tool
  */
-export async function handler(loader: SchemaLoader, _args: unknown) {
+export async function handler(_args: unknown, loader: SchemaLoader) {
 	const categories = await getCategories(loader);
 	return {
 		content: [
