@@ -3,10 +3,14 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { TagSearchResult } from "./types.js";
 
 /**
- * Tool definition for search_tags
+ * Tool name
+ */
+export const name = "search_tags";
+
+/**
+ * Tool definition
  */
 export const definition = {
-	name: "search_tags",
 	description: "Search for tags by keyword in tag keys, values, and preset names",
 	inputSchema: {
 		keyword: z.string().describe("Keyword to search for (case-insensitive)"),
@@ -15,19 +19,13 @@ export const definition = {
 } as const;
 
 /**
- * Search for tags by keyword
- *
- * @param loader - Schema loader instance
- * @param keyword - Keyword to search for in tag keys (from fields), values, and preset names
- * @param limit - Maximum number of results to return (optional, returns all by default)
- * @returns Array of matching tags with key, value, and optional preset name
+ * Handler for search_tags tool
  */
-export async function searchTags(
-	loader: SchemaLoader,
-	keyword: string,
-	limit?: number,
-): Promise<TagSearchResult[]> {
+export async function handler(args: { keyword: string; limit?: number }, loader: SchemaLoader) {
 	const schema = await loader.loadSchema();
+	const keyword = args.keyword;
+	const limit = args.limit;
+
 	const results: TagSearchResult[] = [];
 	const seen = new Set<string>(); // Track unique key-value pairs
 
@@ -59,7 +57,15 @@ export async function searchTags(
 							});
 
 							if (limit !== undefined && results.length >= limit) {
-								return results;
+								return {
+									content: [
+										{
+											type: "text" as const,
+											text: JSON.stringify(results, null, 2),
+										},
+									],
+									structuredContent: { results: results },
+								};
 							}
 						}
 					}
@@ -94,7 +100,15 @@ export async function searchTags(
 
 						// Stop if we reached the limit (if limit is specified)
 						if (limit !== undefined && results.length >= limit) {
-							return results;
+							return {
+								content: [
+									{
+										type: "text" as const,
+										text: JSON.stringify(results, null, 2),
+									},
+								],
+								structuredContent: { results: results },
+							};
 						}
 					}
 				}
@@ -120,7 +134,15 @@ export async function searchTags(
 							});
 
 							if (limit !== undefined && results.length >= limit) {
-								return results;
+								return {
+									content: [
+										{
+											type: "text" as const,
+											text: JSON.stringify(results, null, 2),
+										},
+									],
+									structuredContent: { results: results },
+								};
 							}
 						}
 					}
@@ -129,32 +151,13 @@ export async function searchTags(
 		}
 	}
 
-	return results;
-}
-
-/**
- * Handler for search_tags tool
- */
-export async function handler(args: { keyword: string; limit?: number }, loader: SchemaLoader) {
-	const { logger } = await import("../utils/logger.js");
-	logger.debug("Tool call: search_tags", "MCPServer");
-	try {
-		const results = await searchTags(loader, args.keyword, args.limit);
-		return {
-			content: [
-				{
-					type: "text" as const,
-					text: JSON.stringify(results, null, 2),
-				},
-			],
-			structuredContent: { results: results },
-		};
-	} catch (error) {
-		logger.error(
-			"Error executing tool: search_tags",
-			"MCPServer",
-			error instanceof Error ? error : new Error(String(error)),
-		);
-		throw error;
-	}
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(results, null, 2),
+			},
+		],
+		structuredContent: { results: results },
+	};
 }
