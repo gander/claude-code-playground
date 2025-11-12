@@ -27,16 +27,14 @@ export async function handler(_args: unknown, loader: SchemaLoader) {
 		count: category.members?.length || 0,
 	}));
 
+	const sortedCategories = categories.sort((a, b) => a.name.localeCompare(b.name));
 	return {
 		content: [
 			{
 				type: "text" as const,
-				text: JSON.stringify(
-					categories.sort((a, b) => a.name.localeCompare(b.name)),
-					null,
-					2,
-				),
+				text: JSON.stringify(sortedCategories, null, 2),
 			},
 		],
+		structuredContent: { categories: sortedCategories },
 	};
 }

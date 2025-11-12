@@ -3,8 +3,8 @@ import { describe, it } from "node:test";
 import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with {
 	type: "json",
 };
-import { getCategories } from "../../src/tools/get-categories.ts";
-import { getCategoryTags } from "../../src/tools/get-category-tags.ts";
+import { handler as getCategoriesHandler } from "../../src/tools/get-categories.ts";
+import { handler as getCategoryTagsHandler } from "../../src/tools/get-category-tags.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
 
 describe("get_category_tags", () => {
@@ -13,32 +13,40 @@ describe("get_category_tags", () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
 			// First get a valid category name
-			const allCategories = await getCategories(loader);
+			const categoriesResult = await getCategoriesHandler({}, loader);
+			const allCategories = categoriesResult.structuredContent.categories;
 			assert.ok(allCategories.length > 0, "Should have categories");
 
 			const categoryName = allCategories[0]?.name;
 			assert.ok(categoryName, "Should have category name");
 
-			const tags = await getCategoryTags(loader, categoryName);
+			const tagsResult = await getCategoryTagsHandler({ category: categoryName }, loader);
+			const tags = tagsResult.structuredContent.tags;
 			assert.ok(Array.isArray(tags), "Should return an array");
 		});
 
 		it("should return preset IDs for category members", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const allCategories = await getCategories(loader);
+			const categoriesResult = await getCategoriesHandler({}, loader);
+			const allCategories = categoriesResult.structuredContent.categories;
 
 			// Find a category with members
 			const categoryWithMembers = allCategories.find((cat) => cat.count > 0);
 			assert.ok(categoryWithMembers, "Should have category with members");
 
-			const tags = await getCategoryTags(loader, categoryWithMembers.name);
+			const tagsResult = await getCategoryTagsHandler(
+				{ category: categoryWithMembers.name },
+				loader,
+			);
+			const tags = tagsResult.structuredContent.tags;
 			assert.ok(tags.length > 0, "Should have tags");
 			assert.ok(typeof tags[0] === "string", "Tags should be strings (preset IDs)");
 		});
 
 		it("should return empty array for category with no members", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const tags = await getCategoryTags(loader, "nonexistent-category");
+			const tagsResult = await getCategoryTagsHandler({ category: "nonexistent-category" }, loader);
+			const tags = tagsResult.structuredContent.tags;
 
 			assert.ok(Array.isArray(tags), "Should return an array");
 			assert.strictEqual(tags.length, 0, "Should be empty for nonexistent category");
@@ -46,11 +54,14 @@ describe("get_category_tags", () => {
 
 		it("should use cached data on subsequent calls", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const allCategories = await getCategories(loader);
+			const categoriesResult = await getCategoriesHandler({}, loader);
+			const allCategories = categoriesResult.structuredContent.categories;
 			const categoryName = allCategories[0]?.name || "";
 
-			const tags1 = await getCategoryTags(loader, categoryName);
-			const tags2 = await getCategoryTags(loader, categoryName);
+			const tagsResult1 = await getCategoryTagsHandler({ category: categoryName }, loader);
+			const tags1 = tagsResult1.structuredContent;
+			const tagsResult2 = await getCategoryTagsHandler({ category: categoryName }, loader);
+			const tags2 = tagsResult2.structuredContent;
 
 			assert.deepStrictEqual(tags1, tags2, "Tags should be identical from cache");
 		});
@@ -76,9 +87,9 @@ describe("get_category_tags", () => {
 
 			// Use provider to test each category individually
 			for (const testCase of categoryProvider()) {
-				const returnedCategory = (await getCategories(loader)).find(
-					(cat) => cat.name === testCase.name,
-				);
+				const categoriesResult = await getCategoriesHandler({}, loader);
+				const allCategories = categoriesResult.structuredContent.categories;
+				const returnedCategory = allCategories.find((cat) => cat.name === testCase.name);
 
 				assert.ok(returnedCategory, `Category "${testCase.name}" should exist in returned data`);
 				assert.strictEqual(
@@ -87,7 +98,8 @@ describe("get_category_tags", () => {
 					`Category "${testCase.name}" should have correct count`,
 				);
 
-				const tags = await getCategoryTags(loader, testCase.name);
+				const tagsResult = await getCategoryTagsHandler({ category: testCase.name }, loader);
+				const tags = tagsResult.structuredContent.tags;
 				assert.deepStrictEqual(
 					tags,
 					testCase.expectedMembers,
@@ -106,7 +118,8 @@ describe("get_category_tags", () => {
 				const actualCategory = categories[categoryName];
 				if (!actualCategory) continue;
 
-				const tags = await getCategoryTags(loader, categoryName);
+				const tagsResult = await getCategoryTagsHandler({ category: categoryName }, loader);
+				const tags = tagsResult.structuredContent.tags;
 				const expectedMembers = actualCategory.members || [];
 
 				assert.deepStrictEqual(

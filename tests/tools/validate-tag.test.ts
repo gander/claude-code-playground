@@ -4,14 +4,15 @@ import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" w
 	type: "json",
 };
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
-import { validateTag } from "../../src/tools/validate-tag.js";
+import { handler } from "../../src/tools/validate-tag.js";
 import { SchemaLoader } from "../../src/utils/schema-loader.js";
 
 describe("validateTag", () => {
 	describe("Basic Functionality", () => {
 		it("should validate a tag with valid key and value from options", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await validateTag(loader, "access", "yes");
+			const handlerResult = await handler({ key: "access", value: "yes" }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, true);
@@ -23,7 +24,8 @@ describe("validateTag", () => {
 		it("should validate a tag with valid key but value not in options", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			// building has options, but allows custom values (combo type)
-			const result = await validateTag(loader, "building", "custom_value");
+			const handlerResult = await handler({ key: "building", value: "custom_value" }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, true);
@@ -38,7 +40,8 @@ describe("validateTag", () => {
 			const oldKey = Object.keys(deprecatedEntry.old)[0];
 			const oldValue = deprecatedEntry.old[oldKey];
 
-			const result = await validateTag(loader, oldKey, oldValue);
+			const handlerResult = await handler({ key: oldKey, value: oldValue }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
@@ -48,7 +51,11 @@ describe("validateTag", () => {
 
 		it("should detect unknown key", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await validateTag(loader, "nonexistent_key_12345", "some_value");
+			const handlerResult = await handler(
+				{ key: "nonexistent_key_12345", value: "some_value" },
+				loader,
+			);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, true); // Unknown keys are allowed in OSM
@@ -59,7 +66,8 @@ describe("validateTag", () => {
 		it("should handle tag with no options field", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			// maxspeed has no options - any value is allowed
-			const result = await validateTag(loader, "maxspeed", "50");
+			const handlerResult = await handler({ key: "maxspeed", value: "50" }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, true);
@@ -135,7 +143,8 @@ describe("validateTag", () => {
 	describe("Error Handling", () => {
 		it("should handle empty key", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await validateTag(loader, "", "value");
+			const handlerResult = await handler({ key: "", value: "value" }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, false);
@@ -145,7 +154,8 @@ describe("validateTag", () => {
 
 		it("should handle empty value", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await validateTag(loader, "amenity", "");
+			const handlerResult = await handler({ key: "amenity", value: "" }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, false);

@@ -2,14 +2,15 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import { getTagInfo } from "../../src/tools/get-tag-info.ts";
+import { handler } from "../../src/tools/get-tag-info.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
 
 describe("get_tag_info", () => {
 	describe("Basic Functionality", () => {
 		it("should return info for a valid tag key with field definition", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const info = await getTagInfo(loader, "parking");
+			const handlerResult = await handler({ tagKey: "parking" }, loader);
+			const info = handlerResult.structuredContent;
 
 			assert.ok(info, "Should return tag info");
 			assert.strictEqual(info.key, "parking", "Should return correct key");
@@ -21,7 +22,8 @@ describe("get_tag_info", () => {
 
 		it("should return info for a tag key without field definition", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const info = await getTagInfo(loader, "amenity");
+			const handlerResult = await handler({ tagKey: "amenity" }, loader);
+			const info = handlerResult.structuredContent;
 
 			assert.ok(info, "Should return tag info");
 			assert.strictEqual(info.key, "amenity", "Should return correct key");
@@ -31,7 +33,8 @@ describe("get_tag_info", () => {
 
 		it("should return sorted values", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const info = await getTagInfo(loader, "parking");
+			const handlerResult = await handler({ tagKey: "parking" }, loader);
+			const info = handlerResult.structuredContent;
 
 			const sorted = [...info.values].sort();
 			assert.deepStrictEqual(info.values, sorted, "Values should be sorted alphabetically");
@@ -39,7 +42,8 @@ describe("get_tag_info", () => {
 
 		it("should return unique values only", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const info = await getTagInfo(loader, "building");
+			const handlerResult = await handler({ tagKey: "building" }, loader);
+			const info = handlerResult.structuredContent;
 
 			const uniqueValues = new Set(info.values);
 			assert.strictEqual(info.values.length, uniqueValues.size, "Should return unique values only");
@@ -47,7 +51,8 @@ describe("get_tag_info", () => {
 
 		it("should handle non-existent tag key", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const info = await getTagInfo(loader, "nonexistent_tag_key_12345");
+			const handlerResult = await handler({ tagKey: "nonexistent_tag_key_12345" }, loader);
+			const info = handlerResult.structuredContent;
 
 			assert.ok(info, "Should return tag info even for non-existent key");
 			assert.strictEqual(info.key, "nonexistent_tag_key_12345", "Should return correct key");
@@ -60,7 +65,8 @@ describe("get_tag_info", () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			// toilets:wheelchair is a field stored as "toilets/wheelchair" in fields map
 			// but should accept "toilets:wheelchair" as input (OSM format)
-			const info = await getTagInfo(loader, "toilets:wheelchair");
+			const handlerResult = await handler({ tagKey: "toilets:wheelchair" }, loader);
+			const info = handlerResult.structuredContent;
 
 			assert.ok(info, "Should return tag info");
 			assert.strictEqual(info.key, "toilets:wheelchair", "Should return key with colon separator");
@@ -71,7 +77,8 @@ describe("get_tag_info", () => {
 		it("should return keys with colon separator (BUG FIX TEST)", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			// Test that returned key uses colon, not slash
-			const info = await getTagInfo(loader, "toilets:wheelchair");
+			const handlerResult = await handler({ tagKey: "toilets:wheelchair" }, loader);
+			const info = handlerResult.structuredContent;
 
 			assert.ok(info, "Should return tag info");
 			assert.ok(!info.key.includes("/"), "Returned key should not contain slash separator");
@@ -81,8 +88,10 @@ describe("get_tag_info", () => {
 		it("should use cached data on subsequent calls", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			const info1 = await getTagInfo(loader, "amenity");
-			const info2 = await getTagInfo(loader, "amenity");
+			const handlerResult1 = await handler({ tagKey: "amenity" }, loader);
+			const info1 = handlerResult1.structuredContent;
+			const handlerResult2 = await handler({ tagKey: "amenity" }, loader);
+			const info2 = handlerResult2.structuredContent;
 
 			assert.deepStrictEqual(info1, info2, "Should return identical data from cache");
 		});
@@ -174,7 +183,8 @@ describe("get_tag_info", () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
 			// Test parking which has comprehensive field definition
-			const info = await getTagInfo(loader, "parking");
+			const handlerResult = await handler({ tagKey: "parking" }, loader);
+			const info = handlerResult.structuredContent;
 
 			// Collect expected values from JSON
 			const expectedValues = new Set<string>();
@@ -232,7 +242,8 @@ describe("get_tag_info", () => {
 
 			// CRITICAL: Test EVERY tag key from provider, NO sampling
 			for (const testCase of tagKeyProvider()) {
-				const info = await getTagInfo(loader, testCase.key);
+				const handlerResult = await handler({ tagKey: testCase.key }, loader);
+				const info = handlerResult.structuredContent;
 
 				// Validate hasFieldDefinition matches JSON
 				assert.strictEqual(
@@ -281,7 +292,8 @@ describe("get_tag_info", () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
 			// Test with building which might have wildcards
-			const info = await getTagInfo(loader, "building");
+			const handlerResult = await handler({ tagKey: "building" }, loader);
+			const info = handlerResult.structuredContent;
 
 			// CRITICAL: Verify EACH value individually (NO wildcards, NO pipes)
 			for (const value of info.values) {
@@ -294,7 +306,8 @@ describe("get_tag_info", () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
 			// Test parking which has field definition
-			const info = await getTagInfo(loader, "parking");
+			const handlerResult = await handler({ tagKey: "parking" }, loader);
+			const info = handlerResult.structuredContent;
 			const parkingField = fields.parking;
 
 			assert.ok(parkingField, "parking field should exist in fields.json");

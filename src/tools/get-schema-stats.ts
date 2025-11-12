@@ -37,5 +37,6 @@ export async function handler(_args: unknown, loader: SchemaLoader) {
 				text: JSON.stringify(stats, null, 2),
 			},
 		],
+		structuredContent: stats,
 	};
 }

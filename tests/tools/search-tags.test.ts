@@ -2,14 +2,15 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import { searchTags } from "../../src/tools/search-tags.ts";
+import { handler } from "../../src/tools/search-tags.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
 
 describe("search_tags", () => {
 	describe("Basic Functionality", () => {
 		it("should return tags matching the keyword", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchTags(loader, "restaurant");
+			const handlerResult = await handler({ keyword: "restaurant" }, loader);
+			const results = handlerResult.structuredContent.results;
 
 			assert.ok(Array.isArray(results), "Should return an array");
 			assert.ok(results.length > 0, "Should find matching tags");
@@ -17,7 +18,8 @@ describe("search_tags", () => {
 
 		it("should return tags with key and value properties", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchTags(loader, "cafe");
+			const handlerResult = await handler({ keyword: "cafe" }, loader);
+			const results = handlerResult.structuredContent.results;
 
 			assert.ok(results.length > 0, "Should have results");
 			const first = results[0];
@@ -28,8 +30,10 @@ describe("search_tags", () => {
 
 		it("should perform case-insensitive search", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const resultsLower = await searchTags(loader, "park");
-			const resultsUpper = await searchTags(loader, "PARK");
+			const handlerResultLower = await handler({ keyword: "park" }, loader);
+			const resultsLower = handlerResultLower.structuredContent.results;
+			const handlerResultUpper = await handler({ keyword: "PARK" }, loader);
+			const resultsUpper = handlerResultUpper.structuredContent.results;
 
 			assert.ok(resultsLower.length > 0, "Should find results with lowercase");
 			assert.ok(resultsUpper.length > 0, "Should find results with uppercase");
@@ -38,7 +42,8 @@ describe("search_tags", () => {
 
 		it("should return empty array for no matches", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchTags(loader, "nonexistentkeywordinosm12345xyz");
+			const handlerResult = await handler({ keyword: "nonexistentkeywordinosm12345xyz" }, loader);
+			const results = handlerResult.structuredContent.results;
 
 			assert.ok(Array.isArray(results), "Should return an array");
 			assert.strictEqual(results.length, 0, "Should return empty array");
@@ -46,7 +51,8 @@ describe("search_tags", () => {
 
 		it("should limit results to prevent overwhelming output", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchTags(loader, "building");
+			const handlerResult = await handler({ keyword: "building" }, loader);
+			const results = handlerResult.structuredContent.results;
 
 			assert.ok(Array.isArray(results), "Should return an array");
 			// Should have reasonable limit, not thousands of results
@@ -56,15 +62,18 @@ describe("search_tags", () => {
 		it("should use cached data on subsequent calls", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			const results1 = await searchTags(loader, "school");
-			const results2 = await searchTags(loader, "school");
+			const handlerResult1 = await handler({ keyword: "school" }, loader);
+			const results1 = handlerResult1.structuredContent;
+			const handlerResult2 = await handler({ keyword: "school" }, loader);
+			const results2 = handlerResult2.structuredContent;
 
 			assert.deepStrictEqual(results1, results2, "Results should be identical from cache");
 		});
 
 		it("should find tag keys from fields.json (BUG FIX TEST)", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchTags(loader, "wheelchair");
+			const handlerResult = await handler({ keyword: "wheelchair" }, loader);
+			const results = handlerResult.structuredContent.results;
 
 			// wheelchair exists in fields.json with options: yes, limited, no
 			// This test fails before the bug fix
@@ -90,7 +99,8 @@ describe("search_tags", () => {
 		it("should return keys with colon separator, not slash (BUG FIX TEST)", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			// Search for "toilets" to find nested keys like toilets:wheelchair
-			const results = await searchTags(loader, "toilets");
+			const handlerResult = await handler({ keyword: "toilets" }, loader);
+			const results = handlerResult.structuredContent.results;
 
 			assert.ok(results.length > 0, "Should find toilets-related tags");
 
@@ -229,7 +239,8 @@ describe("search_tags", () => {
 
 		it("should return search results matching JSON data (presets + fields)", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchTags(loader, "parking");
+			const handlerResult = await handler({ keyword: "parking" }, loader);
+			const results = handlerResult.structuredContent.results;
 
 			// Verify each result corresponds to actual JSON data (presets OR fields)
 			for (const result of results) {
@@ -276,7 +287,8 @@ describe("search_tags", () => {
 			// Test each keyword from provider
 			for (const testCase of searchKeywordProvider()) {
 				// Get limited results (default limit: 100)
-				const results = await searchTags(loader, testCase.keyword);
+				const handlerResult = await handler({ keyword: testCase.keyword }, loader);
+				const results = handlerResult.structuredContent.results;
 
 				// Verify all returned results exist in JSON (fields OR presets)
 				for (const result of results) {

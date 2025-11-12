@@ -4,7 +4,7 @@ import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" w
 	type: "json",
 };
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import { suggestImprovements } from "../../src/tools/suggest-improvements.js";
+import { handler } from "../../src/tools/suggest-improvements.js";
 import { SchemaLoader } from "../../src/utils/schema-loader.js";
 
 describe("suggestImprovements", () => {
@@ -15,7 +15,8 @@ describe("suggestImprovements", () => {
 				amenity: "restaurant",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.ok("suggestions" in result);
@@ -30,7 +31,8 @@ describe("suggestImprovements", () => {
 				amenity: "restaurant",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.ok(result.suggestions.length > 0);
@@ -49,7 +51,8 @@ describe("suggestImprovements", () => {
 				[key]: value as string,
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.ok(result.warnings.length > 0);
@@ -78,7 +81,8 @@ describe("suggestImprovements", () => {
 				}
 			}
 
-			const result = await suggestImprovements(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			// Should have fewer suggestions since tags are more complete
@@ -88,7 +92,8 @@ describe("suggestImprovements", () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			const tags = {};
 
-			const result = await suggestImprovements(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.suggestions.length, 0);
@@ -103,7 +108,8 @@ describe("suggestImprovements", () => {
 				amenity: "parking",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.ok("suggestions" in result);
@@ -120,7 +126,8 @@ describe("suggestImprovements", () => {
 				amenity: "restaurant",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.ok(result.matchedPresets);
@@ -133,7 +140,8 @@ describe("suggestImprovements", () => {
 				amenity: "restaurant",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			if (result.suggestions.length > 0) {
@@ -153,7 +161,8 @@ describe("suggestImprovements", () => {
 				cuisine: "italian",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.ok(result.matchedPresets);
@@ -166,7 +175,8 @@ describe("suggestImprovements", () => {
 				amenity: "parking",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			// Parking should have suggestions like capacity, fee, surface, etc.
@@ -210,7 +220,8 @@ describe("suggestImprovements", () => {
 				}
 
 				const tags = { [key]: value };
-				const result = await suggestImprovements(loader, tags);
+				const handlerResult = await handler({ tags: tags }, loader);
+				const result = handlerResult.structuredContent;
 
 				assert.ok(result, `Should return result for deprecated tag ${key}=${value}`);
 				assert.ok(result.warnings.length >= 1, `Should warn about deprecated tag ${key}=${value}`);
@@ -245,7 +256,8 @@ describe("suggestImprovements", () => {
 					}
 				}
 
-				const result = await suggestImprovements(loader, tags);
+				const handlerResult = await handler({ tags: tags }, loader);
+				const result = handlerResult.structuredContent;
 
 				assert.ok(result);
 				assert.ok(result.matchedPresets);
@@ -263,7 +275,8 @@ describe("suggestImprovements", () => {
 				unknown_key_xyz: "unknown_value_123",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.matchedPresets.length, 0);
@@ -275,7 +288,8 @@ describe("suggestImprovements", () => {
 				building: "yes",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			// Building=yes is very generic, should suggest more specific tags
