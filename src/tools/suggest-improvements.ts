@@ -4,6 +4,29 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import { checkDeprecated } from "./check-deprecated.js";
 
 /**
+ * Tool definition for suggest_improvements
+ */
+export const definition = {
+	name: "suggest_improvements",
+	description:
+		"Suggest improvements for an OSM tag collection. Analyzes tags and provides suggestions for missing fields, warnings about deprecated tags, and recommendations based on matched presets.",
+	inputSchema: {
+		type: "object" as const,
+		properties: {
+			tags: {
+				type: "object",
+				description:
+					"Object containing tag key-value pairs to analyze (e.g., { 'amenity': 'restaurant' })",
+				additionalProperties: {
+					type: "string",
+				},
+			},
+		},
+		required: ["tags"],
+	},
+};
+
+/**
  * Result of improvement suggestions
  */
 export interface ImprovementResult {
@@ -153,4 +176,23 @@ function getFieldKey(fieldId: string): string | null {
 
 	// Try to use the field ID directly as a key
 	return fieldId;
+}
+
+/**
+ * Handler for suggest_improvements tool
+ */
+export async function handler(loader: SchemaLoader, args: unknown) {
+	const { tags } = args as { tags?: Record<string, string> };
+	if (!tags) {
+		throw new Error("tags parameter is required");
+	}
+	const result = await suggestImprovements(loader, tags);
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(result, null, 2),
+			},
+		],
+	};
 }

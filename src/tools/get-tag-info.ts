@@ -2,6 +2,25 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { TagInfo } from "./types.js";
 
 /**
+ * Tool definition for get_tag_info
+ */
+export const definition = {
+	name: "get_tag_info",
+	description:
+		"Get comprehensive information about a specific tag key, including all possible values, type, and field definition status",
+	inputSchema: {
+		type: "object" as const,
+		properties: {
+			tagKey: {
+				type: "string",
+				description: "The tag key to get information for (e.g., 'parking', 'amenity')",
+			},
+		},
+		required: ["tagKey"],
+	},
+};
+
+/**
  * Get comprehensive information about a specific tag key
  *
  * @param loader - Schema loader instance
@@ -65,5 +84,24 @@ export async function getTagInfo(loader: SchemaLoader, tagKey: string): Promise<
 		values: Array.from(values).sort(),
 		type: fieldType,
 		hasFieldDefinition,
+	};
+}
+
+/**
+ * Handler for get_tag_info tool
+ */
+export async function handler(loader: SchemaLoader, args: unknown) {
+	const tagKey = (args as { tagKey?: string }).tagKey;
+	if (!tagKey) {
+		throw new Error("tagKey parameter is required");
+	}
+	const info = await getTagInfo(loader, tagKey);
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(info, null, 2),
+			},
+		],
 	};
 }

@@ -3,6 +3,34 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { PresetSearchResult } from "./types.js";
 
 /**
+ * Tool definition for search_presets
+ */
+export const definition = {
+	name: "search_presets",
+	description:
+		"Search for presets by keyword or tag. Searches preset IDs and tags. Supports filtering by geometry type and limiting results.",
+	inputSchema: {
+		type: "object" as const,
+		properties: {
+			keyword: {
+				type: "string",
+				description:
+					"Keyword to search for in preset IDs and tags (case-insensitive). Can be a simple keyword (e.g., 'restaurant') or a tag (e.g., 'amenity=restaurant')",
+			},
+			limit: {
+				type: "number",
+				description: "Maximum number of results to return (optional)",
+			},
+			geometry: {
+				type: "string",
+				description: "Filter by geometry type (point, vertex, line, area, relation) - optional",
+			},
+		},
+		required: ["keyword"],
+	},
+};
+
+/**
  * Options for searching presets
  */
 export interface SearchPresetsOptions {
@@ -95,4 +123,27 @@ export async function searchPresets(
 	}
 
 	return results;
+}
+
+/**
+ * Handler for search_presets tool
+ */
+export async function handler(loader: SchemaLoader, args: unknown) {
+	const { keyword, limit, geometry } = args as {
+		keyword?: string;
+		limit?: number;
+		geometry?: "point" | "vertex" | "line" | "area" | "relation";
+	};
+	if (!keyword) {
+		throw new Error("keyword parameter is required");
+	}
+	const results = await searchPresets(loader, keyword, { limit, geometry });
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(results, null, 2),
+			},
+		],
+	};
 }

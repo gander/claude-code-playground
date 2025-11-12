@@ -2,6 +2,25 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { PresetTags } from "./types.js";
 
 /**
+ * Tool definition for get_preset_tags
+ */
+export const definition = {
+	name: "get_preset_tags",
+	description:
+		"Get recommended tags for a specific preset. Returns identifying tags and additional recommended tags.",
+	inputSchema: {
+		type: "object" as const,
+		properties: {
+			presetId: {
+				type: "string",
+				description: "The preset ID to get tags for (e.g., 'amenity/restaurant')",
+			},
+		},
+		required: ["presetId"],
+	},
+};
+
+/**
  * Get recommended tags for a specific preset
  *
  * @param loader - Schema loader instance
@@ -30,4 +49,23 @@ export async function getPresetTags(loader: SchemaLoader, presetId: string): Pro
 	}
 
 	return result;
+}
+
+/**
+ * Handler for get_preset_tags tool
+ */
+export async function handler(loader: SchemaLoader, args: unknown) {
+	const presetId = (args as { presetId?: string }).presetId;
+	if (!presetId) {
+		throw new Error("presetId parameter is required");
+	}
+	const tags = await getPresetTags(loader, presetId);
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(tags, null, 2),
+			},
+		],
+	};
 }

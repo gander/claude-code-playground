@@ -2,6 +2,30 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { RelatedTag } from "./types.js";
 
 /**
+ * Tool definition for get_related_tags
+ */
+export const definition = {
+	name: "get_related_tags",
+	description:
+		"Find tags commonly used together with a given tag. Returns tags sorted by frequency (how often they appear together).",
+	inputSchema: {
+		type: "object" as const,
+		properties: {
+			tag: {
+				type: "string",
+				description:
+					"Tag to find related tags for (format: 'key' or 'key=value', e.g., 'amenity' or 'amenity=restaurant')",
+			},
+			limit: {
+				type: "number",
+				description: "Maximum number of results to return (optional)",
+			},
+		},
+		required: ["tag"],
+	},
+};
+
+/**
  * Find tags commonly used together with a given tag
  *
  * @param loader - Schema loader instance
@@ -99,4 +123,23 @@ export async function getRelatedTags(
 	}
 
 	return results;
+}
+
+/**
+ * Handler for get_related_tags tool
+ */
+export async function handler(loader: SchemaLoader, args: unknown) {
+	const { tag, limit } = args as { tag?: string; limit?: number };
+	if (!tag) {
+		throw new Error("tag parameter is required");
+	}
+	const results = await getRelatedTags(loader, tag, limit);
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(results, null, 2),
+			},
+		],
+	};
 }
