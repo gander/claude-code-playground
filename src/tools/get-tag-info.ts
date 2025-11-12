@@ -3,10 +3,14 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { TagInfo } from "./types.js";
 
 /**
- * Tool definition for get_tag_info
+ * Tool name
+ */
+export const name = "get_tag_info";
+
+/**
+ * Tool definition
  */
 export const definition = {
-	name: "get_tag_info",
 	description:
 		"Get comprehensive information about a specific tag key, including all possible values, type, and field definition status",
 	inputSchema: {
@@ -15,14 +19,11 @@ export const definition = {
 } as const;
 
 /**
- * Get comprehensive information about a specific tag key
- *
- * @param loader - Schema loader instance
- * @param tagKey - The tag key to get information for (e.g., "parking", "amenity")
- * @returns Tag information including all possible values, type, and field definition status
+ * Handler for get_tag_info tool
  */
-export async function getTagInfo(loader: SchemaLoader, tagKey: string): Promise<TagInfo> {
+export async function handler(args: { tagKey: string }, loader: SchemaLoader) {
 	const schema = await loader.loadSchema();
+	const tagKey = args.tagKey;
 
 	// Collect all unique values for the tag key
 	const values = new Set<string>();
@@ -72,38 +73,21 @@ export async function getTagInfo(loader: SchemaLoader, tagKey: string): Promise<
 		}
 	}
 
-	// Return tag information with the actual OSM key (with colon)
-	return {
+	// Build result object
+	const info: TagInfo = {
 		key: actualKey,
 		values: Array.from(values).sort(),
 		type: fieldType,
 		hasFieldDefinition,
 	};
-}
 
-/**
- * Handler for get_tag_info tool
- */
-export async function handler(args: { tagKey: string }, loader: SchemaLoader) {
-	const { logger } = await import("../utils/logger.js");
-	logger.debug("Tool call: get_tag_info", "MCPServer");
-	try {
-		const info = await getTagInfo(loader, args.tagKey);
-		return {
-			content: [
-				{
-					type: "text" as const,
-					text: JSON.stringify(info, null, 2),
-				},
-			],
-			structuredContent: info,
-		};
-	} catch (error) {
-		logger.error(
-			"Error executing tool: get_tag_info",
-			"MCPServer",
-			error instanceof Error ? error : new Error(String(error)),
-		);
-		throw error;
-	}
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(info, null, 2),
+			},
+		],
+		structuredContent: info,
+	};
 }
