@@ -1,8 +1,9 @@
 # Stage 1: Builder
 # Use build platform to run build tools (npm, tsc) on host architecture
-# Image pinned by SHA256 for security and reproducibility (node:22-alpine)
-# To update: Check https://hub.docker.com/layers/library/node/22-alpine for latest digest
-FROM --platform=$BUILDPLATFORM node:22-alpine@sha256:c17e937e8e79dc0a5630221cfb8bbef536def6ea5b0c6dfc3779c1d41eb2637a AS builder
+# Pinned to manifest list digest for security and multi-platform compatibility
+# This digest references a manifest list supporting: linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6, linux/s390x
+# To update: curl -s https://hub.docker.com/v2/repositories/library/node/tags/22-alpine | jq -r '.digest'
+FROM --platform=$BUILDPLATFORM node:22-alpine@sha256:b2358485e3e33bc3a33114d2b1bdb18cdbe4df01bd2b257198eb51beb1f026c5 AS builder
 
 # Build arguments for multi-platform support
 ARG BUILDPLATFORM
@@ -29,9 +30,10 @@ RUN test -f dist/index.js || (echo "Build failed: dist/index.js not found" && ex
 
 # Stage 2: Runtime
 # Use target platform for the final runtime image
-# Image pinned by SHA256 for security and reproducibility (node:22-alpine)
-# To update: Check https://hub.docker.com/layers/library/node/22-alpine for latest digest
-FROM node:22-alpine@sha256:c17e937e8e79dc0a5630221cfb8bbef536def6ea5b0c6dfc3779c1d41eb2637a
+# Pinned to manifest list digest for security and multi-platform compatibility
+# This digest references a manifest list supporting: linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6, linux/s390x
+# To update: curl -s https://hub.docker.com/v2/repositories/library/node/tags/22-alpine | jq -r '.digest'
+FROM --platform=$TARGETPLATFORM node:22-alpine@sha256:b2358485e3e33bc3a33114d2b1bdb18cdbe4df01bd2b257198eb51beb1f026c5
 
 # Set working directory
 WORKDIR /app
