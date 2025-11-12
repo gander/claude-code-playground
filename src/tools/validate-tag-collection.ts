@@ -1,12 +1,19 @@
+import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
+	type: "json",
+};
+import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
-import { type ValidationResult, validateTag } from "./validate-tag.js";
 
 /**
- * Tool definition for validate_tag_collection
+ * Tool name
+ */
+export const name = "validate_tag_collection";
+
+/**
+ * Tool definition
  */
 export const definition = {
-	name: "validate_tag_collection",
 	description:
 		"Validate a collection of OSM tags. Returns validation results for each tag and aggregated statistics.",
 	inputSchema: {
@@ -17,6 +24,22 @@ export const definition = {
 			),
 	},
 } as const;
+
+/**
+ * Result of tag validation
+ */
+export interface ValidationResult {
+	/** Whether the tag is valid */
+	valid: boolean;
+	/** Whether the tag is deprecated */
+	deprecated: boolean;
+	/** Validation errors (critical issues) */
+	errors: string[];
+	/** Validation warnings (non-critical issues) */
+	warnings: string[];
+	/** Suggested replacement if deprecated */
+	replacement?: Record<string, string>;
+}
 
 /**
  * Result of tag collection validation
@@ -39,16 +62,11 @@ export interface CollectionValidationResult {
 }
 
 /**
- * Validate a collection of OSM tags
- *
- * @param loader - Schema loader instance
- * @param tags - Object containing key-value pairs to validate
- * @returns Validation result with aggregated statistics and individual tag results
+ * Handler for validate_tag_collection tool
  */
-export async function validateTagCollection(
-	loader: SchemaLoader,
-	tags: Record<string, string>,
-): Promise<CollectionValidationResult> {
+export async function handler(args: { tags: Record<string, string> }, _loader: SchemaLoader) {
+	const tags = args.tags;
+
 	const result: CollectionValidationResult = {
 		valid: true,
 		tagResults: {},
@@ -59,9 +77,83 @@ export async function validateTagCollection(
 		warningCount: 0,
 	};
 
-	// Validate each tag individually
+	// Validate each tag individually (inline validation logic)
 	for (const [key, value] of Object.entries(tags)) {
-		const tagResult = await validateTag(loader, key, value);
+		const tagResult: ValidationResult = {
+			valid: true,
+			deprecated: false,
+			errors: [],
+			warnings: [],
+		};
+
+		// Check for empty key or value
+		if (!key || key.trim() === "") {
+			tagResult.valid = false;
+			tagResult.errors.push("Tag key cannot be empty");
+		} else if (!value || value.trim() === "") {
+			tagResult.valid = false;
+			tagResult.errors.push("Tag value cannot be empty");
+		} else {
+			// Check if tag is deprecated
+			const deprecatedEntry = deprecated.find((entry) => {
+				const oldKeys = Object.keys(entry.old);
+				if (oldKeys.length === 1) {
+					const oldKey = oldKeys[0];
+					if (oldKey) {
+						const oldValue = entry.old[oldKey as keyof typeof entry.old];
+						return oldValue === value && oldKey === key;
+					}
+				}
+				return false;
+			});
+
+			if (deprecatedEntry?.replace) {
+				tagResult.deprecated = true;
+				const replacement: Record<string, string> = {};
+				for (const [k, v] of Object.entries(deprecatedEntry.replace)) {
+					if (v !== undefined) {
+						replacement[k] = v;
+					}
+				}
+				tagResult.replacement = replacement;
+				tagResult.warnings.push(
+					`Tag ${key}=${value} is deprecated. Consider using: ${JSON.stringify(replacement)}`,
+				);
+			}
+
+			// Find field definition
+			const fieldPath = key.replace(/:/g, "/");
+			type FieldsType = typeof fields;
+			let fieldDef = (fields as FieldsType)[fieldPath as keyof FieldsType];
+
+			if (!fieldDef) {
+				const matchingField = Object.entries(fields).find(
+					([_, field]) => "key" in field && field.key === key,
+				);
+				if (matchingField) {
+					fieldDef = matchingField[1];
+				}
+			}
+
+			if (!fieldDef) {
+				tagResult.warnings.push(
+					`Tag key '${key}' not found in schema (custom tags are allowed in OpenStreetMap)`,
+				);
+			} else if ("options" in fieldDef && fieldDef.options && Array.isArray(fieldDef.options)) {
+				if (!fieldDef.options.includes(value)) {
+					if ("type" in fieldDef && fieldDef.type === "combo") {
+						tagResult.warnings.push(
+							`Value '${value}' is not in the standard options for '${key}', but custom values are allowed`,
+						);
+					} else {
+						tagResult.warnings.push(
+							`Value '${value}' is not in the standard options for '${key}'. Expected one of: ${fieldDef.options.join(", ")}`,
+						);
+					}
+				}
+			}
+		}
+
 		result.tagResults[key] = tagResult;
 
 		// Aggregate statistics
@@ -75,7 +167,7 @@ export async function validateTagCollection(
 		}
 
 		if (tagResult.errors.length > 0) {
-			result.errorCount += tagResult.errors.length - 1; // Already counted once above
+			result.errorCount += tagResult.errors.length - 1;
 		}
 
 		if (tagResult.warnings.length > 0) {
@@ -83,32 +175,13 @@ export async function validateTagCollection(
 		}
 	}
 
-	return result;
-}
-
-/**
- * Handler for validate_tag_collection tool
- */
-export async function handler(args: { tags: Record<string, string> }, loader: SchemaLoader) {
-	const { logger } = await import("../utils/logger.js");
-	logger.debug("Tool call: validate_tag_collection", "MCPServer");
-	try {
-		const result = await validateTagCollection(loader, args.tags);
-		return {
-			content: [
-				{
-					type: "text" as const,
-					text: JSON.stringify(result, null, 2),
-				},
-			],
-			structuredContent: result,
-		};
-	} catch (error) {
-		logger.error(
-			"Error executing tool: validate_tag_collection",
-			"MCPServer",
-			error instanceof Error ? error : new Error(String(error)),
-		);
-		throw error;
-	}
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(result, null, 2),
+			},
+		],
+		structuredContent: result,
+	};
 }

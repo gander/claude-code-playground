@@ -3,10 +3,14 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { PresetTags } from "./types.js";
 
 /**
- * Tool definition for get_preset_tags
+ * Tool name
+ */
+export const name = "get_preset_tags";
+
+/**
+ * Tool definition
  */
 export const definition = {
-	name: "get_preset_tags",
 	description:
 		"Get recommended tags for a specific preset. Returns identifying tags and additional recommended tags.",
 	inputSchema: {
@@ -15,15 +19,11 @@ export const definition = {
 } as const;
 
 /**
- * Get recommended tags for a specific preset
- *
- * @param loader - Schema loader instance
- * @param presetId - The preset ID to get tags for (e.g., "amenity/restaurant")
- * @returns Preset tags including identifying tags and optional addTags
- * @throws Error if preset is not found
+ * Handler for get_preset_tags tool
  */
-export async function getPresetTags(loader: SchemaLoader, presetId: string): Promise<PresetTags> {
+export async function handler(args: { presetId: string }, loader: SchemaLoader) {
 	const schema = await loader.loadSchema();
+	const presetId = args.presetId;
 
 	// Look up the preset
 	const preset = schema.presets[presetId];
@@ -42,32 +42,13 @@ export async function getPresetTags(loader: SchemaLoader, presetId: string): Pro
 		result.addTags = preset.addTags;
 	}
 
-	return result;
-}
-
-/**
- * Handler for get_preset_tags tool
- */
-export async function handler(args: { presetId: string }, loader: SchemaLoader) {
-	const { logger } = await import("../utils/logger.js");
-	logger.debug("Tool call: get_preset_tags", "MCPServer");
-	try {
-		const tags = await getPresetTags(loader, args.presetId);
-		return {
-			content: [
-				{
-					type: "text" as const,
-					text: JSON.stringify(tags, null, 2),
-				},
-			],
-			structuredContent: tags,
-		};
-	} catch (error) {
-		logger.error(
-			"Error executing tool: get_preset_tags",
-			"MCPServer",
-			error instanceof Error ? error : new Error(String(error)),
-		);
-		throw error;
-	}
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(result, null, 2),
+			},
+		],
+		structuredContent: result,
+	};
 }

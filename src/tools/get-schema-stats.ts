@@ -2,25 +2,26 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { SchemaStats } from "./types.js";
 
 /**
- * Tool definition for get_schema_stats
+ * Tool name
+ */
+export const name = "get_schema_stats";
+
+/**
+ * Tool definition
  */
 export const definition = {
-	name: "get_schema_stats",
 	description:
 		"Get statistics about the OpenStreetMap tagging schema, including counts of presets, fields, categories, and deprecated items",
 	inputSchema: {},
 } as const;
 
 /**
- * Get statistics about the OSM tagging schema
- *
- * @param loader - Schema loader instance
- * @returns Schema statistics including counts of presets, fields, categories, deprecated items, and version info
+ * Handler for get_schema_stats tool
  */
-export async function getSchemaStats(loader: SchemaLoader): Promise<SchemaStats> {
+export async function handler(_args: unknown, loader: SchemaLoader) {
 	const schema = await loader.loadSchema();
 
-	return {
+	const stats: SchemaStats = {
 		presetCount: Object.keys(schema.presets).length,
 		fieldCount: Object.keys(schema.fields).length,
 		categoryCount: Object.keys(schema.categories).length,
@@ -28,30 +29,13 @@ export async function getSchemaStats(loader: SchemaLoader): Promise<SchemaStats>
 		version: schema.metadata?.version,
 		loadedAt: schema.metadata?.loadedAt,
 	};
-}
 
-/**
- * Handler for get_schema_stats tool
- */
-export async function handler(_args: unknown, loader: SchemaLoader) {
-	const { logger } = await import("../utils/logger.js");
-	logger.debug("Tool call: get_schema_stats", "MCPServer");
-	try {
-		const stats = await getSchemaStats(loader);
-		return {
-			content: [
-				{
-					type: "text" as const,
-					text: JSON.stringify(stats, null, 2),
-				},
-			],
-		};
-	} catch (error) {
-		logger.error(
-			"Error executing tool: get_schema_stats",
-			"MCPServer",
-			error instanceof Error ? error : new Error(String(error)),
-		);
-		throw error;
-	}
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(stats, null, 2),
+			},
+		],
+	};
 }

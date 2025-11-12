@@ -5,10 +5,14 @@ import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 
 /**
- * Tool definition for check_deprecated
+ * Tool name
+ */
+export const name = "check_deprecated";
+
+/**
+ * Tool definition
  */
 export const definition = {
-	name: "check_deprecated",
 	description: "Check if an OSM tag is deprecated. Accepts tag key or key-value pair.",
 	inputSchema: {
 		key: z.string().describe("The tag key to check (e.g., 'amenity', 'highway')"),
@@ -36,25 +40,28 @@ export interface DeprecationResult {
 }
 
 /**
- * Check if an OSM tag is deprecated
- *
- * @param _loader - Schema loader instance (reserved for future use)
- * @param key - Tag key to check
- * @param value - Optional tag value. If not provided, checks if any value for this key is deprecated
- * @returns Deprecation result with replacement suggestions
+ * Handler for check_deprecated tool
  */
-export async function checkDeprecated(
-	_loader: SchemaLoader,
-	key: string,
-	value?: string,
-): Promise<DeprecationResult> {
+export async function handler(args: { key: string; value?: string }, _loader: SchemaLoader) {
+	const key = args.key;
+	const value = args.value;
+
 	// Handle empty key
 	if (!key || key.trim() === "") {
-		return {
+		const result: DeprecationResult = {
 			deprecated: false,
 			oldTags: undefined,
 			replacement: undefined,
 			message: "Empty key cannot be deprecated",
+		};
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(result, null, 2),
+				},
+			],
+			structuredContent: result,
 		};
 	}
 
@@ -84,19 +91,28 @@ export async function checkDeprecated(
 
 	// Not deprecated
 	if (!deprecatedEntry) {
-		if (value !== undefined) {
-			return {
-				deprecated: false,
-				oldTags: undefined,
-				replacement: undefined,
-				message: `Tag ${key}=${value} is not deprecated`,
-			};
-		}
+		const result: DeprecationResult =
+			value !== undefined
+				? {
+						deprecated: false,
+						oldTags: undefined,
+						replacement: undefined,
+						message: `Tag ${key}=${value} is not deprecated`,
+					}
+				: {
+						deprecated: false,
+						oldTags: undefined,
+						replacement: undefined,
+						message: `Tag key '${key}' is not deprecated`,
+					};
 		return {
-			deprecated: false,
-			oldTags: undefined,
-			replacement: undefined,
-			message: `Tag key '${key}' is not deprecated`,
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(result, null, 2),
+				},
+			],
+			structuredContent: result,
 		};
 	}
 
@@ -128,37 +144,20 @@ export async function checkDeprecated(
 
 	const message = `Tag ${oldTagsStr} is deprecated. Consider using: ${replaceTagsStr}`;
 
-	return {
+	const result: DeprecationResult = {
 		deprecated: true,
 		oldTags,
 		replacement: Object.keys(replacement).length > 0 ? replacement : undefined,
 		message,
 	};
-}
 
-/**
- * Handler for check_deprecated tool
- */
-export async function handler(args: { key: string; value?: string }, loader: SchemaLoader) {
-	const { logger } = await import("../utils/logger.js");
-	logger.debug("Tool call: check_deprecated", "MCPServer");
-	try {
-		const result = await checkDeprecated(loader, args.key, args.value);
-		return {
-			content: [
-				{
-					type: "text" as const,
-					text: JSON.stringify(result, null, 2),
-				},
-			],
-			structuredContent: result,
-		};
-	} catch (error) {
-		logger.error(
-			"Error executing tool: check_deprecated",
-			"MCPServer",
-			error instanceof Error ? error : new Error(String(error)),
-		);
-		throw error;
-	}
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(result, null, 2),
+			},
+		],
+		structuredContent: result,
+	};
 }

@@ -2,10 +2,14 @@ import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 
 /**
- * Tool definition for get_tag_values
+ * Tool name
+ */
+export const name = "get_tag_values";
+
+/**
+ * Tool definition
  */
 export const definition = {
-	name: "get_tag_values",
 	description: "Get all possible values for a given tag key (e.g., all values for 'amenity' tag)",
 	inputSchema: {
 		tagKey: z.string().describe("The tag key to get values for (e.g., 'amenity', 'building')"),
@@ -13,14 +17,11 @@ export const definition = {
 } as const;
 
 /**
- * Get all possible values for a given tag key
- *
- * @param loader - Schema loader instance
- * @param tagKey - The tag key to get values for (e.g., "amenity", "building")
- * @returns Array of unique values for the tag key, sorted alphabetically
+ * Handler for get_tag_values tool
  */
-export async function getTagValues(loader: SchemaLoader, tagKey: string): Promise<string[]> {
+export async function handler(args: { tagKey: string }, loader: SchemaLoader) {
 	const schema = await loader.loadSchema();
+	const tagKey = args.tagKey;
 
 	// Collect all unique values for the tag key
 	const values = new Set<string>();
@@ -67,32 +68,15 @@ export async function getTagValues(loader: SchemaLoader, tagKey: string): Promis
 	}
 
 	// Convert to array and sort
-	return Array.from(values).sort();
-}
+	const sortedValues = Array.from(values).sort();
 
-/**
- * Handler for get_tag_values tool
- */
-export async function handler(args: { tagKey: string }, loader: SchemaLoader) {
-	const { logger } = await import("../utils/logger.js");
-	logger.debug("Tool call: get_tag_values", "MCPServer");
-	try {
-		const values = await getTagValues(loader, args.tagKey);
-		return {
-			content: [
-				{
-					type: "text" as const,
-					text: JSON.stringify(values, null, 2),
-				},
-			],
-			structuredContent: { values: values },
-		};
-	} catch (error) {
-		logger.error(
-			"Error executing tool: get_tag_values",
-			"MCPServer",
-			error instanceof Error ? error : new Error(String(error)),
-		);
-		throw error;
-	}
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(sortedValues, null, 2),
+			},
+		],
+		structuredContent: { values: sortedValues },
+	};
 }
