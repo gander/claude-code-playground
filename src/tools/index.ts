@@ -19,10 +19,9 @@ import * as validateTag from "./validate-tag.js";
 import * as validateTagCollection from "./validate-tag-collection.js";
 
 /**
- * Tool definition structure
+ * Tool definition structure (without name, which is exported separately)
  */
 export interface ToolDefinition {
-	name: string;
 	description: string;
 	inputSchema: {
 		type: "object";
@@ -32,21 +31,20 @@ export interface ToolDefinition {
 }
 
 /**
- * Tool handler function signature
+ * Tool handler factory function signature
+ * Returns a handler function that accepts typed args
  */
-export type ToolHandler = (
-	loader: SchemaLoader,
-	args: unknown,
-) => Promise<{
+export type ToolHandlerFactory = (loader: SchemaLoader) => (args: unknown) => Promise<{
 	content: Array<{ type: "text"; text: string }>;
 }>;
 
 /**
- * Tool entry combining definition and handler
+ * Tool entry combining name, definition, and handler factory
  */
 export interface ToolEntry {
+	name: string;
 	definition: ToolDefinition;
-	handler: ToolHandler;
+	handler: ToolHandlerFactory;
 }
 
 /**
@@ -54,18 +52,58 @@ export interface ToolEntry {
  * Sorted alphabetically by name for consistent ordering
  */
 export const tools: ToolEntry[] = [
-	{ definition: checkDeprecated.definition, handler: checkDeprecated.handler },
-	{ definition: getCategories.definition, handler: getCategories.handler },
-	{ definition: getCategoryTags.definition, handler: getCategoryTags.handler },
-	{ definition: getPresetDetails.definition, handler: getPresetDetails.handler },
-	{ definition: getPresetTags.definition, handler: getPresetTags.handler },
-	{ definition: getRelatedTags.definition, handler: getRelatedTags.handler },
-	{ definition: getSchemaStats.definition, handler: getSchemaStats.handler },
-	{ definition: getTagInfo.definition, handler: getTagInfo.handler },
-	{ definition: getTagValues.definition, handler: getTagValues.handler },
-	{ definition: searchPresets.definition, handler: searchPresets.handler },
-	{ definition: searchTags.definition, handler: searchTags.handler },
-	{ definition: suggestImprovements.definition, handler: suggestImprovements.handler },
-	{ definition: validateTag.definition, handler: validateTag.handler },
-	{ definition: validateTagCollection.definition, handler: validateTagCollection.handler },
+	{
+		name: checkDeprecated.name,
+		definition: checkDeprecated.definition,
+		handler: checkDeprecated.handler,
+	},
+	{
+		name: getCategories.name,
+		definition: getCategories.definition,
+		handler: getCategories.handler,
+	},
+	{
+		name: getCategoryTags.name,
+		definition: getCategoryTags.definition,
+		handler: getCategoryTags.handler,
+	},
+	{
+		name: getPresetDetails.name,
+		definition: getPresetDetails.definition,
+		handler: getPresetDetails.handler,
+	},
+	{
+		name: getPresetTags.name,
+		definition: getPresetTags.definition,
+		handler: getPresetTags.handler,
+	},
+	{
+		name: getRelatedTags.name,
+		definition: getRelatedTags.definition,
+		handler: getRelatedTags.handler,
+	},
+	{
+		name: getSchemaStats.name,
+		definition: getSchemaStats.definition,
+		handler: getSchemaStats.handler,
+	},
+	{ name: getTagInfo.name, definition: getTagInfo.definition, handler: getTagInfo.handler },
+	{ name: getTagValues.name, definition: getTagValues.definition, handler: getTagValues.handler },
+	{
+		name: searchPresets.name,
+		definition: searchPresets.definition,
+		handler: searchPresets.handler,
+	},
+	{ name: searchTags.name, definition: searchTags.definition, handler: searchTags.handler },
+	{
+		name: suggestImprovements.name,
+		definition: suggestImprovements.definition,
+		handler: suggestImprovements.handler,
+	},
+	{ name: validateTag.name, definition: validateTag.definition, handler: validateTag.handler },
+	{
+		name: validateTagCollection.name,
+		definition: validateTagCollection.definition,
+		handler: validateTagCollection.handler,
+	},
 ];

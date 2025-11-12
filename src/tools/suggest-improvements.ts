@@ -4,10 +4,14 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import { checkDeprecated } from "./check-deprecated.js";
 
 /**
+ * Tool name constant
+ */
+export const name = "suggest_improvements";
+
+/**
  * Tool definition for suggest_improvements
  */
 export const definition = {
-	name: "suggest_improvements",
 	description:
 		"Suggest improvements for an OSM tag collection. Analyzes tags and provides suggestions for missing fields, warnings about deprecated tags, and recommendations based on matched presets.",
 	inputSchema: {
@@ -181,18 +185,20 @@ function getFieldKey(fieldId: string): string | null {
 /**
  * Handler for suggest_improvements tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const { tags } = args as { tags?: Record<string, string> };
-	if (!tags) {
-		throw new Error("tags parameter is required");
-	}
-	const result = await suggestImprovements(loader, tags);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(result, null, 2),
-			},
-		],
+export const handler = (schemaLoader: SchemaLoader) => {
+	return async (args: unknown) => {
+		const { tags } = args as { tags?: Record<string, string> };
+		if (!tags) {
+			throw new Error("tags parameter is required");
+		}
+		const result = await suggestImprovements(schemaLoader, tags);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(result, null, 2),
+				},
+			],
+		};
 	};
-}
+};

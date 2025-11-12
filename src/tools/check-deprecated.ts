@@ -4,10 +4,14 @@ import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" w
 import type { SchemaLoader } from "../utils/schema-loader.js";
 
 /**
+ * Tool name constant
+ */
+export const name = "check_deprecated";
+
+/**
  * Tool definition for check_deprecated
  */
 export const definition = {
-	name: "check_deprecated",
 	description: "Check if an OSM tag is deprecated. Accepts tag key or key-value pair.",
 	inputSchema: {
 		type: "object" as const,
@@ -144,18 +148,20 @@ export async function checkDeprecated(
 /**
  * Handler for check_deprecated tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const { key, value } = args as { key?: string; value?: string };
-	if (key === undefined) {
-		throw new Error("key parameter is required");
-	}
-	const result = await checkDeprecated(loader, key, value);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(result, null, 2),
-			},
-		],
+export const handler = (schemaLoader: SchemaLoader) => {
+	return async (args: unknown) => {
+		const { key, value } = args as { key?: string; value?: string };
+		if (key === undefined) {
+			throw new Error("key parameter is required");
+		}
+		const result = await checkDeprecated(schemaLoader, key, value);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(result, null, 2),
+				},
+			],
+		};
 	};
-}
+};

@@ -31,7 +31,10 @@ export function createServer(): Server {
 	// Register tool handlers
 	// Tools are loaded from src/tools/index.ts and sorted alphabetically by name
 	server.setRequestHandler(ListToolsRequestSchema, async () => ({
-		tools: tools.map((tool) => tool.definition),
+		tools: tools.map((tool) => ({
+			name: tool.name,
+			...tool.definition,
+		})),
 	}));
 
 	server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -41,13 +44,14 @@ export function createServer(): Server {
 
 		try {
 			// Find the tool by name
-			const tool = tools.find((t) => t.definition.name === name);
+			const tool = tools.find((t) => t.name === name);
 			if (!tool) {
 				throw new Error(`Unknown tool: ${name}`);
 			}
 
-			// Call the tool handler
-			return await tool.handler(schemaLoader, args);
+			// Call the tool handler factory to get the handler, then call it with args
+			const handlerFn = tool.handler(schemaLoader);
+			return await handlerFn(args);
 		} catch (error) {
 			logger.error(
 				`Error executing tool: ${name}`,

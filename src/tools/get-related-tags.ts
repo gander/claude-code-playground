@@ -2,10 +2,14 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { RelatedTag } from "./types.js";
 
 /**
+ * Tool name
+ */
+export const name = "get_related_tags";
+
+/**
  * Tool definition for get_related_tags
  */
 export const definition = {
-	name: "get_related_tags",
 	description:
 		"Find tags commonly used together with a given tag. Returns tags sorted by frequency (how often they appear together).",
 	inputSchema: {
@@ -128,18 +132,20 @@ export async function getRelatedTags(
 /**
  * Handler for get_related_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const { tag, limit } = args as { tag?: string; limit?: number };
-	if (!tag) {
-		throw new Error("tag parameter is required");
-	}
-	const results = await getRelatedTags(loader, tag, limit);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(results, null, 2),
-			},
-		],
+export const handler = (schemaLoader: SchemaLoader) => {
+	return async (args: unknown) => {
+		const { tag, limit } = args as { tag?: string; limit?: number };
+		if (!tag) {
+			throw new Error("tag parameter is required");
+		}
+		const results = await getRelatedTags(schemaLoader, tag, limit);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(results, null, 2),
+				},
+			],
+		};
 	};
-}
+};

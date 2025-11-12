@@ -2,10 +2,14 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { PresetTags } from "./types.js";
 
 /**
+ * Tool name constant
+ */
+export const name = "get_preset_tags";
+
+/**
  * Tool definition for get_preset_tags
  */
 export const definition = {
-	name: "get_preset_tags",
 	description:
 		"Get recommended tags for a specific preset. Returns identifying tags and additional recommended tags.",
 	inputSchema: {
@@ -54,18 +58,20 @@ export async function getPresetTags(loader: SchemaLoader, presetId: string): Pro
 /**
  * Handler for get_preset_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const presetId = (args as { presetId?: string }).presetId;
-	if (!presetId) {
-		throw new Error("presetId parameter is required");
-	}
-	const tags = await getPresetTags(loader, presetId);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(tags, null, 2),
-			},
-		],
+export const handler = (schemaLoader: SchemaLoader) => {
+	return async (args: unknown) => {
+		const { presetId } = args as { presetId?: string };
+		if (!presetId) {
+			throw new Error("presetId parameter is required");
+		}
+		const tags = await getPresetTags(schemaLoader, presetId);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(tags, null, 2),
+				},
+			],
+		};
 	};
-}
+};

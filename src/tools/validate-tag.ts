@@ -5,10 +5,14 @@ import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { ty
 import type { SchemaLoader } from "../utils/schema-loader.js";
 
 /**
+ * Tool name constant
+ */
+export const name = "validate_tag";
+
+/**
  * Tool definition for validate_tag
  */
 export const definition = {
-	name: "validate_tag",
 	description:
 		"Validate a single OSM tag key-value pair. Checks for deprecated tags, unknown keys, and validates against field options.",
 	inputSchema: {
@@ -150,21 +154,23 @@ export async function validateTag(
 /**
  * Handler for validate_tag tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const { key, value } = args as { key?: string; value?: string };
-	if (key === undefined) {
-		throw new Error("key parameter is required");
-	}
-	if (value === undefined) {
-		throw new Error("value parameter is required");
-	}
-	const result = await validateTag(loader, key, value);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(result, null, 2),
-			},
-		],
+export const handler = (schemaLoader: SchemaLoader) => {
+	return async (args: unknown) => {
+		const { key, value } = args as { key?: string; value?: string };
+		if (key === undefined) {
+			throw new Error("key parameter is required");
+		}
+		if (value === undefined) {
+			throw new Error("value parameter is required");
+		}
+		const result = await validateTag(schemaLoader, key, value);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(result, null, 2),
+				},
+			],
+		};
 	};
-}
+};

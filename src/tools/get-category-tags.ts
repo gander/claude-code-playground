@@ -1,10 +1,14 @@
 import type { SchemaLoader } from "../utils/schema-loader.js";
 
 /**
+ * Tool name
+ */
+export const name = "get_category_tags";
+
+/**
  * Tool definition for get_category_tags
  */
 export const definition = {
-	name: "get_category_tags",
 	description: "Get all tags (preset IDs) belonging to a specific category",
 	inputSchema: {
 		type: "object" as const,
@@ -41,18 +45,20 @@ export async function getCategoryTags(
 /**
  * Handler for get_category_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const category = (args as { category?: string }).category;
-	if (!category) {
-		throw new Error("category parameter is required");
-	}
-	const tags = await getCategoryTags(loader, category);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(tags, null, 2),
-			},
-		],
+export const handler = (schemaLoader: SchemaLoader) => {
+	return async (args: unknown) => {
+		const { category } = args as { category?: string };
+		if (!category) {
+			throw new Error("category parameter is required");
+		}
+		const tags = await getCategoryTags(schemaLoader, category);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(tags, null, 2),
+				},
+			],
+		};
 	};
-}
+};

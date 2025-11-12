@@ -2,10 +2,14 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { TagSearchResult } from "./types.js";
 
 /**
+ * Tool name
+ */
+export const name = "search_tags";
+
+/**
  * Tool definition for search_tags
  */
 export const definition = {
-	name: "search_tags",
 	description: "Search for tags by keyword in tag keys, values, and preset names",
 	inputSchema: {
 		type: "object" as const,
@@ -144,18 +148,20 @@ export async function searchTags(
 /**
  * Handler for search_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const { keyword, limit } = args as { keyword?: string; limit?: number };
-	if (!keyword) {
-		throw new Error("keyword parameter is required");
-	}
-	const results = await searchTags(loader, keyword, limit);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(results, null, 2),
-			},
-		],
+export const handler = (schemaLoader: SchemaLoader) => {
+	return async (args: unknown) => {
+		const { keyword, limit } = args as { keyword?: string; limit?: number };
+		if (!keyword) {
+			throw new Error("keyword parameter is required");
+		}
+		const results = await searchTags(schemaLoader, keyword, limit);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(results, null, 2),
+				},
+			],
+		};
 	};
-}
+};

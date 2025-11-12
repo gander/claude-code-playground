@@ -2,10 +2,14 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { SchemaStats } from "./types.js";
 
 /**
+ * Tool name
+ */
+export const name = "get_schema_stats";
+
+/**
  * Tool definition for get_schema_stats
  */
 export const definition = {
-	name: "get_schema_stats",
 	description:
 		"Get statistics about the OpenStreetMap tagging schema, including counts of presets, fields, categories, and deprecated items",
 	inputSchema: {
@@ -37,14 +41,16 @@ export async function getSchemaStats(loader: SchemaLoader): Promise<SchemaStats>
 /**
  * Handler for get_schema_stats tool
  */
-export async function handler(loader: SchemaLoader, _args: unknown) {
-	const stats = await getSchemaStats(loader);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(stats, null, 2),
-			},
-		],
+export const handler = (schemaLoader: SchemaLoader) => {
+	return async (_args: unknown) => {
+		const stats = await getSchemaStats(schemaLoader);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(stats, null, 2),
+				},
+			],
+		};
 	};
-}
+};
