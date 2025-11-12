@@ -2,22 +2,23 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { CategoryInfo } from "./types.js";
 
 /**
- * Tool definition for get_categories
+ * Tool name
+ */
+export const name = "get_categories";
+
+/**
+ * Tool definition
  */
 export const definition = {
-	name: "get_categories",
 	description:
 		"Get all available tag categories with counts of presets in each category, sorted by name",
 	inputSchema: {},
 } as const;
 
 /**
- * Get all tag categories with counts of presets in each category
- *
- * @param loader - Schema loader instance
- * @returns Array of categories sorted by name, each with name and preset count
+ * Handler for get_categories tool
  */
-export async function getCategories(loader: SchemaLoader): Promise<CategoryInfo[]> {
+export async function handler(_args: unknown, loader: SchemaLoader) {
 	const schema = await loader.loadSchema();
 
 	// Create array of categories with counts
@@ -26,32 +27,16 @@ export async function getCategories(loader: SchemaLoader): Promise<CategoryInfo[
 		count: category.members?.length || 0,
 	}));
 
-	// Sort by name
-	return categories.sort((a, b) => a.name.localeCompare(b.name));
-}
-
-/**
- * Handler for get_categories tool
- */
-export async function handler(_args: unknown, loader: SchemaLoader) {
-	const { logger } = await import("../utils/logger.js");
-	logger.debug("Tool call: get_categories", "MCPServer");
-	try {
-		const categories = await getCategories(loader);
-		return {
-			content: [
-				{
-					type: "text" as const,
-					text: JSON.stringify(categories, null, 2),
-				},
-			],
-		};
-	} catch (error) {
-		logger.error(
-			"Error executing tool: get_categories",
-			"MCPServer",
-			error instanceof Error ? error : new Error(String(error)),
-		);
-		throw error;
-	}
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(
+					categories.sort((a, b) => a.name.localeCompare(b.name)),
+					null,
+					2,
+				),
+			},
+		],
+	};
 }
