@@ -1,8 +1,8 @@
 # Stage 1: Builder
 # Use build platform to run build tools (npm, tsc) on host architecture
-# Image pinned by SHA256 for security and reproducibility (node:22-alpine)
-# To update: Check https://hub.docker.com/layers/library/node/22-alpine for latest digest
-FROM --platform=$BUILDPLATFORM node:22-alpine@sha256:c17e937e8e79dc0a5630221cfb8bbef536def6ea5b0c6dfc3779c1d41eb2637a AS builder
+# Using tag without SHA pinning for multi-platform build compatibility
+# SHA pinning with multi-platform requires manifest list digests which are complex to maintain
+FROM --platform=$BUILDPLATFORM node:22-alpine AS builder
 
 # Build arguments for multi-platform support
 ARG BUILDPLATFORM
@@ -29,9 +29,9 @@ RUN test -f dist/index.js || (echo "Build failed: dist/index.js not found" && ex
 
 # Stage 2: Runtime
 # Use target platform for the final runtime image
-# Image pinned by SHA256 for security and reproducibility (node:22-alpine)
-# To update: Check https://hub.docker.com/layers/library/node/22-alpine for latest digest
-FROM node:22-alpine@sha256:c17e937e8e79dc0a5630221cfb8bbef536def6ea5b0c6dfc3779c1d41eb2637a
+# Using tag without SHA pinning for multi-platform build compatibility
+# SHA pinning with multi-platform requires manifest list digests which are complex to maintain
+FROM --platform=$TARGETPLATFORM node:22-alpine
 
 # Set working directory
 WORKDIR /app
