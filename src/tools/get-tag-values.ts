@@ -84,8 +84,8 @@ export async function getTagValues(loader: SchemaLoader, tagKey: string): Promis
  * Handler for get_tag_values tool
  */
 export const handler = (schemaLoader: SchemaLoader) => {
-	return async (args: unknown) => {
-		const { tagKey } = args as { tagKey?: string };
+	return async (args: { tagKey?: string }) => {
+		const { tagKey } = args;
 		if (!tagKey) {
 			throw new Error("tagKey parameter is required");
 		}

@@ -133,8 +133,8 @@ export async function getRelatedTags(
  * Handler for get_related_tags tool
  */
 export const handler = (schemaLoader: SchemaLoader) => {
-	return async (args: unknown) => {
-		const { tag, limit } = args as { tag?: string; limit?: number };
+	return async (args: { tag?: string; limit?: number }) => {
+		const { tag, limit } = args;
 		if (!tag) {
 			throw new Error("tag parameter is required");
 		}

@@ -76,8 +76,8 @@ export async function getPresetDetails(
  * Handler for get_preset_details tool
  */
 export const handler = (schemaLoader: SchemaLoader) => {
-	return async (args: unknown) => {
-		const { presetId } = args as { presetId?: string };
+	return async (args: { presetId?: string }) => {
+		const { presetId } = args;
 		if (!presetId) {
 			throw new Error("presetId parameter is required");
 		}

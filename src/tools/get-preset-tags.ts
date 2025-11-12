@@ -59,8 +59,8 @@ export async function getPresetTags(loader: SchemaLoader, presetId: string): Pro
  * Handler for get_preset_tags tool
  */
 export const handler = (schemaLoader: SchemaLoader) => {
-	return async (args: unknown) => {
-		const { presetId } = args as { presetId?: string };
+	return async (args: { presetId?: string }) => {
+		const { presetId } = args;
 		if (!presetId) {
 			throw new Error("presetId parameter is required");
 		}

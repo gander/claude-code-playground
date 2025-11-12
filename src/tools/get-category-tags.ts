@@ -46,8 +46,8 @@ export async function getCategoryTags(
  * Handler for get_category_tags tool
  */
 export const handler = (schemaLoader: SchemaLoader) => {
-	return async (args: unknown) => {
-		const { category } = args as { category?: string };
+	return async (args: { category?: string }) => {
+		const { category } = args;
 		if (!category) {
 			throw new Error("category parameter is required");
 		}

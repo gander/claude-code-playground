@@ -33,8 +33,10 @@ export interface ToolDefinition {
 /**
  * Tool handler factory function signature
  * Returns a handler function that accepts typed args
+ * Uses 'any' to allow handlers to specify their own argument types
  */
-export type ToolHandlerFactory = (loader: SchemaLoader) => (args: unknown) => Promise<{
+// biome-ignore lint/suspicious/noExplicitAny: Handlers need to define their own argument types
+export type ToolHandlerFactory = (loader: SchemaLoader) => (args: any) => Promise<{
 	content: Array<{ type: "text"; text: string }>;
 }>;
 

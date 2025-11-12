@@ -149,8 +149,8 @@ export async function searchTags(
  * Handler for search_tags tool
  */
 export const handler = (schemaLoader: SchemaLoader) => {
-	return async (args: unknown) => {
-		const { keyword, limit } = args as { keyword?: string; limit?: number };
+	return async (args: { keyword?: string; limit?: number }) => {
+		const { keyword, limit } = args;
 		if (!keyword) {
 			throw new Error("keyword parameter is required");
 		}

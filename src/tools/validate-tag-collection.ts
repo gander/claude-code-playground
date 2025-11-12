@@ -100,8 +100,8 @@ export async function validateTagCollection(
  * Handler for validate_tag_collection tool
  */
 export const handler = (schemaLoader: SchemaLoader) => {
-	return async (args: unknown) => {
-		const { tags } = args as { tags?: Record<string, string> };
+	return async (args: { tags?: Record<string, string> }) => {
+		const { tags } = args;
 		if (!tags) {
 			throw new Error("tags parameter is required");
 		}

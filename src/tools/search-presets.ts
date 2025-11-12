@@ -133,12 +133,12 @@ export async function searchPresets(
  * Handler for search_presets tool
  */
 export const handler = (schemaLoader: SchemaLoader) => {
-	return async (args: unknown) => {
-		const { keyword, limit, geometry } = args as {
-			keyword?: string;
-			limit?: number;
-			geometry?: "point" | "vertex" | "line" | "area" | "relation";
-		};
+	return async (args: {
+		keyword?: string;
+		limit?: number;
+		geometry?: "point" | "vertex" | "line" | "area" | "relation";
+	}) => {
+		const { keyword, limit, geometry } = args;
 		if (!keyword) {
 			throw new Error("keyword parameter is required");
 		}

@@ -95,8 +95,8 @@ export async function getTagInfo(loader: SchemaLoader, tagKey: string): Promise<
  * Handler for get_tag_info tool
  */
 export const handler = (schemaLoader: SchemaLoader) => {
-	return async (args: unknown) => {
-		const { tagKey } = args as { tagKey?: string };
+	return async (args: { tagKey?: string }) => {
+		const { tagKey } = args;
 		if (!tagKey) {
 			throw new Error("tagKey parameter is required");
 		}

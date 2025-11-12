@@ -155,8 +155,8 @@ export async function validateTag(
  * Handler for validate_tag tool
  */
 export const handler = (schemaLoader: SchemaLoader) => {
-	return async (args: unknown) => {
-		const { key, value } = args as { key?: string; value?: string };
+	return async (args: { key?: string; value?: string }) => {
+		const { key, value } = args;
 		if (key === undefined) {
 			throw new Error("key parameter is required");
 		}
