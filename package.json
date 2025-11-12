@@ -74,5 +74,8 @@
 	},
 	"engines": {
 		"node": ">=22.0.0"
+	},
+	"overrides": {
+		"@conventional-changelog/git-client": "^2.5.1"
 	}
 }
