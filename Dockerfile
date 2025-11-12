@@ -29,11 +29,11 @@ RUN npm run build
 RUN test -f dist/index.js || (echo "Build failed: dist/index.js not found" && exit 1)
 
 # Stage 2: Runtime
-# Use target platform for the final runtime image
 # Pinned to manifest list digest for security and multi-platform compatibility
 # This digest references a manifest list supporting: linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6, linux/s390x
+# Docker BuildKit automatically uses the target platform (no need for --platform=$TARGETPLATFORM)
 # To update: curl -s https://hub.docker.com/v2/repositories/library/node/tags/22-alpine | jq -r '.digest'
-FROM --platform=$TARGETPLATFORM node:22-alpine@sha256:b2358485e3e33bc3a33114d2b1bdb18cdbe4df01bd2b257198eb51beb1f026c5
+FROM node:22-alpine@sha256:b2358485e3e33bc3a33114d2b1bdb18cdbe4df01bd2b257198eb51beb1f026c5
 
 # Set working directory
 WORKDIR /app
@@ -42,7 +42,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --omit=dev && \
+# Skip postinstall scripts (lefthook is a devDependency and not needed in production)
+RUN npm ci --omit=dev --ignore-scripts && \
     npm cache clean --force
 
 # Copy built application from builder stage
