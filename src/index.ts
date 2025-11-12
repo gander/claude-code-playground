@@ -64,8 +64,10 @@ export function createServer(): McpServer {
 			toolModule.definition.name,
 			{
 				description: toolModule.definition.description,
+				// biome-ignore lint/suspicious/noExplicitAny: Dynamic tool registration requires any
 				inputSchema: toolModule.definition.inputSchema as any,
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: Callback args type determined by SDK
 			async (args: any) => {
 				logger.debug(`Tool call: ${toolModule.definition.name}`, "MCPServer");
 				try {
