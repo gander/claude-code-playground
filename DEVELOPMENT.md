@@ -197,6 +197,69 @@ docker run -i osm-tagging-schema-mcp
 docker-compose up --build
 ```
 
+#### Updating Docker Base Image Digest
+
+The Dockerfile uses **manifest list digests** (not platform-specific digests) to pin the Node.js base image for security while supporting multi-platform builds (linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6, linux/s390x).
+
+**Key Concepts:**
+
+- **Platform-Specific Digest**: SHA256 hash of a single architecture image (e.g., only amd64)
+  - ❌ **Do NOT use** for multi-platform builds - causes "exec format error"
+  - Example: `sha256:ef30b897b4b924010aab656801cb44fe27589b5d0724ba080b191d75f1f81af0` (amd64 only)
+
+- **Manifest List Digest**: SHA256 hash of a manifest list referencing multiple architectures
+  - ✅ **Correct** for multi-platform builds - Docker automatically selects the right platform
+  - Example: `sha256:b2358485e3e33bc3a33114d2b1bdb18cdbe4df01bd2b257198eb51beb1f026c5` (all platforms)
+
+**How to Update:**
+
+```bash
+# Get the current manifest list digest for node:22-alpine
+curl -s https://hub.docker.com/v2/repositories/library/node/tags/22-alpine | jq -r '.digest'
+
+# Alternative: Use Docker buildx (requires Docker installed)
+docker buildx imagetools inspect node:22-alpine --format "{{.Manifest.Digest}}"
+
+# Verify it's a manifest list (should show multiple platforms)
+curl -s https://hub.docker.com/v2/repositories/library/node/tags/22-alpine | jq '.images[] | {arch: .architecture, digest: .digest}'
+```
+
+**Expected Output:**
+```json
+{
+  "arch": "amd64",
+  "digest": "sha256:ef30b897b4b9..."
+}
+{
+  "arch": "arm64",
+  "digest": "sha256:16bb4fe031ce..."
+}
+{
+  "arch": "arm",
+  "digest": "sha256:be91a227520..."
+}
+...
+```
+
+**Update Process:**
+
+1. Get the new manifest list digest using the command above
+2. Update BOTH `FROM` statements in the Dockerfile (builder and runtime stages)
+3. Update the comment showing supported platforms
+4. Test multi-platform build locally:
+   ```bash
+   docker buildx build --platform linux/amd64,linux/arm64 -t test .
+   ```
+5. Commit the changes
+
+**Security Note:**
+
+Using manifest list digests provides:
+- ✅ **Reproducible builds** - Exact same base image every time
+- ✅ **Supply chain security** - Protection against base image tampering
+- ✅ **Multi-platform support** - Single Dockerfile for all architectures
+- ✅ **Automated verification** - CI/CD can verify the digest
+
 ## Testing Strategy
 
 ### Test-Driven Development (TDD)
