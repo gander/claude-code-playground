@@ -1,5 +1,12 @@
 # Stage 1: Builder
-FROM node:22-alpine AS builder
+# Use build platform to run build tools (npm, tsc) on host architecture
+# Image pinned by SHA256 for security and reproducibility (node:22-alpine)
+# To update: Check https://hub.docker.com/layers/library/node/22-alpine for latest digest
+FROM --platform=$BUILDPLATFORM node:22-alpine@sha256:c17e937e8e79dc0a5630221cfb8bbef536def6ea5b0c6dfc3779c1d41eb2637a AS builder
+
+# Build arguments for multi-platform support
+ARG BUILDPLATFORM
+ARG TARGETPLATFORM
 
 # Set working directory
 WORKDIR /app
@@ -21,7 +28,10 @@ RUN npm run build
 RUN test -f dist/index.js || (echo "Build failed: dist/index.js not found" && exit 1)
 
 # Stage 2: Runtime
-FROM node:22-alpine
+# Use target platform for the final runtime image
+# Image pinned by SHA256 for security and reproducibility (node:22-alpine)
+# To update: Check https://hub.docker.com/layers/library/node/22-alpine for latest digest
+FROM node:22-alpine@sha256:c17e937e8e79dc0a5630221cfb8bbef536def6ea5b0c6dfc3779c1d41eb2637a
 
 # Set working directory
 WORKDIR /app
