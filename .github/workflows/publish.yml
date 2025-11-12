@@ -124,16 +124,17 @@ jobs:
           subject-path: ${{ env.TARBALL }}
           sbom-path: sbom.json
 
-      - name: Ensure npm >= 11.5.1 for Trusted Publishers
+      - name: Verify npm >= 11.5.1 for Trusted Publishers
         run: |
           CURRENT_NPM=$(npm --version)
           echo "Current npm version: $CURRENT_NPM"
           if [ "$(printf '%s\n' "11.5.1" "$CURRENT_NPM" | sort -V | head -n1)" = "11.5.1" ]; then
             echo "✓ npm version $CURRENT_NPM is sufficient (>= 11.5.1)"
           else
-            echo "Updating npm to latest version..."
-            npm install -g npm@latest
-            echo "✓ npm updated to $(npm --version)"
+            echo "❌ Error: npm version $CURRENT_NPM is too old"
+            echo "npm >= 11.5.1 is required for Trusted Publishers"
+            echo "Update Node.js version in workflow or manually install newer npm"
+            exit 1
           fi
 
       - name: Publish to NPM with provenance (Trusted Publishers)
