@@ -1,6 +1,24 @@
 import type { SchemaLoader } from "../utils/schema-loader.js";
 
 /**
+ * Tool definition for get_tag_values
+ */
+export const definition = {
+	name: "get_tag_values",
+	description: "Get all possible values for a given tag key (e.g., all values for 'amenity' tag)",
+	inputSchema: {
+		type: "object" as const,
+		properties: {
+			tagKey: {
+				type: "string",
+				description: "The tag key to get values for (e.g., 'amenity', 'building')",
+			},
+		},
+		required: ["tagKey"],
+	},
+};
+
+/**
  * Get all possible values for a given tag key
  *
  * @param loader - Schema loader instance
@@ -56,4 +74,23 @@ export async function getTagValues(loader: SchemaLoader, tagKey: string): Promis
 
 	// Convert to array and sort
 	return Array.from(values).sort();
+}
+
+/**
+ * Handler for get_tag_values tool
+ */
+export async function handler(loader: SchemaLoader, args: unknown) {
+	const tagKey = (args as { tagKey?: string }).tagKey;
+	if (!tagKey) {
+		throw new Error("tagKey parameter is required");
+	}
+	const values = await getTagValues(loader, tagKey);
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(values, null, 2),
+			},
+		],
+	};
 }

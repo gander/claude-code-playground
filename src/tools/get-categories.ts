@@ -2,6 +2,20 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { CategoryInfo } from "./types.js";
 
 /**
+ * Tool definition for get_categories
+ */
+export const definition = {
+	name: "get_categories",
+	description:
+		"Get all available tag categories with counts of presets in each category, sorted by name",
+	inputSchema: {
+		type: "object" as const,
+		properties: {},
+		required: [],
+	},
+};
+
+/**
  * Get all tag categories with counts of presets in each category
  *
  * @param loader - Schema loader instance
@@ -18,4 +32,19 @@ export async function getCategories(loader: SchemaLoader): Promise<CategoryInfo[
 
 	// Sort by name
 	return categories.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Handler for get_categories tool
+ */
+export async function handler(loader: SchemaLoader, _args: unknown) {
+	const categories = await getCategories(loader);
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(categories, null, 2),
+			},
+		],
+	};
 }

@@ -5,6 +5,29 @@ import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { ty
 import type { SchemaLoader } from "../utils/schema-loader.js";
 
 /**
+ * Tool definition for validate_tag
+ */
+export const definition = {
+	name: "validate_tag",
+	description:
+		"Validate a single OSM tag key-value pair. Checks for deprecated tags, unknown keys, and validates against field options.",
+	inputSchema: {
+		type: "object" as const,
+		properties: {
+			key: {
+				type: "string",
+				description: "The tag key to validate (e.g., 'amenity', 'building')",
+			},
+			value: {
+				type: "string",
+				description: "The tag value to validate (e.g., 'restaurant', 'yes')",
+			},
+		},
+		required: ["key", "value"],
+	},
+};
+
+/**
  * Result of tag validation
  */
 export interface ValidationResult {
@@ -122,4 +145,26 @@ export async function validateTag(
 	}
 
 	return result;
+}
+
+/**
+ * Handler for validate_tag tool
+ */
+export async function handler(loader: SchemaLoader, args: unknown) {
+	const { key, value } = args as { key?: string; value?: string };
+	if (key === undefined) {
+		throw new Error("key parameter is required");
+	}
+	if (value === undefined) {
+		throw new Error("value parameter is required");
+	}
+	const result = await validateTag(loader, key, value);
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: JSON.stringify(result, null, 2),
+			},
+		],
+	};
 }
