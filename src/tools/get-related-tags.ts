@@ -1,44 +1,35 @@
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { RelatedTag } from "./types.js";
 
 /**
- * Tool definition for get_related_tags
+ * Tool name
+ */
+export const name = "get_related_tags";
+
+/**
+ * Tool definition
  */
 export const definition = {
-	name: "get_related_tags",
 	description:
 		"Find tags commonly used together with a given tag. Returns tags sorted by frequency (how often they appear together).",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			tag: {
-				type: "string",
-				description:
-					"Tag to find related tags for (format: 'key' or 'key=value', e.g., 'amenity' or 'amenity=restaurant')",
-			},
-			limit: {
-				type: "number",
-				description: "Maximum number of results to return (optional)",
-			},
-		},
-		required: ["tag"],
+		tag: z
+			.string()
+			.describe(
+				"Tag to find related tags for (format: 'key' or 'key=value', e.g., 'amenity' or 'amenity=restaurant')",
+			),
+		limit: z.number().optional().describe("Maximum number of results to return (optional)"),
 	},
-};
+} as const;
 
 /**
- * Find tags commonly used together with a given tag
- *
- * @param loader - Schema loader instance
- * @param tag - Tag to find related tags for (format: "key" or "key=value")
- * @param limit - Maximum number of results to return (optional)
- * @returns Array of related tags sorted by frequency (descending)
+ * Handler for get_related_tags tool
  */
-export async function getRelatedTags(
-	loader: SchemaLoader,
-	tag: string,
-	limit?: number,
-): Promise<RelatedTag[]> {
+export async function handler(args: { tag: string; limit?: number }, loader: SchemaLoader) {
 	const schema = await loader.loadSchema();
+	const tag = args.tag;
+	const limit = args.limit;
 
 	// Parse the input tag
 	const [inputKey, inputValue] = tag.includes("=") ? tag.split("=", 2) : [tag, undefined];
@@ -103,7 +94,7 @@ export async function getRelatedTags(
 	}
 
 	// Convert to array and sort by frequency
-	const results: RelatedTag[] = Array.from(relatedTags.entries())
+	let results: RelatedTag[] = Array.from(relatedTags.entries())
 		.map(([tagId, data]) => {
 			const parts = tagId.split("=", 2);
 			const key = parts[0] || "";
@@ -119,21 +110,9 @@ export async function getRelatedTags(
 
 	// Apply limit if specified
 	if (limit !== undefined) {
-		return results.slice(0, limit);
+		results = results.slice(0, limit);
 	}
 
-	return results;
-}
-
-/**
- * Handler for get_related_tags tool
- */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const { tag, limit } = args as { tag?: string; limit?: number };
-	if (!tag) {
-		throw new Error("tag parameter is required");
-	}
-	const results = await getRelatedTags(loader, tag, limit);
 	return {
 		content: [
 			{
@@ -141,5 +120,6 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 				text: JSON.stringify(results, null, 2),
 			},
 		],
+		structuredContent: { relatedTags: results },
 	};
 }

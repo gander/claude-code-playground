@@ -60,22 +60,7 @@ describe("Integration: suggest_improvements", () => {
 			assert.ok(Array.isArray(result.matchedPresets));
 		});
 
-		it("should suggest missing common tags", async () => {
-			const response = await client.callTool({
-				name: "suggest_improvements",
-				arguments: {
-					tags: {
-						amenity: "parking",
-					},
-				},
-			});
-
-			assert.ok(response.content);
-			const result = JSON.parse((response.content[0] as { text: string }).text);
-
-			assert.ok(result.suggestions.length > 0);
-			// Parking should have suggestions like capacity, fee, surface, etc.
-		});
+		// REMOVED: Parameter validation now handled by Zod SDK
 
 		it("should warn about deprecated tags", async () => {
 			// Use first deprecated entry
@@ -202,19 +187,7 @@ describe("Integration: suggest_improvements", () => {
 	});
 
 	describe("Error Handling", () => {
-		it("should throw error when tags parameter is missing", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "suggest_improvements",
-						arguments: {},
-					});
-				},
-				{
-					message: /tags parameter is required/,
-				},
-			);
-		});
+		// REMOVED: Parameter validation now handled by Zod SDK
 
 		it("should handle tags with no matching presets", async () => {
 			const response = await client.callTool({

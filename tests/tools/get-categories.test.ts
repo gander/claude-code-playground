@@ -3,14 +3,15 @@ import { describe, it } from "node:test";
 import categories from "@openstreetmap/id-tagging-schema/dist/preset_categories.json" with {
 	type: "json",
 };
-import { getCategories } from "../../src/tools/get-categories.ts";
+import { handler } from "../../src/tools/get-categories.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
 
 describe("get_categories", () => {
 	describe("Basic Functionality", () => {
 		it("should return an array of categories", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const returnedCategories = await getCategories(loader);
+			const result = await handler({}, loader);
+			const returnedCategories = result.structuredContent.categories;
 
 			assert.ok(Array.isArray(returnedCategories), "Should return an array");
 			assert.ok(returnedCategories.length > 0, "Should have at least one category");
@@ -18,7 +19,8 @@ describe("get_categories", () => {
 
 		it("should return categories with name and count properties", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const returnedCategories = await getCategories(loader);
+			const result = await handler({}, loader);
+			const returnedCategories = result.structuredContent.categories;
 
 			const firstCategory = returnedCategories[0];
 			assert.ok(firstCategory, "Should have first category");
@@ -29,7 +31,8 @@ describe("get_categories", () => {
 
 		it("should return categories sorted by name", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const returnedCategories = await getCategories(loader);
+			const result = await handler({}, loader);
+			const returnedCategories = result.structuredContent.categories;
 
 			for (let i = 1; i < returnedCategories.length; i++) {
 				const prev = returnedCategories[i - 1];
@@ -44,8 +47,10 @@ describe("get_categories", () => {
 		it("should use cached data on subsequent calls", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			const categories1 = await getCategories(loader);
-			const categories2 = await getCategories(loader);
+			const handlerResult1 = await handler({}, loader);
+			const categories1 = handlerResult1.structuredContent;
+			const handlerResult2 = await handler({}, loader);
+			const categories2 = handlerResult2.structuredContent;
 
 			assert.deepStrictEqual(categories1, categories2, "Categories should be identical from cache");
 		});
@@ -54,7 +59,8 @@ describe("get_categories", () => {
 	describe("JSON Schema Validation", () => {
 		it("should return all categories from JSON data", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const returnedCategories = await getCategories(loader);
+			const result = await handler({}, loader);
+			const returnedCategories = result.structuredContent.categories;
 
 			// Get actual categories from JSON
 			const actualCategoryNames = Object.keys(categories).sort();

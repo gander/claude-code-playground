@@ -54,19 +54,7 @@ describe("get_related_tags integration", () => {
 			assert.ok(results.length > 0);
 		});
 
-		it("should throw error for missing tag parameter", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "get_related_tags",
-						arguments: {},
-					});
-				},
-				{
-					message: /tag parameter is required/,
-				},
-			);
-		});
+		// REMOVED: Parameter validation now handled by Zod SDK
 
 		it("should respect limit parameter via MCP", async () => {
 			const response = await client.callTool({

@@ -1,42 +1,31 @@
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { TagSearchResult } from "./types.js";
 
 /**
- * Tool definition for search_tags
+ * Tool name
  */
-export const definition = {
-	name: "search_tags",
-	description: "Search for tags by keyword in tag keys, values, and preset names",
-	inputSchema: {
-		type: "object" as const,
-		properties: {
-			keyword: {
-				type: "string",
-				description: "Keyword to search for (case-insensitive)",
-			},
-			limit: {
-				type: "number",
-				description: "Maximum number of results to return (default: 100)",
-			},
-		},
-		required: ["keyword"],
-	},
-};
+export const name = "search_tags";
 
 /**
- * Search for tags by keyword
- *
- * @param loader - Schema loader instance
- * @param keyword - Keyword to search for in tag keys (from fields), values, and preset names
- * @param limit - Maximum number of results to return (optional, returns all by default)
- * @returns Array of matching tags with key, value, and optional preset name
+ * Tool definition
  */
-export async function searchTags(
-	loader: SchemaLoader,
-	keyword: string,
-	limit?: number,
-): Promise<TagSearchResult[]> {
+export const definition = {
+	description: "Search for tags by keyword in tag keys, values, and preset names",
+	inputSchema: {
+		keyword: z.string().describe("Keyword to search for (case-insensitive)"),
+		limit: z.number().optional().describe("Maximum number of results to return (default: 100)"),
+	},
+} as const;
+
+/**
+ * Handler for search_tags tool
+ */
+export async function handler(args: { keyword: string; limit?: number }, loader: SchemaLoader) {
 	const schema = await loader.loadSchema();
+	const keyword = args.keyword;
+	const limit = args.limit;
+
 	const results: TagSearchResult[] = [];
 	const seen = new Set<string>(); // Track unique key-value pairs
 
@@ -68,7 +57,15 @@ export async function searchTags(
 							});
 
 							if (limit !== undefined && results.length >= limit) {
-								return results;
+								return {
+									content: [
+										{
+											type: "text" as const,
+											text: JSON.stringify(results, null, 2),
+										},
+									],
+									structuredContent: { results: results },
+								};
 							}
 						}
 					}
@@ -103,7 +100,15 @@ export async function searchTags(
 
 						// Stop if we reached the limit (if limit is specified)
 						if (limit !== undefined && results.length >= limit) {
-							return results;
+							return {
+								content: [
+									{
+										type: "text" as const,
+										text: JSON.stringify(results, null, 2),
+									},
+								],
+								structuredContent: { results: results },
+							};
 						}
 					}
 				}
@@ -129,7 +134,15 @@ export async function searchTags(
 							});
 
 							if (limit !== undefined && results.length >= limit) {
-								return results;
+								return {
+									content: [
+										{
+											type: "text" as const,
+											text: JSON.stringify(results, null, 2),
+										},
+									],
+									structuredContent: { results: results },
+								};
 							}
 						}
 					}
@@ -138,18 +151,6 @@ export async function searchTags(
 		}
 	}
 
-	return results;
-}
-
-/**
- * Handler for search_tags tool
- */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const { keyword, limit } = args as { keyword?: string; limit?: number };
-	if (!keyword) {
-		throw new Error("keyword parameter is required");
-	}
-	const results = await searchTags(loader, keyword, limit);
 	return {
 		content: [
 			{
@@ -157,5 +158,6 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 				text: JSON.stringify(results, null, 2),
 			},
 		],
+		structuredContent: { results: results },
 	};
 }

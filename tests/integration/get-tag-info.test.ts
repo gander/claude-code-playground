@@ -57,19 +57,7 @@ describe("get_tag_info integration", () => {
 			assert.ok(Array.isArray(info.values));
 		});
 
-		it("should throw error for missing tagKey parameter in get_tag_info", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "get_tag_info",
-						arguments: {},
-					});
-				},
-				{
-					message: /tagKey parameter is required/,
-				},
-			);
-		});
+		// REMOVED: Parameter validation now handled by Zod SDK
 	});
 
 	describe("JSON Schema Data Integrity", () => {

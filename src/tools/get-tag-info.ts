@@ -1,34 +1,29 @@
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { TagInfo } from "./types.js";
 
 /**
- * Tool definition for get_tag_info
+ * Tool name
+ */
+export const name = "get_tag_info";
+
+/**
+ * Tool definition
  */
 export const definition = {
-	name: "get_tag_info",
 	description:
 		"Get comprehensive information about a specific tag key, including all possible values, type, and field definition status",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			tagKey: {
-				type: "string",
-				description: "The tag key to get information for (e.g., 'parking', 'amenity')",
-			},
-		},
-		required: ["tagKey"],
+		tagKey: z.string().describe("The tag key to get information for (e.g., 'parking', 'amenity')"),
 	},
-};
+} as const;
 
 /**
- * Get comprehensive information about a specific tag key
- *
- * @param loader - Schema loader instance
- * @param tagKey - The tag key to get information for (e.g., "parking", "amenity")
- * @returns Tag information including all possible values, type, and field definition status
+ * Handler for get_tag_info tool
  */
-export async function getTagInfo(loader: SchemaLoader, tagKey: string): Promise<TagInfo> {
+export async function handler(args: { tagKey: string }, loader: SchemaLoader) {
 	const schema = await loader.loadSchema();
+	const tagKey = args.tagKey;
 
 	// Collect all unique values for the tag key
 	const values = new Set<string>();
@@ -78,24 +73,14 @@ export async function getTagInfo(loader: SchemaLoader, tagKey: string): Promise<
 		}
 	}
 
-	// Return tag information with the actual OSM key (with colon)
-	return {
+	// Build result object
+	const info: TagInfo = {
 		key: actualKey,
 		values: Array.from(values).sort(),
 		type: fieldType,
 		hasFieldDefinition,
 	};
-}
 
-/**
- * Handler for get_tag_info tool
- */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const tagKey = (args as { tagKey?: string }).tagKey;
-	if (!tagKey) {
-		throw new Error("tagKey parameter is required");
-	}
-	const info = await getTagInfo(loader, tagKey);
 	return {
 		content: [
 			{
@@ -103,5 +88,6 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 				text: JSON.stringify(info, null, 2),
 			},
 		],
+		structuredContent: info,
 	};
 }

@@ -1,19 +1,31 @@
 #!/usr/bin/env node
 import { randomUUID } from "node:crypto";
 import http from "node:http";
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { tools } from "./tools/index.js";
+import * as checkDeprecated from "./tools/check-deprecated.js";
+import * as getCategories from "./tools/get-categories.js";
+import * as getCategoryTags from "./tools/get-category-tags.js";
+import * as getPresetDetails from "./tools/get-preset-details.js";
+import * as getPresetTags from "./tools/get-preset-tags.js";
+import * as getRelatedTags from "./tools/get-related-tags.js";
+import * as getSchemaStats from "./tools/get-schema-stats.js";
+import * as getTagInfo from "./tools/get-tag-info.js";
+import * as getTagValues from "./tools/get-tag-values.js";
+import * as searchPresets from "./tools/search-presets.js";
+import * as searchTags from "./tools/search-tags.js";
+import * as suggestImprovements from "./tools/suggest-improvements.js";
+import * as validateTag from "./tools/validate-tag.js";
+import * as validateTagCollection from "./tools/validate-tag-collection.js";
 import { logger } from "./utils/logger.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
 
 /**
  * Create and configure the MCP server
  */
-export function createServer(): Server {
-	const server = new Server(
+export function createServer(): McpServer {
+	const mcpServer = new McpServer(
 		{
 			name: "osm-tagging-schema",
 			version: "0.1.0",
@@ -28,37 +40,39 @@ export function createServer(): Server {
 	// Initialize schema loader (indexing always enabled for optimal performance)
 	const schemaLoader = new SchemaLoader();
 
-	// Register tool handlers
-	// Tools are loaded from src/tools/index.ts and sorted alphabetically by name
-	server.setRequestHandler(ListToolsRequestSchema, async () => ({
-		tools: tools.map((tool) => tool.definition),
-	}));
+	// Register all tools using registerTool API
+	// Tools are registered in alphabetical order
+	const toolModules = [
+		checkDeprecated,
+		getCategories,
+		getCategoryTags,
+		getPresetDetails,
+		getPresetTags,
+		getRelatedTags,
+		getSchemaStats,
+		getTagInfo,
+		getTagValues,
+		searchPresets,
+		searchTags,
+		suggestImprovements,
+		validateTag,
+		validateTagCollection,
+	];
 
-	server.setRequestHandler(CallToolRequestSchema, async (request) => {
-		const { name, arguments: args } = request.params;
+	for (const toolModule of toolModules) {
+		mcpServer.registerTool(
+			toolModule.name,
+			{
+				description: toolModule.definition.description,
+				// biome-ignore lint/suspicious/noExplicitAny: Dynamic tool registration requires any
+				inputSchema: toolModule.definition.inputSchema as any,
+			},
+			// biome-ignore lint/suspicious/noExplicitAny: Callback args type determined by SDK
+			async (args: any) => (await toolModule.handler(args, schemaLoader)) as any,
+		);
+	}
 
-		logger.debug(`Tool call: ${name}`, "MCPServer");
-
-		try {
-			// Find the tool by name
-			const tool = tools.find((t) => t.definition.name === name);
-			if (!tool) {
-				throw new Error(`Unknown tool: ${name}`);
-			}
-
-			// Call the tool handler
-			return await tool.handler(schemaLoader, args);
-		} catch (error) {
-			logger.error(
-				`Error executing tool: ${name}`,
-				"MCPServer",
-				error instanceof Error ? error : new Error(String(error)),
-			);
-			throw error;
-		}
-	});
-
-	return server;
+	return mcpServer;
 }
 
 /**
@@ -91,7 +105,7 @@ function getTransportConfig(): TransportConfig {
  * Create and start HTTP server with SSE transport
  */
 async function startHttpServer(
-	server: Server,
+	mcpServer: McpServer,
 	config: TransportConfig,
 	schemaLoader: SchemaLoader,
 ): Promise<void> {
@@ -177,7 +191,7 @@ async function startHttpServer(
 					});
 
 					// Connect the MCP server to this transport (only once per transport)
-					await server.connect(transport);
+					await mcpServer.connect(transport);
 				}
 
 				// Handle the HTTP request
@@ -223,7 +237,7 @@ async function main() {
 	logger.info(`Transport: ${config.type}`, "main");
 
 	// Create server and preload schema for optimal performance
-	const server = createServer();
+	const mcpServer = createServer();
 
 	// Warmup: Preload schema and build indexes before accepting requests
 	// This eliminates initial latency on first tool call
@@ -234,10 +248,10 @@ async function main() {
 
 	// Start appropriate transport
 	if (config.type === "sse" || config.type === "http") {
-		await startHttpServer(server, config, schemaLoader);
+		await startHttpServer(mcpServer, config, schemaLoader);
 	} else {
 		const transport = new StdioServerTransport();
-		await server.connect(transport);
+		await mcpServer.connect(transport);
 		logger.info("OSM Tagging Schema MCP Server running on stdio", "main");
 		console.error("OSM Tagging Schema MCP Server running on stdio");
 	}

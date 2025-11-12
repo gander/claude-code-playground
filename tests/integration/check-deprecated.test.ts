@@ -164,19 +164,7 @@ describe("Integration: check_deprecated", () => {
 	});
 
 	describe("Error Handling", () => {
-		it("should throw error when key parameter is missing", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "check_deprecated",
-						arguments: {},
-					});
-				},
-				{
-					message: /key parameter is required/,
-				},
-			);
-		});
+		// REMOVED: Parameter validation now handled by Zod SDK
 
 		it("should handle empty key", async () => {
 			const response = await client.callTool({

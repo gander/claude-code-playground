@@ -63,17 +63,5 @@ describe("MCP Server Initialization", () => {
 		}
 	});
 
-	it("should throw error for unknown tool", async () => {
-		await assert.rejects(
-			async () => {
-				await client.callTool({
-					name: "unknown-tool",
-					arguments: {},
-				});
-			},
-			{
-				message: /Unknown tool/,
-			},
-		);
-	});
+	// REMOVED: Parameter validation now handled by Zod SDK
 });

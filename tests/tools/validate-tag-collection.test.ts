@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
 	type: "json",
 };
-import { validateTagCollection } from "../../src/tools/validate-tag-collection.js";
+import { handler } from "../../src/tools/validate-tag-collection.js";
 import { SchemaLoader } from "../../src/utils/schema-loader.js";
 
 describe("validateTagCollection", () => {
@@ -16,7 +16,8 @@ describe("validateTagCollection", () => {
 				capacity: "50",
 			};
 
-			const result = await validateTagCollection(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, true);
@@ -33,7 +34,8 @@ describe("validateTagCollection", () => {
 				parking: "surface",
 			};
 
-			const result = await validateTagCollection(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, false);
@@ -56,7 +58,8 @@ describe("validateTagCollection", () => {
 				amenity: "parking",
 			};
 
-			const result = await validateTagCollection(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecatedCount, 1);
@@ -68,7 +71,8 @@ describe("validateTagCollection", () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			const tags = {};
 
-			const result = await validateTagCollection(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, true);
@@ -84,7 +88,8 @@ describe("validateTagCollection", () => {
 				another_unknown_key_67890: "value2",
 			};
 
-			const result = await validateTagCollection(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, true);
@@ -99,7 +104,8 @@ describe("validateTagCollection", () => {
 				amenity: "parking",
 			};
 
-			const result = await validateTagCollection(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.ok("valid" in result);
@@ -125,7 +131,8 @@ describe("validateTagCollection", () => {
 				access: "yes",
 			};
 
-			const result = await validateTagCollection(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.ok(result.tagResults.amenity);
@@ -179,7 +186,8 @@ describe("validateTagCollection", () => {
 					tags.ref = "Test Ref";
 				}
 
-				const result = await validateTagCollection(loader, tags);
+				const handlerResult = await handler({ tags: tags }, loader);
+				const result = handlerResult.structuredContent;
 
 				assert.ok(result, `Should validate collection for ${oldKey}=${oldValue}`);
 				assert.strictEqual(
@@ -208,7 +216,8 @@ describe("validateTagCollection", () => {
 				amenity: "parking",
 			};
 
-			const result = await validateTagCollection(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, false);
@@ -222,7 +231,8 @@ describe("validateTagCollection", () => {
 				parking: "surface",
 			};
 
-			const result = await validateTagCollection(loader, tags);
+			const handlerResult = await handler({ tags: tags }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, false);

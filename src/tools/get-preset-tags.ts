@@ -1,35 +1,29 @@
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { PresetTags } from "./types.js";
 
 /**
- * Tool definition for get_preset_tags
+ * Tool name
+ */
+export const name = "get_preset_tags";
+
+/**
+ * Tool definition
  */
 export const definition = {
-	name: "get_preset_tags",
 	description:
 		"Get recommended tags for a specific preset. Returns identifying tags and additional recommended tags.",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			presetId: {
-				type: "string",
-				description: "The preset ID to get tags for (e.g., 'amenity/restaurant')",
-			},
-		},
-		required: ["presetId"],
+		presetId: z.string().describe("The preset ID to get tags for (e.g., 'amenity/restaurant')"),
 	},
-};
+} as const;
 
 /**
- * Get recommended tags for a specific preset
- *
- * @param loader - Schema loader instance
- * @param presetId - The preset ID to get tags for (e.g., "amenity/restaurant")
- * @returns Preset tags including identifying tags and optional addTags
- * @throws Error if preset is not found
+ * Handler for get_preset_tags tool
  */
-export async function getPresetTags(loader: SchemaLoader, presetId: string): Promise<PresetTags> {
+export async function handler(args: { presetId: string }, loader: SchemaLoader) {
 	const schema = await loader.loadSchema();
+	const presetId = args.presetId;
 
 	// Look up the preset
 	const preset = schema.presets[presetId];
@@ -48,24 +42,13 @@ export async function getPresetTags(loader: SchemaLoader, presetId: string): Pro
 		result.addTags = preset.addTags;
 	}
 
-	return result;
-}
-
-/**
- * Handler for get_preset_tags tool
- */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const presetId = (args as { presetId?: string }).presetId;
-	if (!presetId) {
-		throw new Error("presetId parameter is required");
-	}
-	const tags = await getPresetTags(loader, presetId);
 	return {
 		content: [
 			{
 				type: "text" as const,
-				text: JSON.stringify(tags, null, 2),
+				text: JSON.stringify(result, null, 2),
 			},
 		],
+		structuredContent: result,
 	};
 }

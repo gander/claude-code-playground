@@ -1,14 +1,15 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import { getRelatedTags } from "../../src/tools/get-related-tags.ts";
+import { handler } from "../../src/tools/get-related-tags.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
 
 describe("get_related_tags", () => {
 	describe("Basic Functionality", () => {
 		it("should return related tags for a tag key", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await getRelatedTags(loader, "amenity");
+			const handlerResult = await handler({ tag: "amenity" }, loader);
+			const results = handlerResult.structuredContent.relatedTags;
 
 			assert.ok(Array.isArray(results), "Should return an array");
 			assert.ok(results.length > 0, "Should find related tags");
@@ -16,7 +17,8 @@ describe("get_related_tags", () => {
 
 		it("should return related tags for a key=value pair", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await getRelatedTags(loader, "amenity=restaurant");
+			const handlerResult = await handler({ tag: "amenity=restaurant" }, loader);
+			const results = handlerResult.structuredContent.relatedTags;
 
 			assert.ok(Array.isArray(results), "Should return an array");
 			assert.ok(results.length > 0, "Should find related tags");
@@ -24,7 +26,8 @@ describe("get_related_tags", () => {
 
 		it("should return tags with required properties", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await getRelatedTags(loader, "amenity=cafe");
+			const handlerResult = await handler({ tag: "amenity=cafe" }, loader);
+			const results = handlerResult.structuredContent.relatedTags;
 
 			assert.ok(results.length > 0, "Should have results");
 			const first = results[0];
@@ -36,7 +39,8 @@ describe("get_related_tags", () => {
 
 		it("should sort results by frequency (descending)", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await getRelatedTags(loader, "amenity=parking");
+			const handlerResult = await handler({ tag: "amenity=parking" }, loader);
+			const results = handlerResult.structuredContent.relatedTags;
 
 			assert.ok(results.length > 1, "Should have multiple results");
 			for (let i = 1; i < results.length; i++) {
@@ -50,14 +54,16 @@ describe("get_related_tags", () => {
 		it("should limit results when limit parameter is provided", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			const limit = 5;
-			const results = await getRelatedTags(loader, "amenity", limit);
+			const handlerResult = await handler({ tag: "amenity", limit }, loader);
+			const results = handlerResult.structuredContent.relatedTags;
 
 			assert.ok(results.length <= limit, `Should return at most ${limit} results`);
 		});
 
 		it("should exclude the input tag itself from results", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await getRelatedTags(loader, "amenity=restaurant");
+			const handlerResult = await handler({ tag: "amenity=restaurant" }, loader);
+			const results = handlerResult.structuredContent.relatedTags;
 
 			// Should not include amenity=restaurant in the results
 			const hasSelf = results.some((r) => r.key === "amenity" && r.value === "restaurant");
@@ -66,7 +72,8 @@ describe("get_related_tags", () => {
 
 		it("should return empty array for non-existent tag", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await getRelatedTags(loader, "nonexistent=fakeval12345xyz");
+			const handlerResult = await handler({ tag: "nonexistent=fakeval12345xyz" }, loader);
+			const results = handlerResult.structuredContent.relatedTags;
 
 			assert.ok(Array.isArray(results), "Should return an array");
 			assert.strictEqual(results.length, 0, "Should return empty array");
@@ -75,15 +82,18 @@ describe("get_related_tags", () => {
 		it("should use cached data on subsequent calls", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			const results1 = await getRelatedTags(loader, "amenity=hospital");
-			const results2 = await getRelatedTags(loader, "amenity=hospital");
+			const handlerResult1 = await handler({ tag: "amenity=hospital" }, loader);
+			const results1 = handlerResult1.structuredContent;
+			const handlerResult2 = await handler({ tag: "amenity=hospital" }, loader);
+			const results2 = handlerResult2.structuredContent;
 
 			assert.deepStrictEqual(results1, results2, "Results should be identical from cache");
 		});
 
 		it("should handle tag key without specific value", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await getRelatedTags(loader, "building");
+			const handlerResult = await handler({ tag: "building" }, loader);
+			const results = handlerResult.structuredContent.relatedTags;
 
 			assert.ok(Array.isArray(results), "Should return an array");
 			// When searching for just "building" key, should find tags that appear
@@ -128,7 +138,8 @@ describe("get_related_tags", () => {
 
 		it("should return related tags that exist in JSON presets", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await getRelatedTags(loader, "amenity=restaurant", 20);
+			const handlerResult = await handler({ tag: "amenity=restaurant", limit: 20 }, loader);
+			const results = handlerResult.structuredContent.relatedTags;
 
 			// Verify each related tag exists in JSON presets
 			for (const result of results) {
@@ -164,7 +175,8 @@ describe("get_related_tags", () => {
 			// CRITICAL: Test dynamically sampled tags from JSON - NO hardcoded values
 			let testedCount = 0;
 			for (const testCase of tagCombinationProvider()) {
-				const results = await getRelatedTags(loader, testCase.tag, 10);
+				const handlerResult = await handler({ tag: testCase.tag, limit: 10 }, loader);
+				const results = handlerResult.structuredContent.relatedTags;
 
 				// Verify each related tag exists in JSON presets
 				for (const result of results) {
@@ -203,7 +215,8 @@ describe("get_related_tags", () => {
 		it("should verify frequency counts match actual preset occurrences", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			const tag = "amenity=cafe";
-			const results = await getRelatedTags(loader, tag, 10);
+			const handlerResult = await handler({ tag: tag, limit: 10 }, loader);
+			const results = handlerResult.structuredContent.relatedTags;
 
 			// For each related tag, verify frequency matches actual count in presets
 			for (const result of results) {
@@ -236,7 +249,8 @@ describe("get_related_tags", () => {
 
 		it("should find related tags that co-occur in presets", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await getRelatedTags(loader, "amenity=parking");
+			const handlerResult = await handler({ tag: "amenity=parking" }, loader);
+			const results = handlerResult.structuredContent.relatedTags;
 
 			// Check that results are tags that actually appear with amenity=parking
 			// in the JSON data

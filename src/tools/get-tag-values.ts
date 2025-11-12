@@ -1,32 +1,27 @@
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
 
 /**
- * Tool definition for get_tag_values
+ * Tool name
  */
-export const definition = {
-	name: "get_tag_values",
-	description: "Get all possible values for a given tag key (e.g., all values for 'amenity' tag)",
-	inputSchema: {
-		type: "object" as const,
-		properties: {
-			tagKey: {
-				type: "string",
-				description: "The tag key to get values for (e.g., 'amenity', 'building')",
-			},
-		},
-		required: ["tagKey"],
-	},
-};
+export const name = "get_tag_values";
 
 /**
- * Get all possible values for a given tag key
- *
- * @param loader - Schema loader instance
- * @param tagKey - The tag key to get values for (e.g., "amenity", "building")
- * @returns Array of unique values for the tag key, sorted alphabetically
+ * Tool definition
  */
-export async function getTagValues(loader: SchemaLoader, tagKey: string): Promise<string[]> {
+export const definition = {
+	description: "Get all possible values for a given tag key (e.g., all values for 'amenity' tag)",
+	inputSchema: {
+		tagKey: z.string().describe("The tag key to get values for (e.g., 'amenity', 'building')"),
+	},
+} as const;
+
+/**
+ * Handler for get_tag_values tool
+ */
+export async function handler(args: { tagKey: string }, loader: SchemaLoader) {
 	const schema = await loader.loadSchema();
+	const tagKey = args.tagKey;
 
 	// Collect all unique values for the tag key
 	const values = new Set<string>();
@@ -73,24 +68,15 @@ export async function getTagValues(loader: SchemaLoader, tagKey: string): Promis
 	}
 
 	// Convert to array and sort
-	return Array.from(values).sort();
-}
+	const sortedValues = Array.from(values).sort();
 
-/**
- * Handler for get_tag_values tool
- */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const tagKey = (args as { tagKey?: string }).tagKey;
-	if (!tagKey) {
-		throw new Error("tagKey parameter is required");
-	}
-	const values = await getTagValues(loader, tagKey);
 	return {
 		content: [
 			{
 				type: "text" as const,
-				text: JSON.stringify(values, null, 2),
+				text: JSON.stringify(sortedValues, null, 2),
 			},
 		],
+		structuredContent: { values: sortedValues },
 	};
 }

@@ -2,14 +2,15 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import { getTagValues } from "../../src/tools/get-tag-values.ts";
+import { handler } from "../../src/tools/get-tag-values.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
 
 describe("get_tag_values", () => {
 	describe("Basic Functionality", () => {
 		it("should return values for a valid tag key", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const values = await getTagValues(loader, "amenity");
+			const handlerResult = await handler({ tagKey: "amenity" }, loader);
+			const values = handlerResult.structuredContent.values;
 
 			assert.ok(Array.isArray(values), "Should return an array");
 			assert.ok(values.length > 0, "Should have at least one value");
@@ -17,7 +18,8 @@ describe("get_tag_values", () => {
 
 		it("should return unique values only", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const values = await getTagValues(loader, "amenity");
+			const handlerResult = await handler({ tagKey: "amenity" }, loader);
+			const values = handlerResult.structuredContent.values;
 
 			const uniqueValues = new Set(values);
 			assert.strictEqual(values.length, uniqueValues.size, "Should return unique values only");
@@ -25,7 +27,8 @@ describe("get_tag_values", () => {
 
 		it("should return sorted values", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const values = await getTagValues(loader, "amenity");
+			const handlerResult = await handler({ tagKey: "amenity" }, loader);
+			const values = handlerResult.structuredContent.values;
 
 			const sorted = [...values].sort();
 			assert.deepStrictEqual(values, sorted, "Values should be sorted");
@@ -33,7 +36,8 @@ describe("get_tag_values", () => {
 
 		it("should return empty array for non-existent tag key", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const values = await getTagValues(loader, "nonexistent_tag_key_12345");
+			const handlerResult = await handler({ tagKey: "nonexistent_tag_key_12345" }, loader);
+			const values = handlerResult.structuredContent.values;
 
 			assert.ok(Array.isArray(values), "Should return an array");
 			assert.strictEqual(values.length, 0, "Should return empty array");
@@ -42,8 +46,10 @@ describe("get_tag_values", () => {
 		it("should use cached data on subsequent calls", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			const values1 = await getTagValues(loader, "amenity");
-			const values2 = await getTagValues(loader, "amenity");
+			const handlerResult1 = await handler({ tagKey: "amenity" }, loader);
+			const values1 = handlerResult1.structuredContent;
+			const handlerResult2 = await handler({ tagKey: "amenity" }, loader);
+			const values2 = handlerResult2.structuredContent;
 
 			assert.deepStrictEqual(values1, values2, "Values should be identical from cache");
 		});
@@ -51,7 +57,8 @@ describe("get_tag_values", () => {
 		it("should handle tag keys with special characters", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			// Tags like "addr:street" exist in OSM
-			const values = await getTagValues(loader, "building");
+			const handlerResult = await handler({ tagKey: "building" }, loader);
+			const values = handlerResult.structuredContent.values;
 
 			assert.ok(Array.isArray(values), "Should handle tag keys");
 			// Should not throw error
@@ -61,7 +68,8 @@ describe("get_tag_values", () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 			// toilets:wheelchair is a field stored as "toilets/wheelchair" in fields map
 			// but should accept "toilets:wheelchair" as input (OSM format)
-			const values = await getTagValues(loader, "toilets:wheelchair");
+			const handlerResult = await handler({ tagKey: "toilets:wheelchair" }, loader);
+			const values = handlerResult.structuredContent.values;
 
 			assert.ok(Array.isArray(values), "Should return an array");
 			assert.ok(values.length > 0, "Should find values for colon-formatted key");
@@ -154,7 +162,8 @@ describe("get_tag_values", () => {
 
 		it("should return tag values that exist in JSON (fields and presets)", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const values = await getTagValues(loader, "amenity");
+			const handlerResult = await handler({ tagKey: "amenity" }, loader);
+			const values = handlerResult.structuredContent.values;
 
 			// Collect all amenity values from JSON (fields + presets)
 			const expectedValues = new Set<string>();
@@ -205,7 +214,8 @@ describe("get_tag_values", () => {
 
 			// Test each tag key from provider
 			for (const testCase of tagKeyProvider()) {
-				const values = await getTagValues(loader, testCase.key);
+				const handlerResult = await handler({ tagKey: testCase.key }, loader);
+				const values = handlerResult.structuredContent.values;
 				const returnedSet = new Set(values);
 
 				// Bidirectional validation: all returned values should exist in expected
@@ -237,7 +247,8 @@ describe("get_tag_values", () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
 			// Test with a tag that might have wildcards in JSON
-			const values = await getTagValues(loader, "building");
+			const handlerResult = await handler({ tagKey: "building" }, loader);
+			const values = handlerResult.structuredContent.values;
 
 			// Verify no wildcards or pipe-separated values
 			for (const value of values) {
@@ -251,7 +262,8 @@ describe("get_tag_values", () => {
 
 			// Test multiple keys using provider
 			for (const testCase of tagKeyProvider()) {
-				const values = await getTagValues(loader, testCase.key);
+				const handlerResult = await handler({ tagKey: testCase.key }, loader);
+				const values = handlerResult.structuredContent.values;
 
 				// Verify no wildcards or pipe-separated values
 				for (const value of values) {
@@ -272,7 +284,8 @@ describe("get_tag_values", () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
 			// Test with "parking" which has comprehensive options in fields.json
-			const values = await getTagValues(loader, "parking");
+			const handlerResult = await handler({ tagKey: "parking" }, loader);
+			const values = handlerResult.structuredContent.values;
 
 			// Get expected values from fields.json
 			const parkingField = fields.parking;

@@ -1,14 +1,15 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
-import { getPresetDetails } from "../../src/tools/get-preset-details.ts";
+import { handler } from "../../src/tools/get-preset-details.ts";
 import { SchemaLoader } from "../../src/utils/schema-loader.ts";
 
 describe("get_preset_details", () => {
 	describe("Basic Functionality", () => {
 		it("should return complete preset details for a valid preset ID", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetDetails(loader, "amenity/restaurant");
+			const handlerResult = await handler({ presetId: "amenity/restaurant" }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result, "Should return a result");
 			assert.strictEqual(result.id, "amenity/restaurant");
@@ -18,7 +19,8 @@ describe("get_preset_details", () => {
 
 		it("should return all required properties", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetDetails(loader, "amenity/restaurant");
+			const handlerResult = await handler({ presetId: "amenity/restaurant" }, loader);
+			const result = handlerResult.structuredContent;
 
 			// Required properties
 			assert.strictEqual(typeof result.id, "string");
@@ -42,7 +44,8 @@ describe("get_preset_details", () => {
 
 		it("should return tags object with correct structure", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetDetails(loader, "amenity/restaurant");
+			const handlerResult = await handler({ presetId: "amenity/restaurant" }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result.tags);
 			assert.strictEqual(typeof result.tags, "object");
@@ -51,7 +54,8 @@ describe("get_preset_details", () => {
 
 		it("should return geometry array", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetDetails(loader, "amenity/restaurant");
+			const handlerResult = await handler({ presetId: "amenity/restaurant" }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(Array.isArray(result.geometry));
 			assert.ok(result.geometry.length > 0, "Should have at least one geometry type");
@@ -59,7 +63,8 @@ describe("get_preset_details", () => {
 
 		it("should return fields array for presets with fields", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetDetails(loader, "amenity/restaurant");
+			const handlerResult = await handler({ presetId: "amenity/restaurant" }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result.fields, "Restaurant preset should have fields");
 			assert.ok(Array.isArray(result.fields));
@@ -71,7 +76,7 @@ describe("get_preset_details", () => {
 
 			await assert.rejects(
 				async () => {
-					await getPresetDetails(loader, "nonexistent/preset");
+					await handler({ presetId: "nonexistent/preset" }, loader);
 				},
 				{
 					message: /Preset .* not found/,
@@ -82,8 +87,10 @@ describe("get_preset_details", () => {
 		it("should use cached data on subsequent calls", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			const result1 = await getPresetDetails(loader, "amenity/cafe");
-			const result2 = await getPresetDetails(loader, "amenity/cafe");
+			const handlerResult1 = await handler({ presetId: "amenity/cafe" }, loader);
+			const result1 = handlerResult1.structuredContent;
+			const handlerResult2 = await handler({ presetId: "amenity/cafe" }, loader);
+			const result2 = handlerResult2.structuredContent;
 
 			assert.deepStrictEqual(result1, result2, "Results should be identical from cache");
 		});
@@ -92,7 +99,8 @@ describe("get_preset_details", () => {
 	describe("JSON Schema Validation", () => {
 		it("should return preset details matching JSON data exactly", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetDetails(loader, "amenity/restaurant");
+			const handlerResult = await handler({ presetId: "amenity/restaurant" }, loader);
+			const result = handlerResult.structuredContent;
 
 			const expected = presets["amenity/restaurant"];
 			assert.ok(expected, "Preset should exist in JSON");
@@ -133,7 +141,8 @@ describe("get_preset_details", () => {
 
 			// Provider pattern: iterate through EVERY preset
 			for (const presetId of allPresetIds) {
-				const result = await getPresetDetails(loader, presetId);
+				const handlerResult = await handler({ presetId: presetId }, loader);
+				const result = handlerResult.structuredContent;
 				const expected = presets[presetId];
 
 				assert.ok(expected, `Preset ${presetId} should exist in JSON`);
@@ -196,7 +205,8 @@ describe("get_preset_details", () => {
 			}
 
 			if (presetWithoutFields) {
-				const result = await getPresetDetails(loader, presetWithoutFields);
+				const handlerResult = await handler({ presetId: presetWithoutFields }, loader);
+				const result = handlerResult.structuredContent;
 				assert.ok(result);
 				assert.strictEqual(result.id, presetWithoutFields);
 				// fields should be undefined or not present

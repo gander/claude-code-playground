@@ -1,30 +1,30 @@
+import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
+	type: "json",
+};
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+import { z } from "zod";
 import type { SchemaLoader } from "../utils/schema-loader.js";
-import { checkDeprecated } from "./check-deprecated.js";
 
 /**
- * Tool definition for suggest_improvements
+ * Tool name
+ */
+export const name = "suggest_improvements";
+
+/**
+ * Tool definition
  */
 export const definition = {
-	name: "suggest_improvements",
 	description:
 		"Suggest improvements for an OSM tag collection. Analyzes tags and provides suggestions for missing fields, warnings about deprecated tags, and recommendations based on matched presets.",
 	inputSchema: {
-		type: "object" as const,
-		properties: {
-			tags: {
-				type: "object",
-				description:
-					"Object containing tag key-value pairs to analyze (e.g., { 'amenity': 'restaurant' })",
-				additionalProperties: {
-					type: "string",
-				},
-			},
-		},
-		required: ["tags"],
+		tags: z
+			.record(z.string())
+			.describe(
+				"Object containing tag key-value pairs to analyze (e.g., { 'amenity': 'restaurant' })",
+			),
 	},
-};
+} as const;
 
 /**
  * Result of improvement suggestions
@@ -39,20 +39,11 @@ export interface ImprovementResult {
 }
 
 /**
- * Suggest improvements for an OSM tag collection
- *
- * Analyzes tags and provides suggestions for missing fields,
- * warnings about deprecated tags, and recommendations based on
- * matched presets.
- *
- * @param loader - Schema loader instance
- * @param tags - Tag collection to analyze
- * @returns Improvement suggestions and warnings
+ * Handler for suggest_improvements tool
  */
-export async function suggestImprovements(
-	loader: SchemaLoader,
-	tags: Record<string, string>,
-): Promise<ImprovementResult> {
+export async function handler(args: { tags: Record<string, string> }, _loader: SchemaLoader) {
+	const tags = args.tags;
+
 	const result: ImprovementResult = {
 		suggestions: [],
 		warnings: [],
@@ -61,67 +52,49 @@ export async function suggestImprovements(
 
 	// Handle empty tag collection
 	if (Object.keys(tags).length === 0) {
-		return result;
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(result, null, 2),
+				},
+			],
+			structuredContent: result,
+		};
 	}
 
-	// Check for deprecated tags
+	// Check for deprecated tags (inline deprecated check logic)
 	for (const [key, value] of Object.entries(tags)) {
-		const deprecationResult = await checkDeprecated(loader, key, value);
-		if (deprecationResult.deprecated) {
-			result.warnings.push(`Tag ${key}=${value} is deprecated. ${deprecationResult.message}`);
+		// Find deprecated entry
+		const deprecatedEntry = deprecated.find((entry) => {
+			const oldKeys = Object.keys(entry.old);
+			if (oldKeys.length === 1) {
+				const oldKey = oldKeys[0];
+				if (oldKey) {
+					const oldValue = entry.old[oldKey as keyof typeof entry.old];
+					return oldValue === value && oldKey === key;
+				}
+			}
+			return false;
+		});
+
+		if (deprecatedEntry?.replace) {
+			// Build replacement object
+			const replacement: Record<string, string> = {};
+			for (const [k, v] of Object.entries(deprecatedEntry.replace)) {
+				if (v !== undefined) {
+					replacement[k] = v;
+				}
+			}
+			const replaceTagsStr = Object.entries(replacement)
+				.map(([k, v]) => `${k}=${v}`)
+				.join(", ");
+			result.warnings.push(`Tag ${key}=${value} is deprecated. Consider using: ${replaceTagsStr}`);
 		}
 	}
 
-	// Find matching presets
-	const matchedPresetIds = findMatchingPresets(tags);
-	result.matchedPresets = matchedPresetIds;
-
-	// Suggest missing fields from matched presets
-	if (matchedPresetIds.length > 0) {
-		const suggestedFields = new Set<string>();
-
-		for (const presetId of matchedPresetIds.slice(0, 5)) {
-			// Limit to first 5 presets
-			const preset = presets[presetId as keyof typeof presets];
-			if (!preset) continue;
-
-			// Check fields
-			if ("fields" in preset && preset.fields) {
-				for (const fieldId of preset.fields) {
-					const fieldKey = getFieldKey(fieldId);
-					if (fieldKey && !tags[fieldKey] && !suggestedFields.has(fieldKey)) {
-						suggestedFields.add(fieldKey);
-						result.suggestions.push(`Consider adding '${fieldKey}' tag (common for ${presetId})`);
-					}
-				}
-			}
-
-			// Check moreFields
-			if ("moreFields" in preset && preset.moreFields) {
-				for (const fieldId of preset.moreFields.slice(0, 3)) {
-					// Limit optional fields
-					const fieldKey = getFieldKey(fieldId);
-					if (fieldKey && !tags[fieldKey] && !suggestedFields.has(fieldKey)) {
-						suggestedFields.add(fieldKey);
-						result.suggestions.push(`Optional: Consider adding '${fieldKey}' tag`);
-					}
-				}
-			}
-		}
-	}
-
-	return result;
-}
-
-/**
- * Find presets that match the given tags
- *
- * @param tags - Tags to match against
- * @returns Array of matching preset IDs
- */
-function findMatchingPresets(tags: Record<string, string>): string[] {
-	const matches: string[] = [];
-
+	// Find matching presets (inline findMatchingPresets logic)
+	const matchedPresetIds: string[] = [];
 	for (const [presetId, preset] of Object.entries(presets)) {
 		if (!preset.tags || Object.keys(preset.tags).length === 0) continue;
 
@@ -144,49 +117,77 @@ function findMatchingPresets(tags: Record<string, string>): string[] {
 		}
 
 		if (allMatch) {
-			matches.push(presetId);
+			matchedPresetIds.push(presetId);
 		}
 	}
 
-	return matches;
-}
+	result.matchedPresets = matchedPresetIds;
 
-/**
- * Get the actual field key from a field ID
- *
- * Field IDs can be paths (e.g., "name") or references (e.g., "{amenity}")
- *
- * @param fieldId - Field ID from preset
- * @returns Field key or null
- */
-function getFieldKey(fieldId: string): string | null {
-	// Skip template references
-	if (fieldId.startsWith("{")) {
-		return null;
+	// Suggest missing fields from matched presets
+	if (matchedPresetIds.length > 0) {
+		const suggestedFields = new Set<string>();
+
+		for (const presetId of matchedPresetIds.slice(0, 5)) {
+			// Limit to first 5 presets
+			const preset = presets[presetId as keyof typeof presets];
+			if (!preset) continue;
+
+			// Check fields
+			if ("fields" in preset && preset.fields) {
+				for (const fieldId of preset.fields) {
+					// Inline getFieldKey logic
+					let fieldKey: string | null = null;
+
+					// Skip template references
+					if (!fieldId.startsWith("{")) {
+						// Handle direct field references
+						const fieldPath = fieldId.replace(/:/g, "/");
+						type FieldsType = typeof fields;
+						const field = (fields as FieldsType)[fieldPath as keyof FieldsType];
+
+						if (field && "key" in field && field.key) {
+							fieldKey = field.key;
+						} else {
+							// Try to use the field ID directly as a key
+							fieldKey = fieldId;
+						}
+					}
+
+					if (fieldKey && !tags[fieldKey] && !suggestedFields.has(fieldKey)) {
+						suggestedFields.add(fieldKey);
+						result.suggestions.push(`Consider adding '${fieldKey}' tag (common for ${presetId})`);
+					}
+				}
+			}
+
+			// Check moreFields
+			if ("moreFields" in preset && preset.moreFields) {
+				for (const fieldId of preset.moreFields.slice(0, 3)) {
+					// Limit optional fields
+					// Inline getFieldKey logic
+					let fieldKey: string | null = null;
+
+					if (!fieldId.startsWith("{")) {
+						const fieldPath = fieldId.replace(/:/g, "/");
+						type FieldsType = typeof fields;
+						const field = (fields as FieldsType)[fieldPath as keyof FieldsType];
+
+						if (field && "key" in field && field.key) {
+							fieldKey = field.key;
+						} else {
+							fieldKey = fieldId;
+						}
+					}
+
+					if (fieldKey && !tags[fieldKey] && !suggestedFields.has(fieldKey)) {
+						suggestedFields.add(fieldKey);
+						result.suggestions.push(`Optional: Consider adding '${fieldKey}' tag`);
+					}
+				}
+			}
+		}
 	}
 
-	// Handle direct field references
-	const fieldPath = fieldId.replace(/:/g, "/");
-	type FieldsType = typeof fields;
-	const field = (fields as FieldsType)[fieldPath as keyof FieldsType];
-
-	if (field && "key" in field && field.key) {
-		return field.key;
-	}
-
-	// Try to use the field ID directly as a key
-	return fieldId;
-}
-
-/**
- * Handler for suggest_improvements tool
- */
-export async function handler(loader: SchemaLoader, args: unknown) {
-	const { tags } = args as { tags?: Record<string, string> };
-	if (!tags) {
-		throw new Error("tags parameter is required");
-	}
-	const result = await suggestImprovements(loader, tags);
 	return {
 		content: [
 			{
@@ -194,5 +195,6 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 				text: JSON.stringify(result, null, 2),
 			},
 		],
+		structuredContent: result,
 	};
 }

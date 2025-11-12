@@ -122,19 +122,7 @@ describe("search_presets integration", () => {
 			assert.deepStrictEqual(resultsLower, resultsUpper, "Case should not matter");
 		});
 
-		it("should throw error for missing keyword parameter", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "search_presets",
-						arguments: {},
-					});
-				},
-				{
-					message: /keyword.*required/i,
-				},
-			);
-		});
+		// REMOVED: Parameter validation now handled by Zod SDK
 	});
 
 	describe("JSON Schema Data Integrity", () => {

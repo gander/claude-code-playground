@@ -2,26 +2,23 @@ import type { SchemaLoader } from "../utils/schema-loader.js";
 import type { CategoryInfo } from "./types.js";
 
 /**
- * Tool definition for get_categories
+ * Tool name
  */
-export const definition = {
-	name: "get_categories",
-	description:
-		"Get all available tag categories with counts of presets in each category, sorted by name",
-	inputSchema: {
-		type: "object" as const,
-		properties: {},
-		required: [],
-	},
-};
+export const name = "get_categories";
 
 /**
- * Get all tag categories with counts of presets in each category
- *
- * @param loader - Schema loader instance
- * @returns Array of categories sorted by name, each with name and preset count
+ * Tool definition
  */
-export async function getCategories(loader: SchemaLoader): Promise<CategoryInfo[]> {
+export const definition = {
+	description:
+		"Get all available tag categories with counts of presets in each category, sorted by name",
+	inputSchema: {},
+} as const;
+
+/**
+ * Handler for get_categories tool
+ */
+export async function handler(_args: unknown, loader: SchemaLoader) {
 	const schema = await loader.loadSchema();
 
 	// Create array of categories with counts
@@ -30,21 +27,14 @@ export async function getCategories(loader: SchemaLoader): Promise<CategoryInfo[
 		count: category.members?.length || 0,
 	}));
 
-	// Sort by name
-	return categories.sort((a, b) => a.name.localeCompare(b.name));
-}
-
-/**
- * Handler for get_categories tool
- */
-export async function handler(loader: SchemaLoader, _args: unknown) {
-	const categories = await getCategories(loader);
+	const sortedCategories = categories.sort((a, b) => a.name.localeCompare(b.name));
 	return {
 		content: [
 			{
 				type: "text" as const,
-				text: JSON.stringify(categories, null, 2),
+				text: JSON.stringify(sortedCategories, null, 2),
 			},
 		],
+		structuredContent: { categories: sortedCategories },
 	};
 }

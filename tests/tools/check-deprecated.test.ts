@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
 	type: "json",
 };
-import { checkDeprecated } from "../../src/tools/check-deprecated.js";
+import { handler } from "../../src/tools/check-deprecated.js";
 import { SchemaLoader } from "../../src/utils/schema-loader.js";
 
 describe("checkDeprecated", () => {
@@ -16,7 +16,8 @@ describe("checkDeprecated", () => {
 			const key = Object.keys(entry.old)[0];
 			const value = entry.old[key as keyof typeof entry.old];
 
-			const result = await checkDeprecated(loader, key, value as string);
+			const handlerResult = await handler({ key, value: value as string }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
@@ -27,7 +28,8 @@ describe("checkDeprecated", () => {
 		it("should return not deprecated for valid non-deprecated tag", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			const result = await checkDeprecated(loader, "amenity", "parking");
+			const handlerResult = await handler({ key: "amenity", value: "parking" }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
@@ -43,7 +45,8 @@ describe("checkDeprecated", () => {
 
 			const key = Object.keys(entry.old)[0];
 
-			const result = await checkDeprecated(loader, key);
+			const handlerResult = await handler({ key }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
@@ -60,7 +63,8 @@ describe("checkDeprecated", () => {
 			const key = Object.keys(entry.old)[0];
 			const value = entry.old[key as keyof typeof entry.old];
 
-			const result = await checkDeprecated(loader, key, value as string);
+			const handlerResult = await handler({ key, value: value as string }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
@@ -73,7 +77,8 @@ describe("checkDeprecated", () => {
 		it("should handle key with no deprecated entries", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			const result = await checkDeprecated(loader, "nonexistent_key_xyz_12345");
+			const handlerResult = await handler({ key: "nonexistent_key_xyz_12345" }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
@@ -83,7 +88,8 @@ describe("checkDeprecated", () => {
 		it("should handle empty key", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			const result = await checkDeprecated(loader, "");
+			const handlerResult = await handler({ key: "" }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
@@ -96,7 +102,11 @@ describe("checkDeprecated", () => {
 			const entry = deprecated[0];
 			const key = Object.keys(entry.old)[0];
 
-			const result = await checkDeprecated(loader, key, "definitely_not_deprecated_value_xyz");
+			const handlerResult = await handler(
+				{ key, value: "definitely_not_deprecated_value_xyz" },
+				loader,
+			);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
@@ -107,7 +117,8 @@ describe("checkDeprecated", () => {
 		it("should return correct result structure", async () => {
 			const loader = new SchemaLoader({ enableIndexing: true });
 
-			const result = await checkDeprecated(loader, "amenity", "parking");
+			const handlerResult = await handler({ key: "amenity", value: "parking" }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.ok("deprecated" in result);
@@ -124,7 +135,8 @@ describe("checkDeprecated", () => {
 			const key = Object.keys(entry.old)[0];
 			const value = entry.old[key as keyof typeof entry.old];
 
-			const result = await checkDeprecated(loader, key, value as string);
+			const handlerResult = await handler({ key, value: value as string }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
@@ -139,7 +151,8 @@ describe("checkDeprecated", () => {
 			const key = Object.keys(entry.old)[0];
 			const value = entry.old[key as keyof typeof entry.old];
 
-			const result = await checkDeprecated(loader, key, value as string);
+			const handlerResult = await handler({ key, value: value as string }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.ok(result.message);
@@ -178,7 +191,8 @@ describe("checkDeprecated", () => {
 					continue;
 				}
 
-				const result = await checkDeprecated(loader, key, value as string);
+				const handlerResult = await handler({ key, value: value as string }, loader);
+				const result = handlerResult.structuredContent;
 
 				assert.strictEqual(result.deprecated, true, `Tag ${key}=${value} should be deprecated`);
 				assert.ok(result.replacement, `Tag ${key}=${value} should have replacement`);
@@ -201,7 +215,8 @@ describe("checkDeprecated", () => {
 			const key = Object.keys(entry.old)[0];
 			const value = entry.old[key as keyof typeof entry.old];
 
-			const result = await checkDeprecated(loader, key, value as string);
+			const handlerResult = await handler({ key, value: value as string }, loader);
+			const result = handlerResult.structuredContent;
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
