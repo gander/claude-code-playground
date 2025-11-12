@@ -49,14 +49,25 @@ export async function getPresetTags(loader: SchemaLoader, presetId: string): Pro
  * Handler for get_preset_tags tool
  */
 export async function handler(args: { presetId: string }, loader: SchemaLoader) {
-	const tags = await getPresetTags(loader, args.presetId);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(tags, null, 2),
-			},
-		],
-		structuredContent: tags,
-	};
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: get_preset_tags", "MCPServer");
+	try {
+		const tags = await getPresetTags(loader, args.presetId);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(tags, null, 2),
+				},
+			],
+			structuredContent: tags,
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: get_preset_tags",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
+	}
 }

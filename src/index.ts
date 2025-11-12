@@ -20,7 +20,6 @@ import * as validateTag from "./tools/validate-tag.js";
 import * as validateTagCollection from "./tools/validate-tag-collection.js";
 import { logger } from "./utils/logger.js";
 import { SchemaLoader } from "./utils/schema-loader.js";
-import { wrapToolHandler } from "./utils/tool-wrapper.js";
 
 /**
  * Create and configure the MCP server
@@ -69,8 +68,7 @@ export function createServer(): McpServer {
 				inputSchema: toolModule.definition.inputSchema as any,
 			},
 			// biome-ignore lint/suspicious/noExplicitAny: Callback args type determined by SDK
-			async (args: any) =>
-				wrapToolHandler(toolModule.definition.name, toolModule.handler)(args, schemaLoader),
+			async (args: any) => toolModule.handler(args, schemaLoader),
 		);
 	}
 

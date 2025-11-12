@@ -90,14 +90,25 @@ export async function validateTagCollection(
  * Handler for validate_tag_collection tool
  */
 export async function handler(args: { tags: Record<string, string> }, loader: SchemaLoader) {
-	const result = await validateTagCollection(loader, args.tags);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(result, null, 2),
-			},
-		],
-		structuredContent: result,
-	};
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: validate_tag_collection", "MCPServer");
+	try {
+		const result = await validateTagCollection(loader, args.tags);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(result, null, 2),
+				},
+			],
+			structuredContent: result,
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: validate_tag_collection",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
+	}
 }

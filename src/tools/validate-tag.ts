@@ -142,14 +142,25 @@ export async function validateTag(
  * Handler for validate_tag tool
  */
 export async function handler(args: { key: string; value: string }, loader: SchemaLoader) {
-	const result = await validateTag(loader, args.key, args.value);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(result, null, 2),
-			},
-		],
-		structuredContent: result,
-	};
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: validate_tag", "MCPServer");
+	try {
+		const result = await validateTag(loader, args.key, args.value);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(result, null, 2),
+				},
+			],
+			structuredContent: result,
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: validate_tag",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
+	}
 }

@@ -74,14 +74,25 @@ export async function getTagValues(loader: SchemaLoader, tagKey: string): Promis
  * Handler for get_tag_values tool
  */
 export async function handler(args: { tagKey: string }, loader: SchemaLoader) {
-	const values = await getTagValues(loader, args.tagKey);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(values, null, 2),
-			},
-		],
-		structuredContent: { values: values },
-	};
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: get_tag_values", "MCPServer");
+	try {
+		const values = await getTagValues(loader, args.tagKey);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(values, null, 2),
+				},
+			],
+			structuredContent: { values: values },
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: get_tag_values",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
+	}
 }

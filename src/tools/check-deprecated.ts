@@ -140,14 +140,25 @@ export async function checkDeprecated(
  * Handler for check_deprecated tool
  */
 export async function handler(args: { key: string; value?: string }, loader: SchemaLoader) {
-	const result = await checkDeprecated(loader, args.key, args.value);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(result, null, 2),
-			},
-		],
-		structuredContent: result,
-	};
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: check_deprecated", "MCPServer");
+	try {
+		const result = await checkDeprecated(loader, args.key, args.value);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(result, null, 2),
+				},
+			],
+			structuredContent: result,
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: check_deprecated",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
+	}
 }

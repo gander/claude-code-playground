@@ -85,14 +85,25 @@ export async function getTagInfo(loader: SchemaLoader, tagKey: string): Promise<
  * Handler for get_tag_info tool
  */
 export async function handler(args: { tagKey: string }, loader: SchemaLoader) {
-	const info = await getTagInfo(loader, args.tagKey);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(info, null, 2),
-			},
-		],
-		structuredContent: info,
-	};
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: get_tag_info", "MCPServer");
+	try {
+		const info = await getTagInfo(loader, args.tagKey);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(info, null, 2),
+				},
+			],
+			structuredContent: info,
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: get_tag_info",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
+	}
 }

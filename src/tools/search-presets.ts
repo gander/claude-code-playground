@@ -130,17 +130,28 @@ export async function handler(
 	},
 	loader: SchemaLoader,
 ) {
-	const results = await searchPresets(loader, args.keyword, {
-		limit: args.limit,
-		geometry: args.geometry,
-	});
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(results, null, 2),
-			},
-		],
-		structuredContent: { presets: results },
-	};
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: search_presets", "MCPServer");
+	try {
+		const results = await searchPresets(loader, args.keyword, {
+			limit: args.limit,
+			geometry: args.geometry,
+		});
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(results, null, 2),
+				},
+			],
+			structuredContent: { presets: results },
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: search_presets",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
+	}
 }

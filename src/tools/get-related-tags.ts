@@ -123,14 +123,25 @@ export async function getRelatedTags(
  * Handler for get_related_tags tool
  */
 export async function handler(args: { tag: string; limit?: number }, loader: SchemaLoader) {
-	const results = await getRelatedTags(loader, args.tag, args.limit);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(results, null, 2),
-			},
-		],
-		structuredContent: { relatedTags: results },
-	};
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: get_related_tags", "MCPServer");
+	try {
+		const results = await getRelatedTags(loader, args.tag, args.limit);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(results, null, 2),
+				},
+			],
+			structuredContent: { relatedTags: results },
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: get_related_tags",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
+	}
 }

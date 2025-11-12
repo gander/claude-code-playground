@@ -34,13 +34,24 @@ export async function getCategories(loader: SchemaLoader): Promise<CategoryInfo[
  * Handler for get_categories tool
  */
 export async function handler(_args: unknown, loader: SchemaLoader) {
-	const categories = await getCategories(loader);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(categories, null, 2),
-			},
-		],
-	};
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: get_categories", "MCPServer");
+	try {
+		const categories = await getCategories(loader);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(categories, null, 2),
+				},
+			],
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: get_categories",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
+	}
 }

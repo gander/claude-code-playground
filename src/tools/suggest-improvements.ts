@@ -176,14 +176,25 @@ function getFieldKey(fieldId: string): string | null {
  * Handler for suggest_improvements tool
  */
 export async function handler(args: { tags: Record<string, string> }, loader: SchemaLoader) {
-	const result = await suggestImprovements(loader, args.tags);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(result, null, 2),
-			},
-		],
-		structuredContent: result,
-	};
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: suggest_improvements", "MCPServer");
+	try {
+		const result = await suggestImprovements(loader, args.tags);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(result, null, 2),
+				},
+			],
+			structuredContent: result,
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: suggest_improvements",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
+	}
 }

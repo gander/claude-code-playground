@@ -66,14 +66,25 @@ export async function getPresetDetails(
  * Handler for get_preset_details tool
  */
 export async function handler(args: { presetId: string }, loader: SchemaLoader) {
-	const details = await getPresetDetails(loader, args.presetId);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(details, null, 2),
-			},
-		],
-		structuredContent: details,
-	};
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: get_preset_details", "MCPServer");
+	try {
+		const details = await getPresetDetails(loader, args.presetId);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(details, null, 2),
+				},
+			],
+			structuredContent: details,
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: get_preset_details",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
+	}
 }

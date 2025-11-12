@@ -36,17 +36,28 @@ export async function getCategoryTags(
  * Handler for get_category_tags tool
  */
 export async function handler(args: unknown, loader: SchemaLoader) {
-	const category = (args as { category?: string }).category;
-	if (!category) {
-		throw new Error("category parameter is required");
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: get_category_tags", "MCPServer");
+	try {
+		const category = (args as { category?: string }).category;
+		if (!category) {
+			throw new Error("category parameter is required");
+		}
+		const tags = await getCategoryTags(loader, category);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(tags, null, 2),
+				},
+			],
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: get_category_tags",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
 	}
-	const tags = await getCategoryTags(loader, category);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(tags, null, 2),
-			},
-		],
-	};
 }

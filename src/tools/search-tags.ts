@@ -136,14 +136,25 @@ export async function searchTags(
  * Handler for search_tags tool
  */
 export async function handler(args: { keyword: string; limit?: number }, loader: SchemaLoader) {
-	const results = await searchTags(loader, args.keyword, args.limit);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(results, null, 2),
-			},
-		],
-		structuredContent: { results: results },
-	};
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: search_tags", "MCPServer");
+	try {
+		const results = await searchTags(loader, args.keyword, args.limit);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(results, null, 2),
+				},
+			],
+			structuredContent: { results: results },
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: search_tags",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
+	}
 }

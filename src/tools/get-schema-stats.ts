@@ -34,13 +34,24 @@ export async function getSchemaStats(loader: SchemaLoader): Promise<SchemaStats>
  * Handler for get_schema_stats tool
  */
 export async function handler(_args: unknown, loader: SchemaLoader) {
-	const stats = await getSchemaStats(loader);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(stats, null, 2),
-			},
-		],
-	};
+	const { logger } = await import("../utils/logger.js");
+	logger.debug("Tool call: get_schema_stats", "MCPServer");
+	try {
+		const stats = await getSchemaStats(loader);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(stats, null, 2),
+				},
+			],
+		};
+	} catch (error) {
+		logger.error(
+			"Error executing tool: get_schema_stats",
+			"MCPServer",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		throw error;
+	}
 }
