@@ -4,6 +4,7 @@ import http from "node:http";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import pkg from "../package.json" with { type: "json" };
 import { tools } from "./tools/index.js";
 import { logger } from "./utils/logger.js";
 import { schemaLoader } from "./utils/schema-loader.js";
@@ -15,7 +16,7 @@ export function createServer(): McpServer {
 	const mcpServer = new McpServer(
 		{
 			name: "osm-tagging-schema",
-			version: "0.1.0",
+			version: pkg.version,
 		},
 		{
 			capabilities: {
