@@ -5,15 +5,25 @@ import { z } from "zod";
 import type { OsmToolDefinition } from "../types/index.js";
 
 /**
+ * Single deprecation case
+ */
+export interface DeprecationCase {
+	/** Old tag(s) that are deprecated */
+	oldTags: Record<string, string>;
+	/** Suggested replacement tags */
+	replacement?: Record<string, string>;
+	/** Type of deprecation: 'key' (any value) or 'value' (specific value) */
+	deprecationType: "key" | "value";
+}
+
+/**
  * Result of deprecation check
  */
 export interface DeprecationResult {
 	/** Whether the tag is deprecated */
 	deprecated: boolean;
-	/** Old tag(s) that are deprecated */
-	oldTags?: Record<string, string>;
-	/** Suggested replacement tags */
-	replacement?: Record<string, string>;
+	/** Collection of all deprecated cases found (undefined if not deprecated) */
+	cases?: DeprecationCase[];
 	/** Human-readable message */
 	message: string;
 }
@@ -22,94 +32,119 @@ export interface DeprecationResult {
  * Check if an OSM tag is deprecated
  *
  * @param key - Tag key to check
- * @param value - Optional tag value. If not provided, checks if any value for this key is deprecated
- * @returns Deprecation result with replacement suggestions
+ * @param value - Optional tag value. If not provided, returns ALL deprecated values for this key
+ * @returns Deprecation result with ALL matching cases and replacement suggestions
  */
 export async function checkDeprecated(key: string, value?: string): Promise<DeprecationResult> {
 	// Handle empty key
 	if (!key || key.trim() === "") {
 		return {
 			deprecated: false,
-			oldTags: undefined,
-			replacement: undefined,
+			cases: undefined,
 			message: "Empty key cannot be deprecated",
 		};
 	}
 
-	// Find deprecated entry
-	let deprecatedEntry: (typeof deprecated)[0] | undefined;
+	// Find ALL deprecated entries for this key
+	const deprecatedEntries: (typeof deprecated)[0][] = [];
 
 	if (value !== undefined) {
-		// Check for exact key-value match
-		deprecatedEntry = deprecated.find((entry) => {
+		// Find exact key-value match (should be only one, but collect all matches)
+		for (const entry of deprecated) {
 			const oldKeys = Object.keys(entry.old);
 			if (oldKeys.length === 1) {
 				const oldKey = oldKeys[0];
-				if (oldKey) {
+				if (oldKey === key) {
 					const oldValue = entry.old[oldKey as keyof typeof entry.old];
-					return oldValue === value && oldKey === key;
+					if (oldValue === value || oldValue === "*") {
+						deprecatedEntries.push(entry);
+					}
 				}
 			}
-			return false;
-		});
+		}
 	} else {
-		// Check for any entry with this key (regardless of value)
-		deprecatedEntry = deprecated.find((entry) => {
+		// Find ALL entries with this key (regardless of value)
+		for (const entry of deprecated) {
 			const oldKeys = Object.keys(entry.old);
-			return oldKeys.includes(key);
-		});
+			if (oldKeys.includes(key)) {
+				deprecatedEntries.push(entry);
+			}
+		}
 	}
 
 	// Not deprecated
-	if (!deprecatedEntry) {
+	if (deprecatedEntries.length === 0) {
 		if (value !== undefined) {
 			return {
 				deprecated: false,
-				oldTags: undefined,
-				replacement: undefined,
+				cases: undefined,
 				message: `Tag ${key}=${value} is not deprecated`,
 			};
 		}
 		return {
 			deprecated: false,
-			oldTags: undefined,
-			replacement: undefined,
+			cases: undefined,
 			message: `Tag key '${key}' is not deprecated`,
 		};
 	}
 
-	// Build oldTags object (filter out undefined values)
-	const oldTags: Record<string, string> = {};
-	for (const [k, v] of Object.entries(deprecatedEntry.old)) {
-		if (v !== undefined) {
-			oldTags[k] = v;
-		}
-	}
+	// Build cases array
+	const cases: DeprecationCase[] = [];
 
-	// Build replacement object (filter out undefined values)
-	const replacement: Record<string, string> = {};
-	if (deprecatedEntry.replace) {
-		for (const [k, v] of Object.entries(deprecatedEntry.replace)) {
+	for (const entry of deprecatedEntries) {
+		// Build oldTags object (filter out undefined values)
+		const oldTags: Record<string, string> = {};
+		for (const [k, v] of Object.entries(entry.old)) {
 			if (v !== undefined) {
-				replacement[k] = v;
+				oldTags[k] = v;
 			}
 		}
+
+		// Build replacement object (filter out undefined values)
+		const replacement: Record<string, string> = {};
+		if (entry.replace) {
+			for (const [k, v] of Object.entries(entry.replace)) {
+				if (v !== undefined) {
+					replacement[k] = v;
+				}
+			}
+		}
+
+		// Determine deprecation type
+		const deprecationType: "key" | "value" = oldTags[key] === "*" ? "key" : "value";
+
+		cases.push({
+			oldTags,
+			replacement: Object.keys(replacement).length > 0 ? replacement : undefined,
+			deprecationType,
+		});
 	}
 
 	// Build message
-	const oldTagsStr = Object.entries(oldTags)
-		.map(([k, v]) => `${k}=${v}`)
-		.join(", ");
-	const replaceTagsStr = Object.entries(replacement)
-		.map(([k, v]) => `${k}=${v}`)
-		.join(", ");
+	let message: string;
+	if (cases.length === 1 && cases[0]) {
+		const case_ = cases[0];
+		const oldTagsStr = Object.entries(case_.oldTags)
+			.map(([k, v]) => `${k}=${v}`)
+			.join(", ");
+		const replaceTagsStr = case_.replacement
+			? Object.entries(case_.replacement)
+					.map(([k, v]) => `${k}=${v}`)
+					.join(", ")
+			: "no replacement";
 
-	const message = `Tag ${oldTagsStr} is deprecated. Consider using: ${replaceTagsStr}`;
+		if (case_.deprecationType === "key") {
+			message = `Tag key '${key}' is deprecated (any value). Consider using: ${replaceTagsStr}`;
+		} else {
+			message = `Tag ${oldTagsStr} is deprecated. Consider using: ${replaceTagsStr}`;
+		}
+	} else {
+		message = `Found ${cases.length} deprecated cases for '${key}'. Check individual cases for details.`;
+	}
 
 	return {
 		deprecated: true,
-		oldTags,
-		replacement: Object.keys(replacement).length > 0 ? replacement : undefined,
+		cases,
 		message,
 	};
 }
