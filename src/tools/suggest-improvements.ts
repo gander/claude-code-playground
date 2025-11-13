@@ -170,7 +170,13 @@ const SuggestImprovements: OsmToolDefinition<{
 		},
 	}),
 	handler: async ({ tags }, _extra) => {
-		const result = await suggestImprovements(tags);
+		// Trim all keys and values in the tags object
+		const trimmedTags: Record<string, string> = {};
+		for (const [key, value] of Object.entries(tags)) {
+			trimmedTags[key.trim()] = value.trim();
+		}
+
+		const result = await suggestImprovements(trimmedTags);
 		return {
 			content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		};

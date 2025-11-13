@@ -134,7 +134,7 @@ const ValidateTag: OsmToolDefinition<{
 		},
 	}),
 	handler: async ({ key, value }, _extra) => {
-		const result = await validateTag(key, value);
+		const result = await validateTag(key.trim(), value.trim());
 		return {
 			content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		};

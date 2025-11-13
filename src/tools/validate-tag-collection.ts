@@ -84,7 +84,13 @@ const ValidateTagCollection: OsmToolDefinition<{
 		},
 	}),
 	handler: async ({ tags }, _extra) => {
-		const result = await validateTagCollection(tags);
+		// Trim all keys and values in the tags object
+		const trimmedTags: Record<string, string> = {};
+		for (const [key, value] of Object.entries(tags)) {
+			trimmedTags[key.trim()] = value.trim();
+		}
+
+		const result = await validateTagCollection(trimmedTags);
 		return {
 			content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		};

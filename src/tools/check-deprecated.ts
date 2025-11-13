@@ -167,7 +167,7 @@ const CheckDeprecated: OsmToolDefinition<{
 		},
 	}),
 	handler: async ({ key, value }, _extra) => {
-		const result = await checkDeprecated(key, value);
+		const result = await checkDeprecated(key.trim(), value ? value.trim() : undefined);
 		return {
 			content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		};
