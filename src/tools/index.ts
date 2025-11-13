@@ -4,7 +4,7 @@
 
 import * as checkDeprecated from "./check-deprecated.js";
 // import * as getCategories from "./get-categories.js"; // Migrated to new ToolDefinition format
-import * as getCategoryTags from "./get-category-tags.js";
+// import * as getCategoryTags from "./get-category-tags.js"; // Migrated to new ToolDefinition format
 import * as getPresetDetails from "./get-preset-details.js";
 import * as getPresetTags from "./get-preset-tags.js";
 import * as getRelatedTags from "./get-related-tags.js";
@@ -52,7 +52,7 @@ export interface ToolEntry {
 export const tools: ToolEntry[] = [
 	{ definition: checkDeprecated.definition, handler: checkDeprecated.handler },
 	// { definition: getCategories.definition, handler: getCategories.handler }, // Migrated to new ToolDefinition format
-	{ definition: getCategoryTags.definition, handler: getCategoryTags.handler },
+	// { definition: getCategoryTags.definition, handler: getCategoryTags.handler }, // Migrated to new ToolDefinition format
 	{ definition: getPresetDetails.definition, handler: getPresetDetails.handler },
 	{ definition: getPresetTags.definition, handler: getPresetTags.handler },
 	{ definition: getRelatedTags.definition, handler: getRelatedTags.handler },

@@ -5,6 +5,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import GetCategories from "./tools/get-categories.js";
+import GetCategoryTags from "./tools/get-category-tags.js";
 import GetSchemaStats from "./tools/get-schema-stats.js";
 import { logger } from "./utils/logger.js";
 import { schemaLoader } from "./utils/schema-loader.js";
@@ -28,6 +29,7 @@ export function createServer(): McpServer {
 	// Register tools using McpServer.registerTool() with new ToolDefinition interface
 	mcpServer.registerTool(GetSchemaStats.name, GetSchemaStats.config(), GetSchemaStats.handler);
 	mcpServer.registerTool(GetCategories.name, GetCategories.config(), GetCategories.handler);
+	mcpServer.registerTool(GetCategoryTags.name, GetCategoryTags.config(), GetCategoryTags.handler);
 
 	return mcpServer;
 }
