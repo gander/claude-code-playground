@@ -6,6 +6,82 @@ import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" w
 import { checkDeprecated } from "../../src/tools/check-deprecated.js";
 
 describe("checkDeprecated", () => {
+	describe("BUG FIX: Return ALL deprecated cases (TDD RED)", () => {
+		it("should return ALL deprecated values for 'parking' key (not just one)", async () => {
+			// When user provides only key, should get ALL deprecated values for that key
+			const result = await checkDeprecated("parking");
+
+			// parking has 6 deprecated values: covered, customers, entrance, park_and_ride, private, public
+			const parkingDeprecated = deprecated.filter((e) => e.old.parking);
+
+			assert.ok(result);
+			assert.strictEqual(result.deprecated, true);
+
+			// CRITICAL: Should return ALL cases, not just one
+			assert.ok(Array.isArray(result.cases), "Result should have 'cases' array");
+			assert.strictEqual(
+				result.cases.length,
+				parkingDeprecated.length,
+				`Should return all ${parkingDeprecated.length} deprecated parking values`,
+			);
+
+			// Verify each case has proper structure
+			for (const case_ of result.cases) {
+				assert.ok(case_.oldTags, "Each case should have oldTags");
+				assert.ok(case_.replacement, "Each case should have replacement");
+				assert.strictEqual(case_.oldTags.parking !== undefined, true, "Should have parking key");
+				assert.ok(case_.deprecationType, "Should indicate deprecation type");
+			}
+		});
+
+		it("should distinguish key-deprecated vs value-deprecated", async () => {
+			// building:height=* means the KEY is deprecated (any value)
+			const resultKey = await checkDeprecated("building:height");
+
+			assert.ok(resultKey);
+			assert.strictEqual(resultKey.deprecated, true);
+			assert.ok(Array.isArray(resultKey.cases));
+			assert.strictEqual(resultKey.cases.length, 1);
+			assert.strictEqual(
+				resultKey.cases[0].deprecationType,
+				"key",
+				"building:height should be key-deprecated",
+			);
+			assert.strictEqual(
+				resultKey.cases[0].oldTags["building:height"],
+				"*",
+				"Key deprecation uses * for value",
+			);
+
+			// parking=covered means only this specific VALUE is deprecated
+			const resultValue = await checkDeprecated("parking", "covered");
+
+			assert.ok(resultValue);
+			assert.strictEqual(resultValue.deprecated, true);
+			assert.ok(Array.isArray(resultValue.cases));
+			assert.strictEqual(resultValue.cases.length, 1);
+			assert.strictEqual(
+				resultValue.cases[0].deprecationType,
+				"value",
+				"parking=covered should be value-deprecated",
+			);
+			assert.strictEqual(
+				resultValue.cases[0].oldTags.parking,
+				"covered",
+				"Value deprecation uses specific value",
+			);
+		});
+
+		it("should return collection even for single deprecated case", async () => {
+			const result = await checkDeprecated("building:height");
+
+			assert.ok(result);
+			assert.strictEqual(result.deprecated, true);
+			assert.ok(Array.isArray(result.cases), "Should return array even for single case");
+			assert.strictEqual(result.cases.length, 1);
+		});
+	});
+
 	describe("Basic Functionality", () => {
 		it("should check if a tag key-value pair is deprecated", async () => {
 			// Use first deprecated entry
@@ -17,8 +93,10 @@ describe("checkDeprecated", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
-			assert.ok(result.replacement);
-			assert.strictEqual(typeof result.replacement, "object");
+			// Updated: should have cases array
+			assert.ok(Array.isArray(result.cases));
+			assert.ok(result.cases[0].replacement);
+			assert.strictEqual(typeof result.cases[0].replacement, "object");
 		});
 
 		it("should return not deprecated for valid non-deprecated tag", async () => {
@@ -26,10 +104,10 @@ describe("checkDeprecated", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
-			assert.strictEqual(result.replacement, undefined);
+			assert.strictEqual(result.cases, undefined, "Non-deprecated should have no cases");
 		});
 
-		it("should check tag by key only (any value)", async () => {
+		it("should check tag by key only (returns all deprecated values)", async () => {
 			// Find a deprecated entry
 			const entry = deprecated.find((e) => Object.keys(e.old).length === 1);
 			assert.ok(entry);
@@ -40,7 +118,9 @@ describe("checkDeprecated", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
-			assert.ok(result.replacement);
+			assert.ok(Array.isArray(result.cases), "Should return cases array");
+			assert.ok(result.cases.length > 0, "Should have at least one case");
+			assert.ok(result.cases[0].replacement);
 		});
 
 		it("should return full replacement object", async () => {
@@ -55,8 +135,9 @@ describe("checkDeprecated", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
-			assert.ok(result.replacement);
-			assert.ok(Object.keys(result.replacement).length > 1);
+			assert.ok(Array.isArray(result.cases));
+			assert.ok(result.cases[0].replacement);
+			assert.ok(Object.keys(result.cases[0].replacement).length > 1);
 		});
 	});
 
@@ -66,7 +147,7 @@ describe("checkDeprecated", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
-			assert.strictEqual(result.replacement, undefined);
+			assert.strictEqual(result.cases, undefined);
 		});
 
 		it("should handle empty key", async () => {
@@ -74,6 +155,7 @@ describe("checkDeprecated", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
+			assert.strictEqual(result.cases, undefined);
 		});
 
 		it("should handle key with value that is not deprecated", async () => {
@@ -85,22 +167,47 @@ describe("checkDeprecated", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, false);
+			assert.strictEqual(result.cases, undefined);
 		});
 	});
 
 	describe("Result Structure", () => {
-		it("should return correct result structure", async () => {
+		it("should return correct result structure for non-deprecated", async () => {
 			const result = await checkDeprecated("amenity", "parking");
 
 			assert.ok(result);
 			assert.ok("deprecated" in result);
 			assert.strictEqual(typeof result.deprecated, "boolean");
-			assert.ok("replacement" in result || result.replacement === undefined);
-			assert.ok("oldTags" in result);
+			assert.strictEqual(result.deprecated, false);
 			assert.ok("message" in result);
+			assert.strictEqual(result.cases, undefined);
 		});
 
-		it("should include old tags in result when deprecated", async () => {
+		it("should return correct result structure for deprecated", async () => {
+			const entry = deprecated[0];
+			const key = Object.keys(entry.old)[0];
+			const value = entry.old[key as keyof typeof entry.old];
+
+			const result = await checkDeprecated(key, value as string);
+
+			assert.ok(result);
+			assert.ok("deprecated" in result);
+			assert.strictEqual(typeof result.deprecated, "boolean");
+			assert.strictEqual(result.deprecated, true);
+			assert.ok("cases" in result);
+			assert.ok(Array.isArray(result.cases));
+			assert.ok("message" in result);
+
+			// Each case should have proper structure
+			for (const case_ of result.cases) {
+				assert.ok("oldTags" in case_);
+				assert.ok("replacement" in case_ || case_.replacement === undefined);
+				assert.ok("deprecationType" in case_);
+				assert.ok(["key", "value"].includes(case_.deprecationType));
+			}
+		});
+
+		it("should include old tags in each case when deprecated", async () => {
 			const entry = deprecated[0];
 			const key = Object.keys(entry.old)[0];
 			const value = entry.old[key as keyof typeof entry.old];
@@ -109,8 +216,9 @@ describe("checkDeprecated", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecated, true);
-			assert.ok(result.oldTags);
-			assert.deepStrictEqual(result.oldTags, entry.old);
+			assert.ok(result.cases);
+			assert.ok(result.cases[0].oldTags);
+			assert.deepStrictEqual(result.cases[0].oldTags, entry.old);
 		});
 
 		it("should include helpful message", async () => {
@@ -158,7 +266,9 @@ describe("checkDeprecated", () => {
 				const result = await checkDeprecated(key, value as string);
 
 				assert.strictEqual(result.deprecated, true, `Tag ${key}=${value} should be deprecated`);
-				assert.ok(result.replacement, `Tag ${key}=${value} should have replacement`);
+				assert.ok(result.cases, `Tag ${key}=${value} should have cases`);
+				assert.ok(result.cases.length > 0, `Tag ${key}=${value} should have at least one case`);
+				assert.ok(result.cases[0].replacement, `Tag ${key}=${value} should have replacement`);
 				testedCount++;
 			}
 
@@ -189,7 +299,8 @@ describe("checkDeprecated", () => {
 				}
 			}
 
-			assert.deepStrictEqual(result.replacement, expectedReplacement);
+			assert.ok(result.cases);
+			assert.deepStrictEqual(result.cases[0].replacement, expectedReplacement);
 		});
 	});
 });
