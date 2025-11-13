@@ -165,8 +165,8 @@ export interface TagCollectionValidationResult {
  * Tool definition types for MCP SDK migration
  */
 export type {
+	OsmToolDefinition,
 	ToolAnnotations,
 	ToolCallback,
 	ToolConfig,
-	ToolDefinition,
 } from "./tool-definition.js";

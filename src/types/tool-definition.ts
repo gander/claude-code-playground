@@ -7,7 +7,7 @@
 
 import type { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
-import type { ZodRawShape, z } from "zod";
+import type { ZodRawShape } from "zod";
 
 // Re-export types from MCP SDK for convenience
 export type { ToolAnnotations, ToolCallback };
@@ -19,8 +19,8 @@ export type { ToolAnnotations, ToolCallback };
  * Input schema uses MCP-specific format: object with Zod validators.
  */
 export interface ToolConfig<
-	TInputSchema = Record<string, z.ZodType>,
-	TOutputSchema = Record<string, z.ZodType>,
+	TInputSchema extends ZodRawShape = ZodRawShape,
+	TOutputSchema extends ZodRawShape = ZodRawShape,
 > {
 	/** Tool display title (optional) */
 	title?: string;
@@ -57,7 +57,7 @@ export interface ToolConfig<
 }
 
 /**
- * Tool definition interface for MCP tools
+ * OSM Tool Definition - unified interface for all tools in this project
  *
  * Each MCP tool must conform to this structure:
  * - name: Unique tool identifier
@@ -66,7 +66,7 @@ export interface ToolConfig<
  *
  * Example:
  * ```typescript
- * const GetTagInfo = {
+ * const GetTagInfo: OsmToolDefinition = {
  *   name: 'get_tag_info',
  *   config: () => ({
  *     description: 'Get comprehensive information about an OSM tag',
@@ -74,25 +74,22 @@ export interface ToolConfig<
  *       tagKey: z.string().describe('Tag key to query')
  *     }
  *   }),
- *   handler: async ({ tagKey }, extra) => {
- *     // Implementation with pre-validated tagKey
+ *   handler: async (args, extra) => {
+ *     const { tagKey } = args;
  *     return {
  *       content: [{ type: 'text', text: JSON.stringify(result) }]
  *     };
  *   }
- * } as const satisfies ToolDefinition;
+ * };
  * ```
  */
-export interface ToolDefinition<
-	TInputSchema extends ZodRawShape | undefined = undefined,
-	TOutputSchema extends ZodRawShape | undefined = undefined,
-> {
+export interface OsmToolDefinition<TInputSchema extends ZodRawShape = ZodRawShape> {
 	/**
 	 * Tool identifier (e.g., "get_tag_info")
 	 *
 	 * Must be unique across all tools in the server.
 	 */
-	name: string;
+	readonly name: string;
 
 	/**
 	 * Configuration function returning tool metadata and schemas
@@ -100,15 +97,15 @@ export interface ToolDefinition<
 	 * Must be a function (not static object) to allow dynamic generation.
 	 * Returns tool description, input/output schemas, and annotations.
 	 */
-	config: () => ToolConfig<TInputSchema, TOutputSchema>;
+	config: () => ToolConfig<TInputSchema>;
 
 	/**
 	 * Tool implementation handler
 	 *
 	 * Handler from MCP SDK that receives pre-validated arguments from Zod.
-	 * Signature depends on whether inputSchema is defined:
-	 * - With inputSchema: (args, extra) => CallToolResult | Promise<CallToolResult>
-	 * - Without inputSchema: (extra) => CallToolResult | Promise<CallToolResult>
+	 * Always receives two parameters: (args, extra)
+	 * - args: Validated input arguments based on inputSchema
+	 * - extra: RequestHandlerExtra with signal, requestId, etc.
 	 */
 	handler: ToolCallback<TInputSchema>;
 }
