@@ -8,7 +8,7 @@ import * as getCategoryTags from "./get-category-tags.js";
 import * as getPresetDetails from "./get-preset-details.js";
 import * as getPresetTags from "./get-preset-tags.js";
 import * as getRelatedTags from "./get-related-tags.js";
-import * as getSchemaStats from "./get-schema-stats.js";
+// import * as getSchemaStats from "./get-schema-stats.js"; // Migrated to new ToolDefinition format
 import * as getTagInfo from "./get-tag-info.js";
 import * as getTagValues from "./get-tag-values.js";
 import * as searchPresets from "./search-presets.js";
@@ -56,7 +56,7 @@ export const tools: ToolEntry[] = [
 	{ definition: getPresetDetails.definition, handler: getPresetDetails.handler },
 	{ definition: getPresetTags.definition, handler: getPresetTags.handler },
 	{ definition: getRelatedTags.definition, handler: getRelatedTags.handler },
-	{ definition: getSchemaStats.definition, handler: getSchemaStats.handler },
+	// { definition: getSchemaStats.definition, handler: getSchemaStats.handler }, // Migrated to new ToolDefinition format
 	{ definition: getTagInfo.definition, handler: getTagInfo.handler },
 	{ definition: getTagValues.definition, handler: getTagValues.handler },
 	{ definition: searchPresets.definition, handler: searchPresets.handler },

@@ -5,38 +5,12 @@
  * the new registerTool() pattern with McpServer.
  */
 
-import type { z } from "zod";
+import type { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
+import type { ZodRawShape, z } from "zod";
 
-/**
- * Tool annotations for metadata and hints
- */
-export interface ToolAnnotations {
-	/** Audience designation for the tool */
-	audience?: Array<"user" | "assistant">;
-	/** Progress tracking support */
-	progress?: boolean;
-	/** Cost tier information */
-	costTier?: "low" | "medium" | "high";
-	[key: string]: unknown;
-}
-
-/**
- * MCP tool callback function type
- *
- * Handler receives pre-validated arguments from Zod and returns tool result.
- * Arguments are fully typed based on the inputSchema.
- */
-export type ToolCallback<TInput> = (args: TInput) => Promise<{
-	content: Array<{
-		type: "text" | "image" | "resource";
-		text?: string;
-		data?: string;
-		mimeType?: string;
-		[key: string]: unknown;
-	}>;
-	structuredContent?: unknown;
-	isError?: boolean;
-}>;
+// Re-export types from MCP SDK for convenience
+export type { ToolAnnotations, ToolCallback };
 
 /**
  * Tool configuration returned by config() function
@@ -88,11 +62,11 @@ export interface ToolConfig<
  * Each MCP tool must conform to this structure:
  * - name: Unique tool identifier
  * - config(): Function returning tool configuration
- * - handler: Async callback implementing tool logic
+ * - handler: Async callback implementing tool logic (from MCP SDK)
  *
  * Example:
  * ```typescript
- * const GetTagInfo: ToolDefinition = {
+ * const GetTagInfo = {
  *   name: 'get_tag_info',
  *   config: () => ({
  *     description: 'Get comprehensive information about an OSM tag',
@@ -100,20 +74,18 @@ export interface ToolConfig<
  *       tagKey: z.string().describe('Tag key to query')
  *     }
  *   }),
- *   handler: async ({ tagKey }) => {
+ *   handler: async ({ tagKey }, extra) => {
  *     // Implementation with pre-validated tagKey
  *     return {
- *       content: [{ type: 'text', text: JSON.stringify(result) }],
- *       structuredContent: result
+ *       content: [{ type: 'text', text: JSON.stringify(result) }]
  *     };
  *   }
- * };
+ * } as const satisfies ToolDefinition;
  * ```
  */
 export interface ToolDefinition<
-	TInputSchema = Record<string, z.ZodType>,
-	TOutputSchema = Record<string, z.ZodType>,
-	TInput = unknown,
+	TInputSchema extends ZodRawShape | undefined = undefined,
+	TOutputSchema extends ZodRawShape | undefined = undefined,
 > {
 	/**
 	 * Tool identifier (e.g., "get_tag_info")
@@ -133,26 +105,10 @@ export interface ToolDefinition<
 	/**
 	 * Tool implementation handler
 	 *
-	 * Async function receiving pre-validated arguments from Zod.
-	 * Arguments are typed based on inputSchema.
-	 *
-	 * @param args - Validated input arguments (typed object)
-	 * @returns Tool result with content array and optional structured data
-	 *
-	 * Example:
-	 * ```typescript
-	 * handler: async ({ tagKey, limit = 10 }) => {
-	 *   // tagKey is validated as string by Zod
-	 *   // limit is validated as optional number with default
-	 *
-	 *   const result = await queryTag(tagKey, limit);
-	 *
-	 *   return {
-	 *     content: [{ type: 'text', text: JSON.stringify(result) }],
-	 *     structuredContent: result
-	 *   };
-	 * }
-	 * ```
+	 * Handler from MCP SDK that receives pre-validated arguments from Zod.
+	 * Signature depends on whether inputSchema is defined:
+	 * - With inputSchema: (args, extra) => CallToolResult | Promise<CallToolResult>
+	 * - Without inputSchema: (extra) => CallToolResult | Promise<CallToolResult>
 	 */
-	handler: ToolCallback<TInput>;
+	handler: ToolCallback<TInputSchema>;
 }

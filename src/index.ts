@@ -4,6 +4,7 @@ import http from "node:http";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import GetSchemaStats from "./tools/get-schema-stats.js";
 import { logger } from "./utils/logger.js";
 import { schemaLoader } from "./utils/schema-loader.js";
 
@@ -23,8 +24,8 @@ export function createServer(): McpServer {
 		},
 	);
 
-	// TODO: Register tools using McpServer.registerTool() with new ToolDefinition interface
-	// Tools will be imported and registered here during migration
+	// Register tools using McpServer.registerTool() with new ToolDefinition interface
+	mcpServer.registerTool(GetSchemaStats.name, GetSchemaStats.config(), GetSchemaStats.handler);
 
 	return mcpServer;
 }
