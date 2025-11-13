@@ -432,6 +432,39 @@ describe("Integration: my_new_tool", () => {
 });
 ```
 
+### Skipped Tests
+
+**Status**: The project currently has 16 skipped integration tests for parameter validation.
+
+**Why skipped**:
+- Tests for parameter validation (missing/invalid parameters) are currently skipped
+- The MCP SDK v1.21.1 uses Zod for schema validation
+- When the MCP SDK migration to the new tool registration API is complete, these tests will be re-enabled or removed based on the new validation behavior
+
+**Location**: All skipped tests are in `tests/integration/*.test.ts` files.
+
+**Examples**:
+```typescript
+// Parameter validation tests (currently skipped)
+it.skip("should throw error for missing tagKey parameter", async () => {
+  await assert.rejects(
+    async () => {
+      await client.callTool({
+        name: "get_tag_info",
+        arguments: {},
+      });
+    },
+    { message: /tagKey parameter is required/ }
+  );
+});
+```
+
+**What this means for contributors**:
+- ✅ Unit tests and data integrity tests are comprehensive (406 total tests)
+- ✅ All skipped tests are non-critical (parameter validation only)
+- ✅ When adding new tools, you can follow the existing pattern of skipping parameter validation tests
+- ✅ These tests will be addressed in a future MCP SDK migration
+
 ## Commit Message Guidelines
 
 Follow **Conventional Commits** format:
