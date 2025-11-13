@@ -50,12 +50,30 @@ jobs:
 
           echo "Fetching packages for ${OWNER}/${REPO}..."
 
-          # Get packages
-          packages=$(gh api --paginate "/orgs/${OWNER}/packages?package_type=${PACKAGE_TYPE}" \
-            --jq ".[] | select(.repository.name == \"${REPO}\") | .name" 2>/dev/null || true)
+          # Detect if owner is org or user
+          OWNER_TYPE="orgs"
+          if ! gh api "/orgs/${OWNER}" >/dev/null 2>&1; then
+            echo "Owner '${OWNER}' is not an organization, trying as user..."
+            OWNER_TYPE="users"
+          else
+            echo "Owner '${OWNER}' is an organization"
+          fi
+
+          # Get packages (try org first, then user)
+          packages=$(gh api --paginate "/${OWNER_TYPE}/${OWNER}/packages?package_type=${PACKAGE_TYPE}" 2>&1)
+
+          # Check if API call failed
+          if echo "$packages" | grep -q '"message"'; then
+            echo "Error fetching packages:"
+            echo "$packages" | jq -r '.message // .'
+            exit 0
+          fi
+
+          # Filter packages for this repository
+          packages=$(echo "$packages" | jq -r ".[] | select(.repository.name == \"${REPO}\") | .name" 2>/dev/null || true)
 
           if [ -z "$packages" ]; then
-            echo "No packages found to clean"
+            echo "No packages found for repository ${REPO}"
             exit 0
           fi
 
@@ -64,8 +82,17 @@ jobs:
 
             # Get versions sorted by creation date (oldest first)
             versions=$(gh api --paginate \
-              "/orgs/${OWNER}/packages/${PACKAGE_TYPE}/${package}/versions?per_page=100" \
-              --jq 'sort_by(.created_at) | .[] | {id: .id, created: .created_at, tags: .metadata.container.tags}' 2>/dev/null || true)
+              "/${OWNER_TYPE}/${OWNER}/packages/${PACKAGE_TYPE}/${package}/versions?per_page=100" 2>&1)
+
+            # Check if API call failed
+            if echo "$versions" | grep -q '"message"'; then
+              echo "Error fetching versions for ${package}:"
+              echo "$versions" | jq -r '.message // .'
+              continue
+            fi
+
+            # Parse versions
+            versions=$(echo "$versions" | jq -c 'sort_by(.created_at) | .[] | {id: .id, created: .created_at, tags: .metadata.container.tags}' 2>/dev/null || true)
 
             if [ -z "$versions" ]; then
               echo "No versions found for $package"
@@ -97,8 +124,15 @@ jobs:
 
               echo "Deleting version ID: $version_id (created: $created, tags: $tags)"
               gh api -X DELETE \
-                "/orgs/${OWNER}/packages/${PACKAGE_TYPE}/${package}/versions/${version_id}" \
-                2>/dev/null && echo "✓ Deleted" || echo "✗ Failed to delete"
+                "/${OWNER_TYPE}/${OWNER}/packages/${PACKAGE_TYPE}/${package}/versions/${version_id}" \
+                2>&1 | tee /tmp/delete_result.txt
+
+              if grep -q '"message"' /tmp/delete_result.txt 2>/dev/null; then
+                echo "✗ Failed to delete:"
+                cat /tmp/delete_result.txt | jq -r '.message // .'
+              else
+                echo "✓ Deleted"
+              fi
 
               sleep 1  # Rate limit protection
             done
@@ -143,8 +177,17 @@ jobs:
           echo "Fetching workflows for ${OWNER}/${REPO}..."
 
           # Get workflows
-          workflows=$(gh api "/repos/${OWNER}/${REPO}/actions/workflows" \
-            --jq '.workflows[] | {id: .id, name: .name}' 2>/dev/null || true)
+          workflows=$(gh api "/repos/${OWNER}/${REPO}/actions/workflows" 2>&1)
+
+          # Check if API call failed
+          if echo "$workflows" | grep -q '"message"'; then
+            echo "Error fetching workflows:"
+            echo "$workflows" | jq -r '.message // .'
+            exit 0
+          fi
+
+          # Parse workflows
+          workflows=$(echo "$workflows" | jq -c '.workflows[] | {id: .id, name: .name}' 2>/dev/null || true)
 
           if [ -z "$workflows" ]; then
             echo "No workflows found"
@@ -159,8 +202,17 @@ jobs:
 
             # Get runs sorted by created_at (newest first)
             runs=$(gh api --paginate \
-              "/repos/${OWNER}/${REPO}/actions/workflows/${workflow_id}/runs?per_page=100&status=completed" \
-              --jq '.workflow_runs | sort_by(.created_at) | reverse | .[] | {id: .id, created: .created_at, conclusion: .conclusion}' 2>/dev/null || true)
+              "/repos/${OWNER}/${REPO}/actions/workflows/${workflow_id}/runs?per_page=100&status=completed" 2>&1)
+
+            # Check if API call failed
+            if echo "$runs" | grep -q '"message"'; then
+              echo "Error fetching runs for ${workflow_name}:"
+              echo "$runs" | jq -r '.message // .'
+              continue
+            fi
+
+            # Parse runs
+            runs=$(echo "$runs" | jq -c '.workflow_runs | sort_by(.created_at) | reverse | .[] | {id: .id, created: .created_at, conclusion: .conclusion}' 2>/dev/null || true)
 
             if [ -z "$runs" ]; then
               echo "No completed runs found for $workflow_name"
@@ -193,7 +245,14 @@ jobs:
 
               echo "Deleting run ID: $run_id (created: $created, conclusion: $conclusion)"
               gh api -X DELETE "/repos/${OWNER}/${REPO}/actions/runs/${run_id}" \
-                2>/dev/null && echo "✓ Deleted" || echo "✗ Failed to delete"
+                2>&1 | tee /tmp/delete_run_result.txt
+
+              if grep -q '"message"' /tmp/delete_run_result.txt 2>/dev/null; then
+                echo "✗ Failed to delete:"
+                cat /tmp/delete_run_result.txt | jq -r '.message // .'
+              else
+                echo "✓ Deleted"
+              fi
 
               sleep 1  # Rate limit protection
             done
