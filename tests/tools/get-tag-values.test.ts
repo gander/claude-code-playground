@@ -316,5 +316,58 @@ describe("get_tag_values", () => {
 				`Should return at least ${expectedOptions.size} values (from fields), got ${values.length}`,
 			);
 		});
+
+		it("should return descriptions for parking values from field.strings.options.[value].description", async () => {
+			// Test with "parking" which has descriptions in new schema format
+			const values = await getTagValues("parking");
+
+			assert.ok(values.length > 0, "Should have parking values");
+
+			// Verify that ALL parking values have descriptions
+			// In schema v6.13.4+, parking field has descriptions for all values
+			for (const item of values) {
+				assert.ok(
+					"description" in item &&
+						typeof item.description === "string" &&
+						item.description.length > 0,
+					`Parking value "${item.value}" should have a description. Got: ${JSON.stringify(item)}`,
+				);
+			}
+
+			// Verify specific examples from the schema
+			const surfaceValue = values.find((v) => v.value === "surface");
+			assert.ok(surfaceValue, "Should have 'surface' value");
+			assert.strictEqual(
+				surfaceValue.name,
+				"Surface",
+				"Surface value should have correct name/title",
+			);
+			assert.strictEqual(
+				surfaceValue.description,
+				"One level of parking on the ground.",
+				"Surface value should have correct description",
+			);
+
+			const undergroundValue = values.find((v) => v.value === "underground");
+			assert.ok(undergroundValue, "Should have 'underground' value");
+			assert.strictEqual(
+				undergroundValue.name,
+				"Underground",
+				"Underground value should have correct name/title",
+			);
+			assert.strictEqual(
+				undergroundValue.description,
+				"Underground parking.",
+				"Underground value should have correct description",
+			);
+
+			const carportsValue = values.find((v) => v.value === "carports");
+			assert.ok(carportsValue, "Should have 'carports' value");
+			assert.strictEqual(
+				carportsValue.description,
+				"Structure used to offer limited protection to vehicles, typically without walls.",
+				"Carports value should have correct description",
+			);
+		});
 	});
 });
