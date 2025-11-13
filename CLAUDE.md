@@ -432,9 +432,10 @@ interface ToolDefinition<InputArgs, OutputArgs> {
    - **inputSchema**: Zod schema for input validation (e.g., `{ tagKey: z.string() }`)
    - **outputSchema**: Zod schema for output validation (optional)
 3. **handler**: Async tool implementation callback function
-   - **Async function**: `async (args) => { ... }`
-   - **First parameter**: Object with typed arguments (e.g., `{ tagKey: string, limit?: number }`)
-   - **TypeScript typing**: Arguments are typed directly in the function signature
+   - **Async function**: Use parameter destructuring for clean code
+   - **No parameters**: `async (_args, _extra) => { ... }`
+   - **With parameters**: `async ({ param1, param2 }, _extra) => { ... }`
+   - **TypeScript typing**: Arguments are automatically typed by Zod schema (inferred from inputSchema)
    - **Pre-validated inputs**: Zod validates inputs before calling handler - no additional validation needed
    - **Returns**: Object with `content` array and optional `structuredContent`
 
@@ -487,9 +488,15 @@ inputSchema: {
 
 **Handler Signature**:
 ```typescript
-async (args: { param1: string, param2?: number }) => {
-    // args are already validated by Zod
-    // args are typed with TypeScript for IDE support
+// No parameters - use _args
+async (_args, _extra) => {
+    return { content: [{ type: 'text', text: 'result' }] };
+}
+
+// With parameters - use destructuring
+async ({ param1, param2 }, _extra) => {
+    // params are already validated by Zod
+    // params are typed by TypeScript (inferred from inputSchema)
 
     return {
         content: [{ type: 'text', text: 'result' }],
