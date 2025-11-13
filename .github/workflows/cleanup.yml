@@ -1,0 +1,210 @@
+name: Hourly Cleanup
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Co godzinę o pełnej godzinie
+  workflow_dispatch:      # Manualny trigger dla testowania
+
+# Top-level permissions: read-only by default (principle of least privilege)
+permissions:
+  contents: read
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  cleanup-packages:
+    name: Clean Old Package Versions
+    runs-on: ubuntu-latest
+    # Minimal permissions required for package cleanup
+    permissions:
+      packages: write  # Required to delete package versions via GitHub Packages API
+      contents: read   # Required for checkout
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4.2.2
+
+      - name: Random delay to avoid rate limits
+        run: sleep $((RANDOM % 30))
+
+      - name: Check rate limit before start
+        run: |
+          rate_info=$(gh api rate_limit --jq '.resources.core')
+          echo "Rate limit info: $rate_info"
+          remaining=$(echo "$rate_info" | jq -r '.remaining')
+          echo "Remaining requests: $remaining"
+
+          # Przerwij jeśli zostało mniej niż 100 requestów
+          if [ "$remaining" -lt 100 ]; then
+            echo "::warning::Rate limit too low ($remaining remaining), skipping cleanup"
+            exit 0
+          fi
+
+      - name: Cleanup package versions
+        run: |
+          OWNER="${{ github.repository_owner }}"
+          REPO="${{ github.event.repository.name }}"
+          PACKAGE_TYPE="container"
+          MIN_KEEP=3  # Zachowaj tylko 3 najnowsze wersje (uruchamiamy co godzinę)
+
+          echo "Fetching packages for ${OWNER}/${REPO}..."
+
+          # Get packages
+          packages=$(gh api --paginate "/orgs/${OWNER}/packages?package_type=${PACKAGE_TYPE}" \
+            --jq ".[] | select(.repository.name == \"${REPO}\") | .name" 2>/dev/null || true)
+
+          if [ -z "$packages" ]; then
+            echo "No packages found to clean"
+            exit 0
+          fi
+
+          for package in $packages; do
+            echo "Processing package: $package"
+
+            # Get versions sorted by creation date (oldest first)
+            versions=$(gh api --paginate \
+              "/orgs/${OWNER}/packages/${PACKAGE_TYPE}/${package}/versions?per_page=100" \
+              --jq 'sort_by(.created_at) | .[] | {id: .id, created: .created_at, tags: .metadata.container.tags}' 2>/dev/null || true)
+
+            if [ -z "$versions" ]; then
+              echo "No versions found for $package"
+              continue
+            fi
+
+            # Count total versions
+            total=$(echo "$versions" | jq -s 'length')
+            echo "Total versions: $total"
+
+            if [ "$total" -le "$MIN_KEEP" ]; then
+              echo "Only $total versions, keeping all (MIN_KEEP=$MIN_KEEP)"
+              continue
+            fi
+
+            to_delete=$((total - MIN_KEEP))
+            echo "Will delete $to_delete oldest versions"
+
+            count=0
+            echo "$versions" | jq -c '.' | while read -r version; do
+              count=$((count + 1))
+              if [ $count -gt $to_delete ]; then
+                break
+              fi
+
+              version_id=$(echo "$version" | jq -r '.id')
+              created=$(echo "$version" | jq -r '.created')
+              tags=$(echo "$version" | jq -r '.tags[]?' 2>/dev/null || echo "untagged")
+
+              echo "Deleting version ID: $version_id (created: $created, tags: $tags)"
+              gh api -X DELETE \
+                "/orgs/${OWNER}/packages/${PACKAGE_TYPE}/${package}/versions/${version_id}" \
+                2>/dev/null && echo "✓ Deleted" || echo "✗ Failed to delete"
+
+              sleep 1  # Rate limit protection
+            done
+
+            echo "Finished processing $package"
+            echo "---"
+          done
+
+  cleanup-workflow-runs:
+    name: Clean Old Workflow Runs
+    runs-on: ubuntu-latest
+    # Minimal permissions required for workflow runs cleanup
+    permissions:
+      actions: write   # Required to delete workflow runs via GitHub Actions API
+      contents: read   # Required for checkout
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4.2.2
+
+      - name: Random delay
+        run: sleep $((RANDOM % 30))
+
+      - name: Check rate limit
+        run: |
+          rate_info=$(gh api rate_limit --jq '.resources.core')
+          echo "Rate limit info: $rate_info"
+          remaining=$(echo "$rate_info" | jq -r '.remaining')
+          echo "Remaining requests: $remaining"
+
+          if [ "$remaining" -lt 100 ]; then
+            echo "::warning::Rate limit too low ($remaining remaining), skipping cleanup"
+            exit 0
+          fi
+
+      - name: Cleanup workflow runs
+        run: |
+          OWNER="${{ github.repository_owner }}"
+          REPO="${{ github.event.repository.name }}"
+          MIN_KEEP=10  # Zachowaj tylko 10 najnowszych runs (uruchamiamy co godzinę)
+
+          echo "Fetching workflows for ${OWNER}/${REPO}..."
+
+          # Get workflows
+          workflows=$(gh api "/repos/${OWNER}/${REPO}/actions/workflows" \
+            --jq '.workflows[] | {id: .id, name: .name}' 2>/dev/null || true)
+
+          if [ -z "$workflows" ]; then
+            echo "No workflows found"
+            exit 0
+          fi
+
+          echo "$workflows" | jq -c '.' | while read -r workflow; do
+            workflow_id=$(echo "$workflow" | jq -r '.id')
+            workflow_name=$(echo "$workflow" | jq -r '.name')
+
+            echo "Processing workflow: $workflow_name (ID: $workflow_id)"
+
+            # Get runs sorted by created_at (newest first)
+            runs=$(gh api --paginate \
+              "/repos/${OWNER}/${REPO}/actions/workflows/${workflow_id}/runs?per_page=100&status=completed" \
+              --jq '.workflow_runs | sort_by(.created_at) | reverse | .[] | {id: .id, created: .created_at, conclusion: .conclusion}' 2>/dev/null || true)
+
+            if [ -z "$runs" ]; then
+              echo "No completed runs found for $workflow_name"
+              continue
+            fi
+
+            # Count total runs
+            total=$(echo "$runs" | jq -s 'length')
+            echo "Total completed runs: $total"
+
+            if [ "$total" -le "$MIN_KEEP" ]; then
+              echo "Only $total runs, keeping all (MIN_KEEP=$MIN_KEEP)"
+              continue
+            fi
+
+            to_delete=$((total - MIN_KEEP))
+            echo "Will delete $to_delete oldest runs"
+
+            count=0
+            echo "$runs" | jq -c '.' | while read -r run; do
+              count=$((count + 1))
+              # Skip first MIN_KEEP runs (newest)
+              if [ $count -le $MIN_KEEP ]; then
+                continue
+              fi
+
+              run_id=$(echo "$run" | jq -r '.id')
+              created=$(echo "$run" | jq -r '.created')
+              conclusion=$(echo "$run" | jq -r '.conclusion')
+
+              echo "Deleting run ID: $run_id (created: $created, conclusion: $conclusion)"
+              gh api -X DELETE "/repos/${OWNER}/${REPO}/actions/runs/${run_id}" \
+                2>/dev/null && echo "✓ Deleted" || echo "✗ Failed to delete"
+
+              sleep 1  # Rate limit protection
+            done
+
+            echo "Finished processing $workflow_name"
+            echo "---"
+          done
+
+      - name: Final rate limit check
+        run: |
+          rate_info=$(gh api rate_limit --jq '.resources.core')
+          echo "Final rate limit: $rate_info"
+          remaining=$(echo "$rate_info" | jq -r '.remaining')
+          echo "Remaining requests: $remaining"
