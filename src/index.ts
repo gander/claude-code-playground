@@ -7,6 +7,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import GetCategories from "./tools/get-categories.js";
 import GetCategoryTags from "./tools/get-category-tags.js";
 import GetSchemaStats from "./tools/get-schema-stats.js";
+import GetTagInfo from "./tools/get-tag-info.js";
 import { logger } from "./utils/logger.js";
 import { schemaLoader } from "./utils/schema-loader.js";
 
@@ -30,6 +31,7 @@ export function createServer(): McpServer {
 	mcpServer.registerTool(GetSchemaStats.name, GetSchemaStats.config(), GetSchemaStats.handler);
 	mcpServer.registerTool(GetCategories.name, GetCategories.config(), GetCategories.handler);
 	mcpServer.registerTool(GetCategoryTags.name, GetCategoryTags.config(), GetCategoryTags.handler);
+	mcpServer.registerTool(GetTagInfo.name, GetTagInfo.config(), GetTagInfo.handler);
 
 	return mcpServer;
 }

@@ -1,24 +1,7 @@
+import { z } from "zod";
+import type { OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
 import type { TagInfo } from "./types.js";
-
-/**
- * Tool definition for get_tag_info
- */
-export const definition = {
-	name: "get_tag_info",
-	description:
-		"Get comprehensive information about a specific tag key, including all possible values, type, and field definition status",
-	inputSchema: {
-		type: "object" as const,
-		properties: {
-			tagKey: {
-				type: "string",
-				description: "The tag key to get information for (e.g., 'parking', 'amenity')",
-			},
-		},
-		required: ["tagKey"],
-	},
-};
 
 /**
  * Get comprehensive information about a specific tag key
@@ -87,20 +70,38 @@ export async function getTagInfo(tagKey: string): Promise<TagInfo> {
 }
 
 /**
- * Handler for get_tag_info tool
+ * Tool definition for get_tag_info following new OsmToolDefinition interface
+ *
+ * Returns comprehensive information about a specific tag key including all possible values,
+ * type, and field definition status.
  */
-export async function handler(args: unknown) {
-	const tagKey = (args as { tagKey?: string }).tagKey;
-	if (!tagKey) {
-		throw new Error("tagKey parameter is required");
-	}
-	const info = await getTagInfo(tagKey);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(info, null, 2),
-			},
-		],
-	};
-}
+const GetTagInfo: OsmToolDefinition<{
+	tagKey: z.ZodString;
+}> = {
+	name: "get_tag_info" as const,
+
+	config: () => ({
+		description:
+			"Get comprehensive information about a specific tag key, including all possible values, type, and field definition status",
+		inputSchema: {
+			tagKey: z
+				.string()
+				.describe("The tag key to get information for (e.g., 'parking', 'amenity')"),
+		},
+	}),
+
+	handler: async ({ tagKey }, _extra) => {
+		const info = await getTagInfo(tagKey);
+
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(info, null, 2),
+				},
+			],
+		};
+	},
+};
+
+export default GetTagInfo;
