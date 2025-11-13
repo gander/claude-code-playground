@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GH_TOKEN: ${{ secrets.PAT_PACKAGES }}
 
 jobs:
   cleanup-packages:
@@ -50,16 +50,10 @@ jobs:
 
           echo "Fetching packages for ${OWNER}/${REPO}..."
 
-          # Detect if owner is org or user
+          # Owner is organization
           OWNER_TYPE="orgs"
-          if ! gh api "/orgs/${OWNER}" >/dev/null 2>&1; then
-            echo "Owner '${OWNER}' is not an organization, trying as user..."
-            OWNER_TYPE="users"
-          else
-            echo "Owner '${OWNER}' is an organization"
-          fi
 
-          # Get packages (try org first, then user)
+          # Get packages
           packages=$(gh api --paginate "/${OWNER_TYPE}/${OWNER}/packages?package_type=${PACKAGE_TYPE}" 2>&1)
 
           # Check if API call failed
