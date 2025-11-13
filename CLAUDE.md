@@ -639,6 +639,207 @@ server.registerTool(
 - GitHub Repository: https://github.com/modelcontextprotocol/typescript-sdk
 - Migration Guide: (to be created in DEVELOPMENT.md)
 
+## Data Sources and Usage Patterns
+
+This section documents key architectural decisions about data sources from `@openstreetmap/id-tagging-schema` and their appropriate use in the MCP server context.
+
+### Schema Data Files Analysis
+
+The schema library provides multiple JSON data files, each serving a distinct purpose:
+
+| File | Size | Entries | Purpose | Usage in Project |
+|------|------|---------|---------|------------------|
+| `presets.json` | 672 KB | 1,707 | Feature presets with tags, geometry, fields | ✅ Core data - ALL tools |
+| `fields.json` | 150 KB | 714 | Tag field definitions (types, options, validation) | ✅ Core data - ALL tools |
+| `translations/en.json` | 476 KB | 1,707 presets<br>714 fields<br>17 categories | **UI strings only**: names, labels, descriptions | ⚠️ LIMITED - 2 tools only |
+| `deprecated.json` | 81 KB | 529 | Deprecated tag mappings | ✅ Validation tools (4 tools) |
+| `preset_categories.json` | 7 KB | 17 | Category membership | ✅ Category tools (2 tools) |
+| `preset_defaults.json` | 1.5 KB | ~10 | Default presets per geometry | ✅ Schema exploration |
+
+**IMPORTANT**: Files are **complementary** - each contains unique data that cannot be replaced by others.
+
+### Translations File (`translations/en.json`) - Usage Guidelines
+
+**Structure**:
+```json
+{
+  "en": {
+    "presets": {
+      "categories": { "category-building": { "name": "Building Features" } },
+      "fields": {
+        "parking": {
+          "label": "Type",
+          "options": {
+            "surface": { "title": "Surface", "description": "..." },
+            "underground": { "title": "Underground", "description": "..." }
+          }
+        }
+      },
+      "presets": {
+        "amenity/parking": { "name": "Parking Lot", "terms": "..." }
+      }
+    }
+  }
+}
+```
+
+**What translations contain**:
+- ✅ Human-readable names for presets (e.g., "Parking Lot" for `amenity/parking`)
+- ✅ Field labels and option descriptions (e.g., "Type" label, "Surface" option title)
+- ✅ Search terms for presets (e.g., "automobile parking, car lot")
+- ✅ Category display names (e.g., "Building Features")
+
+**What translations DO NOT contain**:
+- ❌ Tag structure and definitions (that's in `presets.json` and `fields.json`)
+- ❌ Field types, validation rules, constraints (that's in `fields.json`)
+- ❌ Deprecated tag mappings (that's in `deprecated.json`)
+- ❌ Geometry types, preset membership (that's in `presets.json`)
+
+**Current usage** (2/14 tools):
+1. `get_tag_info` - Uses preset names and field option descriptions
+2. `get_tag_values` - Uses field option titles and descriptions
+
+**TypeScript interface**:
+```typescript
+// Current interface (src/types/index.ts:121)
+export interface SchemaData {
+  translations?: Record<string, unknown>;  // Dynamic, untyped
+}
+
+// Access pattern in code
+const fieldStrings = (schema.translations as Record<string, any>)?.en?.presets?.fields?.[fieldKey];
+```
+
+**TypeScript type definitions**:
+- ❌ **NOT PROVIDED** by `@openstreetmap/id-tagging-schema` package
+- Package has no `.d.ts` files or `types` field in `package.json`
+- Project maintains own interfaces in `src/types/index.ts`
+
+**Recommendations**:
+- ✅ **Keep all data files** - each serves unique purpose
+- ✅ **Expand translations usage** - only 2/14 tools currently use them
+- ⚠️ **Add TypeScript interfaces** for translations structure (type safety)
+- ✅ **Schema loader loads all files** in parallel for optimal performance
+
+### Validation Tools - MCP Server Context
+
+**Purpose**: This is an **MCP server for AI assistants**, not a form-building UI like iD editor or StreetComplete.
+
+**Key difference**:
+- **Form-based editors**: Validation = "what to show, when to show, how to show"
+- **MCP server**: Validation = "data quality analysis, education, error detection"
+
+#### Validation Tools (4/14 tools)
+
+| Tool | Function | MCP Use Case | Value for AI |
+|------|----------|--------------|--------------|
+| `validate_tag` | Validate single tag | ✅ Typo detection, value checking | ⭐⭐⭐ High |
+| `validate_tag_collection` | Validate tag collection | ✅ Data quality analysis | ⭐⭐⭐ High |
+| `check_deprecated` | Check deprecated tags | ✅ Schema updates, migration help | ⭐⭐⭐ High |
+| `suggest_improvements` | Suggest missing fields | ✅ Data completeness | ⭐⭐ Medium |
+
+#### Use Cases for AI Assistants
+
+**1. Educational / Explaining**
+```
+User: "Can I use amenity=parking_lot?"
+AI: *uses validate_tag*
+AI: "Tag 'amenity=parking_lot' doesn't exist in schema.
+     Did you mean 'amenity=parking'?"
+```
+
+**2. Data Quality Analysis**
+```
+User: "Analyze these OSM exports for issues"
+AI: *uses validate_tag_collection*
+AI: "Found 3 deprecated tags:
+     - highway=ford → ford=yes
+     - amenity=ev_charging → amenity=charging_station"
+```
+
+**3. Code Review / Import Validation**
+```python
+# Import script
+tags = {"amenity": "restraunt"}  # typo!
+```
+AI detects typos in tag values using validation tools.
+
+**4. Data Completeness Check**
+```
+User: "Check if restaurant data is complete"
+AI: *uses suggest_improvements*
+AI: "Missing common tags: cuisine, opening_hours, wheelchair"
+```
+
+#### Features Relevant vs. Not Relevant
+
+**✅ Useful for MCP server**:
+
+1. **Deprecated tag checking** ⭐⭐⭐
+   - OSM schema evolves, AI should know current tags
+   - Tools: `check_deprecated`, `validate_tag`
+
+2. **Value validation** ⭐⭐⭐
+   - Detect typos, incorrect values
+   - Tools: `validate_tag` (checks `field.options`)
+
+3. **Completeness suggestions** ⭐⭐
+   - Help users complete data
+   - Tools: `suggest_improvements`
+
+4. **Geometry validation** ⭐⭐ (NOT YET IMPLEMENTED)
+   - Check if tag appropriate for geometry type
+   - Example: `amenity=parking` typically `area`, not `point`
+
+**❌ NOT useful for MCP server** (form-specific):
+
+1. **`prerequisiteTag` validation** (50 fields in schema)
+   - **Purpose**: Show field X only when field Y has value Z
+   - **Example**: Show "voltage" only when "electrified ≠ no"
+   - **MCP value**: ❌ None - only relevant for dynamic forms
+   - **AI alternative**: Explain field relationships in text
+
+2. **Field display logic**
+   - **Purpose**: UI conditional rendering
+   - **MCP value**: ❌ None - AI doesn't build forms
+
+**🔄 Consider adding** (future enhancements):
+
+1. **Geometry-based validation** ⭐⭐⭐
+```typescript
+{
+  "tags": { "amenity": "parking" },
+  "geometry": "point"  // ← Warning: parking usually "area"
+}
+```
+
+2. **Value type validation** ⭐⭐
+```typescript
+{
+  "key": "maxspeed",
+  "value": "fast"  // ← Error: should be number (e.g., "50")
+}
+```
+Currently: Validates `field.options` only, not `field.type` (number/url/email).
+
+3. **Tag combination validation** ⭐
+```typescript
+{
+  "tags": {
+    "amenity": "restaurant",
+    "shop": "bakery"  // ← Warning: conflicting tags
+  }
+}
+```
+
+#### Summary
+
+**Validation in MCP context**:
+- **Purpose**: Data quality, education, error detection (NOT form building)
+- **Current tools**: All 4 validation tools are useful and should be kept
+- **Omit**: Form-specific features like `prerequisiteTag` logic
+- **Expand**: Geometry validation, type validation, combination checks
+
 ## Development Status
 
 **Current Phase: Phase 6 - COMPLETED ✅**
