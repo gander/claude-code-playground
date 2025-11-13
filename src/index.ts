@@ -4,14 +4,20 @@ import http from "node:http";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import CheckDeprecated from "./tools/check-deprecated.js";
 import GetCategories from "./tools/get-categories.js";
 import GetCategoryTags from "./tools/get-category-tags.js";
+import GetPresetDetails from "./tools/get-preset-details.js";
+import GetPresetTags from "./tools/get-preset-tags.js";
 import GetRelatedTags from "./tools/get-related-tags.js";
 import GetSchemaStats from "./tools/get-schema-stats.js";
 import GetTagInfo from "./tools/get-tag-info.js";
 import GetTagValues from "./tools/get-tag-values.js";
 import SearchPresets from "./tools/search-presets.js";
 import SearchTags from "./tools/search-tags.js";
+import SuggestImprovements from "./tools/suggest-improvements.js";
+import ValidateTag from "./tools/validate-tag.js";
+import ValidateTagCollection from "./tools/validate-tag-collection.js";
 import { logger } from "./utils/logger.js";
 import { schemaLoader } from "./utils/schema-loader.js";
 
@@ -40,6 +46,24 @@ export function createServer(): McpServer {
 	mcpServer.registerTool(GetRelatedTags.name, GetRelatedTags.config(), GetRelatedTags.handler);
 	mcpServer.registerTool(SearchPresets.name, SearchPresets.config(), SearchPresets.handler);
 	mcpServer.registerTool(SearchTags.name, SearchTags.config(), SearchTags.handler);
+	mcpServer.registerTool(
+		GetPresetDetails.name,
+		GetPresetDetails.config(),
+		GetPresetDetails.handler,
+	);
+	mcpServer.registerTool(GetPresetTags.name, GetPresetTags.config(), GetPresetTags.handler);
+	mcpServer.registerTool(CheckDeprecated.name, CheckDeprecated.config(), CheckDeprecated.handler);
+	mcpServer.registerTool(ValidateTag.name, ValidateTag.config(), ValidateTag.handler);
+	mcpServer.registerTool(
+		ValidateTagCollection.name,
+		ValidateTagCollection.config(),
+		ValidateTagCollection.handler,
+	);
+	mcpServer.registerTool(
+		SuggestImprovements.name,
+		SuggestImprovements.config(),
+		SuggestImprovements.handler,
+	);
 
 	return mcpServer;
 }

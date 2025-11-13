@@ -1,29 +1,8 @@
 import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
 	type: "json",
 };
-
-/**
- * Tool definition for check_deprecated
- */
-export const definition = {
-	name: "check_deprecated",
-	description: "Check if an OSM tag is deprecated. Accepts tag key or key-value pair.",
-	inputSchema: {
-		type: "object" as const,
-		properties: {
-			key: {
-				type: "string",
-				description: "The tag key to check (e.g., 'amenity', 'highway')",
-			},
-			value: {
-				type: "string",
-				description:
-					"Optional tag value. If not provided, checks if any value for this key is deprecated",
-			},
-		},
-		required: ["key"],
-	},
-};
+import { z } from "zod";
+import type { OsmToolDefinition } from "../types/index.js";
 
 /**
  * Result of deprecation check
@@ -135,21 +114,29 @@ export async function checkDeprecated(key: string, value?: string): Promise<Depr
 	};
 }
 
-/**
- * Handler for check_deprecated tool
- */
-export async function handler(args: unknown) {
-	const { key, value } = args as { key?: string; value?: string };
-	if (key === undefined) {
-		throw new Error("key parameter is required");
-	}
-	const result = await checkDeprecated(key, value);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(result, null, 2),
-			},
-		],
-	};
-}
+const CheckDeprecated: OsmToolDefinition<{
+	key: z.ZodString;
+	value: z.ZodOptional<z.ZodString>;
+}> = {
+	name: "check_deprecated" as const,
+	config: () => ({
+		description: "Check if an OSM tag is deprecated. Accepts tag key or key-value pair.",
+		inputSchema: {
+			key: z.string().describe("The tag key to check (e.g., 'amenity', 'highway')"),
+			value: z
+				.string()
+				.optional()
+				.describe(
+					"Optional tag value. If not provided, checks if any value for this key is deprecated",
+				),
+		},
+	}),
+	handler: async ({ key, value }, _extra) => {
+		const result = await checkDeprecated(key, value);
+		return {
+			content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+		};
+	},
+};
+
+export default CheckDeprecated;

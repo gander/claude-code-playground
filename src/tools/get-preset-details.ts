@@ -1,24 +1,7 @@
+import { z } from "zod";
+import type { OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
 import type { PresetDetails } from "./types.js";
-
-/**
- * Tool definition for get_preset_details
- */
-export const definition = {
-	name: "get_preset_details",
-	description:
-		"Get complete details for a specific preset including tags, geometry, fields, and metadata",
-	inputSchema: {
-		type: "object" as const,
-		properties: {
-			presetId: {
-				type: "string",
-				description: "The preset ID to get details for (e.g., 'amenity/restaurant')",
-			},
-		},
-		required: ["presetId"],
-	},
-};
 
 /**
  * Get complete details for a specific preset
@@ -67,18 +50,23 @@ export async function getPresetDetails(presetId: string): Promise<PresetDetails>
 /**
  * Handler for get_preset_details tool
  */
-export async function handler(args: unknown) {
-	const presetId = (args as { presetId?: string }).presetId;
-	if (!presetId) {
-		throw new Error("presetId parameter is required");
-	}
-	const details = await getPresetDetails(presetId);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(details, null, 2),
-			},
-		],
-	};
-}
+const GetPresetDetails: OsmToolDefinition<{ presetId: z.ZodString }> = {
+	name: "get_preset_details" as const,
+	config: () => ({
+		description:
+			"Get complete details for a specific preset including tags, geometry, fields, and metadata",
+		inputSchema: {
+			presetId: z
+				.string()
+				.describe("The preset ID to get details for (e.g., 'amenity/restaurant')"),
+		},
+	}),
+	handler: async ({ presetId }, _extra) => {
+		const details = await getPresetDetails(presetId);
+		return {
+			content: [{ type: "text" as const, text: JSON.stringify(details, null, 2) }],
+		};
+	},
+};
+
+export default GetPresetDetails;
