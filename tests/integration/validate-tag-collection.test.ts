@@ -199,6 +199,90 @@ describe("Integration: validate_tag_collection", () => {
 		});
 	});
 
+	describe("Text Format Support", () => {
+		it("should accept tags in text format (key=value lines)", async () => {
+			const textInput = `amenity=restaurant
+cuisine=pizza
+indoor_seating=yes`;
+
+			const response = await client.callTool({
+				name: "validate_tag_collection",
+				arguments: {
+					tags: textInput,
+				},
+			});
+
+			assert.ok(response.content);
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			assert.strictEqual(result.valid, true);
+			assert.strictEqual(Object.keys(result.tagResults).length, 3);
+			assert.ok(result.tagResults.amenity);
+			assert.ok(result.tagResults.cuisine);
+			assert.ok(result.tagResults.indoor_seating);
+		});
+
+		it("should accept tags in JSON string format", async () => {
+			const jsonInput = '{"amenity": "restaurant", "cuisine": "pizza"}';
+
+			const response = await client.callTool({
+				name: "validate_tag_collection",
+				arguments: {
+					tags: jsonInput,
+				},
+			});
+
+			assert.ok(response.content);
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			assert.strictEqual(result.valid, true);
+			assert.strictEqual(Object.keys(result.tagResults).length, 2);
+		});
+
+		it("should handle text format with comments and empty lines", async () => {
+			const textInput = `# Restaurant tags
+amenity=restaurant
+
+# Cuisine information
+cuisine=italian`;
+
+			const response = await client.callTool({
+				name: "validate_tag_collection",
+				arguments: {
+					tags: textInput,
+				},
+			});
+
+			assert.ok(response.content);
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			assert.strictEqual(result.valid, true);
+			assert.strictEqual(Object.keys(result.tagResults).length, 2);
+		});
+
+		it("should detect deprecated tags in text format", async () => {
+			const deprecatedEntry = deprecated[0];
+			const oldKey = Object.keys(deprecatedEntry.old)[0];
+			if (!oldKey) return;
+			const oldValue = deprecatedEntry.old[oldKey as keyof typeof deprecatedEntry.old];
+
+			const textInput = `${oldKey}=${oldValue}
+name=Test`;
+
+			const response = await client.callTool({
+				name: "validate_tag_collection",
+				arguments: {
+					tags: textInput,
+				},
+			});
+
+			assert.ok(response.content);
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			assert.strictEqual(result.deprecatedCount, 1);
+		});
+	});
+
 	describe("JSON Schema Data Integrity", () => {
 		it("should validate collections with deprecated tags from JSON", async () => {
 			// Test first 5 deprecated entries

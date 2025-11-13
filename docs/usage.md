@@ -106,6 +106,7 @@ const response = await client.callTool({
 
 **Tool:** `validate_tag_collection`
 
+**Format 1: Object format**
 ```json
 {
   "name": "validate_tag_collection",
@@ -121,7 +122,29 @@ const response = await client.callTool({
 }
 ```
 
+**Format 2: Text format (key=value lines)**
+```json
+{
+  "name": "validate_tag_collection",
+  "arguments": {
+    "tags": "amenity=parking\nparking=surface\ncapacity=50\nfee=yes\naccess=customers"
+  }
+}
+```
+
+**Format 3: JSON string**
+```json
+{
+  "name": "validate_tag_collection",
+  "arguments": {
+    "tags": "{\"amenity\": \"parking\", \"parking\": \"surface\"}"
+  }
+}
+```
+
 **Response:** Validation results with any errors or warnings
+
+**Note:** The text format supports comments (lines starting with `#`) and empty lines for better readability.
 
 ---
 
@@ -151,6 +174,7 @@ const response = await client.callTool({
 
 **Tool:** `suggest_improvements`
 
+**Format 1: Object format**
 ```json
 {
   "name": "suggest_improvements",
@@ -163,7 +187,19 @@ const response = await client.callTool({
 }
 ```
 
+**Format 2: Text format (key=value lines)**
+```json
+{
+  "name": "suggest_improvements",
+  "arguments": {
+    "tags": "amenity=restaurant\nname=Pizza Place"
+  }
+}
+```
+
 **Response:** Suggestions for missing tags (cuisine, opening_hours, phone, website, etc.)
+
+**Note:** Text format is especially useful when copying tag data from OSM editors or other sources.
 
 ## Tool Categories
 

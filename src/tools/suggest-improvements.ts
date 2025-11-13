@@ -2,6 +2,7 @@ import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { ty
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { z } from "zod";
 import type { OsmToolDefinition } from "../types/index.js";
+import { parseTagInput } from "../utils/tag-parser.js";
 import { checkDeprecated } from "./check-deprecated.js";
 
 /**
@@ -155,28 +156,25 @@ function getFieldKey(fieldId: string): string | null {
 }
 
 const SuggestImprovements: OsmToolDefinition<{
-	tags: z.ZodRecord<z.ZodString, z.ZodString>;
+	tags: z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>;
 }> = {
 	name: "suggest_improvements" as const,
 	config: () => ({
 		description:
-			"Suggest improvements for an OSM tag collection. Analyzes tags and provides suggestions for missing fields, warnings about deprecated tags, and recommendations based on matched presets.",
+			"Suggest improvements for an OSM tag collection. Analyzes tags and provides suggestions for missing fields, warnings about deprecated tags, and recommendations based on matched presets. Accepts tags in JSON format, text format (key=value lines), or as an object.",
 		inputSchema: {
 			tags: z
-				.record(z.string())
+				.union([z.string(), z.record(z.string())])
 				.describe(
-					"Object containing tag key-value pairs to analyze (e.g., { 'amenity': 'restaurant' })",
+					'Tags as object (e.g., {"amenity": "restaurant"}), JSON string, or text format (one per line: key=value)',
 				),
 		},
 	}),
 	handler: async ({ tags }, _extra) => {
-		// Trim all keys and values in the tags object
-		const trimmedTags: Record<string, string> = {};
-		for (const [key, value] of Object.entries(tags)) {
-			trimmedTags[key.trim()] = value.trim();
-		}
+		// Parse tags using the shared parser (handles string, JSON, and object formats)
+		const parsedTags = typeof tags === "string" ? parseTagInput(tags) : parseTagInput(tags);
 
-		const result = await suggestImprovements(trimmedTags);
+		const result = await suggestImprovements(parsedTags);
 		return {
 			content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		};
