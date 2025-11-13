@@ -440,11 +440,50 @@ interface ToolDefinition<InputArgs, OutputArgs> {
 
 ### Handler Function Details
 
-**Input Validation with Zod**:
+**Input Validation with Zod v3**:
 - `inputSchema` in `config()` defines Zod validation rules
 - MCP SDK validates inputs automatically before calling handler
 - Handler receives fully validated and typed arguments
 - No manual input validation logic needed in handler
+
+**Zod Schema Format (MCP-specific)**:
+```typescript
+// ✅ MCP FORMAT - Object with Zod field validators
+inputSchema: {
+    weightKg: z.number().positive().describe('Body weight in kilograms'),
+    heightM: z.number().positive().describe('Body height in meters')
+}
+
+// ❌ NOT standard Zod object schema
+inputSchema: z.object({
+    weightKg: z.number(),
+    heightM: z.number()
+})
+```
+
+**Using Descriptions and Constraints**:
+```typescript
+inputSchema: {
+    email: z.string()
+        .email()
+        .describe('User email address'), // ← parameter description
+
+    age: z.number()
+        .int()
+        .positive()
+        .max(120)
+        .optional()
+        .default(18)
+        .describe('User age (18 if not provided)'),
+
+    role: z.enum(['admin', 'user', 'guest'])
+        .describe('User role in the system'),
+
+    tags: z.array(z.string())
+        .min(1)
+        .describe('List of tags (at least one required)')
+}
+```
 
 **Handler Signature**:
 ```typescript
