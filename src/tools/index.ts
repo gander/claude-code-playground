@@ -12,7 +12,7 @@ import * as getRelatedTags from "./get-related-tags.js";
 // import * as getTagInfo from "./get-tag-info.js"; // Migrated to new ToolDefinition format
 // import * as getTagValues from "./get-tag-values.js"; // Migrated to new ToolDefinition format
 import * as searchPresets from "./search-presets.js";
-import * as searchTags from "./search-tags.js";
+// import * as searchTags from "./search-tags.js"; // Migrated to new ToolDefinition format
 import * as suggestImprovements from "./suggest-improvements.js";
 import * as validateTag from "./validate-tag.js";
 import * as validateTagCollection from "./validate-tag-collection.js";
@@ -60,7 +60,7 @@ export const tools: ToolEntry[] = [
 	// { definition: getTagInfo.definition, handler: getTagInfo.handler }, // Migrated to new ToolDefinition format
 	// { definition: getTagValues.definition, handler: getTagValues.handler }, // Migrated to new ToolDefinition format
 	{ definition: searchPresets.definition, handler: searchPresets.handler },
-	{ definition: searchTags.definition, handler: searchTags.handler },
+	// { definition: searchTags.definition, handler: searchTags.handler }, // Migrated to new ToolDefinition format
 	{ definition: suggestImprovements.definition, handler: suggestImprovements.handler },
 	{ definition: validateTag.definition, handler: validateTag.handler },
 	{ definition: validateTagCollection.definition, handler: validateTagCollection.handler },
