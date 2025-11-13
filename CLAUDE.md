@@ -369,6 +369,169 @@ All layers are fully tested using Node.js native test runner with TDD approach.
 - **Shared types**: Grouped in `tools/types.ts` to avoid duplication
 - **Tool ordering**: Tools returned in **alphabetical order** by name in MCP ListToolsRequest for API predictability
 
+## MCP SDK Migration Plan
+
+**Status**: PLANNED - Migration to new MCP SDK v1.21.1 tool registration API
+
+This section documents the planned migration from the deprecated `Server` class to the new `McpServer` class and modern tool registration patterns.
+
+### Migration Goals
+
+1. **Update MCP SDK Usage**: Migrate from `@modelcontextprotocol/sdk` v1.21.1's deprecated `Server` to `McpServer`
+2. **Modernize Tool Registration**: Use the new `registerTool` method with structured configuration
+3. **Standardize Tool Structure**: Convert all tools to a consistent interface pattern
+4. **Maintain Compatibility**: Ensure zero breaking changes for end users
+
+### Current State (Deprecated)
+
+Currently, the project uses the deprecated `Server` class for MCP server setup and tool registration.
+
+### Target State (New API)
+
+**MCP SDK v1.21.1 - McpServer API**:
+
+```typescript
+McpServer.registerTool<InputArgs extends ZodRawShape | ZodType<object>, OutputArgs extends ZodRawShape | ZodType<object>>(
+    name: string,
+    config: {
+        title?: string;
+        description?: string;
+        inputSchema?: InputArgs;
+        outputSchema?: OutputArgs;
+        annotations?: ToolAnnotations;
+        _meta?: Record<string, unknown>;
+    },
+    cb: ToolCallback<InputArgs>
+): RegisteredTool
+```
+
+### New Tool Structure
+
+**Each tool must conform to this interface**:
+
+```typescript
+interface ToolDefinition<InputArgs, OutputArgs> {
+    name: string;
+    config: () => {
+        title?: string;
+        description?: string;
+        inputSchema?: InputArgs;
+        outputSchema?: OutputArgs;
+        annotations?: ToolAnnotations;
+        _meta?: Record<string, unknown>;
+    };
+    handler: ToolCallback<InputArgs>;
+}
+```
+
+**Key Requirements**:
+1. **name**: Tool identifier (e.g., "get_tag_info")
+2. **config()**: Function that returns tool configuration
+   - Must be a function (not a static object) to allow dynamic generation
+   - Returns schema definitions, descriptions, and metadata
+3. **handler**: Tool implementation callback function
+   - Receives validated input parameters
+   - Returns tool output or throws errors
+
+### Tool Registration Pattern
+
+**Tools will be registered using this pattern**:
+
+```typescript
+import GetTagInfo from './tools/get-tag-info.ts';
+import GetTagValues from './tools/get-tag-values.ts';
+// ... other tool imports
+
+// In server initialization
+server.registerTool(
+    GetTagInfo.name,
+    GetTagInfo.config(),
+    GetTagInfo.handler
+);
+
+server.registerTool(
+    GetTagValues.name,
+    GetTagValues.config(),
+    GetTagValues.handler
+);
+
+// ... register remaining tools
+```
+
+### Migration Steps
+
+**For each tool** (14 tools total):
+
+1. **Refactor Tool Structure**:
+   - Convert tool to export object with `name`, `config()`, and `handler`
+   - Move schema definitions into `config()` function
+   - Move implementation logic into `handler` function
+   - Maintain existing functionality and behavior
+
+2. **Update Server Registration**:
+   - Replace deprecated `Server` with `McpServer`
+   - Update tool registration calls to use new `registerTool` method
+   - Remove old registration code
+
+3. **Verify Tests**:
+   - Ensure all unit tests pass unchanged
+   - Ensure all integration tests pass unchanged
+   - No changes to test assertions (only internal refactoring)
+
+4. **Update Documentation**:
+   - Update DEVELOPMENT.md with new tool structure pattern
+   - Update CONTRIBUTING.md with examples of new tool pattern
+   - Update API documentation if needed
+
+### Implementation Priority
+
+**Phase 1**: Migration Infrastructure
+- Update `src/index.ts` to use `McpServer` instead of `Server`
+- Create template/example tool with new structure
+- Document tool structure pattern
+
+**Phase 2**: Tool Migration (Batched by Category)
+- Tag Query Tools (4 tools): `get_tag_info`, `get_tag_values`, `search_tags`, `get_related_tags`
+- Preset Tools (3 tools): `search_presets`, `get_preset_details`, `get_preset_tags`
+- Validation Tools (4 tools): `validate_tag`, `validate_tag_collection`, `check_deprecated`, `suggest_improvements`
+- Schema Tools (3 tools): `get_schema_stats`, `get_categories`, `get_category_tags`
+
+**Phase 3**: Verification & Cleanup
+- Run full test suite (unit + integration)
+- Verify Docker builds work
+- Update documentation
+- Clean up deprecated code references
+
+### Compatibility Guarantees
+
+**This migration is INTERNAL ONLY**:
+- ✅ Zero breaking changes for users
+- ✅ All tool names remain unchanged
+- ✅ All input/output schemas remain unchanged
+- ✅ All tool behavior remains unchanged
+- ✅ All tests pass without modification
+- ✅ External API remains 100% compatible
+
+**Testing Requirements**:
+- All 299 unit tests must pass
+- All 107 integration tests must pass
+- No changes to test assertions (internal refactoring only)
+- CI/CD pipeline must pass all checks
+
+### Benefits of Migration
+
+1. **Future-Proof**: Uses non-deprecated MCP SDK API
+2. **Better Type Safety**: TypeScript generics for input/output schemas
+3. **Cleaner Architecture**: Consistent tool structure across codebase
+4. **Maintainability**: Easier to add new tools following established pattern
+5. **SDK Compatibility**: Aligns with MCP SDK best practices
+
+### References
+
+- MCP SDK v1.21.1 Documentation: https://modelcontextprotocol.io
+- GitHub Repository: https://github.com/modelcontextprotocol/typescript-sdk
+- Migration Guide: (to be created in DEVELOPMENT.md)
+
 ## Development Status
 
 **Current Phase: Phase 6 - COMPLETED ✅**
