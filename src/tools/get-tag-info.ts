@@ -62,6 +62,7 @@ export async function getTagInfo(tagKey: string): Promise<TagInfo> {
 	}
 
 	// Get translations for field label and value titles/descriptions
+	// biome-ignore lint/suspicious/noExplicitAny: translations structure is dynamic and deeply nested
 	const fieldStrings = (schema.translations as Record<string, any>)?.en?.presets?.fields?.[
 		fieldKeyLookup
 	];

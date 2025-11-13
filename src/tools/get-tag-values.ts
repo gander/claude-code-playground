@@ -57,6 +57,7 @@ export async function getTagValues(tagKey: string): Promise<Record<string, Value
 	}
 
 	// Get translations for value titles/descriptions
+	// biome-ignore lint/suspicious/noExplicitAny: translations structure is dynamic and deeply nested
 	const fieldStrings = (schema.translations as Record<string, any>)?.en?.presets?.fields?.[
 		fieldKeyLookup
 	];
