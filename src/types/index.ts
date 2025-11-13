@@ -160,3 +160,13 @@ export interface TagCollectionValidationResult {
 	tags: Record<string, TagValidationResult>;
 	suggestions: string[];
 }
+
+/**
+ * Tool definition types for MCP SDK migration
+ */
+export type {
+	OsmToolDefinition,
+	ToolAnnotations,
+	ToolCallback,
+	ToolConfig,
+} from "./tool-definition.js";

@@ -1,24 +1,7 @@
+import { z } from "zod";
+import type { OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
 import type { PresetTags } from "./types.js";
-
-/**
- * Tool definition for get_preset_tags
- */
-export const definition = {
-	name: "get_preset_tags",
-	description:
-		"Get recommended tags for a specific preset. Returns identifying tags and additional recommended tags.",
-	inputSchema: {
-		type: "object" as const,
-		properties: {
-			presetId: {
-				type: "string",
-				description: "The preset ID to get tags for (e.g., 'amenity/restaurant')",
-			},
-		},
-		required: ["presetId"],
-	},
-};
 
 /**
  * Get recommended tags for a specific preset
@@ -53,18 +36,21 @@ export async function getPresetTags(presetId: string): Promise<PresetTags> {
 /**
  * Handler for get_preset_tags tool
  */
-export async function handler(args: unknown) {
-	const presetId = (args as { presetId?: string }).presetId;
-	if (!presetId) {
-		throw new Error("presetId parameter is required");
-	}
-	const tags = await getPresetTags(presetId);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(tags, null, 2),
-			},
-		],
-	};
-}
+const GetPresetTags: OsmToolDefinition<{ presetId: z.ZodString }> = {
+	name: "get_preset_tags" as const,
+	config: () => ({
+		description:
+			"Get recommended tags for a specific preset. Returns identifying tags and additional recommended tags.",
+		inputSchema: {
+			presetId: z.string().describe("The preset ID to get tags for (e.g., 'amenity/restaurant')"),
+		},
+	}),
+	handler: async ({ presetId }, _extra) => {
+		const tags = await getPresetTags(presetId);
+		return {
+			content: [{ type: "text" as const, text: JSON.stringify(tags, null, 2) }],
+		};
+	},
+};
+
+export default GetPresetTags;

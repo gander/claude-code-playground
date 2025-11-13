@@ -1,27 +1,7 @@
+import { z } from "zod";
+import type { OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
 import type { TagSearchResult } from "./types.js";
-
-/**
- * Tool definition for search_tags
- */
-export const definition = {
-	name: "search_tags",
-	description: "Search for tags by keyword in tag keys, values, and preset names",
-	inputSchema: {
-		type: "object" as const,
-		properties: {
-			keyword: {
-				type: "string",
-				description: "Keyword to search for (case-insensitive)",
-			},
-			limit: {
-				type: "number",
-				description: "Maximum number of results to return (default: 100)",
-			},
-		},
-		required: ["keyword"],
-	},
-};
 
 /**
  * Search for tags by keyword
@@ -137,20 +117,36 @@ export async function searchTags(keyword: string, limit?: number): Promise<TagSe
 }
 
 /**
- * Handler for search_tags tool
+ * Tool definition for search_tags following new OsmToolDefinition interface
+ *
+ * Search for tags by keyword in tag keys, values, and preset names.
  */
-export async function handler(args: unknown) {
-	const { keyword, limit } = args as { keyword?: string; limit?: number };
-	if (!keyword) {
-		throw new Error("keyword parameter is required");
-	}
-	const results = await searchTags(keyword, limit);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(results, null, 2),
-			},
-		],
-	};
-}
+const SearchTags: OsmToolDefinition<{
+	keyword: z.ZodString;
+	limit: z.ZodOptional<z.ZodNumber>;
+}> = {
+	name: "search_tags" as const,
+
+	config: () => ({
+		description: "Search for tags by keyword in tag keys, values, and preset names",
+		inputSchema: {
+			keyword: z.string().describe("Keyword to search for (case-insensitive)"),
+			limit: z.number().optional().describe("Maximum number of results to return (default: 100)"),
+		},
+	}),
+
+	handler: async ({ keyword, limit }, _extra) => {
+		const results = await searchTags(keyword, limit);
+
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(results, null, 2),
+				},
+			],
+		};
+	},
+};
+
+export default SearchTags;

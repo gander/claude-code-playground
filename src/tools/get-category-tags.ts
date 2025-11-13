@@ -1,22 +1,6 @@
+import { z } from "zod";
+import type { OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
-
-/**
- * Tool definition for get_category_tags
- */
-export const definition = {
-	name: "get_category_tags",
-	description: "Get all tags (preset IDs) belonging to a specific category",
-	inputSchema: {
-		type: "object" as const,
-		properties: {
-			category: {
-				type: "string",
-				description: "Name of the category",
-			},
-		},
-		required: ["category"],
-	},
-};
 
 /**
  * Get all tags (preset IDs) belonging to a specific category
@@ -35,20 +19,34 @@ export async function getCategoryTags(categoryName: string): Promise<string[]> {
 }
 
 /**
- * Handler for get_category_tags tool
+ * Tool definition for get_category_tags following new OsmToolDefinition interface
+ *
+ * Returns all preset IDs (tags) belonging to a specific category.
  */
-export async function handler(args: unknown) {
-	const category = (args as { category?: string }).category;
-	if (!category) {
-		throw new Error("category parameter is required");
-	}
-	const tags = await getCategoryTags(category);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(tags, null, 2),
-			},
-		],
-	};
-}
+const GetCategoryTags: OsmToolDefinition<{
+	category: z.ZodString;
+}> = {
+	name: "get_category_tags" as const,
+
+	config: () => ({
+		description: "Get all tags (preset IDs) belonging to a specific category",
+		inputSchema: {
+			category: z.string().describe("Name of the category"),
+		},
+	}),
+
+	handler: async ({ category }, _extra) => {
+		const tags = await getCategoryTags(category);
+
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(tags, null, 2),
+				},
+			],
+		};
+	},
+};
+
+export default GetCategoryTags;

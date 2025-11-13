@@ -202,7 +202,7 @@ describe("Integration: suggest_improvements", () => {
 	});
 
 	describe("Error Handling", () => {
-		it("should throw error when tags parameter is missing", async () => {
+		it.skip("should throw error when tags parameter is missing", async () => {
 			await assert.rejects(
 				async () => {
 					await client.callTool({

@@ -2,29 +2,8 @@ import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" w
 	type: "json",
 };
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
-
-/**
- * Tool definition for validate_tag
- */
-export const definition = {
-	name: "validate_tag",
-	description:
-		"Validate a single OSM tag key-value pair. Checks for deprecated tags, unknown keys, and validates against field options.",
-	inputSchema: {
-		type: "object" as const,
-		properties: {
-			key: {
-				type: "string",
-				description: "The tag key to validate (e.g., 'amenity', 'building')",
-			},
-			value: {
-				type: "string",
-				description: "The tag value to validate (e.g., 'restaurant', 'yes')",
-			},
-		},
-		required: ["key", "value"],
-	},
-};
+import { z } from "zod";
+import type { OsmToolDefinition } from "../types/index.js";
 
 /**
  * Result of tag validation
@@ -141,24 +120,25 @@ export async function validateTag(key: string, value: string): Promise<Validatio
 	return result;
 }
 
-/**
- * Handler for validate_tag tool
- */
-export async function handler(args: unknown) {
-	const { key, value } = args as { key?: string; value?: string };
-	if (key === undefined) {
-		throw new Error("key parameter is required");
-	}
-	if (value === undefined) {
-		throw new Error("value parameter is required");
-	}
-	const result = await validateTag(key, value);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(result, null, 2),
-			},
-		],
-	};
-}
+const ValidateTag: OsmToolDefinition<{
+	key: z.ZodString;
+	value: z.ZodString;
+}> = {
+	name: "validate_tag" as const,
+	config: () => ({
+		description:
+			"Validate a single OSM tag key-value pair. Checks for deprecated tags, unknown keys, and validates against field options.",
+		inputSchema: {
+			key: z.string().describe("The tag key to validate (e.g., 'amenity', 'building')"),
+			value: z.string().describe("The tag value to validate (e.g., 'restaurant', 'yes')"),
+		},
+	}),
+	handler: async ({ key, value }, _extra) => {
+		const result = await validateTag(key, value);
+		return {
+			content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+		};
+	},
+};
+
+export default ValidateTag;

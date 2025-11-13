@@ -1,29 +1,7 @@
+import { z } from "zod";
+import type { OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
 import type { RelatedTag } from "./types.js";
-
-/**
- * Tool definition for get_related_tags
- */
-export const definition = {
-	name: "get_related_tags",
-	description:
-		"Find tags commonly used together with a given tag. Returns tags sorted by frequency (how often they appear together).",
-	inputSchema: {
-		type: "object" as const,
-		properties: {
-			tag: {
-				type: "string",
-				description:
-					"Tag to find related tags for (format: 'key' or 'key=value', e.g., 'amenity' or 'amenity=restaurant')",
-			},
-			limit: {
-				type: "number",
-				description: "Maximum number of results to return (optional)",
-			},
-		},
-		required: ["tag"],
-	},
-};
 
 /**
  * Find tags commonly used together with a given tag
@@ -121,20 +99,39 @@ export async function getRelatedTags(tag: string, limit?: number): Promise<Relat
 }
 
 /**
- * Handler for get_related_tags tool
+ * Tool definition for get_related_tags following new OsmToolDefinition interface
  */
-export async function handler(args: unknown) {
-	const { tag, limit } = args as { tag?: string; limit?: number };
-	if (!tag) {
-		throw new Error("tag parameter is required");
-	}
-	const results = await getRelatedTags(tag, limit);
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(results, null, 2),
-			},
-		],
-	};
-}
+const GetRelatedTags: OsmToolDefinition<{
+	tag: z.ZodString;
+	limit: z.ZodOptional<z.ZodNumber>;
+}> = {
+	name: "get_related_tags" as const,
+
+	config: () => ({
+		description:
+			"Find tags commonly used together with a given tag. Returns tags sorted by frequency (how often they appear together).",
+		inputSchema: {
+			tag: z
+				.string()
+				.describe(
+					"Tag to find related tags for (format: 'key' or 'key=value', e.g., 'amenity' or 'amenity=restaurant')",
+				),
+			limit: z.number().optional().describe("Maximum number of results to return (optional)"),
+		},
+	}),
+
+	handler: async ({ tag, limit }, _extra) => {
+		const results = await getRelatedTags(tag, limit);
+
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(results, null, 2),
+				},
+			],
+		};
+	},
+};
+
+export default GetRelatedTags;

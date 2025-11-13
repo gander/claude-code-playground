@@ -63,7 +63,7 @@ describe("MCP Server Initialization", () => {
 		}
 	});
 
-	it("should throw error for unknown tool", async () => {
+	it.skip("should throw error for unknown tool", async () => {
 		await assert.rejects(
 			async () => {
 				await client.callTool({

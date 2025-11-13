@@ -1,19 +1,6 @@
+import type { OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
 import type { SchemaStats } from "./types.js";
-
-/**
- * Tool definition for get_schema_stats
- */
-export const definition = {
-	name: "get_schema_stats",
-	description:
-		"Get statistics about the OpenStreetMap tagging schema, including counts of presets, fields, categories, and deprecated items",
-	inputSchema: {
-		type: "object" as const,
-		properties: {},
-		required: [],
-	},
-};
 
 /**
  * Get statistics about the OSM tagging schema
@@ -34,16 +21,32 @@ export async function getSchemaStats(): Promise<SchemaStats> {
 }
 
 /**
- * Handler for get_schema_stats tool
+ * Tool definition for get_schema_stats following new OsmToolDefinition interface
+ *
+ * Returns statistics about the OpenStreetMap tagging schema including counts of
+ * presets, fields, categories, and deprecated items.
  */
-export async function handler(_args: unknown) {
-	const stats = await getSchemaStats();
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(stats, null, 2),
-			},
-		],
-	};
-}
+const GetSchemaStats: OsmToolDefinition = {
+	name: "get_schema_stats" as const,
+
+	config: () => ({
+		description:
+			"Get statistics about the OpenStreetMap tagging schema, including counts of presets, fields, categories, and deprecated items",
+		inputSchema: {}, // Empty object for tools with no parameters
+	}),
+
+	handler: async (_args, _extra) => {
+		const stats = await getSchemaStats();
+
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(stats, null, 2),
+				},
+			],
+		};
+	},
+};
+
+export default GetSchemaStats;

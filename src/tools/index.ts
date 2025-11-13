@@ -1,67 +1,41 @@
 /**
- * Tool registry - exports all tools with their definitions and handlers
+ * Tool registry - exports all tools as OsmToolDefinition array
  */
 
-import * as checkDeprecated from "./check-deprecated.js";
-import * as getCategories from "./get-categories.js";
-import * as getCategoryTags from "./get-category-tags.js";
-import * as getPresetDetails from "./get-preset-details.js";
-import * as getPresetTags from "./get-preset-tags.js";
-import * as getRelatedTags from "./get-related-tags.js";
-import * as getSchemaStats from "./get-schema-stats.js";
-import * as getTagInfo from "./get-tag-info.js";
-import * as getTagValues from "./get-tag-values.js";
-import * as searchPresets from "./search-presets.js";
-import * as searchTags from "./search-tags.js";
-import * as suggestImprovements from "./suggest-improvements.js";
-import * as validateTag from "./validate-tag.js";
-import * as validateTagCollection from "./validate-tag-collection.js";
+import type { OsmToolDefinition } from "../types/index.js";
+import CheckDeprecated from "./check-deprecated.js";
+import GetCategories from "./get-categories.js";
+import GetCategoryTags from "./get-category-tags.js";
+import GetPresetDetails from "./get-preset-details.js";
+import GetPresetTags from "./get-preset-tags.js";
+import GetRelatedTags from "./get-related-tags.js";
+import GetSchemaStats from "./get-schema-stats.js";
+import GetTagInfo from "./get-tag-info.js";
+import GetTagValues from "./get-tag-values.js";
+import SearchPresets from "./search-presets.js";
+import SearchTags from "./search-tags.js";
+import SuggestImprovements from "./suggest-improvements.js";
+import ValidateTag from "./validate-tag.js";
+import ValidateTagCollection from "./validate-tag-collection.js";
 
 /**
- * Tool definition structure
- */
-export interface ToolDefinition {
-	name: string;
-	description: string;
-	inputSchema: {
-		type: "object";
-		properties: Record<string, unknown>;
-		required: string[];
-	};
-}
-
-/**
- * Tool handler function signature
- */
-export type ToolHandler = (args: unknown) => Promise<{
-	content: Array<{ type: "text"; text: string }>;
-}>;
-
-/**
- * Tool entry combining definition and handler
- */
-export interface ToolEntry {
-	definition: ToolDefinition;
-	handler: ToolHandler;
-}
-
-/**
- * All available tools
+ * All available tools using new OsmToolDefinition interface
  * Sorted alphabetically by name for consistent ordering
  */
-export const tools: ToolEntry[] = [
-	{ definition: checkDeprecated.definition, handler: checkDeprecated.handler },
-	{ definition: getCategories.definition, handler: getCategories.handler },
-	{ definition: getCategoryTags.definition, handler: getCategoryTags.handler },
-	{ definition: getPresetDetails.definition, handler: getPresetDetails.handler },
-	{ definition: getPresetTags.definition, handler: getPresetTags.handler },
-	{ definition: getRelatedTags.definition, handler: getRelatedTags.handler },
-	{ definition: getSchemaStats.definition, handler: getSchemaStats.handler },
-	{ definition: getTagInfo.definition, handler: getTagInfo.handler },
-	{ definition: getTagValues.definition, handler: getTagValues.handler },
-	{ definition: searchPresets.definition, handler: searchPresets.handler },
-	{ definition: searchTags.definition, handler: searchTags.handler },
-	{ definition: suggestImprovements.definition, handler: suggestImprovements.handler },
-	{ definition: validateTag.definition, handler: validateTag.handler },
-	{ definition: validateTagCollection.definition, handler: validateTagCollection.handler },
+// biome-ignore lint/suspicious/noExplicitAny: Heterogeneous array of tools with different input schemas
+export const tools: OsmToolDefinition<any>[] = [
+	CheckDeprecated,
+	GetCategories,
+	GetCategoryTags,
+	GetPresetDetails,
+	GetPresetTags,
+	GetRelatedTags,
+	GetSchemaStats,
+	GetTagInfo,
+	GetTagValues,
+	SearchPresets,
+	SearchTags,
+	SuggestImprovements,
+	ValidateTag,
+	ValidateTagCollection,
 ];
