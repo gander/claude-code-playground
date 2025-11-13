@@ -784,6 +784,111 @@ cat sbom.json | jq .
 
 **For more details**, see [docs/security.md](./docs/security.md)
 
+### Docker Image Publishing
+
+Docker images are automatically built and published to GitHub Container Registry (GHCR) by the `.github/workflows/docker.yml` workflow.
+
+#### Automated Build Triggers
+
+**Master Branch Push:**
+- Builds multi-architecture images (amd64, arm64)
+- Tags: `dev`, `latest`, and short commit hash (e.g., `938b0d1`)
+
+**Version Tag Push:**
+- Triggered when pushing tags like `v1.0.0`
+- Tags: `1.0.0`, `1.0`, `1`, `latest`, and short commit hash
+
+#### Image Tags
+
+The following tags are created automatically:
+
+| Tag | Description | Example |
+|-----|-------------|---------|
+| `dev` | Latest master branch | `ghcr.io/gander-tools/osm-tagging-schema-mcp:dev` |
+| `latest` | Latest stable release | `ghcr.io/gander-tools/osm-tagging-schema-mcp:latest` |
+| `X.Y.Z` | Specific version | `ghcr.io/gander-tools/osm-tagging-schema-mcp:0.1.0` |
+| `X.Y` | Major.minor version | `ghcr.io/gander-tools/osm-tagging-schema-mcp:0.1` |
+| `X` | Major version | `ghcr.io/gander-tools/osm-tagging-schema-mcp:0` |
+| `abc1234` | Short commit hash (7 chars) | `ghcr.io/gander-tools/osm-tagging-schema-mcp:938b0d1` |
+
+#### Ensuring Images Are Public
+
+**IMPORTANT:** By default, GitHub Container Registry packages are **private**. To make images publicly accessible:
+
+1. **Navigate to Package Settings:**
+   - Go to https://github.com/orgs/gander-tools/packages/container/osm-tagging-schema-mcp/settings
+   - Or: Repository → Packages → osm-tagging-schema-mcp → Package settings
+
+2. **Change Visibility:**
+   - Scroll to "Danger Zone"
+   - Click "Change visibility"
+   - Select "Public"
+   - Confirm the change
+
+3. **Verify Public Access:**
+   ```bash
+   # Should work without authentication
+   docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+   ```
+
+**Note:** This step only needs to be done once per package. All subsequent images will inherit the public visibility.
+
+#### Security Features
+
+Each Docker image includes:
+
+- ✅ **Vulnerability Scanning**: Automated Trivy scanning for CRITICAL/HIGH severity issues
+- ✅ **Image Signing**: Cosign keyless signatures with Sigstore
+- ✅ **SARIF Reports**: Security scan results in GitHub Security tab
+- ✅ **Verification**: Users can verify image authenticity
+
+#### Verifying Docker Images
+
+After images are published, verify security features:
+
+**Verify Image Signature:**
+```bash
+cosign verify ghcr.io/gander-tools/osm-tagging-schema-mcp:latest \
+  --certificate-identity-regexp=https://github.com/gander-tools \
+  --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+```
+
+**Check Security Scan Results:**
+- Navigate to: Repository → Security → Code scanning alerts
+- Review Trivy vulnerability reports
+- Ensure no CRITICAL or HIGH severity issues
+
+**Pull Specific Commit:**
+```bash
+# Get current commit hash
+COMMIT=$(git rev-parse --short HEAD)
+
+# Pull image for specific commit
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:$COMMIT
+```
+
+#### Troubleshooting Docker Builds
+
+**Build Failed:**
+- Check workflow logs in GitHub Actions
+- Verify Dockerfile builds locally: `docker build -t test .`
+- Ensure multi-arch build works: `docker buildx build --platform linux/amd64,linux/arm64 .`
+
+**Image Push Failed:**
+- Ensure `packages: write` permission in workflow
+- Verify GITHUB_TOKEN has correct permissions
+- Check if package name conflicts with existing package
+
+**Signature Failed:**
+- Ensure `id-token: write` permission in workflow
+- Verify Cosign installation in workflow
+- Check OIDC provider configuration
+
+**Images Not Public:**
+- Follow "Ensuring Images Are Public" steps above
+- Verify package visibility in GitHub settings
+- Test anonymous pull without docker login
+
 ### Post-Publication
 
 1. **Verify Package**
