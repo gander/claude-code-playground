@@ -4,12 +4,12 @@ import { schemaLoader } from "../utils/schema-loader.js";
 import type { ValueInfo } from "./types.js";
 
 /**
- * Get all possible values for a given tag key with localized titles and descriptions
+ * Get all possible values for a given tag key with localized names and descriptions
  *
  * @param tagKey - The tag key to get values for (e.g., "amenity", "building")
- * @returns Object mapping value keys to localized titles and descriptions
+ * @returns Array of structured value information with value, name, and optional description
  */
-export async function getTagValues(tagKey: string): Promise<Record<string, ValueInfo>> {
+export async function getTagValues(tagKey: string): Promise<ValueInfo[]> {
 	const schema = await schemaLoader.loadSchema();
 
 	// Collect all unique values for the tag key
@@ -56,14 +56,14 @@ export async function getTagValues(tagKey: string): Promise<Record<string, Value
 		}
 	}
 
-	// Get translations for value titles/descriptions
+	// Get translations for value names/descriptions
 	// biome-ignore lint/suspicious/noExplicitAny: translations structure is dynamic and deeply nested
 	const fieldStrings = (schema.translations as Record<string, any>)?.en?.presets?.fields?.[
 		fieldKeyLookup
 	];
 
-	// Build structured values with translations
-	const values: Record<string, ValueInfo> = {};
+	// Build structured values array with translations
+	const values: ValueInfo[] = [];
 	const sortedValueKeys = Array.from(valueKeys).sort();
 
 	for (const valueKey of sortedValueKeys) {
@@ -71,17 +71,24 @@ export async function getTagValues(tagKey: string): Promise<Record<string, Value
 		const translationValue = fieldStrings?.options?.[valueKey];
 
 		if (typeof translationValue === "string") {
-			// Simple string title
-			values[valueKey] = { title: translationValue };
+			// Simple string name
+			values.push({
+				value: valueKey,
+				name: translationValue,
+			});
 		} else if (typeof translationValue === "object" && translationValue !== null) {
-			// Object with title and description
-			values[valueKey] = {
-				title: translationValue.title as string,
+			// Object with name and description
+			values.push({
+				value: valueKey,
+				name: translationValue.title as string,
 				description: translationValue.description as string | undefined,
-			};
+			});
 		} else {
-			// Fallback: use value key as title if no translation
-			values[valueKey] = { title: valueKey };
+			// Fallback: use value key as name if no translation
+			values.push({
+				value: valueKey,
+				name: valueKey,
+			});
 		}
 	}
 

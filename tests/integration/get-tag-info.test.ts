@@ -38,11 +38,8 @@ describe("get_tag_info integration", () => {
 			const info = JSON.parse((response.content[0] as { text: string }).text);
 			assert.ok(typeof info.key === "string");
 			assert.strictEqual(info.key, "parking");
-			assert.ok(
-				typeof info.values === "object" && !Array.isArray(info.values),
-				"values should be object",
-			);
-			assert.ok(Object.keys(info.values).length > 0);
+			assert.ok(Array.isArray(info.values), "values should be array");
+			assert.ok(info.values.length > 0);
 			assert.ok(typeof info.hasFieldDefinition === "boolean");
 			assert.strictEqual(info.hasFieldDefinition, true);
 			assert.ok(typeof info.type === "string");
@@ -57,10 +54,7 @@ describe("get_tag_info integration", () => {
 			assert.ok(response);
 			const info = JSON.parse((response.content[0] as { text: string }).text);
 			assert.strictEqual(info.key, "amenity");
-			assert.ok(
-				typeof info.values === "object" && !Array.isArray(info.values),
-				"values should be object",
-			);
+			assert.ok(Array.isArray(info.values), "values should be array");
 		});
 
 		it.skip("should throw error for missing tagKey parameter in get_tag_info", async () => {
@@ -117,13 +111,13 @@ describe("get_tag_info integration", () => {
 			}
 
 			// CRITICAL: Validate EACH returned value individually via MCP
-			const valueKeys = Object.keys(info.values);
-			for (const value of valueKeys) {
+			const values = info.values.map((v) => v.value);
+			for (const value of values) {
 				assert.ok(expectedValues.has(value), `Value "${value}" should exist in JSON data via MCP`);
 			}
 
 			// CRITICAL: Bidirectional validation via MCP
-			const returnedSet = new Set(valueKeys);
+			const returnedSet = new Set(values);
 			for (const expected of expectedValues) {
 				assert.ok(returnedSet.has(expected), `JSON value "${expected}" should be returned via MCP`);
 			}
@@ -214,9 +208,9 @@ describe("get_tag_info integration", () => {
 				);
 
 				// CRITICAL: Validate EACH value individually via MCP
-				const valueKeys = Object.keys(info.values);
-				const returnedSet = new Set(valueKeys);
-				for (const value of valueKeys) {
+				const values = info.values.map((v) => v.value);
+				const returnedSet = new Set(values);
+				for (const value of values) {
 					assert.ok(
 						expectedValues.has(value),
 						`Value "${value}" for key "${key}" should exist in JSON via MCP`,

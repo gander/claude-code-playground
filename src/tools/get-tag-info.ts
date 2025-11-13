@@ -1,23 +1,22 @@
 import { z } from "zod";
 import type { OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
-import type { TagInfo, ValueInfo } from "./types.js";
+import { getTagValues } from "./get-tag-values.js";
+import type { TagInfo } from "./types.js";
 
 /**
  * Get comprehensive information about a specific tag key
  *
  * @param tagKey - The tag key to get information for (e.g., "parking", "amenity")
- * @returns Tag information including all possible values with localized titles/descriptions, type, and field definition status
+ * @returns Tag information including all possible values with localized names/descriptions, type, and field definition status
  */
 export async function getTagInfo(tagKey: string): Promise<TagInfo> {
 	const schema = await schemaLoader.loadSchema();
 
-	// Collect all unique values for the tag key
-	const valueKeys = new Set<string>();
 	let hasFieldDefinition = false;
 	let fieldType: string | undefined;
 	let actualKey = tagKey; // The actual OSM key (with colon)
-	let fieldName: string | undefined;
+	let name: string | undefined;
 
 	// First, check fields for predefined options and metadata
 	// Field map keys are FILE PATHS with slash (e.g., "toilets/wheelchair" → data/fields/toilets/wheelchair.json)
@@ -29,74 +28,51 @@ export async function getTagInfo(tagKey: string): Promise<TagInfo> {
 		fieldType = field.type;
 		// Use the actual OSM tag key from field.key (e.g., "parking:both" not "parking/side/parking")
 		actualKey = field.key;
-
-		// Add field options if available
-		if (field.options && Array.isArray(field.options)) {
-			for (const option of field.options) {
-				if (typeof option === "string") {
-					valueKeys.add(option);
-				}
-			}
-		}
 	}
 
-	// Then iterate through all presets to find additional values
-	// Presets use the actual OSM key format (with colon)
-	for (const preset of Object.values(schema.presets)) {
-		// Check if this preset has the tag key
-		if (preset.tags[actualKey]) {
-			const value = preset.tags[actualKey];
-			// Skip wildcards and complex patterns
-			if (value && value !== "*" && !value.includes("|")) {
-				valueKeys.add(value);
-			}
-		}
+	// Get values using getTagValues to avoid code duplication
+	const values = await getTagValues(tagKey);
 
-		// Also check addTags if present
-		if (preset.addTags?.[actualKey]) {
-			const value = preset.addTags[actualKey];
-			if (value && value !== "*" && !value.includes("|")) {
-				valueKeys.add(value);
-			}
-		}
-	}
-
-	// Get translations for field label and value titles/descriptions
+	// Find a representative preset that uses this field/tag key to get the name
+	// Look for presets that list this key in their fields array OR have it in tags
+	// Prefer presets with fewer tags (more general/parent presets)
 	// biome-ignore lint/suspicious/noExplicitAny: translations structure is dynamic and deeply nested
-	const fieldStrings = (schema.translations as Record<string, any>)?.en?.presets?.fields?.[
-		fieldKeyLookup
-	];
-	if (fieldStrings) {
-		fieldName = fieldStrings.label as string | undefined;
+	const presetTranslations = (schema.translations as Record<string, any>)?.en?.presets?.presets;
+	let selectedPreset: { id: string; tagCount: number } | null = null;
+
+	for (const [presetId, preset] of Object.entries(schema.presets)) {
+		// Check if preset has this key in fields array OR in tags
+		const hasInFields =
+			preset.fields?.includes(actualKey) || preset.fields?.includes(fieldKeyLookup);
+		const hasInTags = actualKey in preset.tags;
+
+		if (hasInFields || hasInTags) {
+			const tagCount = Object.keys(preset.tags).length;
+			// Select preset with fewest tags (most general)
+			if (!selectedPreset || tagCount < selectedPreset.tagCount) {
+				selectedPreset = { id: presetId, tagCount };
+			}
+		}
 	}
 
-	// Build structured values with translations
-	const values: Record<string, ValueInfo> = {};
-	const sortedValueKeys = Array.from(valueKeys).sort();
+	// Get preset name from translations if found
+	if (selectedPreset && presetTranslations) {
+		name = presetTranslations[selectedPreset.id]?.name as string | undefined;
+	}
 
-	for (const valueKey of sortedValueKeys) {
-		// Get translation for this value from field options
-		const translationValue = fieldStrings?.options?.[valueKey];
-
-		if (typeof translationValue === "string") {
-			// Simple string title
-			values[valueKey] = { title: translationValue };
-		} else if (typeof translationValue === "object" && translationValue !== null) {
-			// Object with title and description
-			values[valueKey] = {
-				title: translationValue.title as string,
-				description: translationValue.description as string | undefined,
-			};
-		} else {
-			// Fallback: use value key as title if no translation
-			values[valueKey] = { title: valueKey };
-		}
+	// Fallback to field label if no preset name found
+	if (!name) {
+		// biome-ignore lint/suspicious/noExplicitAny: translations structure is dynamic and deeply nested
+		const fieldStrings = (schema.translations as Record<string, any>)?.en?.presets?.fields?.[
+			fieldKeyLookup
+		];
+		name = fieldStrings?.label as string | undefined;
 	}
 
 	// Return tag information with the actual OSM key (with colon)
 	return {
 		key: actualKey,
-		name: fieldName,
+		name,
 		values,
 		type: fieldType,
 		hasFieldDefinition,

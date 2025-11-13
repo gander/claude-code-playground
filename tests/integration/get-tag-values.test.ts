@@ -36,13 +36,15 @@ describe("get_tag_values integration", () => {
 
 			// Parse the values from the response
 			const values = JSON.parse((response.content[0] as { text: string }).text);
-			assert.ok(typeof values === "object" && !Array.isArray(values), "Should return an object");
-			assert.ok(Object.keys(values).length > 0, "Should have at least one value");
+			assert.ok(Array.isArray(values), "Should return an array");
+			assert.ok(values.length > 0, "Should have at least one value");
 
 			// Check structure of first value
-			const firstKey = Object.keys(values)[0];
-			assert.ok(firstKey, "Should have at least one key");
-			assert.ok(typeof values[firstKey] === "object", "Value should be an object");
+			const firstValue = values[0];
+			assert.ok(firstValue, "Should have at least one value");
+			assert.ok(typeof firstValue === "object", "Value should be an object");
+			assert.ok(typeof firstValue.value === "string", "Value should have a 'value' property");
+			assert.ok(typeof firstValue.name === "string", "Value should have a 'name' property");
 		});
 
 		it.skip("should throw error for missing tagKey parameter", async () => {
@@ -168,7 +170,7 @@ describe("get_tag_values integration", () => {
 
 			// Verify all values match exactly (bidirectional)
 			assert.deepStrictEqual(
-				new Set(Object.keys(values)),
+				new Set(values.map((v) => v.value)),
 				expectedValues,
 				"Tag values should match JSON data exactly",
 			);
@@ -183,7 +185,7 @@ describe("get_tag_values integration", () => {
 				});
 
 				const values = JSON.parse((response.content[0] as { text: string }).text);
-				const returnedSet = new Set(Object.keys(values));
+				const returnedSet = new Set(values.map((v) => v.value));
 
 				// Bidirectional validation through MCP
 				assert.deepStrictEqual(

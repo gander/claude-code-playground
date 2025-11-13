@@ -14,11 +14,8 @@ describe("get_tag_info", () => {
 
 			assert.ok(info, "Should return tag info");
 			assert.strictEqual(info.key, "parking", "Should return correct key");
-			assert.ok(
-				typeof info.values === "object" && !Array.isArray(info.values),
-				"Should return values object",
-			);
-			assert.ok(Object.keys(info.values).length > 0, "Should have at least one value");
+			assert.ok(Array.isArray(info.values), "Should return values array");
+			assert.ok(info.values.length > 0, "Should have at least one value");
 			assert.strictEqual(info.hasFieldDefinition, true, "parking should have field definition");
 			assert.ok(info.type, "Should have type from field definition");
 		});
@@ -28,27 +25,24 @@ describe("get_tag_info", () => {
 
 			assert.ok(info, "Should return tag info");
 			assert.strictEqual(info.key, "amenity", "Should return correct key");
-			assert.ok(
-				typeof info.values === "object" && !Array.isArray(info.values),
-				"Should return values object",
-			);
-			assert.ok(Object.keys(info.values).length > 0, "Should have at least one value");
+			assert.ok(Array.isArray(info.values), "Should return values array");
+			assert.ok(info.values.length > 0, "Should have at least one value");
 		});
 
 		it("should return sorted values", async () => {
 			const info = await getTagInfo("parking");
 
-			const keys = Object.keys(info.values);
-			const sorted = [...keys].sort();
-			assert.deepStrictEqual(keys, sorted, "Value keys should be sorted alphabetically");
+			const values = info.values.map((v) => v.value);
+			const sorted = [...values].sort();
+			assert.deepStrictEqual(values, sorted, "Value keys should be sorted alphabetically");
 		});
 
 		it("should return unique values only", async () => {
 			const info = await getTagInfo("building");
 
-			const keys = Object.keys(info.values);
-			const uniqueValues = new Set(keys);
-			assert.strictEqual(keys.length, uniqueValues.size, "Should return unique values only");
+			const values = info.values.map((v) => v.value);
+			const uniqueValues = new Set(values);
+			assert.strictEqual(values.length, uniqueValues.size, "Should return unique values only");
 		});
 
 		it("should handle non-existent tag key", async () => {
@@ -56,11 +50,8 @@ describe("get_tag_info", () => {
 
 			assert.ok(info, "Should return tag info even for non-existent key");
 			assert.strictEqual(info.key, "nonexistent_tag_key_12345", "Should return correct key");
-			assert.ok(
-				typeof info.values === "object" && !Array.isArray(info.values),
-				"Should return values object",
-			);
-			assert.strictEqual(Object.keys(info.values).length, 0, "Should have no values");
+			assert.ok(Array.isArray(info.values), "Should return values array");
+			assert.strictEqual(info.values.length, 0, "Should have no values");
 			assert.strictEqual(info.hasFieldDefinition, false, "Should not have field definition");
 		});
 
@@ -72,7 +63,7 @@ describe("get_tag_info", () => {
 			assert.ok(info, "Should return tag info");
 			assert.strictEqual(info.key, "toilets:wheelchair", "Should return key with colon separator");
 			assert.strictEqual(info.hasFieldDefinition, true, "Should find field definition");
-			assert.ok(Object.keys(info.values).length > 0, "Should have values from field options");
+			assert.ok(info.values.length > 0, "Should have values from field options");
 		});
 
 		it("should return keys with colon separator (BUG FIX TEST)", async () => {
@@ -208,8 +199,8 @@ describe("get_tag_info", () => {
 			}
 
 			// CRITICAL: Validate EACH returned value exists in JSON (100% coverage)
-			const returnedValueKeys = Object.keys(info.values);
-			for (const value of returnedValueKeys) {
+			const returnedValues = info.values.map((v) => v.value);
+			for (const value of returnedValues) {
 				assert.ok(
 					expectedValues.has(value),
 					`Value "${value}" should exist in JSON (fields or presets)`,
@@ -217,14 +208,14 @@ describe("get_tag_info", () => {
 			}
 
 			// CRITICAL: Bidirectional validation - ALL JSON values should be returned
-			const returnedSet = new Set(returnedValueKeys);
+			const returnedSet = new Set(returnedValues);
 			for (const expected of expectedValues) {
 				assert.ok(returnedSet.has(expected), `JSON value "${expected}" should be returned by tool`);
 			}
 
 			// Exact count match
 			assert.strictEqual(
-				returnedValueKeys.length,
+				returnedValues.length,
 				expectedValues.size,
 				`Should return exactly ${expectedValues.size} values`,
 			);
@@ -251,11 +242,11 @@ describe("get_tag_info", () => {
 					);
 				}
 
-				const returnedValueKeys = Object.keys(info.values);
-				const returnedSet = new Set(returnedValueKeys);
+				const returnedValues = info.values.map((v) => v.value);
+				const returnedSet = new Set(returnedValues);
 
 				// CRITICAL: Validate EACH returned value individually
-				for (const value of returnedValueKeys) {
+				for (const value of returnedValues) {
 					assert.ok(
 						testCase.expectedValues.has(value),
 						`Value "${value}" for key "${testCase.key}" should exist in JSON`,
@@ -272,7 +263,7 @@ describe("get_tag_info", () => {
 
 				// Exact count match
 				assert.strictEqual(
-					returnedValueKeys.length,
+					returnedValues.length,
 					testCase.expectedValues.size,
 					`Key "${testCase.key}" should return exactly ${testCase.expectedValues.size} values`,
 				);
@@ -284,8 +275,8 @@ describe("get_tag_info", () => {
 			const info = await getTagInfo("building");
 
 			// CRITICAL: Verify EACH value individually (NO wildcards, NO pipes)
-			const valueKeys = Object.keys(info.values);
-			for (const value of valueKeys) {
+			const values = info.values.map((v) => v.value);
+			for (const value of values) {
 				assert.notStrictEqual(value, "*", `Should not include wildcard: ${value}`);
 				assert.ok(!value.includes("|"), `Should not include pipe-separated value: ${value}`);
 			}
@@ -301,11 +292,11 @@ describe("get_tag_info", () => {
 			assert.strictEqual(info.type, parkingField.type, "Type should match field definition");
 
 			// CRITICAL: Validate ALL field options are included
-			const valueKeys = Object.keys(info.values);
+			const values = info.values.map((v) => v.value);
 			if (parkingField.options && Array.isArray(parkingField.options)) {
 				for (const option of parkingField.options) {
 					assert.ok(
-						valueKeys.includes(option),
+						values.includes(option),
 						`Field option "${option}" should be included in values`,
 					);
 				}
@@ -314,18 +305,18 @@ describe("get_tag_info", () => {
 	});
 
 	describe("Structured Value Information (TDD RED)", () => {
-		it("should return field label as name for fields with definitions", async () => {
+		it("should return preset name for fields used in presets", async () => {
 			const info = await getTagInfo("parking");
 
-			// Get expected label from translations
-			const fieldStrings = strings.en.presets.fields.parking;
-			const expectedLabel = fieldStrings?.label;
+			// For "parking" field, expect name from the most general preset that uses it
+			// amenity/parking is the most general preset with "parking" in fields
+			const expectedName = strings.en.presets.presets["amenity/parking"]?.name;
 
 			assert.ok(info.name, "Should have name field");
-			assert.strictEqual(info.name, expectedLabel, `Should return field label "${expectedLabel}"`);
+			assert.strictEqual(info.name, expectedName, `Should return preset name "${expectedName}"`);
 		});
 
-		it("should return values as objects with titles from translations", async () => {
+		it("should return values as array with names from translations", async () => {
 			const info = await getTagInfo("parking");
 
 			// Get expected options from translations
@@ -333,26 +324,24 @@ describe("get_tag_info", () => {
 			const expectedOptions = fieldStrings?.options;
 
 			assert.ok(expectedOptions, "parking field should have options in translations");
-			assert.ok(
-				typeof info.values === "object" && !Array.isArray(info.values),
-				"values should be an object, not array",
-			);
+			assert.ok(Array.isArray(info.values), "values should be an array");
 
-			// Check that each value has a title
-			for (const [valueKey, valueData] of Object.entries(info.values)) {
-				assert.ok(typeof valueData === "object", `Value "${valueKey}" should be an object`);
-				assert.ok(valueData.title, `Value "${valueKey}" should have a title`);
+			// Check that each value has required fields
+			for (const valueData of info.values) {
+				assert.ok(typeof valueData === "object", `Value should be an object`);
+				assert.ok(valueData.value, `Value should have a value field`);
+				assert.ok(valueData.name, `Value "${valueData.value}" should have a name`);
 
-				// Verify title matches translation
-				const expectedTitle =
-					typeof expectedOptions[valueKey] === "string"
-						? expectedOptions[valueKey]
-						: expectedOptions[valueKey]?.title;
+				// Verify name matches translation
+				const expectedName =
+					typeof expectedOptions[valueData.value] === "string"
+						? expectedOptions[valueData.value]
+						: expectedOptions[valueData.value]?.title;
 
 				assert.strictEqual(
-					valueData.title,
-					expectedTitle,
-					`Value "${valueKey}" title should match translation`,
+					valueData.name,
+					expectedName,
+					`Value "${valueData.value}" name should match translation`,
 				);
 			}
 		});
@@ -367,14 +356,15 @@ describe("get_tag_info", () => {
 			assert.ok(expectedOptions, "taxi_vehicle field should have options in translations");
 
 			// Check that motorcar has description
-			assert.ok(info.values.motorcar, "Should have motorcar value");
-			assert.ok(info.values.motorcar.title, "motorcar should have title");
-			assert.ok(info.values.motorcar.description, "motorcar should have description");
+			const motorcarValue = info.values.find((v) => v.value === "motorcar");
+			assert.ok(motorcarValue, "Should have motorcar value");
+			assert.ok(motorcarValue.name, "motorcar should have name");
+			assert.ok(motorcarValue.description, "motorcar should have description");
 
 			// Verify description matches translation
 			const expectedMotorcarData = expectedOptions.motorcar;
 			assert.strictEqual(
-				info.values.motorcar.description,
+				motorcarValue.description,
 				expectedMotorcarData.description,
 				"motorcar description should match translation",
 			);
@@ -387,16 +377,16 @@ describe("get_tag_info", () => {
 			const expectedOptions = fieldStrings?.options;
 
 			// parking options are just strings in translations, not objects with descriptions
-			for (const [valueKey, valueData] of Object.entries(info.values)) {
-				assert.ok(valueData.title, `Value "${valueKey}" should have title`);
+			for (const valueData of info.values) {
+				assert.ok(valueData.name, `Value "${valueData.value}" should have name`);
 
 				// For parking, options are strings, so no description should be present
-				const translationValue = expectedOptions[valueKey];
+				const translationValue = expectedOptions[valueData.value];
 				if (typeof translationValue === "string") {
 					assert.strictEqual(
 						valueData.description,
 						undefined,
-						`Value "${valueKey}" should not have description when translation is just a string`,
+						`Value "${valueData.value}" should not have description when translation is just a string`,
 					);
 				}
 			}
@@ -412,14 +402,14 @@ describe("get_tag_info", () => {
 			assert.ok(expectedOptions, "Field should have options in translations");
 
 			// CRITICAL: Verify EACH value individually has a translation
-			for (const [valueKey, valueData] of Object.entries(info.values)) {
+			for (const valueData of info.values) {
 				assert.ok(
-					expectedOptions[valueKey],
-					`Value "${valueKey}" should have translation in en.json`,
+					expectedOptions[valueData.value],
+					`Value "${valueData.value}" should have translation in en.json`,
 				);
 				assert.ok(
-					valueData.title,
-					`Value "${valueKey}" should have title extracted from translation`,
+					valueData.name,
+					`Value "${valueData.value}" should have name extracted from translation`,
 				);
 			}
 		});
@@ -429,11 +419,14 @@ describe("get_tag_info", () => {
 			const info = await getTagInfo("amenity");
 
 			// amenity has many values from presets, not all will be in field options
-			assert.ok(typeof info.values === "object", "values should be an object");
+			assert.ok(Array.isArray(info.values), "values should be an array");
 
-			// Each value should still have at least a title (even if it's the key itself as fallback)
-			for (const [valueKey, valueData] of Object.entries(info.values)) {
-				assert.ok(valueData.title, `Value "${valueKey}" should have title (possibly fallback)`);
+			// Each value should still have at least a name (even if it's the value itself as fallback)
+			for (const valueData of info.values) {
+				assert.ok(
+					valueData.name,
+					`Value "${valueData.value}" should have name (possibly fallback)`,
+				);
 			}
 		});
 	});

@@ -6,37 +6,67 @@ import { getTagValues } from "../../src/tools/get-tag-values.ts";
 
 describe("get_tag_values", () => {
 	describe("Basic Functionality", () => {
+		it("should return values as an array (NEW FORMAT)", async () => {
+			const values = await getTagValues("amenity");
+
+			assert.ok(Array.isArray(values), "Should return an array");
+			assert.ok(values.length > 0, "Should have at least one value");
+		});
+
+		it("should return structured value objects with value and name fields", async () => {
+			const values = await getTagValues("amenity");
+
+			assert.ok(Array.isArray(values), "Should return an array");
+
+			// Each item should have value and name
+			for (const item of values) {
+				assert.ok(typeof item === "object", "Each item should be an object");
+				assert.ok("value" in item, "Each item should have a 'value' field");
+				assert.ok("name" in item, "Each item should have a 'name' field");
+				assert.ok(typeof item.value === "string", "value should be a string");
+				assert.ok(typeof item.name === "string", "name should be a string");
+			}
+		});
+
+		it("should include descriptions when available", async () => {
+			// taxi_vehicle field has descriptions for its values
+			const values = await getTagValues("taxi_vehicle");
+
+			assert.ok(Array.isArray(values), "Should return an array");
+			assert.ok(values.length > 0, "Should have at least one value");
+
+			// At least some values should have descriptions
+			const withDescriptions = values.filter((v) => "description" in v && v.description);
+			assert.ok(withDescriptions.length > 0, "At least some values should have descriptions");
+		});
+
 		it("should return values for a valid tag key", async () => {
 			const values = await getTagValues("amenity");
 
-			assert.ok(typeof values === "object" && !Array.isArray(values), "Should return an object");
-			assert.ok(Object.keys(values).length > 0, "Should have at least one value");
+			assert.ok(Array.isArray(values), "Should return an array");
+			assert.ok(values.length > 0, "Should have at least one value");
 		});
 
 		it("should return unique values only", async () => {
 			const values = await getTagValues("amenity");
 
-			const uniqueValues = new Set(Object.keys(values));
-			assert.strictEqual(
-				Object.keys(values).length,
-				uniqueValues.size,
-				"Should return unique values only",
-			);
+			const uniqueValues = new Set(values.map((v) => v.value));
+			assert.strictEqual(values.length, uniqueValues.size, "Should return unique values only");
 		});
 
 		it("should return sorted values", async () => {
 			const values = await getTagValues("amenity");
 
-			const keys = Object.keys(values);
-			const sorted = [...keys].sort();
-			assert.deepStrictEqual(keys, sorted, "Values should be sorted");
+			const valueKeys = values.map((v) => v.value);
+			const sorted = [...valueKeys].sort();
+			assert.deepStrictEqual(valueKeys, sorted, "Values should be sorted by value field");
 		});
 
-		it("should return empty object for non-existent tag key", async () => {
+		it("should return empty array for non-existent tag key", async () => {
 			const values = await getTagValues("nonexistent_tag_key_12345");
 
-			assert.ok(typeof values === "object" && !Array.isArray(values), "Should return an object");
-			assert.strictEqual(Object.keys(values).length, 0, "Should return empty object");
+			assert.ok(Array.isArray(values), "Should return an array");
+			assert.strictEqual(values.length, 0, "Should return empty array");
 		});
 
 		it("should use cached data on subsequent calls", async () => {
@@ -50,7 +80,7 @@ describe("get_tag_values", () => {
 			// Tags like "addr:street" exist in OSM
 			const values = await getTagValues("building");
 
-			assert.ok(typeof values === "object" && !Array.isArray(values), "Should handle tag keys");
+			assert.ok(Array.isArray(values), "Should handle tag keys");
 			// Should not throw error
 		});
 
@@ -59,16 +89,16 @@ describe("get_tag_values", () => {
 			// but should accept "toilets:wheelchair" as input (OSM format)
 			const values = await getTagValues("toilets:wheelchair");
 
-			assert.ok(typeof values === "object" && !Array.isArray(values), "Should return an object");
-			assert.ok(Object.keys(values).length > 0, "Should find values for colon-formatted key");
+			assert.ok(Array.isArray(values), "Should return an array");
+			assert.ok(values.length > 0, "Should find values for colon-formatted key");
 
 			// Verify values match the field definition
 			const toiletsWheelchairField = fields["toilets/wheelchair"];
 			if (toiletsWheelchairField?.options) {
-				for (const value of Object.keys(values)) {
+				for (const item of values) {
 					assert.ok(
-						toiletsWheelchairField.options.includes(value),
-						`Value "${value}" should be in field options`,
+						toiletsWheelchairField.options.includes(item.value),
+						`Value "${item.value}" should be in field options`,
 					);
 				}
 			}
@@ -181,15 +211,15 @@ describe("get_tag_values", () => {
 			}
 
 			// Verify all returned values exist in JSON
-			for (const value of Object.keys(values)) {
+			for (const item of values) {
 				assert.ok(
-					expectedValues.has(value),
-					`Value "${value}" should exist in JSON (fields or presets)`,
+					expectedValues.has(item.value),
+					`Value "${item.value}" should exist in JSON (fields or presets)`,
 				);
 			}
 
 			// Verify all JSON values are returned (bidirectional validation)
-			const returnedSet = new Set(Object.keys(values));
+			const returnedSet = new Set(values.map((v) => v.value));
 			for (const expected of expectedValues) {
 				assert.ok(returnedSet.has(expected), `JSON value "${expected}" should be returned`);
 			}
@@ -199,13 +229,13 @@ describe("get_tag_values", () => {
 			// Test each tag key from provider
 			for (const testCase of tagKeyProvider()) {
 				const values = await getTagValues(testCase.key);
-				const returnedSet = new Set(Object.keys(values));
+				const returnedSet = new Set(values.map((v) => v.value));
 
 				// Bidirectional validation: all returned values should exist in expected
-				for (const value of Object.keys(values)) {
+				for (const item of values) {
 					assert.ok(
-						testCase.expectedValues.has(value),
-						`Value "${value}" for key "${testCase.key}" should exist in JSON presets`,
+						testCase.expectedValues.has(item.value),
+						`Value "${item.value}" for key "${testCase.key}" should exist in JSON presets`,
 					);
 				}
 
@@ -231,9 +261,12 @@ describe("get_tag_values", () => {
 			const values = await getTagValues("building");
 
 			// Verify no wildcards or pipe-separated values
-			for (const value of Object.keys(values)) {
-				assert.notStrictEqual(value, "*", "Should not include wildcard values");
-				assert.ok(!value.includes("|"), `Should not include pipe-separated values: ${value}`);
+			for (const item of values) {
+				assert.notStrictEqual(item.value, "*", "Should not include wildcard values");
+				assert.ok(
+					!item.value.includes("|"),
+					`Should not include pipe-separated values: ${item.value}`,
+				);
 			}
 		});
 
@@ -243,15 +276,15 @@ describe("get_tag_values", () => {
 				const values = await getTagValues(testCase.key);
 
 				// Verify no wildcards or pipe-separated values
-				for (const value of Object.keys(values)) {
+				for (const item of values) {
 					assert.notStrictEqual(
-						value,
+						item.value,
 						"*",
 						`Key "${testCase.key}" should not include wildcard values`,
 					);
 					assert.ok(
-						!value.includes("|"),
-						`Key "${testCase.key}" should not include pipe-separated values: ${value}`,
+						!item.value.includes("|"),
+						`Key "${testCase.key}" should not include pipe-separated values: ${item.value}`,
 					);
 				}
 			}
@@ -267,19 +300,20 @@ describe("get_tag_values", () => {
 			assert.ok(parkingField.options, "parking field should have options");
 
 			const expectedOptions = new Set(parkingField.options);
+			const returnedValues = values.map((v) => v.value);
 
 			// Verify ALL field options are included in returned values
 			for (const option of parkingField.options) {
 				assert.ok(
-					option in values,
-					`Field option "${option}" should be included in returned values. Got: ${Object.keys(values).join(", ")}`,
+					returnedValues.includes(option),
+					`Field option "${option}" should be included in returned values. Got: ${returnedValues.join(", ")}`,
 				);
 			}
 
 			// Verify we have at least the number of options from fields
 			assert.ok(
-				Object.keys(values).length >= expectedOptions.size,
-				`Should return at least ${expectedOptions.size} values (from fields), got ${Object.keys(values).length}`,
+				values.length >= expectedOptions.size,
+				`Should return at least ${expectedOptions.size} values (from fields), got ${values.length}`,
 			);
 		});
 	});
