@@ -32,11 +32,12 @@ export interface TagSearchResult {
 }
 
 /**
- * Value information with localized title and optional description
+ * Value information with localized name and optional description
  */
 export interface ValueInfo {
-	title: string;
-	description?: string;
+	value: string; // The actual value key (e.g., "surface", "underground")
+	name: string; // Localized title (e.g., "Surface", "Underground")
+	description?: string; // Optional description
 }
 
 /**
@@ -44,8 +45,8 @@ export interface ValueInfo {
  */
 export interface TagInfo {
 	key: string;
-	name?: string; // Localized field label
-	values: Record<string, ValueInfo>; // Value key -> localized info
+	name?: string; // Preset name (e.g., "Parking Lot") or field label
+	values: ValueInfo[]; // Array of structured value information
 	type?: string;
 	hasFieldDefinition: boolean;
 }
