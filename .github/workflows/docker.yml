@@ -42,18 +42,11 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # Tag with "dev" for pushes to master
+            # Tag with "dev" and "latest" for pushes to master
             type=raw,value=dev,enable={{is_default_branch}}
+            type=raw,value=latest,enable={{is_default_branch}}
             # Tag with version for tagged releases (e.g., v1.0.0 -> 1.0.0)
             type=semver,pattern={{version}}
-            # Tag with major.minor for tagged releases (e.g., v1.0.0 -> 1.0)
-            type=semver,pattern={{major}}.{{minor}}
-            # Tag with major for tagged releases (e.g., v1.0.0 -> 1)
-            type=semver,pattern={{major}}
-            # Tag with "latest" for tagged releases
-            type=raw,value=latest,enable={{is_default_branch}}
-            # Tag with short commit hash (7 characters, e.g., 938b0d1)
-            type=sha,format=short
 
       - name: Build and push Docker image
         id: build-and-push
