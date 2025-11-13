@@ -35,10 +35,7 @@ const GetCategoryTags: OsmToolDefinition<{
 		},
 	}),
 
-	handler: async (args, _extra) => {
-		// Zod validates that category is present and is a string
-		const { category } = args;
-
+	handler: async ({ category }, _extra) => {
 		const tags = await getCategoryTags(category);
 
 		return {
