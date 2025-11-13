@@ -8,6 +8,7 @@ import GetCategories from "./tools/get-categories.js";
 import GetCategoryTags from "./tools/get-category-tags.js";
 import GetSchemaStats from "./tools/get-schema-stats.js";
 import GetTagInfo from "./tools/get-tag-info.js";
+import GetTagValues from "./tools/get-tag-values.js";
 import { logger } from "./utils/logger.js";
 import { schemaLoader } from "./utils/schema-loader.js";
 
@@ -32,6 +33,7 @@ export function createServer(): McpServer {
 	mcpServer.registerTool(GetCategories.name, GetCategories.config(), GetCategories.handler);
 	mcpServer.registerTool(GetCategoryTags.name, GetCategoryTags.config(), GetCategoryTags.handler);
 	mcpServer.registerTool(GetTagInfo.name, GetTagInfo.config(), GetTagInfo.handler);
+	mcpServer.registerTool(GetTagValues.name, GetTagValues.config(), GetTagValues.handler);
 
 	return mcpServer;
 }

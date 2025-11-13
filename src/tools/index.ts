@@ -10,7 +10,7 @@ import * as getPresetTags from "./get-preset-tags.js";
 import * as getRelatedTags from "./get-related-tags.js";
 // import * as getSchemaStats from "./get-schema-stats.js"; // Migrated to new ToolDefinition format
 // import * as getTagInfo from "./get-tag-info.js"; // Migrated to new ToolDefinition format
-import * as getTagValues from "./get-tag-values.js";
+// import * as getTagValues from "./get-tag-values.js"; // Migrated to new ToolDefinition format
 import * as searchPresets from "./search-presets.js";
 import * as searchTags from "./search-tags.js";
 import * as suggestImprovements from "./suggest-improvements.js";
@@ -58,7 +58,7 @@ export const tools: ToolEntry[] = [
 	{ definition: getRelatedTags.definition, handler: getRelatedTags.handler },
 	// { definition: getSchemaStats.definition, handler: getSchemaStats.handler }, // Migrated to new ToolDefinition format
 	// { definition: getTagInfo.definition, handler: getTagInfo.handler }, // Migrated to new ToolDefinition format
-	{ definition: getTagValues.definition, handler: getTagValues.handler },
+	// { definition: getTagValues.definition, handler: getTagValues.handler }, // Migrated to new ToolDefinition format
 	{ definition: searchPresets.definition, handler: searchPresets.handler },
 	{ definition: searchTags.definition, handler: searchTags.handler },
 	{ definition: suggestImprovements.definition, handler: suggestImprovements.handler },
