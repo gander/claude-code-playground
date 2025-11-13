@@ -113,7 +113,7 @@ const GetTagValues: OsmToolDefinition<{
 	}),
 
 	handler: async ({ tagKey }, _extra) => {
-		const values = await getTagValues(tagKey);
+		const values = await getTagValues(tagKey.trim());
 
 		return {
 			content: [

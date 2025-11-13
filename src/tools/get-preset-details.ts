@@ -62,7 +62,7 @@ const GetPresetDetails: OsmToolDefinition<{ presetId: z.ZodString }> = {
 		},
 	}),
 	handler: async ({ presetId }, _extra) => {
-		const details = await getPresetDetails(presetId);
+		const details = await getPresetDetails(presetId.trim());
 		return {
 			content: [{ type: "text" as const, text: JSON.stringify(details, null, 2) }],
 		};

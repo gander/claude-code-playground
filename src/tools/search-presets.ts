@@ -124,7 +124,7 @@ const SearchPresets: OsmToolDefinition<{
 	}),
 
 	handler: async ({ keyword, limit, geometry }, _extra) => {
-		const results = await searchPresets(keyword, { limit, geometry });
+		const results = await searchPresets(keyword.trim(), { limit, geometry });
 
 		return {
 			content: [

@@ -136,7 +136,7 @@ const SearchTags: OsmToolDefinition<{
 	}),
 
 	handler: async ({ keyword, limit }, _extra) => {
-		const results = await searchTags(keyword, limit);
+		const results = await searchTags(keyword.trim(), limit);
 
 		return {
 			content: [
