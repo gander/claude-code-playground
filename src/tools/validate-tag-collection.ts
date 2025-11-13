@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { OsmToolDefinition } from "../types/index.js";
+import { parseTagInput } from "../utils/tag-parser.js";
 import { type ValidationResult, validateTag } from "./validate-tag.js";
 
 /**
@@ -69,28 +70,25 @@ export async function validateTagCollection(
 }
 
 const ValidateTagCollection: OsmToolDefinition<{
-	tags: z.ZodRecord<z.ZodString, z.ZodString>;
+	tags: z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>;
 }> = {
 	name: "validate_tag_collection" as const,
 	config: () => ({
 		description:
-			"Validate a collection of OSM tags. Returns validation results for each tag and aggregated statistics.",
+			"Validate a collection of OSM tags. Returns validation results for each tag and aggregated statistics. Accepts tags in JSON format, text format (key=value lines), or as an object.",
 		inputSchema: {
 			tags: z
-				.record(z.string())
+				.union([z.string(), z.record(z.string())])
 				.describe(
-					"Object containing tag key-value pairs to validate (e.g., { 'amenity': 'parking', 'parking': 'surface' })",
+					'Tags as object (e.g., {"amenity": "parking"}), JSON string, or text format (one per line: key=value)',
 				),
 		},
 	}),
 	handler: async ({ tags }, _extra) => {
-		// Trim all keys and values in the tags object
-		const trimmedTags: Record<string, string> = {};
-		for (const [key, value] of Object.entries(tags)) {
-			trimmedTags[key.trim()] = value.trim();
-		}
+		// Parse tags using the shared parser (handles string, JSON, and object formats)
+		const parsedTags = typeof tags === "string" ? parseTagInput(tags) : parseTagInput(tags);
 
-		const result = await validateTagCollection(trimmedTags);
+		const result = await validateTagCollection(parsedTags);
 		return {
 			content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		};

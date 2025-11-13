@@ -233,6 +233,86 @@ describe("Integration: suggest_improvements", () => {
 		});
 	});
 
+	describe("Text Format Support", () => {
+		it("should accept tags in text format (key=value lines)", async () => {
+			const textInput = `amenity=restaurant
+cuisine=italian`;
+
+			const response = await client.callTool({
+				name: "suggest_improvements",
+				arguments: {
+					tags: textInput,
+				},
+			});
+
+			assert.ok(response.content);
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			assert.ok(result.suggestions);
+			assert.ok(result.matchedPresets.length > 0);
+		});
+
+		it("should accept tags in JSON string format", async () => {
+			const jsonInput = '{"amenity": "restaurant", "cuisine": "italian"}';
+
+			const response = await client.callTool({
+				name: "suggest_improvements",
+				arguments: {
+					tags: jsonInput,
+				},
+			});
+
+			assert.ok(response.content);
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			assert.ok(result.suggestions);
+			assert.ok(result.matchedPresets.length > 0);
+		});
+
+		it("should handle text format with comments and empty lines", async () => {
+			const textInput = `# Building information
+building=commercial
+
+# Amenity
+amenity=restaurant`;
+
+			const response = await client.callTool({
+				name: "suggest_improvements",
+				arguments: {
+					tags: textInput,
+				},
+			});
+
+			assert.ok(response.content);
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			assert.ok(result.matchedPresets.length > 0);
+		});
+
+		it("should warn about deprecated tags in text format", async () => {
+			const deprecatedEntry = deprecated[0];
+			const oldKey = Object.keys(deprecatedEntry.old)[0];
+			if (!oldKey) return;
+			const oldValue = deprecatedEntry.old[oldKey as keyof typeof deprecatedEntry.old];
+
+			const textInput = `${oldKey}=${oldValue}
+name=Test`;
+
+			const response = await client.callTool({
+				name: "suggest_improvements",
+				arguments: {
+					tags: textInput,
+				},
+			});
+
+			assert.ok(response.content);
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			assert.ok(result.warnings.length > 0);
+			assert.ok(result.warnings[0].includes("deprecated"));
+		});
+	});
+
 	describe("JSON Schema Data Integrity", () => {
 		it("should suggest fields from preset fields", async () => {
 			// Use a known preset

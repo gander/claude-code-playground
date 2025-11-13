@@ -37,9 +37,14 @@ The server provides tools organized into four categories:
 | Tool | Description | Input | Output |
 |------|-------------|-------|--------|
 | [`validate_tag`](./validate_tag.md) | Validate a single tag key-value pair | `key` (string), `value` (string) | Validation result with errors/warnings |
-| [`validate_tag_collection`](./validate_tag_collection.md) | Validate a collection of tags | `tags` (object) | Validation report with statistics |
+| [`validate_tag_collection`](./validate_tag_collection.md) | Validate a collection of tags | `tags` (object/string) | Validation report with statistics |
 | [`check_deprecated`](./check_deprecated.md) | Check if tags are deprecated | `key` (string), `value` (optional) | Deprecation status and replacements |
-| [`suggest_improvements`](./suggest_improvements.md) | Suggest improvements for tag collection | `tags` (object) | Suggestions, warnings, matched presets |
+| [`suggest_improvements`](./suggest_improvements.md) | Suggest improvements for tag collection | `tags` (object/string) | Suggestions, warnings, matched presets |
+
+**Note:** `validate_tag_collection` and `suggest_improvements` accept tags in multiple formats:
+- **Object**: `{"amenity": "restaurant", "cuisine": "pizza"}`
+- **Text** (key=value lines): `"amenity=restaurant\ncuisine=pizza"`
+- **JSON string**: `'{"amenity": "restaurant"}'`
 
 ### Schema Exploration Tools
 
