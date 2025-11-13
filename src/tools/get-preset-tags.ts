@@ -1,4 +1,4 @@
-import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import type { PresetTags } from "./types.js";
 
 /**
@@ -23,13 +23,12 @@ export const definition = {
 /**
  * Get recommended tags for a specific preset
  *
- * @param loader - Schema loader instance
  * @param presetId - The preset ID to get tags for (e.g., "amenity/restaurant")
  * @returns Preset tags including identifying tags and optional addTags
  * @throws Error if preset is not found
  */
-export async function getPresetTags(loader: SchemaLoader, presetId: string): Promise<PresetTags> {
-	const schema = await loader.loadSchema();
+export async function getPresetTags(presetId: string): Promise<PresetTags> {
+	const schema = await schemaLoader.loadSchema();
 
 	// Look up the preset
 	const preset = schema.presets[presetId];
@@ -54,12 +53,12 @@ export async function getPresetTags(loader: SchemaLoader, presetId: string): Pro
 /**
  * Handler for get_preset_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const presetId = (args as { presetId?: string }).presetId;
 	if (!presetId) {
 		throw new Error("presetId parameter is required");
 	}
-	const tags = await getPresetTags(loader, presetId);
+	const tags = await getPresetTags(presetId);
 	return {
 		content: [
 			{

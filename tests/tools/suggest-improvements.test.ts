@@ -5,17 +5,15 @@ import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" w
 };
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { suggestImprovements } from "../../src/tools/suggest-improvements.js";
-import { SchemaLoader } from "../../src/utils/schema-loader.js";
 
 describe("suggestImprovements", () => {
 	describe("Basic Functionality", () => {
 		it("should return suggestions for tag collection", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
 			const tags = {
 				amenity: "restaurant",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const result = await suggestImprovements(tags);
 
 			assert.ok(result);
 			assert.ok("suggestions" in result);
@@ -25,12 +23,11 @@ describe("suggestImprovements", () => {
 		});
 
 		it("should suggest missing common tags", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
 			const tags = {
 				amenity: "restaurant",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const result = await suggestImprovements(tags);
 
 			assert.ok(result);
 			assert.ok(result.suggestions.length > 0);
@@ -38,8 +35,6 @@ describe("suggestImprovements", () => {
 		});
 
 		it("should warn about deprecated tags", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// Use first deprecated entry
 			const entry = deprecated[0];
 			const key = Object.keys(entry.old)[0];
@@ -49,7 +44,7 @@ describe("suggestImprovements", () => {
 				[key]: value as string,
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const result = await suggestImprovements(tags);
 
 			assert.ok(result);
 			assert.ok(result.warnings.length > 0);
@@ -57,8 +52,6 @@ describe("suggestImprovements", () => {
 		});
 
 		it("should return empty suggestions for complete tag set", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// Find a preset and use its complete tag set
 			const preset = Object.values(presets)[0];
 			const tags: Record<string, string> = {};
@@ -78,17 +71,16 @@ describe("suggestImprovements", () => {
 				}
 			}
 
-			const result = await suggestImprovements(loader, tags);
+			const result = await suggestImprovements(tags);
 
 			assert.ok(result);
 			// Should have fewer suggestions since tags are more complete
 		});
 
 		it("should handle empty tag collection", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
 			const tags = {};
 
-			const result = await suggestImprovements(loader, tags);
+			const result = await suggestImprovements(tags);
 
 			assert.ok(result);
 			assert.strictEqual(result.suggestions.length, 0);
@@ -98,12 +90,11 @@ describe("suggestImprovements", () => {
 
 	describe("Result Structure", () => {
 		it("should return correct result structure", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
 			const tags = {
 				amenity: "parking",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const result = await suggestImprovements(tags);
 
 			assert.ok(result);
 			assert.ok("suggestions" in result);
@@ -115,12 +106,11 @@ describe("suggestImprovements", () => {
 		});
 
 		it("should include matched presets", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
 			const tags = {
 				amenity: "restaurant",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const result = await suggestImprovements(tags);
 
 			assert.ok(result);
 			assert.ok(result.matchedPresets);
@@ -128,12 +118,11 @@ describe("suggestImprovements", () => {
 		});
 
 		it("should have meaningful suggestion messages", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
 			const tags = {
 				amenity: "restaurant",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const result = await suggestImprovements(tags);
 
 			assert.ok(result);
 			if (result.suggestions.length > 0) {
@@ -147,13 +136,12 @@ describe("suggestImprovements", () => {
 
 	describe("Preset Matching", () => {
 		it("should match presets based on tags", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
 			const tags = {
 				amenity: "restaurant",
 				cuisine: "italian",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const result = await suggestImprovements(tags);
 
 			assert.ok(result);
 			assert.ok(result.matchedPresets);
@@ -161,12 +149,11 @@ describe("suggestImprovements", () => {
 		});
 
 		it("should suggest fields from matched presets", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
 			const tags = {
 				amenity: "parking",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const result = await suggestImprovements(tags);
 
 			assert.ok(result);
 			// Parking should have suggestions like capacity, fee, surface, etc.
@@ -176,8 +163,6 @@ describe("suggestImprovements", () => {
 
 	describe("Deprecation Warnings", () => {
 		it("should warn about ALL deprecated tags (100% coverage)", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// CRITICAL: Test ALL deprecated entries individually - no Math.min, no sampling
 			let testedCount = 0;
 			let skippedCount = 0;
@@ -210,7 +195,7 @@ describe("suggestImprovements", () => {
 				}
 
 				const tags = { [key]: value };
-				const result = await suggestImprovements(loader, tags);
+				const result = await suggestImprovements(tags);
 
 				assert.ok(result, `Should return result for deprecated tag ${key}=${value}`);
 				assert.ok(result.warnings.length >= 1, `Should warn about deprecated tag ${key}=${value}`);
@@ -233,8 +218,6 @@ describe("suggestImprovements", () => {
 
 	describe("JSON Schema Validation", () => {
 		it("should suggest fields from preset fields", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// Use a known preset
 			const preset = presets["amenity/restaurant"];
 			if (preset?.tags) {
@@ -245,7 +228,7 @@ describe("suggestImprovements", () => {
 					}
 				}
 
-				const result = await suggestImprovements(loader, tags);
+				const result = await suggestImprovements(tags);
 
 				assert.ok(result);
 				assert.ok(result.matchedPresets);
@@ -258,24 +241,22 @@ describe("suggestImprovements", () => {
 
 	describe("Edge Cases", () => {
 		it("should handle tags with no matching presets", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
 			const tags = {
 				unknown_key_xyz: "unknown_value_123",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const result = await suggestImprovements(tags);
 
 			assert.ok(result);
 			assert.strictEqual(result.matchedPresets.length, 0);
 		});
 
 		it("should handle single tag", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
 			const tags = {
 				building: "yes",
 			};
 
-			const result = await suggestImprovements(loader, tags);
+			const result = await suggestImprovements(tags);
 
 			assert.ok(result);
 			// Building=yes is very generic, should suggest more specific tags

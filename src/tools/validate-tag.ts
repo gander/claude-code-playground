@@ -2,7 +2,6 @@ import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" w
 	type: "json",
 };
 import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
-import type { SchemaLoader } from "../utils/schema-loader.js";
 
 /**
  * Tool definition for validate_tag
@@ -46,16 +45,11 @@ export interface ValidationResult {
 /**
  * Validate a single OSM tag (key-value pair)
  *
- * @param _loader - Schema loader instance (reserved for future use)
  * @param key - Tag key to validate
  * @param value - Tag value to validate
  * @returns Validation result with errors, warnings, and deprecation info
  */
-export async function validateTag(
-	_loader: SchemaLoader,
-	key: string,
-	value: string,
-): Promise<ValidationResult> {
+export async function validateTag(key: string, value: string): Promise<ValidationResult> {
 	const result: ValidationResult = {
 		valid: true,
 		deprecated: false,
@@ -150,7 +144,7 @@ export async function validateTag(
 /**
  * Handler for validate_tag tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const { key, value } = args as { key?: string; value?: string };
 	if (key === undefined) {
 		throw new Error("key parameter is required");
@@ -158,7 +152,7 @@ export async function handler(loader: SchemaLoader, args: unknown) {
 	if (value === undefined) {
 		throw new Error("value parameter is required");
 	}
-	const result = await validateTag(loader, key, value);
+	const result = await validateTag(key, value);
 	return {
 		content: [
 			{

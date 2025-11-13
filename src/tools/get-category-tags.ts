@@ -1,4 +1,4 @@
-import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 
 /**
  * Tool definition for get_category_tags
@@ -21,15 +21,11 @@ export const definition = {
 /**
  * Get all tags (preset IDs) belonging to a specific category
  *
- * @param loader - Schema loader instance
  * @param categoryName - Name of the category
  * @returns Array of preset IDs belonging to the category
  */
-export async function getCategoryTags(
-	loader: SchemaLoader,
-	categoryName: string,
-): Promise<string[]> {
-	const schema = await loader.loadSchema();
+export async function getCategoryTags(categoryName: string): Promise<string[]> {
+	const schema = await schemaLoader.loadSchema();
 
 	// Get the category
 	const category = schema.categories[categoryName];
@@ -41,12 +37,12 @@ export async function getCategoryTags(
 /**
  * Handler for get_category_tags tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const category = (args as { category?: string }).category;
 	if (!category) {
 		throw new Error("category parameter is required");
 	}
-	const tags = await getCategoryTags(loader, category);
+	const tags = await getCategoryTags(category);
 	return {
 		content: [
 			{

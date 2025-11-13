@@ -1,4 +1,4 @@
-import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import type { SchemaStats } from "./types.js";
 
 /**
@@ -18,11 +18,10 @@ export const definition = {
 /**
  * Get statistics about the OSM tagging schema
  *
- * @param loader - Schema loader instance
  * @returns Schema statistics including counts of presets, fields, categories, deprecated items, and version info
  */
-export async function getSchemaStats(loader: SchemaLoader): Promise<SchemaStats> {
-	const schema = await loader.loadSchema();
+export async function getSchemaStats(): Promise<SchemaStats> {
+	const schema = await schemaLoader.loadSchema();
 
 	return {
 		presetCount: Object.keys(schema.presets).length,
@@ -37,8 +36,8 @@ export async function getSchemaStats(loader: SchemaLoader): Promise<SchemaStats>
 /**
  * Handler for get_schema_stats tool
  */
-export async function handler(loader: SchemaLoader, _args: unknown) {
-	const stats = await getSchemaStats(loader);
+export async function handler(_args: unknown) {
+	const stats = await getSchemaStats();
 	return {
 		content: [
 			{

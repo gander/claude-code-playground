@@ -2,13 +2,11 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { searchPresets } from "../../src/tools/search-presets.ts";
-import { SchemaLoader } from "../../src/utils/schema-loader.ts";
 
 describe("search_presets", () => {
 	describe("Basic Functionality", () => {
 		it("should search presets by ID keyword", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchPresets(loader, "restaurant");
+			const results = await searchPresets("restaurant");
 
 			assert.ok(Array.isArray(results), "Should return an array");
 			assert.ok(results.length > 0, "Should find matching presets");
@@ -19,8 +17,7 @@ describe("search_presets", () => {
 		});
 
 		it("should return preset with required properties", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchPresets(loader, "restaurant");
+			const results = await searchPresets("restaurant");
 
 			assert.ok(results.length > 0, "Should have results");
 			const first = results[0];
@@ -31,8 +28,7 @@ describe("search_presets", () => {
 		});
 
 		it("should search presets by tag", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchPresets(loader, "amenity=restaurant");
+			const results = await searchPresets("amenity=restaurant");
 
 			assert.ok(results.length > 0, "Should find presets with tag");
 
@@ -43,9 +39,8 @@ describe("search_presets", () => {
 		});
 
 		it("should perform case-insensitive search", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const resultsLower = await searchPresets(loader, "restaurant");
-			const resultsUpper = await searchPresets(loader, "RESTAURANT");
+			const resultsLower = await searchPresets("restaurant");
+			const resultsUpper = await searchPresets("RESTAURANT");
 
 			assert.ok(resultsLower.length > 0, "Should find results with lowercase");
 			assert.ok(resultsUpper.length > 0, "Should find results with uppercase");
@@ -53,24 +48,21 @@ describe("search_presets", () => {
 		});
 
 		it("should return empty array for no matches", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchPresets(loader, "nonexistentpresetxyz12345");
+			const results = await searchPresets("nonexistentpresetxyz12345");
 
 			assert.ok(Array.isArray(results), "Should return an array");
 			assert.strictEqual(results.length, 0, "Should return empty array");
 		});
 
 		it("should limit results when limit parameter is provided", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchPresets(loader, "building", { limit: 5 });
+			const results = await searchPresets("building", { limit: 5 });
 
 			assert.ok(Array.isArray(results), "Should return an array");
 			assert.ok(results.length <= 5, "Should respect limit");
 		});
 
 		it("should filter by geometry type", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchPresets(loader, "restaurant", {
+			const results = await searchPresets("restaurant", {
 				geometry: "area",
 			});
 
@@ -86,10 +78,8 @@ describe("search_presets", () => {
 		});
 
 		it("should use cached data on subsequent calls", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
-			const results1 = await searchPresets(loader, "school");
-			const results2 = await searchPresets(loader, "school");
+			const results1 = await searchPresets("school");
+			const results2 = await searchPresets("school");
 
 			assert.deepStrictEqual(results1, results2, "Results should be identical from cache");
 		});
@@ -97,8 +87,7 @@ describe("search_presets", () => {
 
 	describe("JSON Schema Validation", () => {
 		it("should return presets matching JSON data", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchPresets(loader, "restaurant");
+			const results = await searchPresets("restaurant");
 
 			// Verify each result exists in JSON
 			for (const result of results) {
@@ -118,8 +107,7 @@ describe("search_presets", () => {
 		});
 
 		it("should find presets by exact tag match", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchPresets(loader, "amenity=cafe");
+			const results = await searchPresets("amenity=cafe");
 
 			assert.ok(results.length > 0, "Should find cafe presets");
 
@@ -132,8 +120,7 @@ describe("search_presets", () => {
 		});
 
 		it("should validate search results against complete preset data", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const results = await searchPresets(loader, "parking");
+			const results = await searchPresets("parking");
 
 			assert.ok(results.length > 0, "Should find parking presets");
 
@@ -155,8 +142,6 @@ describe("search_presets", () => {
 		});
 
 		it("should be able to find ALL presets from JSON by ID using provider pattern (100% coverage)", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// CRITICAL: Test EVERY preset from JSON, not a sample
 			const allPresetIds = Object.keys(presets);
 			assert.ok(allPresetIds.length > 1500, "Should have all presets from JSON");
@@ -169,7 +154,7 @@ describe("search_presets", () => {
 				// Search by preset ID (use last part for searchable presets)
 				const searchTerm = presetId.split("/").pop() || presetId;
 
-				const results = await searchPresets(loader, searchTerm);
+				const results = await searchPresets(searchTerm);
 
 				// Check if this preset was found in results
 				const found = results.some((r) => r.id === presetId);

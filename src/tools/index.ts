@@ -2,7 +2,6 @@
  * Tool registry - exports all tools with their definitions and handlers
  */
 
-import type { SchemaLoader } from "../utils/schema-loader.js";
 import * as checkDeprecated from "./check-deprecated.js";
 import * as getCategories from "./get-categories.js";
 import * as getCategoryTags from "./get-category-tags.js";
@@ -34,10 +33,7 @@ export interface ToolDefinition {
 /**
  * Tool handler function signature
  */
-export type ToolHandler = (
-	loader: SchemaLoader,
-	args: unknown,
-) => Promise<{
+export type ToolHandler = (args: unknown) => Promise<{
 	content: Array<{ type: "text"; text: string }>;
 }>;
 

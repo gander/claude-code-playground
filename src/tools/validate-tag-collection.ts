@@ -1,4 +1,3 @@
-import type { SchemaLoader } from "../utils/schema-loader.js";
 import { type ValidationResult, validateTag } from "./validate-tag.js";
 
 /**
@@ -47,12 +46,10 @@ export interface CollectionValidationResult {
 /**
  * Validate a collection of OSM tags
  *
- * @param loader - Schema loader instance
  * @param tags - Object containing key-value pairs to validate
  * @returns Validation result with aggregated statistics and individual tag results
  */
 export async function validateTagCollection(
-	loader: SchemaLoader,
 	tags: Record<string, string>,
 ): Promise<CollectionValidationResult> {
 	const result: CollectionValidationResult = {
@@ -67,7 +64,7 @@ export async function validateTagCollection(
 
 	// Validate each tag individually
 	for (const [key, value] of Object.entries(tags)) {
-		const tagResult = await validateTag(loader, key, value);
+		const tagResult = await validateTag(key, value);
 		result.tagResults[key] = tagResult;
 
 		// Aggregate statistics
@@ -95,12 +92,12 @@ export async function validateTagCollection(
 /**
  * Handler for validate_tag_collection tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const { tags } = args as { tags?: Record<string, string> };
 	if (!tags) {
 		throw new Error("tags parameter is required");
 	}
-	const result = await validateTagCollection(loader, tags);
+	const result = await validateTagCollection(tags);
 	return {
 		content: [
 			{

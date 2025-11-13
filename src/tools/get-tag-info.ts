@@ -1,4 +1,4 @@
-import type { SchemaLoader } from "../utils/schema-loader.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import type { TagInfo } from "./types.js";
 
 /**
@@ -23,12 +23,11 @@ export const definition = {
 /**
  * Get comprehensive information about a specific tag key
  *
- * @param loader - Schema loader instance
  * @param tagKey - The tag key to get information for (e.g., "parking", "amenity")
  * @returns Tag information including all possible values, type, and field definition status
  */
-export async function getTagInfo(loader: SchemaLoader, tagKey: string): Promise<TagInfo> {
-	const schema = await loader.loadSchema();
+export async function getTagInfo(tagKey: string): Promise<TagInfo> {
+	const schema = await schemaLoader.loadSchema();
 
 	// Collect all unique values for the tag key
 	const values = new Set<string>();
@@ -90,12 +89,12 @@ export async function getTagInfo(loader: SchemaLoader, tagKey: string): Promise<
 /**
  * Handler for get_tag_info tool
  */
-export async function handler(loader: SchemaLoader, args: unknown) {
+export async function handler(args: unknown) {
 	const tagKey = (args as { tagKey?: string }).tagKey;
 	if (!tagKey) {
 		throw new Error("tagKey parameter is required");
 	}
-	const info = await getTagInfo(loader, tagKey);
+	const info = await getTagInfo(tagKey);
 	return {
 		content: [
 			{

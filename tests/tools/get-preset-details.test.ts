@@ -2,13 +2,11 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { getPresetDetails } from "../../src/tools/get-preset-details.ts";
-import { SchemaLoader } from "../../src/utils/schema-loader.ts";
 
 describe("get_preset_details", () => {
 	describe("Basic Functionality", () => {
 		it("should return complete preset details for a valid preset ID", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetDetails(loader, "amenity/restaurant");
+			const result = await getPresetDetails("amenity/restaurant");
 
 			assert.ok(result, "Should return a result");
 			assert.strictEqual(result.id, "amenity/restaurant");
@@ -17,8 +15,7 @@ describe("get_preset_details", () => {
 		});
 
 		it("should return all required properties", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetDetails(loader, "amenity/restaurant");
+			const result = await getPresetDetails("amenity/restaurant");
 
 			// Required properties
 			assert.strictEqual(typeof result.id, "string");
@@ -41,8 +38,7 @@ describe("get_preset_details", () => {
 		});
 
 		it("should return tags object with correct structure", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetDetails(loader, "amenity/restaurant");
+			const result = await getPresetDetails("amenity/restaurant");
 
 			assert.ok(result.tags);
 			assert.strictEqual(typeof result.tags, "object");
@@ -50,16 +46,14 @@ describe("get_preset_details", () => {
 		});
 
 		it("should return geometry array", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetDetails(loader, "amenity/restaurant");
+			const result = await getPresetDetails("amenity/restaurant");
 
 			assert.ok(Array.isArray(result.geometry));
 			assert.ok(result.geometry.length > 0, "Should have at least one geometry type");
 		});
 
 		it("should return fields array for presets with fields", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetDetails(loader, "amenity/restaurant");
+			const result = await getPresetDetails("amenity/restaurant");
 
 			assert.ok(result.fields, "Restaurant preset should have fields");
 			assert.ok(Array.isArray(result.fields));
@@ -67,11 +61,9 @@ describe("get_preset_details", () => {
 		});
 
 		it("should throw error for non-existent preset", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			await assert.rejects(
 				async () => {
-					await getPresetDetails(loader, "nonexistent/preset");
+					await getPresetDetails("nonexistent/preset");
 				},
 				{
 					message: /Preset .* not found/,
@@ -80,10 +72,8 @@ describe("get_preset_details", () => {
 		});
 
 		it("should use cached data on subsequent calls", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
-			const result1 = await getPresetDetails(loader, "amenity/cafe");
-			const result2 = await getPresetDetails(loader, "amenity/cafe");
+			const result1 = await getPresetDetails("amenity/cafe");
+			const result2 = await getPresetDetails("amenity/cafe");
 
 			assert.deepStrictEqual(result1, result2, "Results should be identical from cache");
 		});
@@ -91,8 +81,7 @@ describe("get_preset_details", () => {
 
 	describe("JSON Schema Validation", () => {
 		it("should return preset details matching JSON data exactly", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-			const result = await getPresetDetails(loader, "amenity/restaurant");
+			const result = await getPresetDetails("amenity/restaurant");
 
 			const expected = presets["amenity/restaurant"];
 			assert.ok(expected, "Preset should exist in JSON");
@@ -125,15 +114,13 @@ describe("get_preset_details", () => {
 		});
 
 		it("should validate ALL preset details via provider pattern (100% coverage)", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// CRITICAL: Test EVERY preset from JSON, not a sample
 			const allPresetIds = Object.keys(presets);
 			assert.ok(allPresetIds.length > 1500, "Should have all presets from JSON");
 
 			// Provider pattern: iterate through EVERY preset
 			for (const presetId of allPresetIds) {
-				const result = await getPresetDetails(loader, presetId);
+				const result = await getPresetDetails(presetId);
 				const expected = presets[presetId];
 
 				assert.ok(expected, `Preset ${presetId} should exist in JSON`);
@@ -184,8 +171,6 @@ describe("get_preset_details", () => {
 		});
 
 		it("should handle presets without optional fields", async () => {
-			const loader = new SchemaLoader({ enableIndexing: true });
-
 			// Find a preset without fields (if any exist)
 			let presetWithoutFields: string | null = null;
 			for (const [id, preset] of Object.entries(presets)) {
@@ -196,7 +181,7 @@ describe("get_preset_details", () => {
 			}
 
 			if (presetWithoutFields) {
-				const result = await getPresetDetails(loader, presetWithoutFields);
+				const result = await getPresetDetails(presetWithoutFields);
 				assert.ok(result);
 				assert.strictEqual(result.id, presetWithoutFields);
 				// fields should be undefined or not present
