@@ -5,6 +5,10 @@ on:
     - cron: '0 * * * *'  # Co godzinę o pełnej godzinie
   workflow_dispatch:      # Manualny trigger dla testowania
 
+# Top-level permissions: read-only by default (principle of least privilege)
+permissions:
+  contents: read
+
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -12,13 +16,14 @@ jobs:
   cleanup-packages:
     name: Clean Old Package Versions
     runs-on: ubuntu-latest
+    # Minimal permissions required for package cleanup
     permissions:
-      packages: write
-      contents: read
+      packages: write  # Required to delete package versions via GitHub Packages API
+      contents: read   # Required for checkout
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4.2.2
 
       - name: Random delay to avoid rate limits
         run: sleep $((RANDOM % 30))
@@ -105,13 +110,14 @@ jobs:
   cleanup-workflow-runs:
     name: Clean Old Workflow Runs
     runs-on: ubuntu-latest
+    # Minimal permissions required for workflow runs cleanup
     permissions:
-      actions: write
-      contents: read
+      actions: write   # Required to delete workflow runs via GitHub Actions API
+      contents: read   # Required for checkout
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4.2.2
 
       - name: Random delay
         run: sleep $((RANDOM % 30))
