@@ -4,8 +4,6 @@ import http from "node:http";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { tools } from "./tools/index.js";
 import { logger } from "./utils/logger.js";
 import { schemaLoader } from "./utils/schema-loader.js";
 
@@ -25,39 +23,8 @@ export function createServer(): McpServer {
 		},
 	);
 
-	// Access underlying Server for advanced use case (dynamic tool registration with JSON Schema)
-	// McpServer's high-level API expects Zod schemas, but we use JSON Schema for tool definitions
-	const server = mcpServer.server;
-
-	// Register tool handlers
-	// Tools are loaded from src/tools/index.ts and sorted alphabetically by name
-	server.setRequestHandler(ListToolsRequestSchema, async () => ({
-		tools: tools.map((tool) => tool.definition),
-	}));
-
-	server.setRequestHandler(CallToolRequestSchema, async (request) => {
-		const { name, arguments: args } = request.params;
-
-		logger.debug(`Tool call: ${name}`, "MCPServer");
-
-		try {
-			// Find the tool by name
-			const tool = tools.find((t) => t.definition.name === name);
-			if (!tool) {
-				throw new Error(`Unknown tool: ${name}`);
-			}
-
-			// Call the tool handler
-			return await tool.handler(args);
-		} catch (error) {
-			logger.error(
-				`Error executing tool: ${name}`,
-				"MCPServer",
-				error instanceof Error ? error : new Error(String(error)),
-			);
-			throw error;
-		}
-	});
+	// TODO: Register tools using McpServer.registerTool() with new ToolDefinition interface
+	// Tools will be imported and registered here during migration
 
 	return mcpServer;
 }
