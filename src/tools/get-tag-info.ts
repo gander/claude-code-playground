@@ -1,22 +1,23 @@
 import { z } from "zod";
 import type { OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
-import type { TagInfo } from "./types.js";
+import type { TagInfo, ValueInfo } from "./types.js";
 
 /**
  * Get comprehensive information about a specific tag key
  *
  * @param tagKey - The tag key to get information for (e.g., "parking", "amenity")
- * @returns Tag information including all possible values, type, and field definition status
+ * @returns Tag information including all possible values with localized titles/descriptions, type, and field definition status
  */
 export async function getTagInfo(tagKey: string): Promise<TagInfo> {
 	const schema = await schemaLoader.loadSchema();
 
 	// Collect all unique values for the tag key
-	const values = new Set<string>();
+	const valueKeys = new Set<string>();
 	let hasFieldDefinition = false;
 	let fieldType: string | undefined;
 	let actualKey = tagKey; // The actual OSM key (with colon)
+	let fieldName: string | undefined;
 
 	// First, check fields for predefined options and metadata
 	// Field map keys are FILE PATHS with slash (e.g., "toilets/wheelchair" → data/fields/toilets/wheelchair.json)
@@ -33,7 +34,7 @@ export async function getTagInfo(tagKey: string): Promise<TagInfo> {
 		if (field.options && Array.isArray(field.options)) {
 			for (const option of field.options) {
 				if (typeof option === "string") {
-					values.add(option);
+					valueKeys.add(option);
 				}
 			}
 		}
@@ -47,7 +48,7 @@ export async function getTagInfo(tagKey: string): Promise<TagInfo> {
 			const value = preset.tags[actualKey];
 			// Skip wildcards and complex patterns
 			if (value && value !== "*" && !value.includes("|")) {
-				values.add(value);
+				valueKeys.add(value);
 			}
 		}
 
@@ -55,15 +56,48 @@ export async function getTagInfo(tagKey: string): Promise<TagInfo> {
 		if (preset.addTags?.[actualKey]) {
 			const value = preset.addTags[actualKey];
 			if (value && value !== "*" && !value.includes("|")) {
-				values.add(value);
+				valueKeys.add(value);
 			}
+		}
+	}
+
+	// Get translations for field label and value titles/descriptions
+	// biome-ignore lint/suspicious/noExplicitAny: translations structure is dynamic and deeply nested
+	const fieldStrings = (schema.translations as Record<string, any>)?.en?.presets?.fields?.[
+		fieldKeyLookup
+	];
+	if (fieldStrings) {
+		fieldName = fieldStrings.label as string | undefined;
+	}
+
+	// Build structured values with translations
+	const values: Record<string, ValueInfo> = {};
+	const sortedValueKeys = Array.from(valueKeys).sort();
+
+	for (const valueKey of sortedValueKeys) {
+		// Get translation for this value from field options
+		const translationValue = fieldStrings?.options?.[valueKey];
+
+		if (typeof translationValue === "string") {
+			// Simple string title
+			values[valueKey] = { title: translationValue };
+		} else if (typeof translationValue === "object" && translationValue !== null) {
+			// Object with title and description
+			values[valueKey] = {
+				title: translationValue.title as string,
+				description: translationValue.description as string | undefined,
+			};
+		} else {
+			// Fallback: use value key as title if no translation
+			values[valueKey] = { title: valueKey };
 		}
 	}
 
 	// Return tag information with the actual OSM key (with colon)
 	return {
 		key: actualKey,
-		values: Array.from(values).sort(),
+		name: fieldName,
+		values,
 		type: fieldType,
 		hasFieldDefinition,
 	};

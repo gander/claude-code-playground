@@ -57,7 +57,7 @@ export class SchemaLoader {
 			logger.info(`Loading OSM tagging schema v${metadata.version}`, "SchemaLoader");
 
 			// Load all schema files in parallel
-			const [presets, fields, categories, deprecated, defaults] = await Promise.all([
+			const [presets, fields, categories, deprecated, defaults, translations] = await Promise.all([
 				this.loadJSON<Record<string, Preset>>("presets.json"),
 				this.loadJSON<Record<string, Field>>("fields.json"),
 				this.loadJSON<Record<string, PresetCategory>>("preset_categories.json"),
@@ -65,6 +65,7 @@ export class SchemaLoader {
 				this.loadJSON<Record<string, { area?: string[]; line?: string[]; point?: string[] }>>(
 					"preset_defaults.json",
 				),
+				this.loadJSON<Record<string, unknown>>("translations/en.json"),
 			]);
 
 			// Validate schema structure
@@ -82,6 +83,7 @@ export class SchemaLoader {
 				categories,
 				deprecated,
 				defaults,
+				translations,
 				metadata,
 			};
 

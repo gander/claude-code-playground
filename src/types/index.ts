@@ -118,6 +118,7 @@ export interface SchemaData {
 	categories: Record<string, PresetCategory>;
 	deprecated: DeprecatedTag[];
 	defaults: Record<string, { area?: string[]; line?: string[]; point?: string[] }>;
+	translations?: Record<string, unknown>; // Localized strings (e.g., en.json)
 	metadata?: SchemaMetadata; // Schema version and load metadata
 }
 

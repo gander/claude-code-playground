@@ -32,11 +32,20 @@ export interface TagSearchResult {
 }
 
 /**
+ * Value information with localized title and optional description
+ */
+export interface ValueInfo {
+	title: string;
+	description?: string;
+}
+
+/**
  * Tag information interface
  */
 export interface TagInfo {
 	key: string;
-	values: string[];
+	name?: string; // Localized field label
+	values: Record<string, ValueInfo>; // Value key -> localized info
 	type?: string;
 	hasFieldDefinition: boolean;
 }
