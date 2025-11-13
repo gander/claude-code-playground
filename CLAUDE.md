@@ -429,9 +429,70 @@ interface ToolDefinition<InputArgs, OutputArgs> {
 2. **config()**: Function that returns tool configuration
    - Must be a function (not a static object) to allow dynamic generation
    - Returns schema definitions, descriptions, and metadata
-3. **handler**: Tool implementation callback function
-   - Receives validated input parameters
-   - Returns tool output or throws errors
+   - **inputSchema**: Zod schema for input validation (e.g., `{ tagKey: z.string() }`)
+   - **outputSchema**: Zod schema for output validation (optional)
+3. **handler**: Async tool implementation callback function
+   - **Async function**: `async (args) => { ... }`
+   - **First parameter**: Object with typed arguments (e.g., `{ tagKey: string, limit?: number }`)
+   - **TypeScript typing**: Arguments are typed directly in the function signature
+   - **Pre-validated inputs**: Zod validates inputs before calling handler - no additional validation needed
+   - **Returns**: Object with `content` array and optional `structuredContent`
+
+### Handler Function Details
+
+**Input Validation with Zod**:
+- `inputSchema` in `config()` defines Zod validation rules
+- MCP SDK validates inputs automatically before calling handler
+- Handler receives fully validated and typed arguments
+- No manual input validation logic needed in handler
+
+**Handler Signature**:
+```typescript
+async (args: { param1: string, param2?: number }) => {
+    // args are already validated by Zod
+    // args are typed with TypeScript for IDE support
+
+    return {
+        content: [{ type: 'text', text: 'result' }],
+        structuredContent: { key: 'value' }
+    };
+}
+```
+
+**Example from MCP SDK Documentation**:
+```typescript
+// Create server
+const server = new McpServer({
+    name: 'my-app',
+    version: '1.0.0'
+});
+
+// Register tool with Zod validation
+server.registerTool(
+    'calculate-bmi',
+    {
+        title: 'BMI Calculator',
+        description: 'Calculate Body Mass Index',
+        inputSchema: {
+            weightKg: z.number(),
+            heightM: z.number()
+        },
+        outputSchema: { bmi: z.number() }
+    },
+    async ({ weightKg, heightM }) => {
+        const output = { bmi: weightKg / (heightM * heightM) };
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(output)
+                }
+            ],
+            structuredContent: output
+        };
+    }
+);
+```
 
 ### Tool Registration Pattern
 
