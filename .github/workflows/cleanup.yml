@@ -80,9 +80,12 @@ jobs:
           for package in $packages; do
             echo "Processing package: $package"
 
+            # URL-encode package name (e.g., "org/repo" -> "org%2Frepo")
+            package_encoded=$(echo -n "$package" | jq -sRr @uri)
+
             # Get versions sorted by creation date (oldest first)
             versions=$(gh api --paginate \
-              "/${OWNER_TYPE}/${OWNER}/packages/${PACKAGE_TYPE}/${package}/versions?per_page=100" 2>&1)
+              "/${OWNER_TYPE}/${OWNER}/packages/${PACKAGE_TYPE}/${package_encoded}/versions?per_page=100" 2>&1)
 
             # Check if API call failed
             if echo "$versions" | grep -q '"message"'; then
@@ -124,7 +127,7 @@ jobs:
 
               echo "Deleting version ID: $version_id (created: $created, tags: $tags)"
               gh api -X DELETE \
-                "/${OWNER_TYPE}/${OWNER}/packages/${PACKAGE_TYPE}/${package}/versions/${version_id}" \
+                "/${OWNER_TYPE}/${OWNER}/packages/${PACKAGE_TYPE}/${package_encoded}/versions/${version_id}" \
                 2>&1 | tee /tmp/delete_result.txt
 
               if grep -q '"message"' /tmp/delete_result.txt 2>/dev/null; then
