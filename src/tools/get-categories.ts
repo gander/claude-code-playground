@@ -1,19 +1,6 @@
+import type { OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
 import type { CategoryInfo } from "./types.js";
-
-/**
- * Tool definition for get_categories
- */
-export const definition = {
-	name: "get_categories",
-	description:
-		"Get all available tag categories with counts of presets in each category, sorted by name",
-	inputSchema: {
-		type: "object" as const,
-		properties: {},
-		required: [],
-	},
-};
 
 /**
  * Get all tag categories with counts of presets in each category
@@ -34,16 +21,32 @@ export async function getCategories(): Promise<CategoryInfo[]> {
 }
 
 /**
- * Handler for get_categories tool
+ * Tool definition for get_categories following new OsmToolDefinition interface
+ *
+ * Returns all available tag categories with counts of presets in each category,
+ * sorted by name.
  */
-export async function handler(_args: unknown) {
-	const categories = await getCategories();
-	return {
-		content: [
-			{
-				type: "text" as const,
-				text: JSON.stringify(categories, null, 2),
-			},
-		],
-	};
-}
+const GetCategories: OsmToolDefinition = {
+	name: "get_categories" as const,
+
+	config: () => ({
+		description:
+			"Get all available tag categories with counts of presets in each category, sorted by name",
+		inputSchema: {}, // Empty object for tools with no parameters
+	}),
+
+	handler: async (_args, _extra) => {
+		const categories = await getCategories();
+
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(categories, null, 2),
+				},
+			],
+		};
+	},
+};
+
+export default GetCategories;
