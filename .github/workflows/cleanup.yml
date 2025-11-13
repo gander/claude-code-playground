@@ -197,64 +197,80 @@ jobs:
 
             echo "Processing workflow: $workflow_name (ID: $workflow_id)"
 
-            # Get runs sorted by created_at (newest first)
-            runs=$(gh api --paginate \
-              "/repos/${OWNER}/${REPO}/actions/workflows/${workflow_id}/runs?per_page=100&status=completed" 2>&1)
+            # Check total count of completed runs
+            first_page=$(gh api "/repos/${OWNER}/${REPO}/actions/workflows/${workflow_id}/runs?per_page=1&status=completed" 2>&1)
 
-            # Check if API call failed
-            if echo "$runs" | grep -q '"message"'; then
-              echo "Error fetching runs for ${workflow_name}:"
-              echo "$runs" | jq -r '.message // .'
+            if echo "$first_page" | grep -q '"message"'; then
+              echo "Error fetching runs count for ${workflow_name}:"
+              echo "$first_page" | jq -r '.message // .'
               continue
             fi
 
-            # Parse runs
-            runs=$(echo "$runs" | jq -c '.workflow_runs | sort_by(.created_at) | reverse | .[] | {id: .id, created: .created_at, conclusion: .conclusion}' 2>/dev/null || true)
+            total_count=$(echo "$first_page" | jq -r '.total_count // 0')
+            echo "Total completed runs: $total_count"
 
-            if [ -z "$runs" ]; then
-              echo "No completed runs found for $workflow_name"
+            if [ "$total_count" -le "$MIN_KEEP" ]; then
+              echo "Only $total_count runs, keeping all (MIN_KEEP=$MIN_KEEP)"
               continue
             fi
 
-            # Count total runs
-            total=$(echo "$runs" | jq -s 'length')
-            echo "Total completed runs: $total"
+            to_delete=$((total_count - MIN_KEEP))
+            echo "Will delete $to_delete oldest runs (keeping newest $MIN_KEEP)"
 
-            if [ "$total" -le "$MIN_KEEP" ]; then
-              echo "Only $total runs, keeping all (MIN_KEEP=$MIN_KEEP)"
-              continue
-            fi
+            # Use pagination to skip first MIN_KEEP runs (newest)
+            # GitHub API returns newest first, so we skip page 1 (first MIN_KEEP runs)
+            # and delete everything from page 2 onwards
+            page=2
+            deleted_total=0
 
-            to_delete=$((total - MIN_KEEP))
-            echo "Will delete $to_delete oldest runs"
+            while true; do
+              echo "Fetching page $page..."
+              runs=$(gh api "/repos/${OWNER}/${REPO}/actions/workflows/${workflow_id}/runs?per_page=${MIN_KEEP}&page=${page}&status=completed" 2>&1)
 
-            count=0
-            echo "$runs" | jq -c '.' | while read -r run; do
-              count=$((count + 1))
-              # Skip first MIN_KEEP runs (newest)
-              if [ $count -le $MIN_KEEP ]; then
-                continue
+              # Check if API call failed
+              if echo "$runs" | grep -q '"message"'; then
+                echo "Error fetching runs page ${page}:"
+                echo "$runs" | jq -r '.message // .'
+                break
               fi
 
-              run_id=$(echo "$run" | jq -r '.id')
-              created=$(echo "$run" | jq -r '.created')
-              conclusion=$(echo "$run" | jq -r '.conclusion')
-
-              echo "Deleting run ID: $run_id (created: $created, conclusion: $conclusion)"
-              gh api -X DELETE "/repos/${OWNER}/${REPO}/actions/runs/${run_id}" \
-                2>&1 | tee /tmp/delete_run_result.txt
-
-              if grep -q '"message"' /tmp/delete_run_result.txt 2>/dev/null; then
-                echo "✗ Failed to delete:"
-                cat /tmp/delete_run_result.txt | jq -r '.message // .'
-              else
-                echo "✓ Deleted"
+              # Count runs on this page
+              run_count=$(echo "$runs" | jq '.workflow_runs | length')
+              if [ "$run_count" -eq 0 ]; then
+                echo "No more runs to delete"
+                break
               fi
 
-              sleep 1  # Rate limit protection
+              echo "Processing $run_count runs from page $page..."
+
+              # Extract run IDs to array (avoids subshell variable issues)
+              run_ids=$(echo "$runs" | jq -r '.workflow_runs[].id')
+
+              # Delete each run
+              for run_id in $run_ids; do
+                # Get run details for logging
+                run_details=$(echo "$runs" | jq -r ".workflow_runs[] | select(.id == $run_id) | {created: .created_at, conclusion: .conclusion}")
+                created=$(echo "$run_details" | jq -r '.created')
+                conclusion=$(echo "$run_details" | jq -r '.conclusion')
+
+                echo "Deleting run ID: $run_id (created: $created, conclusion: $conclusion)"
+                delete_result=$(gh api -X DELETE "/repos/${OWNER}/${REPO}/actions/runs/${run_id}" 2>&1)
+
+                if echo "$delete_result" | grep -q '"message"'; then
+                  echo "✗ Failed to delete:"
+                  echo "$delete_result" | jq -r '.message // .'
+                else
+                  echo "✓ Deleted"
+                  deleted_total=$((deleted_total + 1))
+                fi
+
+                sleep 1  # Rate limit protection
+              done
+
+              page=$((page + 1))
             done
 
-            echo "Finished processing $workflow_name"
+            echo "Finished processing $workflow_name (deleted $deleted_total runs)"
             echo "---"
           done
 
