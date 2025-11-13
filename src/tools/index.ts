@@ -22,6 +22,7 @@ import ValidateTagCollection from "./validate-tag-collection.js";
  * All available tools using new OsmToolDefinition interface
  * Sorted alphabetically by name for consistent ordering
  */
+// biome-ignore lint/suspicious/noExplicitAny: Heterogeneous array of tools with different input schemas
 export const tools: OsmToolDefinition<any>[] = [
 	CheckDeprecated,
 	GetCategories,
