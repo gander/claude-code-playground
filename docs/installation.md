@@ -131,7 +131,12 @@ docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 
 # Or pull specific version
 docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:0.1.0
+
+# Or pull specific commit (short hash, e.g., 938b0d1)
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:938b0d1
 ```
+
+> **Note:** All Docker images are publicly available in GitHub Container Registry (ghcr.io) and can be pulled without authentication.
 
 **2. Run the container:**
 ```bash

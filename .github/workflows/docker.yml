@@ -52,8 +52,8 @@ jobs:
             type=semver,pattern={{major}}
             # Tag with "latest" for tagged releases
             type=raw,value=latest,enable={{is_default_branch}}
-            # Tag with commit SHA (for all builds)
-            type=sha,prefix=sha-
+            # Tag with short commit hash (7 characters, e.g., 938b0d1)
+            type=sha,format=short
 
       - name: Build and push Docker image
         id: build-and-push
