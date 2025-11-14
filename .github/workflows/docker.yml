@@ -44,12 +44,13 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=edge,branch=$repo.default_branch
-            type=semver,pattern={{major}}.{{minor}}.{{patch}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=edge,branch=$repo.default_branch,enable={{is_default_branch}}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}},enable={{is_default_branch}}
+            type=semver,pattern={{major}}.{{minor}},enable={{is_default_branch}}
+            type=semver,pattern={{major}},enable={{is_default_branch}}
             type=ref,event=branch
-            type=ref,event=pr            
+            type=ref,event=pr
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
         id: build-and-push
