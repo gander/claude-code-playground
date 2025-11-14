@@ -4,6 +4,22 @@ on:
   schedule:
     - cron: '0 * * * *'  # Every hour
   workflow_dispatch:      # Manual trigger for testing
+    inputs:
+      min-versions-to-keep:
+        description: 'Minimum number of package versions to keep'
+        required: false
+        default: '10'
+        type: number
+      retain-days:
+        description: 'Number of days to retain workflow runs'
+        required: false
+        default: '3'
+        type: number
+      keep-minimum-runs:
+        description: 'Minimum number of workflow runs to keep'
+        required: false
+        default: '30'
+        type: number
 
 # Top-level permissions: read-only by default (principle of least privilege)
 permissions:
@@ -23,7 +39,7 @@ jobs:
         with:
           package-name: 'osm-tagging-schema-mcp'
           package-type: 'container'
-          min-versions-to-keep: 3
+          min-versions-to-keep: ${{ inputs.min-versions-to-keep || 10 }}
           delete-only-untagged-versions: 'false'
           token: ${{ secrets.PAT_PACKAGES }}
 
@@ -43,5 +59,5 @@ jobs:
         with:
           token: ${{ github.token }}
           repository: ${{ github.repository }}
-          retain_days: 7
-          keep_minimum_runs: 10
+          retain_days: ${{ inputs.retain-days || 3 }}
+          keep_minimum_runs: ${{ inputs.keep-minimum-runs || 30 }}
