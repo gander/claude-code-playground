@@ -374,7 +374,7 @@ tests/                               # Test files (TDD - one test file per tool)
     ├── publish.yml                  # ✅ npm publishing
     ├── security.yml                 # ✅ Security scanning
     ├── codeql.yml                   # ✅ Code scanning
-    ├── cleanup.yml                  # ✅ Package cleanup
+    ├── cleanup.yml                  # ✅ Auto cleanup (dev/tagged packages)
     └── dependency-review.yml        # ✅ Dependency review
 docs/                                # User documentation
     ├── installation.md              # ✅ Installation guide
