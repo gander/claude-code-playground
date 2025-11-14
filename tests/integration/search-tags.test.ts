@@ -42,20 +42,6 @@ describe("search_tags integration", () => {
 				assert.ok(typeof results[0].value === "string");
 			}
 		});
-
-		it.skip("should throw error for missing keyword parameter", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "search_tags",
-						arguments: {},
-					});
-				},
-				{
-					message: /keyword parameter is required/,
-				},
-			);
-		});
 	});
 
 	describe("JSON Schema Data Integrity", () => {
