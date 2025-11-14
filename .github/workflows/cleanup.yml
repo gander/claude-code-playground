@@ -5,10 +5,15 @@ on:
     - cron: '0 * * * *'  # Every hour
   workflow_dispatch:      # Manual trigger for testing
     inputs:
-      keep-tagged-images:
-        description: 'Number of tagged images to keep (-1 = never delete)'
+      keep-n-tagged:
+        description: 'Number of tagged images to keep'
         required: false
-        default: '-1'
+        default: '10'
+        type: number
+      keep-n-untagged:
+        description: 'Number of untagged images to keep'
+        required: false
+        default: '20'
         type: number
       retain-days:
         description: 'Number of days to retain workflow runs'
@@ -26,40 +31,31 @@ permissions:
   contents: read
 
 jobs:
-  cleanup-untagged-packages:
-    name: Clean Untagged Images
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-
-    steps:
-      - name: Delete untagged images
-        uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55
-        with:
-          package-name: 'osm-tagging-schema-mcp'
-          package-type: 'container'
-          min-versions-to-keep: 0
-          delete-only-untagged-versions: 'true'
-          token: ${{ secrets.PAT_PACKAGES }}
-
-  cleanup-tagged-packages:
-    name: Clean Old Tagged Images
+  cleanup-packages:
+    name: Clean Old Packages
     runs-on: ubuntu-latest
     permissions:
       packages: write  # Required to delete package versions
       contents: read
 
     steps:
-      - name: Delete old tagged images
-        uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55
+      - name: Delete old packages
+        uses: dataaxiom/ghcr-cleanup-action@cd0cdb900b5dbf3a6f2cc869f0dbb0b8211f50c4
         with:
-          package-name: 'osm-tagging-schema-mcp'
-          package-type: 'container'
-          min-versions-to-keep: ${{ github.event.inputs.keep-tagged-images || '999999' }}
-          delete-only-untagged-versions: 'false'
-          ignore-versions: '^latest$'
           token: ${{ secrets.PAT_PACKAGES }}
+          package: osm-tagging-schema-mcp
+          owner: ${{ github.repository_owner }}
+          keep-n-tagged: ${{ github.event.inputs.keep-n-tagged || 10 }}
+          keep-n-untagged: ${{ github.event.inputs.keep-n-untagged || 20 }}
+          exclude-tags: |
+            ^latest$
+            ^master$
+            ^main$
+            ^edge$
+            ^[0-9]+$
+            ^[0-9]+\.[0-9]+$
+            ^pr-.*
+          older-than: 1 day
 
   cleanup-workflow-runs:
     name: Clean Old Workflow Runs
