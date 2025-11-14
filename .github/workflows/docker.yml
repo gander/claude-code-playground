@@ -44,7 +44,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch && github.ref_type == 'tag'}},priority=1000
+            type=raw,value=latest,enable={{github.ref_type == 'tag'}},priority=1000
             type=edge,enable={{is_default_branch}},priority=900
             type=ref,event=branch,priority=800
             type=ref,event=pr,priority=700
