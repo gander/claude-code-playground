@@ -1,8 +1,14 @@
 # Project: OpenStreetMap Tagging Schema MCP Server
 
+> **⚠️ IMPORTANT**: This document reflects the ACTUAL current state of the codebase.
+> **Last Updated**: 2025-11-14
+> **Current Status**: 8 of 14 tools implemented | Build issues present | Phase 3 in progress
+
 ## Project Overview
 
 This is a Model Context Protocol (MCP) server built with TypeScript that provides tools for querying and validating OpenStreetMap (OSM) tags using the `@openstreetmap/id-tagging-schema` library.
+
+**Development Status**: Active development with production-ready infrastructure but incomplete tool implementation.
 
 ## Purpose
 
@@ -16,27 +22,37 @@ The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tool
 
 ## Core Functionality
 
-### 1. Tag Query Tools
-- **get_tag_info**: Get comprehensive information about a specific tag key (e.g., "parking" returns all possible values like surface, underground, multi-storey, plus compatible tags like capacity, fee, operator)
-- **get_tag_values**: Retrieve all valid values for a tag key with descriptions
-- **get_related_tags**: Find tags commonly used together with a given tag
-- **search_tags**: Search for tags by keyword
+**Current Status**: 8 of 14 planned tools implemented
 
-### 2. Preset Tools
-- **search_presets**: Search for presets by name or tag filters
-- **get_preset_details**: Get complete preset configuration including tags and fields
-- **get_preset_tags**: Get recommended (required/optional) tags for a preset
+### Implemented Tools (8)
 
-### 3. Validation Tools
-- **validate_tag**: Validate a single tag key-value pair
-- **validate_tag_collection**: Validate complete tag collections and report all issues
-- **check_deprecated**: Check if tags are deprecated and get replacement suggestions
-- **suggest_improvements**: Analyze tag collections and provide recommendations
+**Validation Tools** (4/4 complete):
+- ✅ **validate_tag**: Validate a single tag key-value pair
+- ✅ **validate_tag_collection**: Validate complete tag collections and report all issues
+- ✅ **check_deprecated**: Check if tags are deprecated and get replacement suggestions
+- ✅ **suggest_improvements**: Analyze tag collections and provide recommendations
 
-### 4. Schema Exploration Tools
-- **get_categories**: List all available tag categories with counts
-- **get_category_tags**: Get all tags belonging to a specific category
-- **get_schema_stats**: Get statistics about the schema (tag counts, preset counts, deprecated items)
+**Tag Query Tools** (2/4 implemented):
+- ✅ **get_tag_values**: Retrieve all valid values for a tag key with descriptions
+- ✅ **search_tags**: Search for tags by keyword
+
+**Preset Tools** (2/3 implemented):
+- ✅ **search_presets**: Search for presets by name or tag filters
+- ✅ **get_preset_details**: Get complete preset configuration including tags and fields
+
+### Missing Tools (6)
+
+**Tag Query Tools** (2 missing):
+- ❌ **get_tag_info**: Get comprehensive information about a specific tag key
+- ❌ **get_related_tags**: Find tags commonly used together with a given tag
+
+**Preset Tools** (1 missing):
+- ❌ **get_preset_tags**: Get recommended (required/optional) tags for a preset
+
+**Schema Exploration Tools** (3 missing):
+- ❌ **get_categories**: List all available tag categories with counts
+- ❌ **get_category_tags**: Get all tags belonging to a specific category
+- ❌ **get_schema_stats**: Get statistics about the schema (tag counts, preset counts, deprecated items)
 
 ## Technical Stack
 
@@ -306,50 +322,77 @@ When completing a phase or major feature:
 
 ```
 src/
-├── index.ts              # MCP server entry point
-├── tools/                # Tool implementations (one file per tool)
-│   ├── types.ts          # Shared type definitions for tools
-│   ├── get-schema-stats.ts
-│   ├── get-categories.ts
-│   ├── get-category-tags.ts
-│   ├── get-tag-values.ts
-│   ├── search-tags.ts
-│   ├── (future tools...)
-│   ├── presets.ts        # Preset-related tools (to be split)
-│   └── validation.ts     # Validation tools (to be split)
-├── utils/                # Helper functions
-│   ├── schema-loader.ts
-│   └── validators.ts
-└── types/                # TypeScript type definitions
-    └── index.ts
-tests/                    # Test files (TDD - one test file per tool)
-├── tools/                # Unit tests (one file per tool)
-│   ├── get-schema-stats.test.ts
-│   ├── get-categories.test.ts
-│   ├── get-category-tags.test.ts
-│   ├── get-tag-values.test.ts
-│   ├── get-tag-info.test.ts
-│   ├── search-tags.test.ts
-│   ├── (future tool tests...)
-│   ├── presets.test.ts   # Preset tools tests (to be split)
-│   └── validation.test.ts # Validation tools tests (to be split)
-├── utils/                # Utility tests
-│   ├── schema-loader.test.ts
-│   └── validators.test.ts
-└── integration/          # Integration tests (one file per tool)
-    ├── helpers.ts        # Shared test utilities
-    ├── server-init.test.ts        # Server initialization tests
-    ├── get-schema-stats.test.ts   # get_schema_stats integration
-    ├── get-categories.test.ts     # get_categories integration
-    ├── get-category-tags.test.ts  # get_category_tags integration
-    ├── get-tag-values.test.ts     # get_tag_values integration
-    ├── get-tag-info.test.ts       # get_tag_info integration
-    └── search-tags.test.ts        # search_tags integration
-.github/
-└── workflows/
-    ├── test.yml          # CI testing workflow
-    ├── release.yml       # Release automation
-    └── dependabot.yml    # Dependency updates
+├── index.ts                         # MCP server entry point
+├── tools/                           # Tool implementations (one file per tool)
+│   ├── index.ts                     # Tool registry exports
+│   ├── types.ts                     # Shared type definitions for tools
+│   ├── check-deprecated.ts          # ✅ Implemented
+│   ├── get-preset-details.ts        # ✅ Implemented
+│   ├── get-tag-values.ts            # ✅ Implemented
+│   ├── search-presets.ts            # ✅ Implemented
+│   ├── search-tags.ts               # ✅ Implemented
+│   ├── suggest-improvements.ts      # ✅ Implemented
+│   ├── validate-tag.ts              # ✅ Implemented
+│   ├── validate-tag-collection.ts   # ✅ Implemented
+│   ├── get-tag-info.ts              # ❌ Missing
+│   ├── get-related-tags.ts          # ❌ Missing
+│   ├── get-preset-tags.ts           # ❌ Missing
+│   ├── get-schema-stats.ts          # ❌ Missing
+│   ├── get-categories.ts            # ❌ Missing
+│   └── get-category-tags.ts         # ❌ Missing
+├── utils/                           # Helper functions
+│   ├── schema-loader.ts             # ✅ Schema loader with caching
+│   ├── logger.ts                    # ✅ Configurable logging
+│   └── tag-parser.ts                # ✅ Text/JSON tag parser
+└── types/                           # TypeScript type definitions
+    ├── index.ts                     # ✅ Core type definitions
+    └── tool-definition.ts           # ✅ OsmToolDefinition interface
+tests/                               # Test files (TDD - one test file per tool)
+├── index.test.ts                    # Server tests
+├── tools/                           # Unit tests (one file per tool)
+│   ├── check-deprecated.test.ts     # ✅ Present
+│   ├── get-preset-details.test.ts   # ✅ Present
+│   ├── get-tag-values.test.ts       # ✅ Present
+│   ├── search-presets.test.ts       # ✅ Present
+│   ├── search-tags.test.ts          # ✅ Present
+│   ├── suggest-improvements.test.ts # ✅ Present
+│   ├── validate-tag.test.ts         # ✅ Present
+│   └── validate-tag-collection.test.ts # ✅ Present
+├── utils/                           # Utility tests
+│   ├── schema-loader.test.ts        # ✅ Present
+│   ├── logger.test.ts               # ✅ Present
+│   └── tag-parser.test.ts           # ✅ Present
+└── integration/                     # Integration tests (one file per tool)
+    ├── helpers.ts                   # ✅ Shared test utilities
+    ├── server-init.test.ts          # ✅ Server initialization tests
+    ├── sse-transport.test.ts        # ✅ HTTP/SSE transport tests
+    ├── check-deprecated.test.ts     # ✅ Present
+    ├── get-preset-details.test.ts   # ✅ Present
+    ├── get-tag-values.test.ts       # ✅ Present
+    ├── search-presets.test.ts       # ✅ Present
+    ├── search-tags.test.ts          # ✅ Present
+    ├── suggest-improvements.test.ts # ✅ Present
+    ├── validate-tag.test.ts         # ✅ Present
+    └── validate-tag-collection.test.ts # ✅ Present
+.github/workflows/                   # CI/CD workflows
+    ├── test.yml                     # ✅ CI testing workflow
+    ├── docker.yml                   # ✅ Docker build & publish
+    ├── publish.yml                  # ✅ npm publishing
+    ├── security.yml                 # ✅ Security scanning
+    ├── codeql.yml                   # ✅ Code scanning
+    ├── cleanup.yml                  # ✅ Package cleanup
+    └── dependency-review.yml        # ✅ Dependency review
+docs/                                # User documentation
+    ├── installation.md              # ✅ Installation guide
+    ├── configuration.md             # ✅ Configuration guide
+    ├── usage.md                     # ✅ Usage examples
+    ├── deployment.md                # ✅ Deployment guide
+    ├── security.md                  # ✅ Security documentation
+    ├── troubleshooting.md           # ✅ Troubleshooting guide
+    └── api/                         # API documentation
+        ├── README.md                # ✅ API overview
+        ├── get_tag_info.md          # ✅ Example (for planned tool)
+        └── NOTE.md                  # ✅ Documentation pattern
 ```
 
 ### Architectural Layers
@@ -369,24 +412,20 @@ All layers are fully tested using Node.js native test runner with TDD approach.
 - **Shared types**: Grouped in `tools/types.ts` to avoid duplication
 - **Tool ordering**: Tools returned in **alphabetical order** by name in MCP ListToolsRequest for API predictability
 
-## MCP SDK Migration Plan
+## MCP SDK Tool Structure
 
-**Status**: PLANNED - Migration to new MCP SDK v1.21.1 tool registration API
+**Status**: ✅ IMPLEMENTED - Using modern MCP SDK v1.21.1 tool registration API
 
-This section documents the planned migration from the deprecated `Server` class to the new `McpServer` class and modern tool registration patterns.
+This section documents the tool structure pattern used throughout the codebase. The migration from deprecated `Server` class to `McpServer` class is complete.
 
-### Migration Goals
+### Implementation Status
 
-1. **Update MCP SDK Usage**: Migrate from `@modelcontextprotocol/sdk` v1.21.1's deprecated `Server` to `McpServer`
-2. **Modernize Tool Registration**: Use the new `registerTool` method with structured configuration
-3. **Standardize Tool Structure**: Convert all tools to a consistent interface pattern
-4. **Maintain Compatibility**: Ensure zero breaking changes for end users
+1. ✅ **Modern MCP SDK**: Uses `McpServer` class from `@modelcontextprotocol/sdk`
+2. ✅ **Structured Tool Registration**: Uses `registerTool` method with configuration objects
+3. ✅ **Standardized Interface**: All tools implement `OsmToolDefinition` interface
+4. ✅ **Zero Breaking Changes**: External API remains fully compatible
 
-### Current State (Deprecated)
-
-Currently, the project uses the deprecated `Server` class for MCP server setup and tool registration.
-
-### Target State (New API)
+### Current Architecture
 
 **MCP SDK v1.21.1 - McpServer API**:
 
@@ -542,102 +581,118 @@ server.registerTool(
 
 ### Tool Registration Pattern
 
-**Tools will be registered using this pattern**:
+**Current implementation in src/index.ts**:
 
 ```typescript
-import GetTagInfo from './tools/get-tag-info.ts';
-import GetTagValues from './tools/get-tag-values.ts';
-// ... other tool imports
+import { tools } from "./tools/index.js";
 
-// In server initialization
-server.registerTool(
-    GetTagInfo.name,
-    GetTagInfo.config(),
-    GetTagInfo.handler
-);
+export function createServer(): McpServer {
+    const mcpServer = new McpServer(
+        {
+            name: "osm-tagging-schema",
+            version: pkg.version,
+        },
+        {
+            capabilities: {
+                tools: {},
+            },
+        },
+    );
 
-server.registerTool(
-    GetTagValues.name,
-    GetTagValues.config(),
-    GetTagValues.handler
-);
+    // Register all tools in a loop
+    for (const tool of tools) {
+        mcpServer.registerTool(tool.name, tool.config(), tool.handler);
+    }
 
-// ... register remaining tools
+    return mcpServer;
+}
 ```
 
-### Migration Steps
+**Tool exports in src/tools/index.ts**:
 
-**For each tool** (14 tools total):
+```typescript
+import type { OsmToolDefinition } from "../types/index.js";
+import CheckDeprecated from "./check-deprecated.js";
+import GetPresetDetails from "./get-preset-details.js";
+import GetTagValues from "./get-tag-values.js";
+import SearchPresets from "./search-presets.js";
+import SearchTags from "./search-tags.js";
+import SuggestImprovements from "./suggest-improvements.js";
+import ValidateTag from "./validate-tag.js";
+import ValidateTagCollection from "./validate-tag-collection.js";
 
-1. **Refactor Tool Structure**:
-   - Convert tool to export object with `name`, `config()`, and `handler`
-   - Move schema definitions into `config()` function
-   - Move implementation logic into `handler` function
-   - Maintain existing functionality and behavior
+// All available tools (sorted alphabetically)
+export const tools: OsmToolDefinition<any>[] = [
+    CheckDeprecated,
+    GetPresetDetails,
+    GetTagValues,
+    SearchPresets,
+    SearchTags,
+    SuggestImprovements,
+    ValidateTag,
+    ValidateTagCollection,
+];
+```
 
-2. **Update Server Registration**:
-   - Replace deprecated `Server` with `McpServer`
-   - Update tool registration calls to use new `registerTool` method
-   - Remove old registration code
+### Adding New Tools
 
-3. **Verify Tests**:
-   - Ensure all unit tests pass unchanged
-   - Ensure all integration tests pass unchanged
-   - No changes to test assertions (only internal refactoring)
+**To implement a missing tool** (e.g., `get_tag_info`):
 
-4. **Update Documentation**:
-   - Update DEVELOPMENT.md with new tool structure pattern
-   - Update CONTRIBUTING.md with examples of new tool pattern
-   - Update API documentation if needed
+1. **Create tool file**: `src/tools/get-tag-info.ts`
+2. **Implement OsmToolDefinition interface**:
+   - `name`: Tool identifier (e.g., "get_tag_info")
+   - `config()`: Returns tool configuration with inputSchema
+   - `handler`: Async function with SchemaLoader parameter
+3. **Export tool**: Add import/export in `src/tools/index.ts`
+4. **Write tests**:
+   - Unit tests: `tests/tools/get-tag-info.test.ts`
+   - Integration tests: `tests/integration/get-tag-info.test.ts`
+5. **Document**: Add API documentation in `docs/api/get_tag_info.md`
 
-### Implementation Priority
+**Example tool structure** (see existing tools for reference):
 
-**Phase 1**: Migration Infrastructure
-- Update `src/index.ts` to use `McpServer` instead of `Server`
-- Create template/example tool with new structure
-- Document tool structure pattern
+```typescript
+import type { OsmToolDefinition } from "../types/index.js";
+import { z } from "zod";
 
-**Phase 2**: Tool Migration (Batched by Category)
-- Tag Query Tools (4 tools): `get_tag_info`, `get_tag_values`, `search_tags`, `get_related_tags`
-- Preset Tools (3 tools): `search_presets`, `get_preset_details`, `get_preset_tags`
-- Validation Tools (4 tools): `validate_tag`, `validate_tag_collection`, `check_deprecated`, `suggest_improvements`
-- Schema Tools (3 tools): `get_schema_stats`, `get_categories`, `get_category_tags`
+const GetTagInfo: OsmToolDefinition<{ tagKey: z.ZodString }> = {
+    name: "get_tag_info",
+    config: () => ({
+        description: "Get comprehensive information about a tag key",
+        inputSchema: {
+            tagKey: z.string().describe("The OSM tag key to query"),
+        },
+    }),
+    handler: async ({ tagKey }, { loader }) => {
+        const schema = await loader.loadSchema();
+        // Implementation here
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(result, null, 2),
+                },
+            ],
+        };
+    },
+};
 
-**Phase 3**: Verification & Cleanup
-- Run full test suite (unit + integration)
-- Verify Docker builds work
-- Update documentation
-- Clean up deprecated code references
+export default GetTagInfo;
+```
 
-### Compatibility Guarantees
+### Architecture Benefits
 
-**This migration is INTERNAL ONLY**:
-- ✅ Zero breaking changes for users
-- ✅ All tool names remain unchanged
-- ✅ All input/output schemas remain unchanged
-- ✅ All tool behavior remains unchanged
-- ✅ All tests pass without modification
-- ✅ External API remains 100% compatible
-
-**Testing Requirements**:
-- All 299 unit tests must pass
-- All 107 integration tests must pass
-- No changes to test assertions (internal refactoring only)
-- CI/CD pipeline must pass all checks
-
-### Benefits of Migration
-
-1. **Future-Proof**: Uses non-deprecated MCP SDK API
-2. **Better Type Safety**: TypeScript generics for input/output schemas
-3. **Cleaner Architecture**: Consistent tool structure across codebase
-4. **Maintainability**: Easier to add new tools following established pattern
-5. **SDK Compatibility**: Aligns with MCP SDK best practices
+1. ✅ **Future-Proof**: Uses modern MCP SDK API (not deprecated)
+2. ✅ **Type Safety**: TypeScript generics for input/output schemas with Zod validation
+3. ✅ **Consistent Structure**: All tools follow same pattern
+4. ✅ **Easy to Extend**: Adding new tools is straightforward
+5. ✅ **Maintainable**: One file per tool, clear separation of concerns
 
 ### References
 
 - MCP SDK v1.21.1 Documentation: https://modelcontextprotocol.io
 - GitHub Repository: https://github.com/modelcontextprotocol/typescript-sdk
-- Migration Guide: (to be created in DEVELOPMENT.md)
+- Tool Definition Interface: `src/types/tool-definition.ts`
 
 ## Data Sources and Usage Patterns
 
@@ -842,165 +897,128 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 
 ## Development Status
 
-**Current Phase: Phase 6 - COMPLETED ✅**
+**Current Phase: Phase 3 - PARTIALLY COMPLETE ⚠️**
 
-Phase 1 has been completed with the following achievements:
+**IMPORTANT REALITY CHECK**: The codebase is in active development with 8 of 14 planned tools implemented.
+
+### Actual Implementation Status
+
+**Phase 1: Project Setup ✅ COMPLETE**
 - ✅ Project structure initialized with TypeScript 5.9
 - ✅ Dependencies installed (@modelcontextprotocol/sdk, @openstreetmap/id-tagging-schema)
 - ✅ BiomeJS 2.3.4 configured for code quality
 - ✅ Node.js test runner configured
 - ✅ GitHub Actions CI/CD pipeline set up
 - ✅ Dependabot configured for automated dependency updates
-- ✅ First test written and passing (TDD - Red/Green cycle completed)
-- ✅ Basic MCP server implementation with createServer() function
+- ✅ MCP server implementation with McpServer class (modern API)
 
-Phase 2 has been completed with the following achievements:
+**Phase 2: Schema Integration ✅ COMPLETE**
 - ✅ Type definitions created for schema structures (Preset, Field, DeprecatedTag, etc.)
 - ✅ Schema loader utility implemented with full test coverage
 - ✅ Caching mechanism with configurable TTL
-- ✅ Indexing system for fast tag lookups (byKey, byTag, byGeometry)
+- ✅ Indexing system for fast tag lookups (byKey, byTag, byGeometry, byFieldKey)
 - ✅ Query operations (findPresetsByKey, findPresetsByTag, findPresetsByGeometry)
-- ✅ Unit tests written and passing (19 tests, 8 suites)
 - ✅ Integration tests implemented
-- ✅ CI/CD pipeline configured and running tests automatically
+- ✅ CI/CD pipeline configured
 
-Phase 3 (Core Tool Implementation) is partially completed:
-- ✅ Schema Exploration Tools (3.4):
-  - `get_schema_stats` - Get schema statistics
-  - `get_categories` - List all tag categories
-  - `get_category_tags` - Get tags in a specific category
-- ✅ Tag Query Tools (3.1 - COMPLETED ✅):
-  - `get_tag_info` - Get comprehensive information about a tag key (values, type, field definition)
-  - `get_tag_values` - Get all possible values for a tag key
-  - `search_tags` - Search for tags by keyword
-  - `get_related_tags` - Find tags commonly used together (with frequency counts and examples)
-- ✅ Preset Tools (3.2 - COMPLETED ✅):
-  - `search_presets` - Search for presets by keyword or tag (with geometry filtering and limits)
-  - `get_preset_details` - Get complete preset information (tags, geometry, fields, metadata)
-  - `get_preset_tags` - Get recommended tags for a preset (identifying tags + addTags)
-- ✅ Validation Tools (3.3 - COMPLETED ✅):
-  - `validate_tag` - Validate single tag key-value pairs (checks deprecation, field options, empty values) ✅
-  - `validate_tag_collection` - Validate collections of tags with aggregated statistics ✅
-  - `check_deprecated` - Check if tag is deprecated with replacement suggestions ✅
-  - `suggest_improvements` - Suggest improvements for tag collections (missing fields, deprecation warnings, preset matching) ✅
+**Phase 3: Core Tool Implementation ⚠️ PARTIAL (8 of 14 tools)**
 
-Phase 4 (Testing) has been COMPLETED ✅:
+**Implemented Tools** (8/14):
+- ✅ `check_deprecated` - Check if tag is deprecated with replacement suggestions
+- ✅ `get_preset_details` - Get complete preset information (tags, geometry, fields, metadata)
+- ✅ `get_tag_values` - Get all possible values for a tag key
+- ✅ `search_presets` - Search for presets by keyword or tag (with geometry filtering and limits)
+- ✅ `search_tags` - Search for tags by keyword
+- ✅ `suggest_improvements` - Suggest improvements for tag collections (missing fields, deprecation warnings)
+- ✅ `validate_tag` - Validate single tag key-value pairs (checks deprecation, field options, empty values)
+- ✅ `validate_tag_collection` - Validate collections of tags with aggregated statistics
+
+**Missing Tools** (6/14):
+- ❌ `get_tag_info` - Get comprehensive information about a tag key (values, type, field definition)
+- ❌ `get_related_tags` - Find tags commonly used together (with frequency counts and examples)
+- ❌ `get_preset_tags` - Get recommended tags for a preset (identifying tags + addTags)
+- ❌ `get_schema_stats` - Get schema statistics
+- ❌ `get_categories` - List all tag categories
+- ❌ `get_category_tags` - Get tags in a specific category
+
+**Phase 4: Testing ⚠️ IN PROGRESS**
 - ✅ Node.js test runner configured
-- ✅ Unit tests for all implemented tools (263 tests, 111 suites passing)
-- ✅ Integration tests for MCP server (107 tests, 55 suites passing)
-  - Modular structure: One integration test file per tool
-  - Shared test utilities in `helpers.ts`
-  - Server initialization tests separated
-  - Order-independent test assertions (no hardcoded tool positions)
-- ✅ Testing with real OpenStreetMap data
-- ✅ GitHub Actions CI/CD pipeline running tests
-- ✅ **JSON Data Integrity Tests**: All tools validated against source JSON files
-  - Unit tests import JSON data directly from @openstreetmap/id-tagging-schema
-  - Tests verify exact match between tool outputs and JSON source data
-  - Ensures compatibility when schema package updates
-  - Provider pattern for comprehensive data validation
-  - **100% coverage for tag tools**: ALL 799 tag keys tested (no hardcoded values)
-  - **100% coverage for preset tools**: ALL 1707 presets tested (no hardcoded values)
-  - Bidirectional validation ensures complete data integrity
+- ⚠️ Test suite present but requires dependency resolution
+- ⚠️ Unit tests for implemented tools (counts TBD after build fixes)
+- ⚠️ Integration tests for MCP server (counts TBD after build fixes)
+- ✅ Modular structure: One integration test file per tool
+- ✅ Shared test utilities in `helpers.ts`
+- ✅ Testing with real OpenStreetMap data approach established
+- ⚠️ **Build Issues**: TypeScript compilation errors present (missing 'zod' dependency)
 
-**Code Quality & Architecture**:
-- ✅ **Alphabetical Tool Ordering**: Tools returned in alphabetical order for predictable API
-- ✅ **Test Robustness**: Tests check tool existence, not array positions (order-independent)
-- ✅ **Modular Architecture**: One file per tool for clarity and maintainability
-
-**Bug Fixes**:
-- ✅ **search_tags fields.json coverage** (TDD approach):
-  - **Issue**: search_tags only searched preset.tags and preset.addTags, missing tag keys that exist solely in fields.json (e.g., "wheelchair")
-  - **Root Cause**: Tool ignored fields.json as a data source
-  - **Fix**: Modified search_tags to search fields.json FIRST for matching keys, then presets
-  - **TDD RED**: Added failing test "should find tag keys from fields.json (BUG FIX TEST)" in tests/tools/search-tags.test.ts
-  - **TDD GREEN**: Implemented fix in src/tools/search-tags.ts to query fields.json before presets
-  - **Test Coverage**: Updated both unit and integration tests to validate against fields.json + presets.json
-  - **Result**: search_tags now returns results from both data sources (e.g., wheelchair=yes, wheelchair=limited, wheelchair=no)
-- ✅ **Alphabetical tool sorting** (API improvement):
-  - **Issue**: Tools returned in arbitrary order, making API unpredictable; tests relied on hardcoded positions
-  - **Fix**: Sorted tools alphabetically in ListToolsRequestSchema (src/index.ts)
-  - **Test Improvement**: Refactored tests to check tool existence vs. collection (order-independent)
-  - **Result**: Predictable tool listing, robust tests that won't break when adding new tools
-- ✅ **Tag key format: colon vs slash separator** (TDD approach):
-  - **Issue**: Tools returned tag keys with slash separator (e.g., `toilets/wheelchair`) instead of proper OSM format with colon (e.g., `toilets:wheelchair`)
-  - **Root Cause**: In @openstreetmap/id-tagging-schema, field map keys are **FILE PATHS** with slash separators (e.g., `fields["toilets/wheelchair"]` refers to `data/fields/toilets/wheelchair.json`), but the actual OSM tag key is stored in the `field.key` property with colon separators
-  - **Key Insight**: Slash-separated map keys are NOT tag names - they are file paths. The ONLY source of truth for OSM tags is the `field.key` property in the JSON
-  - **Examples**:
-    - File path: `parking/side/parking` → data/fields/parking/side/parking.json → **Actual OSM tag**: `parking:both`
-    - File path: `toilets/wheelchair` → data/fields/toilets/wheelchair.json → **Actual OSM tag**: `toilets:wheelchair`
-  - **Fix**:
-    - **get_tag_info**: Use `field.key` (actual OSM tag) instead of map key (file path); convert input `:` → `/` for field lookup; use actualKey for preset lookups
-    - **get_tag_values**: Same approach as get_tag_info
-    - **search_tags**: Use `field.key` for returned results instead of map key (file path); skip fields without `key` property
-  - **TDD RED**: Added failing tests in get-tag-info.test.ts, get-tag-values.test.ts, search-tags.test.ts
-  - **TDD GREEN**: Implemented fixes in src/tools/get-tag-info.ts, get-tag-values.ts, search-tags.ts
-  - **Test Updates**: Updated provider patterns in unit and integration tests to:
-    - Collect keys using `field.key` values (actual OSM tags) instead of `Object.keys(fields)` (file paths)
-    - Use reverse lookup (iterate field.values) for validation since file path → OSM tag mapping is not 1:1
-    - Handle non-trivial mappings (e.g., file path `parking/side/parking` → OSM tag `parking:both`)
-  - **Result**: All tools now return and accept proper OSM tag keys with colon separators; 113 tests passing
-
-**Infrastructure & Distribution**:
-- ✅ **Docker Support** (Containerization):
-  - Multistage Dockerfile with optimized builds
-  - Stage 1 (builder): Installs dependencies and compiles TypeScript
-  - Stage 2 (runtime): Minimal Alpine-based Node.js image with production dependencies only
-  - Non-root user execution for security
-  - Health checks configured
-  - .dockerignore for optimized build context
-  - GitHub Actions workflow for automated Docker builds
-  - Images published to GitHub Container Registry (ghcr.io)
-  - Multi-architecture support (amd64, arm64)
-  - Tags: `dev` (master branch), `latest` (stable releases), `x.y.z` (versioned releases)
-  - **Vulnerability Scanning**: Automated Trivy scanning for CRITICAL and HIGH severity issues
-  - **Image Signing**: Cosign keyless signing with OIDC (Sigstore)
-  - **Security Reports**: Trivy results uploaded to GitHub Security tab
-  - **Signature Verification**: Users can verify image authenticity with `cosign verify`
-
-Phase 5 (Documentation) has been COMPLETED ✅:
+**Phase 5: Documentation ✅ COMPLETE (for implemented tools)**
 - ✅ Comprehensive user documentation in `docs/` directory
   - `docs/installation.md`: Complete installation guide (npx, source, Docker)
   - `docs/configuration.md`: Configuration for Claude Code/Desktop and custom clients
   - `docs/usage.md`: Usage examples, workflows, and best practices
   - `docs/troubleshooting.md`: Common issues and solutions
-- ✅ Complete API documentation
-  - `docs/api/README.md`: API overview and quick reference for all 14 tools
-  - `docs/api/get_tag_info.md`: Complete example API documentation (pattern for other tools)
+  - `docs/deployment.md`: Docker Compose deployment guide
+  - `docs/security.md`: Security, provenance, SLSA, and SBOM documentation
+- ✅ API documentation framework
+  - `docs/api/README.md`: API overview structure
+  - `docs/api/get_tag_info.md`: Example API documentation (for planned tool)
   - `docs/api/NOTE.md`: Documentation pattern guide
 - ✅ Enhanced developer documentation
   - `CONTRIBUTING.md`: Contribution guidelines with TDD workflow
   - `DEVELOPMENT.md`: Development setup, commands, debugging, troubleshooting
-- ✅ Project documentation
-  - `ROADMAP.md`: Development roadmap without time estimates
+  - `ROADMAP.md`: Development roadmap
   - `CHANGELOG.md`: Project changelog (Keep a Changelog format)
-  - `CLAUDE.md`: Documentation guidelines and patterns (updated)
-- ✅ Compact README.md
-  - Removed redundant details (moved to `docs/`)
-  - Clear navigation to all documentation
-  - User and Developer documentation sections
+- ✅ Compact README.md with clear navigation
 
-Phase 6 (Optimization & Polish) - PARTIALLY COMPLETED:
+**Phase 6: Optimization & Polish ✅ COMPLETE**
 - ✅ Schema loading optimization (always-on indexing, preloading at startup)
 - ✅ Logging and debugging support (configurable log levels, structured output)
 - ✅ Schema update handling (version tracking, graceful error handling)
-- ✅ **Publication Preparation**:
-  - Added `files` field to package.json for package content control
-  - Package size optimization: 597KB → 245KB unpacked (59% reduction)
-  - Package file count optimization: 155 → 89 files
-  - Publication checklist added to CONTRIBUTING.md
-  - Pre-publication verification workflow documented
-  - All tests passing: 299 unit tests, 107 integration tests (406 total)
-  - Ready for npm publishing with provenance support
+- ✅ Package size optimization (59% reduction via `files` field in package.json)
+- ✅ Tag parser utility for text and JSON input formats
 
-See ROADMAP.md for the complete development plan covering:
-- Phase 1: Project Setup ✅
-- Phase 2: Schema Integration ✅
-- Phase 3: Core Tool Implementation ✅ (All 14 tools implemented)
-- Phase 4: Testing ✅ (406 tests, >90% coverage)
-- Phase 5: Documentation ✅ (Installation, Usage, API, Troubleshooting)
-- Phase 6: Optimization & Polish ✅ (COMPLETED - optimization, logging, schema updates, publication preparation)
-- Phase 7: Distribution & Deployment (PARTIALLY COMPLETED - npm publishing ✅, transports ✅, Docker Compose deployment ✅, authentication & rate limiting pending)
+**Phase 7: Distribution & Deployment ✅ COMPLETE**
+- ✅ **NPM Publishing**: Package published with SLSA Level 3 provenance and SBOM
+- ✅ **Docker Support**: Multi-stage builds, multi-arch (amd64/arm64), image signing (Cosign)
+- ✅ **Container Registry**: Images published to GitHub Container Registry (ghcr.io)
+- ✅ **Security Scanning**: Trivy vulnerability scanning, security reports
+- ✅ **Transport Protocols**: stdio (default), HTTP/SSE for web clients
+- ✅ **Docker Compose**: Production, development, and test configurations
+- ✅ **Health Checks**: `/health` (liveness) and `/ready` (readiness) endpoints
+
+### Known Issues & Current Work
+
+**Critical Issues**:
+1. ⚠️ **Missing Dependencies**: `zod` package not in package.json (TypeScript compilation fails)
+2. ⚠️ **6 Tools Not Implemented**: get_tag_info, get_related_tags, get_preset_tags, get_schema_stats, get_categories, get_category_tags
+3. ⚠️ **Test Suite Blocked**: Cannot run tests until build issues resolved
+4. ⚠️ **Documentation Misalignment**: README/CHANGELOG claim 14 tools but only 8 exist
+
+**Architecture Status**:
+- ✅ **Modern MCP SDK**: Already using `McpServer` class (migration complete)
+- ✅ **Modular Architecture**: One file per tool for clarity and maintainability
+- ✅ **Alphabetical Tool Ordering**: Tools returned in alphabetical order for predictable API
+- ✅ **Tool Definition Interface**: `OsmToolDefinition` interface established in src/types/tool-definition.ts
+
+**Historical Bug Fixes** (from previous development):
+- ✅ search_tags fields.json coverage (searches both fields.json and presets)
+- ✅ Alphabetical tool sorting (predictable API)
+- ✅ Tag key format handling (colon vs slash separators, field.key as source of truth)
+
+### Next Steps
+
+**Immediate Priorities**:
+1. **Fix Build**: Add `zod` to package.json dependencies
+2. **Implement Missing Tools** (6 tools):
+   - get_tag_info, get_related_tags, get_preset_tags
+   - get_schema_stats, get_categories, get_category_tags
+3. **Fix Test Suite**: Resolve compilation errors, verify test counts
+4. **Update Documentation**: Align README/CHANGELOG with actual implementation
+
+**Future Enhancements** (See ROADMAP.md):
+- Advanced validation features (geometry constraints, field inheritance)
+- Authentication and rate limiting for public deployments
+- Additional tools based on community feedback
 
 ## Example Use Cases
 
