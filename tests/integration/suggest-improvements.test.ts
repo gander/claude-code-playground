@@ -202,20 +202,6 @@ describe("Integration: suggest_improvements", () => {
 	});
 
 	describe("Error Handling", () => {
-		it.skip("should throw error when tags parameter is missing", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "suggest_improvements",
-						arguments: {},
-					});
-				},
-				{
-					message: /tags parameter is required/,
-				},
-			);
-		});
-
 		it("should handle tags with no matching presets", async () => {
 			const response = await client.callTool({
 				name: "suggest_improvements",

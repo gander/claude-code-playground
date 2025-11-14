@@ -56,18 +56,4 @@ describe("MCP Server Initialization", () => {
 			assert.ok(toolNames.includes(expectedTool), `Tool "${expectedTool}" should be available`);
 		}
 	});
-
-	it.skip("should throw error for unknown tool", async () => {
-		await assert.rejects(
-			async () => {
-				await client.callTool({
-					name: "unknown-tool",
-					arguments: {},
-				});
-			},
-			{
-				message: /Unknown tool/,
-			},
-		);
-	});
 });

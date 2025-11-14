@@ -46,20 +46,6 @@ describe("get_tag_values integration", () => {
 			assert.ok(typeof firstValue.value === "string", "Value should have a 'value' property");
 			assert.ok(typeof firstValue.name === "string", "Value should have a 'name' property");
 		});
-
-		it.skip("should throw error for missing tagKey parameter", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "get_tag_values",
-						arguments: {},
-					});
-				},
-				{
-					message: /tagKey parameter is required/,
-				},
-			);
-		});
 	});
 
 	describe("JSON Schema Data Integrity", () => {

@@ -54,34 +54,6 @@ describe("get_preset_details integration", () => {
 			assert.strictEqual(typeof result.tags, "object");
 			assert.ok(Array.isArray(result.geometry));
 		});
-
-		it.skip("should throw error for missing presetId parameter", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "get_preset_details",
-						arguments: {},
-					});
-				},
-				{
-					message: /presetId.*required/i,
-				},
-			);
-		});
-
-		it.skip("should throw error for non-existent preset via MCP", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "get_preset_details",
-						arguments: { presetId: "nonexistent/preset" },
-					});
-				},
-				{
-					message: /not found/i,
-				},
-			);
-		});
 	});
 
 	describe("JSON Schema Data Integrity", () => {

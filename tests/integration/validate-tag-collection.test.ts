@@ -167,20 +167,6 @@ describe("Integration: validate_tag_collection", () => {
 	});
 
 	describe("Error Handling", () => {
-		it.skip("should throw error when tags parameter is missing", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "validate_tag_collection",
-						arguments: {},
-					});
-				},
-				{
-					message: /tags parameter is required/,
-				},
-			);
-		});
-
 		it("should handle tags with empty values", async () => {
 			const response = await client.callTool({
 				name: "validate_tag_collection",

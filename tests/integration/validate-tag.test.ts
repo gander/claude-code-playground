@@ -158,38 +158,6 @@ describe("Integration: validate_tag", () => {
 			assert.ok(result.errors.length > 0);
 			assert.ok(result.errors.some((e: string) => e.includes("empty")));
 		});
-
-		it.skip("should throw error when key parameter is missing", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "validate_tag",
-						arguments: {
-							value: "some_value",
-						},
-					});
-				},
-				{
-					message: /key parameter is required/,
-				},
-			);
-		});
-
-		it.skip("should throw error when value parameter is missing", async () => {
-			await assert.rejects(
-				async () => {
-					await client.callTool({
-						name: "validate_tag",
-						arguments: {
-							key: "amenity",
-						},
-					});
-				},
-				{
-					message: /value parameter is required/,
-				},
-			);
-		});
 	});
 
 	describe("JSON Schema Data Integrity", () => {
