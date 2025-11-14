@@ -7,7 +7,9 @@ on:
     tags:
       - 'v*.*.*'
   workflow_dispatch:
-
+  pull_request:
+    branches:
+      - 'master'
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -36,18 +38,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels)
+      - name: Docker metadata
         id: meta
         uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            # Tag "dev" for every push (merges to master + version tags)
-            type=raw,value=dev
-            # Tag "latest" only for version tags vX.Y.Z
-            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
-            # Tag vX.Y.Z (full version only, without vX.Y and vX)
-            type=semver,pattern={{version}}
 
       - name: Build and push Docker image
         id: build-and-push
