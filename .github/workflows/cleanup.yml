@@ -23,7 +23,7 @@ jobs:
         with:
           package-name: 'osm-tagging-schema-mcp'
           package-type: 'container'
-          min-versions-to-keep: 3
+          min-versions-to-keep: 10
           delete-only-untagged-versions: 'false'
           token: ${{ secrets.PAT_PACKAGES }}
 
@@ -43,5 +43,5 @@ jobs:
         with:
           token: ${{ github.token }}
           repository: ${{ github.repository }}
-          retain_days: 7
-          keep_minimum_runs: 10
+          retain_days: 3
+          keep_minimum_runs: 30
