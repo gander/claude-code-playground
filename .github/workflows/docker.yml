@@ -42,10 +42,11 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # Tag with "dev" and "latest" for pushes to master
-            type=raw,value=dev,enable={{is_default_branch}}
-            type=raw,value=latest,enable={{is_default_branch}}
-            # Tag with version for tagged releases (e.g., v1.0.0 -> 1.0.0)
+            # Tag "dev" for every push (merges to master + version tags)
+            type=raw,value=dev
+            # Tag "latest" only for version tags vX.Y.Z
+            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
+            # Tag vX.Y.Z (full version only, without vX.Y and vX)
             type=semver,pattern={{version}}
 
       - name: Build and push Docker image
