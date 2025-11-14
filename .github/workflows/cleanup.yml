@@ -5,11 +5,6 @@ on:
     - cron: '0 * * * *'  # Every hour
   workflow_dispatch:      # Manual trigger for testing
     inputs:
-      keep-dev-images:
-        description: 'Number of dev images to keep (-1 = never delete)'
-        required: false
-        default: '10'
-        type: number
       keep-tagged-images:
         description: 'Number of tagged images to keep (-1 = never delete)'
         required: false
@@ -31,48 +26,39 @@ permissions:
   contents: read
 
 jobs:
-  cleanup-dev-packages:
-    name: Clean Old Dev Images
+  cleanup-untagged-packages:
+    name: Clean Untagged Images
     runs-on: ubuntu-latest
-    # Skip if keep-dev-images is -1 (never delete)
-    # On schedule: runs with default (10). On manual: runs only if not -1
-    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.keep-dev-images != '-1') }}
     permissions:
-      packages: write  # Required to delete package versions
+      packages: write
       contents: read
 
     steps:
-      - name: Delete old dev images
-        uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5.0.0
+      - name: Delete untagged images
+        uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55
         with:
           package-name: 'osm-tagging-schema-mcp'
           package-type: 'container'
-          min-versions-to-keep: ${{ github.event.inputs.keep-dev-images || 10 }}
-          delete-only-untagged-versions: 'false'
-          # Only delete versions tagged with 'dev'
-          ignore-versions: '^(?!.*dev).*$'
+          min-versions-to-keep: 0
+          delete-only-untagged-versions: 'true'
           token: ${{ secrets.PAT_PACKAGES }}
 
   cleanup-tagged-packages:
     name: Clean Old Tagged Images
     runs-on: ubuntu-latest
-    # Skip if keep-tagged-images is -1 (never delete)
-    # On schedule: skipped (default -1). On manual: runs only if not -1
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.keep-tagged-images != '-1' }}
     permissions:
       packages: write  # Required to delete package versions
       contents: read
 
     steps:
       - name: Delete old tagged images
-        uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5.0.0
+        uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55
         with:
           package-name: 'osm-tagging-schema-mcp'
           package-type: 'container'
-          min-versions-to-keep: ${{ github.event.inputs.keep-tagged-images || 999999 }}
+          min-versions-to-keep: ${{ github.event.inputs.keep-tagged-images || '999999' }}
           delete-only-untagged-versions: 'false'
-          # Only delete semantic version tags (exclude 'dev', 'latest')
-          ignore-versions: '^(dev|latest)$'
+          ignore-versions: '^latest$'
           token: ${{ secrets.PAT_PACKAGES }}
 
   cleanup-workflow-runs:
