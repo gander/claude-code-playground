@@ -310,6 +310,12 @@ When completing a phase or major feature:
 - Use markdown features: tables, code blocks, links, details/summary
 - Include practical examples with real OSM data
 - Cross-link related documentation
+- **CRITICAL**: When syntax or tool behavior changes, update ALL documentation where that syntax is explained:
+  - Tool implementation files (`src/tools/*.ts`)
+  - API documentation (`docs/api/*.md`)
+  - Usage examples (`docs/usage.md`, `docs/examples.md`)
+  - Integration tests (`tests/integration/*.test.ts`)
+  - README.md (if applicable)
 
 ## Architecture
 
