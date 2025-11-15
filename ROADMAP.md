@@ -174,29 +174,34 @@
 3. **Template Expansion:** Support field references `{amenity}` and templates `@templates/contact`
 4. **Flexible Input:** Accept multiple input formats (preset ID, tag notation, JSON object)
 
-#### 8.1: Translation Infrastructure ⏳
+#### 8.1: Translation Infrastructure ✅
 
 **Objective:** Load and index English translations from schema package
 
-**Tasks:**
-- [ ] Add translations loader to `SchemaLoader` class
-  - Load `/dist/translations/en.json` from schema package
-  - Index by presets, fields (~~categories removed~~)
-  - Cache translations alongside schema data
-- [ ] Create TypeScript interfaces for translation structure
-  - `TranslationPreset`: name, terms
-  - `TranslationField`: label, options (title, description)
-  - ~~`TranslationCategory`: name~~ (not used)
-- [ ] Add translation lookup utilities
-  - `getPresetName(presetId: string): string`
-  - `getFieldName(fieldKey: string): string`
-  - `getFieldOptionName(fieldKey: string, optionValue: string): { title: string, description: string }`
-  - ~~`getCategoryName(categoryId: string): string`~~ (removed)
-- [ ] Add fallback logic for missing translations (ucfirst + replace _ with spaces)
-- [ ] Unit tests for translation loading and lookups
-- [ ] Integration tests for translation data integrity
+**Status:** COMPLETE - Full translation infrastructure implemented in SchemaLoader
 
-#### 8.2: validate_tag Refactor ⏳
+**Tasks:**
+- [x] Add translations loader to `SchemaLoader` class
+  - Loads `/dist/translations/en.json` from schema package
+  - Indexed by presets, fields, and categories
+  - Cached translations alongside schema data
+- [x] Create TypeScript interfaces for translation structure
+  - `Translations` interface in `src/types/index.ts`
+  - Supports presets, fields, and categories
+- [x] Add translation lookup utilities
+  - ✅ `getPresetName(presetId: string): string` - Get localized preset name
+  - ✅ `getFieldLabel(fieldKey: string): string` - Get localized field label
+  - ✅ `getFieldOptionName(fieldKey: string, optionValue: string): { title: string, description?: string }` - Get localized option name
+  - ✅ `getCategoryName(categoryId: string): string` - Get localized category name
+- [x] Add fallback logic for missing translations (ucfirst + replace _ with spaces)
+  - Implemented in `formatFallbackName()` private method
+  - Used in all translation lookup methods via try-catch
+- [x] Unit tests for translation loading and lookups
+  - Covered in `tests/utils/schema-loader.test.ts`
+- [x] Integration tests for translation data integrity
+  - All tool integration tests validate translation data
+
+#### 8.2: validate_tag Refactor ✅
 
 **Current Response:**
 ```typescript
@@ -248,20 +253,25 @@
   - Key or value is empty string
   - (Note: Unknown keys are still `valid = true` per OSM philosophy)
 
+**Status:** COMPLETE - Full localization with detailed replacement info
+
 **Tasks:**
-- [ ] Update `validate-tag.ts` implementation
-  - Add translation lookups for key and value names
-  - Remove `fieldExists` and `availableOptions` from response
-  - Add `key`, `keyName`, `value`, `valueName` to response
-  - Add `replacementDetailed` with translation lookups for replacement tags
-- [ ] Update input schema (no changes needed)
-- [ ] Update unit tests (`tests/tools/validate-tag.test.ts`)
-  - Update all assertions to match new response format
-  - Add tests for translation name lookups
-  - Add tests for replacementDetailed format
-- [ ] Update integration tests (`tests/integration/validate-tag.test.ts`)
-- [ ] Update API documentation (`docs/api/validate_tag.md`)
-- [ ] Update usage examples (`docs/examples.md`)
+- [x] Update `validate-tag.ts` implementation
+  - Added translation lookups for key and value names using `SchemaLoader`
+  - Removed `fieldExists` and `availableOptions` from response (cleaner API)
+  - Added `key`, `keyName`, `value`, `valueName` to response
+  - Added `replacementDetailed` with translation lookups for replacement tags
+- [x] Update input schema (no changes needed)
+- [x] Update unit tests (`tests/tools/validate-tag.test.ts`)
+  - All assertions updated to match new response format
+  - Tests for translation name lookups included
+  - Tests for replacementDetailed format working
+- [x] Update integration tests (`tests/integration/validate-tag.test.ts`)
+  - Full integration test coverage with localization
+- [x] Update API documentation (`docs/api/validate_tag.md`)
+  - Documented in API overview (docs/api/README.md)
+- [x] Update usage examples (`docs/examples.md`)
+  - Examples show localized output
 
 #### 8.3: get_tag_values Refactor ✅
 
@@ -308,7 +318,7 @@
 - [x] Update API documentation (`docs/api/README.md`)
 - [x] Update usage examples (`docs/examples.md`)
 
-#### 8.4: search_tags Refactor ⏳
+#### 8.4: search_tags Refactor ✅
 
 **Current Behavior:**
 - Returns tags matching keyword in key or value
@@ -357,20 +367,25 @@
 }
 ```
 
+**Status:** COMPLETE - Separate key/value matches with full localization
+
 **Tasks:**
-- [ ] Update `search-tags.ts` implementation
-  - Implement separate search logic for keys vs values
-  - For key matches: call `get_tag_values` to get all values
-  - For value matches: return specific key-value pair
-  - Return structured response with `keyMatches` and `valueMatches`
-- [ ] Update input schema (no changes needed)
-- [ ] Update unit tests (`tests/tools/search-tags.test.ts`)
-  - Test key-only matches return all values
-  - Test value matches return specific pairs
-  - Test partial matching for both keys and values
-- [ ] Update integration tests (`tests/integration/search-tags.test.ts`)
-- [ ] Update API documentation (`docs/api/search_tags.md`)
-- [ ] Update usage examples (`docs/examples.md`)
+- [x] Update `search-tags.ts` implementation
+  - Implemented separate search logic for keys vs values
+  - For key matches: calls `get_tag_values` to get all values with localization
+  - For value matches: returns specific key-value pair with `keyName`/`valueName`
+  - Returns structured response with `keyMatches` and `valueMatches`
+- [x] Update input schema (no changes needed)
+- [x] Update unit tests (`tests/tools/search-tags.test.ts`)
+  - Tests for key-only matches returning all values
+  - Tests for value matches returning specific pairs
+  - Tests for partial matching for both keys and values
+- [x] Update integration tests (`tests/integration/search-tags.test.ts`)
+  - Full integration test coverage
+- [x] Update API documentation (`docs/api/search_tags.md`)
+  - Documented in API overview (docs/api/README.md)
+- [x] Update usage examples (`docs/examples.md`)
+  - Examples show new response format
 
 #### 8.5: get_preset_details Refactor ✅
 
@@ -503,7 +518,7 @@
 - [x] Update API documentation (`docs/api/validate_tag_collection.md`)
 - [x] Update usage examples (`docs/examples.md`)
 
-#### 8.7: suggest_improvements Refactor ⏳
+#### 8.7: suggest_improvements Refactor ✅
 
 **Current Response:**
 ```typescript
@@ -570,23 +585,28 @@
 ]
 ```
 
+**Status:** COMPLETE - Structured suggestions with localized names
+
 **Tasks:**
-- [ ] Update `suggest-improvements.ts` implementation
-  - Change suggestions from strings to structured objects
-  - Add `keyName` with translation lookup for each suggestion
-  - Determine operation type (add/remove/update) based on analysis
-  - Generate contextual messages with reasons
-  - Add `matchedPresetsDetailed` with preset IDs and names
-  - Remove `warnings` field
-- [ ] Update input schema (no changes needed)
-- [ ] Update unit tests (`tests/tools/suggest-improvements.test.ts`)
-  - Update assertions for new suggestion format
-  - Test operation type detection
-  - Test keyName translation lookups
-  - Test matchedPresetsDetailed format
-- [ ] Update integration tests (`tests/integration/suggest-improvements.test.ts`)
-- [ ] Update API documentation (`docs/api/suggest_improvements.md`)
-- [ ] Update usage examples (`docs/examples.md`)
+- [x] Update `suggest-improvements.ts` implementation
+  - Changed suggestions from strings to structured objects with `operation`, `message`, `key`, `keyName`
+  - Added `keyName` with translation lookup using `SchemaLoader.getFieldLabel()`
+  - Operation type (add/remove/update) determined by suggestion logic
+  - Generated contextual messages with reasons (e.g., "Add 'cuisine' to provide more information...")
+  - Added `matchedPresetsDetailed` with preset IDs and localized names
+  - Removed `warnings` field (deprecation warnings in `validate_tag_collection`)
+- [x] Update input schema (no changes needed)
+- [x] Update unit tests (`tests/tools/suggest-improvements.test.ts`)
+  - Assertions updated for new suggestion format
+  - Tests for operation type detection (currently "add" only)
+  - Tests for keyName translation lookups
+  - Tests for matchedPresetsDetailed format
+- [x] Update integration tests (`tests/integration/suggest-improvements.test.ts`)
+  - Full integration test coverage
+- [x] Update API documentation (`docs/api/suggest_improvements.md`)
+  - Documented in API overview (docs/api/README.md)
+- [x] Update usage examples (`docs/examples.md`)
+  - Examples show structured suggestions
 
 #### 8.8: search_presets Refactor ✅
 
@@ -630,15 +650,25 @@
 - [x] Update API documentation (`docs/api/README.md`)
 - [x] Update usage examples (`docs/examples.md`)
 
-#### 8.9: Localization Enhancements ⏳
+#### 8.9: Localization Enhancements ✅
 
 **Objective:** Add translation lookups to all applicable tools
 
+**Status:** COMPLETE - All tools include localized names with comprehensive fallback logic
+
 **Tasks:**
-- [ ] Update tool responses to include localized names where applicable
-- [ ] Implement fallback logic: ucfirst value + replace underscores with spaces
-- [ ] Example: "fast_food" → "Fast Food"
-- [ ] Document translation usage in API docs
+- [x] Update tool responses to include localized names where applicable
+  - All 7 tools now include `keyName`, `valueName`, `name`, or `tagsDetailed` fields
+  - Translation lookups integrated in: `validate_tag`, `get_tag_values`, `search_tags`, `get_preset_details`, `search_presets`, `validate_tag_collection`, `suggest_improvements`
+- [x] Implement fallback logic: ucfirst value + replace underscores with spaces
+  - Implemented in `SchemaLoader.formatFallbackName()` method
+  - Used automatically when translation not found via try-catch blocks
+- [x] Example: "fast_food" → "Fast Food"
+  - Working correctly in all tools
+- [x] Document translation usage in API docs
+  - Added comprehensive "Localization" section to `docs/api/README.md`
+  - Documented all localized fields, fallback logic, and examples
+  - Added backward compatibility notes
 
 #### 8.10: Template System Implementation ⏳
 
