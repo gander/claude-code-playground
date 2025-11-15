@@ -3,7 +3,7 @@ import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { 
 import { z } from "zod";
 import type { OsmToolDefinition } from "../types/index.js";
 import { parseTagInput } from "../utils/tag-parser.js";
-import { checkDeprecated } from "./check-deprecated.js";
+import { validateTag } from "./validate-tag.js";
 
 /**
  * Result of improvement suggestions
@@ -43,9 +43,9 @@ export async function suggestImprovements(
 
 	// Check for deprecated tags
 	for (const [key, value] of Object.entries(tags)) {
-		const deprecationResult = await checkDeprecated(key, value);
-		if (deprecationResult.deprecated) {
-			result.warnings.push(`Tag ${key}=${value} is deprecated. ${deprecationResult.message}`);
+		const validationResult = await validateTag(key, value);
+		if (validationResult.deprecated) {
+			result.warnings.push(validationResult.message);
 		}
 	}
 

@@ -1,14 +1,14 @@
 # Project: OpenStreetMap Tagging Schema MCP Server
 
 > **⚠️ IMPORTANT**: This document reflects the ACTUAL current state of the codebase.
-> **Last Updated**: 2025-11-14
-> **Current Status**: 8 tools (optimized set) | All systems operational ✅ | Production-ready
+> **Last Updated**: 2025-11-15
+> **Current Status**: 7 tools (optimized set) | All systems operational ✅ | Production-ready
 
 ## Project Overview
 
 This is a Model Context Protocol (MCP) server built with TypeScript that provides tools for querying and validating OpenStreetMap (OSM) tags using the `@openstreetmap/id-tagging-schema` library.
 
-**Development Status**: Production-ready with optimized tool set. Originally planned 14 tools, reduced to 8 after removing redundant functionality.
+**Development Status**: Production-ready with optimized tool set. Originally planned 14 tools, reduced to 7 after removing redundant functionality.
 
 ## Purpose
 
@@ -22,14 +22,13 @@ The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tool
 
 ## Core Functionality
 
-**Current Status**: 8 tools (optimized, complete set)
+**Current Status**: 7 tools (optimized, complete set)
 
-### Complete Tool Set (8 tools)
+### Complete Tool Set (7 tools)
 
-**Validation Tools** (4 tools):
-- ✅ **validate_tag**: Validate a single tag key-value pair
+**Validation Tools** (3 tools):
+- ✅ **validate_tag**: Validate a single tag key-value pair (includes deprecation checking)
 - ✅ **validate_tag_collection**: Validate complete tag collections and report all issues
-- ✅ **check_deprecated**: Check if tags are deprecated and get replacement suggestions
 - ✅ **suggest_improvements**: Analyze tag collections and provide recommendations
 
 **Tag Query Tools** (2 tools):
@@ -42,7 +41,7 @@ The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tool
 
 ### Redundant Tools Removed
 
-During development, 6 additional tools were considered but **intentionally not implemented** due to redundancy:
+During development, 7 additional tools were considered but **intentionally not implemented** or **removed** due to redundancy:
 
 **Not Implemented (redundant functionality):**
 - ~~get_tag_info~~ - Functionality covered by `get_tag_values` and `search_tags`
@@ -51,6 +50,9 @@ During development, 6 additional tools were considered but **intentionally not i
 - ~~get_schema_stats~~ - Statistics can be derived from existing tools
 - ~~get_categories~~ - Category exploration possible via `search_presets`
 - ~~get_category_tags~~ - Covered by `search_presets` with filtering
+
+**Removed (merged into other tools):**
+- ~~check_deprecated~~ - Functionality merged into `validate_tag` (deprecation checking is now included in validation results)
 
 **Design Philosophy**: Maintain minimal, non-overlapping tool set rather than redundant convenience wrappers.
 
@@ -778,13 +780,12 @@ const fieldStrings = (schema.translations as Record<string, any>)?.en?.presets?.
 - **Form-based editors**: Validation = "what to show, when to show, how to show"
 - **MCP server**: Validation = "data quality analysis, education, error detection"
 
-#### Validation Tools (4/14 tools)
+#### Validation Tools (3/7 tools)
 
 | Tool | Function | MCP Use Case | Value for AI |
 |------|----------|--------------|--------------|
-| `validate_tag` | Validate single tag | ✅ Typo detection, value checking | ⭐⭐⭐ High |
+| `validate_tag` | Validate single tag (includes deprecation checking) | ✅ Typo detection, value checking, deprecation warnings | ⭐⭐⭐ High |
 | `validate_tag_collection` | Validate tag collection | ✅ Data quality analysis | ⭐⭐⭐ High |
-| `check_deprecated` | Check deprecated tags | ✅ Schema updates, migration help | ⭐⭐⭐ High |
 | `suggest_improvements` | Suggest missing fields | ✅ Data completeness | ⭐⭐ Medium |
 
 #### Use Cases for AI Assistants
@@ -826,7 +827,7 @@ AI: "Missing common tags: cuisine, opening_hours, wheelchair"
 
 1. **Deprecated tag checking** ⭐⭐⭐
    - OSM schema evolves, AI should know current tags
-   - Tools: `check_deprecated`, `validate_tag`
+   - Tools: `validate_tag` (includes deprecation checking)
 
 2. **Value validation** ⭐⭐⭐
    - Detect typos, incorrect values
@@ -915,27 +916,27 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 - ✅ Integration tests implemented
 - ✅ CI/CD pipeline configured
 
-**Phase 3: Core Tool Implementation ✅ COMPLETE (8 tools - optimized set)**
+**Phase 3: Core Tool Implementation ✅ COMPLETE (7 tools - optimized set)**
 
-**All Tools Implemented** (8/8):
-- ✅ `check_deprecated` - Check if tag is deprecated with replacement suggestions
+**All Tools Implemented** (7/7):
 - ✅ `get_preset_details` - Get complete preset information (tags, geometry, fields, metadata)
 - ✅ `get_tag_values` - Get all possible values for a tag key
 - ✅ `search_presets` - Search for presets by keyword or tag (with geometry filtering and limits)
 - ✅ `search_tags` - Search for tags by keyword
 - ✅ `suggest_improvements` - Suggest improvements for tag collections (missing fields, deprecation warnings)
-- ✅ `validate_tag` - Validate single tag key-value pairs (checks deprecation, field options, empty values)
+- ✅ `validate_tag` - Validate single tag key-value pairs (includes deprecation checking, field options, empty values)
 - ✅ `validate_tag_collection` - Validate collections of tags with aggregated statistics
 
 **Redundancy Optimization**:
-- 6 additional tools considered during planning phase
+- 7 additional tools considered during planning phase
 - All deemed redundant after analyzing functionality overlap
-- Current 8 tools provide complete coverage without duplication
+- `check_deprecated` merged into `validate_tag` to eliminate redundancy
+- Current 7 tools provide complete coverage without duplication
 - Design favors composition over convenience wrappers
 
 **Phase 4: Testing ✅ COMPLETE**
 - ✅ Node.js test runner configured
-- ✅ Comprehensive test suite for all 8 tools
+- ✅ Comprehensive test suite for all 7 tools
 - ✅ 199 unit tests passing (11 skipped)
 - ✅ 102 integration tests passing (11 skipped)
 - ✅ Modular structure: One integration test file per tool
@@ -1409,10 +1410,10 @@ Based on analysis of [schema-builder](https://github.com/ideditor/schema-builder
 - **Multi-tag replacements**: One deprecated tag can map to multiple replacement tags
 - **Conditional replacements**: Different replacements based on additional tag context
 
-**Enhanced tool**: `check_deprecated(tag) → { deprecated, replacement, transformationRule }`
-- Returns structured replacement with transformation details
-- Supports complex tag splitting and recombination
-- Provides human-readable transformation explanation
+**Enhanced functionality for**: `validate_tag(tag) → { valid, deprecated, message, replacement }`
+- Currently returns simple replacement with human-readable message
+- Future: Support complex tag splitting and recombination
+- Future: Add transformation rule details for complex deprecations
 
 ### 5. Tag Quality Scoring
 

@@ -229,19 +229,12 @@ echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | docker run -i --rm 
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | docker run -i --rm ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
 ```
 
-**Expected output:** JSON response with list of 14 available tools.
+**Expected output:** JSON response with list of 7 available tools.
 
 **2. Verify all tools are available:**
 
 The response should include these tools (in alphabetical order):
-- `check_deprecated`
-- `get_categories`
-- `get_category_tags`
 - `get_preset_details`
-- `get_preset_tags`
-- `get_related_tags`
-- `get_schema_stats`
-- `get_tag_info`
 - `get_tag_values`
 - `search_presets`
 - `search_tags`

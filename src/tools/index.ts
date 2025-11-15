@@ -3,7 +3,6 @@
  */
 
 import type { OsmToolDefinition } from "../types/index.js";
-import CheckDeprecated from "./check-deprecated.js";
 import GetPresetDetails from "./get-preset-details.js";
 import GetTagValues from "./get-tag-values.js";
 import SearchPresets from "./search-presets.js";
@@ -18,7 +17,6 @@ import ValidateTagCollection from "./validate-tag-collection.js";
  */
 // biome-ignore lint/suspicious/noExplicitAny: Heterogeneous array of tools with different input schemas
 export const tools: OsmToolDefinition<any>[] = [
-	CheckDeprecated,
 	GetPresetDetails,
 	GetTagValues,
 	SearchPresets,

@@ -148,15 +148,15 @@ const response = await client.callTool({
 
 ---
 
-### 5. Checking for Deprecated Tags
+### 5. Validating and Checking for Deprecated Tags
 
-**Question:** "Is amenity=park_bench deprecated?"
+**Question:** "Is amenity=park_bench valid or deprecated?"
 
-**Tool:** `check_deprecated`
+**Tool:** `validate_tag`
 
 ```json
 {
-  "name": "check_deprecated",
+  "name": "validate_tag",
   "arguments": {
     "key": "amenity",
     "value": "park_bench"
@@ -164,7 +164,7 @@ const response = await client.callTool({
 }
 ```
 
-**Response:** Deprecation status and suggested replacement (leisure=picnic_table)
+**Response:** Validation result with deprecation status and suggested replacement if deprecated
 
 ---
 
@@ -409,7 +409,7 @@ Get recommended tags for a preset.
 
 #### `validate_tag`
 
-Validate a single tag key-value pair.
+Validate a single tag key-value pair. Includes deprecation checking, field option validation, and schema compliance.
 
 **Example 1:** Valid tag
 ```json
@@ -426,9 +426,8 @@ Validate a single tag key-value pair.
 ```json
 {
   "valid": true,
-  "errors": [],
-  "warnings": [],
-  "deprecated": false
+  "deprecated": false,
+  "message": "Tag amenity=restaurant is valid"
 }
 ```
 
@@ -446,11 +445,32 @@ Validate a single tag key-value pair.
 **Returns:**
 ```json
 {
-  "valid": false,
-  "errors": ["Tag is deprecated"],
-  "warnings": [],
+  "valid": true,
   "deprecated": true,
-  "message": "Consider using: leisure=picnic_table"
+  "message": "Tag amenity=park_bench is deprecated. Consider using: leisure=picnic_table",
+  "replacement": {
+    "leisure": "picnic_table"
+  }
+}
+```
+
+**Example 3:** Unknown tag key
+```json
+{
+  "name": "validate_tag",
+  "arguments": {
+    "key": "custom_key",
+    "value": "custom_value"
+  }
+}
+```
+
+**Returns:**
+```json
+{
+  "valid": true,
+  "deprecated": false,
+  "message": "Tag key 'custom_key' not found in schema (custom tags are allowed in OpenStreetMap)"
 }
 ```
 
@@ -494,44 +514,7 @@ Validate a complete set of tags.
 }
 ```
 
-**Use case:** Feature validation before saving
-
----
-
-#### `check_deprecated`
-
-Check if a tag is deprecated.
-
-**Example 1:** Check key-value pair
-```json
-{
-  "name": "check_deprecated",
-  "arguments": {
-    "key": "highway",
-    "value": "incline"
-  }
-}
-```
-
-**Example 2:** Check key only
-```json
-{
-  "name": "check_deprecated",
-  "arguments": {
-    "key": "created_by"
-  }
-}
-```
-
-**Returns:**
-```json
-{
-  "deprecated": true,
-  "oldTags": { "created_by": "*" },
-  "replacement": {},
-  "message": "Tag created_by is deprecated. Should not be used."
-}
-```
+**Use case:** Feature validation before saving (includes deprecation checking)
 
 ---
 
@@ -692,10 +675,10 @@ Get statistics about the schema.
 
 ### Workflow 2: Updating Old OSM Data
 
-**Step 1:** Check if tags are deprecated
+**Step 1:** Validate tags and check if deprecated
 ```json
 {
-  "name": "check_deprecated",
+  "name": "validate_tag",
   "arguments": {
     "key": "amenity",
     "value": "park_bench"
@@ -703,10 +686,19 @@ Get statistics about the schema.
 }
 ```
 
-**Step 2:** Get replacement tags
-(Returned in check_deprecated response)
+**Response includes deprecation status and replacement:**
+```json
+{
+  "valid": true,
+  "deprecated": true,
+  "message": "Tag amenity=park_bench is deprecated. Consider using: leisure=picnic_table",
+  "replacement": {
+    "leisure": "picnic_table"
+  }
+}
+```
 
-**Step 3:** Validate new tags
+**Step 2:** Validate replacement tags
 ```json
 {
   "name": "validate_tag",
@@ -1003,9 +995,9 @@ Choose the most specific tool for your task:
 
 ### 4. Check for Deprecation
 
-Before using old data:
+Before using old data, validate tags (includes deprecation checking):
 ```json
-{ "name": "check_deprecated", "arguments": { "key": "...", "value": "..." } }
+{ "name": "validate_tag", "arguments": { "key": "...", "value": "..." } }
 ```
 
 ### 5. Limit Result Sizes

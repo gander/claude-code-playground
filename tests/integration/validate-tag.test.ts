@@ -54,8 +54,8 @@ describe("Integration: validate_tag", () => {
 
 			assert.strictEqual(result.valid, true);
 			assert.strictEqual(result.deprecated, false);
-			assert.deepStrictEqual(result.errors, []);
-			assert.deepStrictEqual(result.warnings, []);
+			assert.ok(result.message);
+			assert.match(result.message, /valid/i);
 		});
 
 		it("should detect deprecated tag from deprecated.json", async () => {
@@ -78,7 +78,8 @@ describe("Integration: validate_tag", () => {
 			assert.strictEqual(result.valid, true);
 			assert.strictEqual(result.deprecated, true);
 			assert.ok(result.replacement);
-			assert.ok(result.warnings.length > 0);
+			assert.ok(result.message);
+			assert.match(result.message, /deprecated/i);
 		});
 
 		it("should warn about unknown key not in fields.json", async () => {
@@ -94,8 +95,8 @@ describe("Integration: validate_tag", () => {
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			assert.strictEqual(result.valid, true);
-			assert.ok(result.warnings.length > 0);
-			assert.ok(result.warnings.some((w: string) => w.includes("not found in schema")));
+			assert.ok(result.message);
+			assert.match(result.message, /not found in schema/i);
 		});
 
 		it("should validate value against field options", async () => {
@@ -138,8 +139,8 @@ describe("Integration: validate_tag", () => {
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			assert.strictEqual(result.valid, false);
-			assert.ok(result.errors.length > 0);
-			assert.ok(result.errors.some((e: string) => e.includes("empty")));
+			assert.ok(result.message);
+			assert.match(result.message, /empty/i);
 		});
 
 		it("should return error for empty value", async () => {
@@ -155,8 +156,8 @@ describe("Integration: validate_tag", () => {
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			assert.strictEqual(result.valid, false);
-			assert.ok(result.errors.length > 0);
-			assert.ok(result.errors.some((e: string) => e.includes("empty")));
+			assert.ok(result.message);
+			assert.match(result.message, /empty/i);
 		});
 	});
 
@@ -248,7 +249,8 @@ describe("Integration: validate_tag", () => {
 			assert.ok(response.content);
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
-			assert.ok(result.warnings.length > 0, `Should have warning for invalid value on ${key}`);
+			assert.ok(result.message, `Should have message for invalid value on ${key}`);
+			assert.match(result.message, /not in the standard options/i);
 		});
 	});
 });
