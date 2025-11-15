@@ -175,7 +175,7 @@ This document provides comprehensive examples for all 7 tools in the OSM Tagging
 
 ## 2. get_tag_values
 
-**Purpose**: Retrieve all possible values for a tag key from the schema (fields and presets).
+**Purpose**: Retrieve all possible values for a tag key from the schema with localized names (fields and presets).
 
 **Input**: `tagKey` (string) - required
 
@@ -190,157 +190,99 @@ This document provides comprehensive examples for all 7 tools in the OSM Tagging
 
 **Response**:
 ```json
-[
-  {
-    "value": "animal_boarding",
-    "name": "Animal Boarding"
-  },
-  {
-    "value": "animal_breeding",
-    "name": "Animal Breeding"
-  },
-  {
-    "value": "animal_shelter",
-    "name": "Animal Shelter"
-  },
-  {
-    "value": "arts_centre",
-    "name": "Arts Centre"
-  },
-  {
-    "value": "atm",
-    "name": "ATM"
-  },
-  {
-    "value": "bank",
-    "name": "Bank"
-  },
-  {
-    "value": "bar",
-    "name": "Bar"
-  },
-  {
-    "value": "bicycle_parking",
-    "name": "Bicycle Parking"
-  },
-  {
-    "value": "cafe",
-    "name": "Cafe"
-  },
-  {
-    "value": "car_wash",
-    "name": "Car Wash"
-  },
-  {
-    "value": "charging_station",
-    "name": "Charging Station"
-  },
-  {
-    "value": "cinema",
-    "name": "Cinema"
-  },
-  {
-    "value": "clinic",
-    "name": "Clinic"
-  },
-  {
-    "value": "college",
-    "name": "College"
-  },
-  {
-    "value": "community_centre",
-    "name": "Community Centre"
-  },
-  {
-    "value": "courthouse",
-    "name": "Courthouse"
-  },
-  {
-    "value": "dentist",
-    "name": "Dentist"
-  },
-  {
-    "value": "doctors",
-    "name": "Doctor"
-  },
-  {
-    "value": "fast_food",
-    "name": "Fast Food"
-  },
-  {
-    "value": "fire_station",
-    "name": "Fire Station"
-  },
-  {
-    "value": "fuel",
-    "name": "Gas Station"
-  },
-  {
-    "value": "hospital",
-    "name": "Hospital"
-  },
-  {
-    "value": "kindergarten",
-    "name": "Kindergarten"
-  },
-  {
-    "value": "library",
-    "name": "Library"
-  },
-  {
-    "value": "marketplace",
-    "name": "Marketplace"
-  },
-  {
-    "value": "parking",
-    "name": "Parking"
-  },
-  {
-    "value": "pharmacy",
-    "name": "Pharmacy"
-  },
-  {
-    "value": "place_of_worship",
-    "name": "Place of Worship"
-  },
-  {
-    "value": "police",
-    "name": "Police"
-  },
-  {
-    "value": "post_office",
-    "name": "Post Office"
-  },
-  {
-    "value": "pub",
-    "name": "Pub"
-  },
-  {
-    "value": "restaurant",
-    "name": "Restaurant"
-  },
-  {
-    "value": "school",
-    "name": "School"
-  },
-  {
-    "value": "toilets",
-    "name": "Toilets"
-  },
-  {
-    "value": "townhall",
-    "name": "Town Hall"
-  },
-  {
-    "value": "university",
-    "name": "University"
-  }
-]
+{
+  "key": "amenity",
+  "keyName": "Amenity",
+  "values": [
+    "animal_boarding",
+    "animal_breeding",
+    "animal_shelter",
+    "arts_centre",
+    "atm",
+    "bank",
+    "bar",
+    "bicycle_parking",
+    "cafe",
+    "car_wash",
+    "charging_station",
+    "cinema",
+    "clinic",
+    "college",
+    "community_centre",
+    "courthouse",
+    "dentist",
+    "doctors",
+    "fast_food",
+    "fire_station",
+    "fuel",
+    "hospital",
+    "kindergarten",
+    "library",
+    "marketplace",
+    "parking",
+    "pharmacy",
+    "place_of_worship",
+    "police",
+    "post_office",
+    "pub",
+    "restaurant",
+    "school",
+    "toilets",
+    "townhall",
+    "university"
+  ],
+  "valuesDetailed": [
+    {
+      "value": "animal_boarding",
+      "valueName": "Animal Boarding"
+    },
+    {
+      "value": "animal_breeding",
+      "valueName": "Animal Breeding"
+    },
+    {
+      "value": "animal_shelter",
+      "valueName": "Animal Shelter"
+    },
+    {
+      "value": "arts_centre",
+      "valueName": "Arts Centre"
+    },
+    {
+      "value": "atm",
+      "valueName": "ATM"
+    },
+    {
+      "value": "bank",
+      "valueName": "Bank"
+    },
+    {
+      "value": "bar",
+      "valueName": "Bar"
+    },
+    {
+      "value": "bicycle_parking",
+      "valueName": "Bicycle Parking"
+    },
+    {
+      "value": "cafe",
+      "valueName": "Cafe"
+    },
+    {
+      "value": "car_wash",
+      "valueName": "Car Wash"
+    }
+  ]
+}
 ```
 
-**Note**: Results are sorted alphabetically by value. The list above is abbreviated for brevity; the actual response contains 100+ amenity values.
+**Note**:
+- The response includes both `values` (simple string array) and `valuesDetailed` (with localized names).
+- Results are sorted alphabetically by value.
+- The `valuesDetailed` array is abbreviated for brevity; the actual response contains 100+ amenity values.
+- Use `values` for simple lookups, `valuesDetailed` when you need localized names.
 
-### Example 2.2: Valid Key with Values and Descriptions
+### Example 2.2: Valid Key with Localized Names
 
 **Request**:
 ```json
@@ -351,54 +293,62 @@ This document provides comprehensive examples for all 7 tools in the OSM Tagging
 
 **Response**:
 ```json
-[
-  {
-    "value": "carports",
-    "name": "Carports",
-    "description": "Structure used to offer limited protection to vehicles, typically without walls."
-  },
-  {
-    "value": "garage_boxes",
-    "name": "Garage Boxes",
-    "description": "Lockable garage boxes."
-  },
-  {
-    "value": "lane",
-    "name": "Lane",
-    "description": "Parking on the lane."
-  },
-  {
-    "value": "multi-storey",
-    "name": "Multi-Storey",
-    "description": "A building with multiple parking levels."
-  },
-  {
-    "value": "rooftop",
-    "name": "Rooftop",
-    "description": "Parking on the rooftop of a building."
-  },
-  {
-    "value": "sheds",
-    "name": "Sheds",
-    "description": "Sheds to park vehicles."
-  },
-  {
-    "value": "street_side",
-    "name": "Street Side",
-    "description": "Parking along the street."
-  },
-  {
-    "value": "surface",
-    "name": "Surface",
-    "description": "One level of parking on the ground."
-  },
-  {
-    "value": "underground",
-    "name": "Underground",
-    "description": "Underground parking."
-  }
-]
+{
+  "key": "parking",
+  "keyName": "Type",
+  "values": [
+    "carports",
+    "garage_boxes",
+    "lane",
+    "multi-storey",
+    "rooftop",
+    "sheds",
+    "street_side",
+    "surface",
+    "underground"
+  ],
+  "valuesDetailed": [
+    {
+      "value": "carports",
+      "valueName": "Carports"
+    },
+    {
+      "value": "garage_boxes",
+      "valueName": "Garage Boxes"
+    },
+    {
+      "value": "lane",
+      "valueName": "Lane"
+    },
+    {
+      "value": "multi-storey",
+      "valueName": "Multi-Storey"
+    },
+    {
+      "value": "rooftop",
+      "valueName": "Rooftop"
+    },
+    {
+      "value": "sheds",
+      "valueName": "Sheds"
+    },
+    {
+      "value": "street_side",
+      "valueName": "Street Side"
+    },
+    {
+      "value": "surface",
+      "valueName": "Surface"
+    },
+    {
+      "value": "underground",
+      "valueName": "Underground"
+    }
+  ]
+}
 ```
+
+**Note**: Descriptions are no longer included in the response (removed in Phase 8.3 refactor). Use `valuesDetailed` for localized value names.
 
 ### Example 2.3: Invalid Key (Non-Existent)
 
@@ -411,10 +361,15 @@ This document provides comprehensive examples for all 7 tools in the OSM Tagging
 
 **Response**:
 ```json
-[]
+{
+  "key": "nonexistent_tag_key_12345",
+  "keyName": "Nonexistent tag key 12345",
+  "values": [],
+  "valuesDetailed": []
+}
 ```
 
-**Note**: Returns an empty array when the key is not found in the schema.
+**Note**: Returns empty `values` and `valuesDetailed` arrays when the key is not found in the schema. The `keyName` is a fallback formatted name.
 
 ### Example 2.4: Valid Key with Colon Separator
 
@@ -427,16 +382,24 @@ This document provides comprehensive examples for all 7 tools in the OSM Tagging
 
 **Response**:
 ```json
-[
-  {
-    "value": "no",
-    "name": "No"
-  },
-  {
-    "value": "yes",
-    "name": "Yes"
-  }
-]
+{
+  "key": "toilets:wheelchair",
+  "keyName": "Toilets Wheelchair",
+  "values": [
+    "no",
+    "yes"
+  ],
+  "valuesDetailed": [
+    {
+      "value": "no",
+      "valueName": "No"
+    },
+    {
+      "value": "yes",
+      "valueName": "Yes"
+    }
+  ]
+}
 ```
 
 **Note**: The tool accepts both colon (`:`) and slash (`/`) separators for nested keys.

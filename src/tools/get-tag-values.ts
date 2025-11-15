@@ -1,15 +1,15 @@
 import { z } from "zod";
 import type { OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
-import type { ValueInfo } from "./types.js";
+import type { TagValuesResponse } from "./types.js";
 
 /**
- * Get all possible values for a given tag key with localized names and descriptions
+ * Get all possible values for a given tag key with localized names
  *
  * @param tagKey - The tag key to get values for (e.g., "amenity", "building")
- * @returns Array of structured value information with value, name, and optional description
+ * @returns Response object with key, keyName, values array, and valuesDetailed array
  */
-export async function getTagValues(tagKey: string): Promise<ValueInfo[]> {
+export async function getTagValues(tagKey: string): Promise<TagValuesResponse> {
 	const schema = await schemaLoader.loadSchema();
 
 	// Collect all unique values for the tag key
@@ -56,49 +56,41 @@ export async function getTagValues(tagKey: string): Promise<ValueInfo[]> {
 		}
 	}
 
-	// Get translations for value names/descriptions
-	// biome-ignore lint/suspicious/noExplicitAny: translations structure is dynamic and deeply nested
-	const fieldStrings = (schema.translations as Record<string, any>)?.en?.presets?.fields?.[
-		fieldKeyLookup
-	];
+	// Get localized key name using schema loader's translation utilities
+	const keyName = schemaLoader.getFieldLabel(fieldKeyLookup);
 
-	// Build structured values array with translations
-	const values: ValueInfo[] = [];
+	// Build simple values array and detailed values array
+	const values: string[] = [];
+	const valuesDetailed: { value: string; valueName: string }[] = [];
 	const sortedValueKeys = Array.from(valueKeys).sort();
 
 	for (const valueKey of sortedValueKeys) {
-		// Get translation for this value from field options
-		const translationValue = fieldStrings?.options?.[valueKey];
+		// Add to simple values array
+		values.push(valueKey);
 
-		if (typeof translationValue === "string") {
-			// Simple string name
-			values.push({
-				value: valueKey,
-				name: translationValue,
-			});
-		} else if (typeof translationValue === "object" && translationValue !== null) {
-			// Object with name and description
-			values.push({
-				value: valueKey,
-				name: translationValue.title as string,
-				description: translationValue.description as string | undefined,
-			});
-		} else {
-			// Fallback: use value key as name if no translation
-			values.push({
-				value: valueKey,
-				name: valueKey,
-			});
-		}
+		// Get localized value name using schema loader's translation utilities
+		const { title } = schemaLoader.getFieldOptionName(fieldKeyLookup, valueKey);
+
+		// Add to detailed values array (NO description field in Phase 8.3 format)
+		valuesDetailed.push({
+			value: valueKey,
+			valueName: title,
+		});
 	}
 
-	return values;
+	// Return new response format
+	return {
+		key: actualKey,
+		keyName,
+		values,
+		valuesDetailed,
+	};
 }
 
 /**
  * Tool definition for get_tag_values following new OsmToolDefinition interface
  *
- * Returns all possible values for a given tag key.
+ * Returns all possible values for a given tag key with localized names.
  */
 const GetTagValues: OsmToolDefinition<{
 	tagKey: z.ZodString;
@@ -106,20 +98,21 @@ const GetTagValues: OsmToolDefinition<{
 	name: "get_tag_values" as const,
 
 	config: () => ({
-		description: "Get all possible values for a given tag key (e.g., all values for 'amenity' tag)",
+		description:
+			"Get all possible values for a given tag key with localized names (e.g., all values for 'amenity' tag). Returns key, keyName, values array, and valuesDetailed array.",
 		inputSchema: {
 			tagKey: z.string().describe("The tag key to get values for (e.g., 'amenity', 'building')"),
 		},
 	}),
 
 	handler: async ({ tagKey }, _extra) => {
-		const values = await getTagValues(tagKey.trim());
+		const response = await getTagValues(tagKey.trim());
 
 		return {
 			content: [
 				{
 					type: "text" as const,
-					text: JSON.stringify(values, null, 2),
+					text: JSON.stringify(response, null, 2),
 				},
 			],
 		};

@@ -34,17 +34,31 @@ describe("get_tag_values integration", () => {
 			assert.strictEqual(response.content.length, 1);
 			assert.strictEqual(response.content[0]?.type, "text");
 
-			// Parse the values from the response
-			const values = JSON.parse((response.content[0] as { text: string }).text);
-			assert.ok(Array.isArray(values), "Should return an array");
-			assert.ok(values.length > 0, "Should have at least one value");
+			// Parse the response object (NEW FORMAT)
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+			assert.ok(typeof result === "object", "Should return an object");
+			assert.ok("key" in result, "Should have 'key' field");
+			assert.ok("keyName" in result, "Should have 'keyName' field");
+			assert.ok("values" in result, "Should have 'values' field");
+			assert.ok("valuesDetailed" in result, "Should have 'valuesDetailed' field");
 
-			// Check structure of first value
-			const firstValue = values[0];
+			// Check values array
+			assert.ok(Array.isArray(result.values), "values should be an array");
+			assert.ok(result.values.length > 0, "values should have at least one item");
+
+			// Check valuesDetailed array
+			assert.ok(Array.isArray(result.valuesDetailed), "valuesDetailed should be an array");
+			assert.ok(result.valuesDetailed.length > 0, "valuesDetailed should have at least one item");
+
+			// Check structure of first item in valuesDetailed
+			const firstValue = result.valuesDetailed[0];
 			assert.ok(firstValue, "Should have at least one value");
 			assert.ok(typeof firstValue === "object", "Value should be an object");
 			assert.ok(typeof firstValue.value === "string", "Value should have a 'value' property");
-			assert.ok(typeof firstValue.name === "string", "Value should have a 'name' property");
+			assert.ok(
+				typeof firstValue.valueName === "string",
+				"Value should have a 'valueName' property",
+			);
 		});
 	});
 
@@ -123,7 +137,7 @@ describe("get_tag_values integration", () => {
 				arguments: { tagKey: "amenity" },
 			});
 
-			const values = JSON.parse((response.content[0] as { text: string }).text);
+			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			// Collect expected values from JSON (fields + presets)
 			const expectedValues = new Set<string>();
@@ -154,9 +168,9 @@ describe("get_tag_values integration", () => {
 				}
 			}
 
-			// Verify all values match exactly (bidirectional)
+			// Verify all values match exactly (bidirectional) using NEW FORMAT
 			assert.deepStrictEqual(
-				new Set(values.map((v) => v.value)),
+				new Set(result.values),
 				expectedValues,
 				"Tag values should match JSON data exactly",
 			);
@@ -170,10 +184,10 @@ describe("get_tag_values integration", () => {
 					arguments: { tagKey: testCase.key },
 				});
 
-				const values = JSON.parse((response.content[0] as { text: string }).text);
-				const returnedSet = new Set(values.map((v) => v.value));
+				const result = JSON.parse((response.content[0] as { text: string }).text);
+				const returnedSet = new Set(result.values);
 
-				// Bidirectional validation through MCP
+				// Bidirectional validation through MCP (using NEW FORMAT)
 				assert.deepStrictEqual(
 					returnedSet,
 					testCase.expectedValues,
