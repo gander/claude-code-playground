@@ -14,8 +14,8 @@ describe("validateTag", () => {
 			assert.ok(result);
 			assert.strictEqual(result.valid, true);
 			assert.strictEqual(result.deprecated, false);
-			assert.deepStrictEqual(result.errors, []);
-			assert.deepStrictEqual(result.warnings, []);
+			assert.ok(result.message);
+			assert.match(result.message, /valid/i);
 		});
 
 		it("should validate a tag with valid key but value not in options", async () => {
@@ -26,6 +26,7 @@ describe("validateTag", () => {
 			assert.strictEqual(result.valid, true);
 			// May have a warning that it's not in the standard options
 			assert.strictEqual(result.deprecated, false);
+			assert.ok(result.message);
 		});
 
 		it("should detect deprecated tag", async () => {
@@ -40,6 +41,8 @@ describe("validateTag", () => {
 			assert.strictEqual(result.deprecated, true);
 			assert.ok(result.replacement);
 			assert.strictEqual(result.valid, true); // Still valid, but deprecated
+			assert.ok(result.message);
+			assert.match(result.message, /deprecated/i);
 		});
 
 		it("should detect unknown key", async () => {
@@ -47,8 +50,8 @@ describe("validateTag", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, true); // Unknown keys are allowed in OSM
-			assert.ok(result.warnings.length > 0);
-			assert.ok(result.warnings.some((w) => w.includes("not found in schema")));
+			assert.ok(result.message);
+			assert.match(result.message, /not found in schema/i);
 		});
 
 		it("should handle tag with no options field", async () => {
@@ -58,6 +61,7 @@ describe("validateTag", () => {
 			assert.ok(result);
 			assert.strictEqual(result.valid, true);
 			assert.strictEqual(result.deprecated, false);
+			assert.ok(result.message);
 		});
 	});
 
@@ -132,8 +136,8 @@ describe("validateTag", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, false);
-			assert.ok(result.errors.length > 0);
-			assert.ok(result.errors.some((e) => e.includes("empty")));
+			assert.ok(result.message);
+			assert.match(result.message, /empty/i);
 		});
 
 		it("should handle empty value", async () => {
@@ -141,8 +145,8 @@ describe("validateTag", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, false);
-			assert.ok(result.errors.length > 0);
-			assert.ok(result.errors.some((e) => e.includes("empty")));
+			assert.ok(result.message);
+			assert.match(result.message, /empty/i);
 		});
 	});
 });

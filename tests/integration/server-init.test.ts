@@ -37,12 +37,11 @@ describe("MCP Server Initialization", () => {
 
 		assert.ok(response);
 		assert.ok(Array.isArray(response.tools));
-		assert.strictEqual(response.tools.length, 8);
+		assert.strictEqual(response.tools.length, 7);
 
 		// Check that expected tools exist (order-independent)
 		const toolNames = response.tools.map((tool) => tool.name);
 		const expectedTools = [
-			"check_deprecated",
 			"get_preset_details",
 			"get_tag_values",
 			"search_presets",

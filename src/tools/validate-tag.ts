@@ -13,10 +13,8 @@ export interface ValidationResult {
 	valid: boolean;
 	/** Whether the tag is deprecated */
 	deprecated: boolean;
-	/** Validation errors (critical issues) */
-	errors: string[];
-	/** Validation warnings (non-critical issues) */
-	warnings: string[];
+	/** Human-readable validation message */
+	message: string;
 	/** Suggested replacement if deprecated */
 	replacement?: Record<string, string>;
 }
@@ -29,24 +27,23 @@ export interface ValidationResult {
  * @returns Validation result with errors, warnings, and deprecation info
  */
 export async function validateTag(key: string, value: string): Promise<ValidationResult> {
-	const result: ValidationResult = {
-		valid: true,
-		deprecated: false,
-		errors: [],
-		warnings: [],
-	};
+	const messages: string[] = [];
 
 	// Check for empty key or value
 	if (!key || key.trim() === "") {
-		result.valid = false;
-		result.errors.push("Tag key cannot be empty");
-		return result;
+		return {
+			valid: false,
+			deprecated: false,
+			message: "Tag key cannot be empty",
+		};
 	}
 
 	if (!value || value.trim() === "") {
-		result.valid = false;
-		result.errors.push("Tag value cannot be empty");
-		return result;
+		return {
+			valid: false,
+			deprecated: false,
+			message: "Tag value cannot be empty",
+		};
 	}
 
 	// Check if tag is deprecated
@@ -62,19 +59,23 @@ export async function validateTag(key: string, value: string): Promise<Validatio
 		return false;
 	});
 
+	let replacement: Record<string, string> | undefined;
+	let isDeprecated = false;
+
 	if (deprecatedEntry?.replace) {
-		result.deprecated = true;
+		isDeprecated = true;
 		// Filter out undefined values from replace object
-		const replacement: Record<string, string> = {};
+		const replacementTags: Record<string, string> = {};
 		for (const [k, v] of Object.entries(deprecatedEntry.replace)) {
 			if (v !== undefined) {
-				replacement[k] = v;
+				replacementTags[k] = v;
 			}
 		}
-		result.replacement = replacement;
-		result.warnings.push(
-			`Tag ${key}=${value} is deprecated. Consider using: ${JSON.stringify(replacement)}`,
-		);
+		replacement = replacementTags;
+		const replacementStr = Object.entries(replacementTags)
+			.map(([k, v]) => `${k}=${v}`)
+			.join(", ");
+		messages.push(`Tag ${key}=${value} is deprecated. Consider using: ${replacementStr}`);
 	}
 
 	// Find field definition by looking for field.key === key
@@ -95,10 +96,15 @@ export async function validateTag(key: string, value: string): Promise<Validatio
 
 	if (!fieldDef) {
 		// Key not found in schema - this is allowed in OSM but we warn about it
-		result.warnings.push(
+		messages.push(
 			`Tag key '${key}' not found in schema (custom tags are allowed in OpenStreetMap)`,
 		);
-		return result;
+		return {
+			valid: true,
+			deprecated: isDeprecated,
+			message: messages.join(". "),
+			replacement,
+		};
 	}
 
 	// If field has options, check if value is in the list
@@ -106,18 +112,26 @@ export async function validateTag(key: string, value: string): Promise<Validatio
 		if (!fieldDef.options.includes(value)) {
 			// For combo type fields, custom values are allowed
 			if ("type" in fieldDef && fieldDef.type === "combo") {
-				result.warnings.push(
+				messages.push(
 					`Value '${value}' is not in the standard options for '${key}', but custom values are allowed`,
 				);
 			} else {
-				result.warnings.push(
+				messages.push(
 					`Value '${value}' is not in the standard options for '${key}'. Expected one of: ${fieldDef.options.join(", ")}`,
 				);
 			}
 		}
 	}
 
-	return result;
+	// Build final message
+	const finalMessage = messages.length > 0 ? messages.join(". ") : `Tag ${key}=${value} is valid`;
+
+	return {
+		valid: true,
+		deprecated: isDeprecated,
+		message: finalMessage,
+		replacement,
+	};
 }
 
 const ValidateTag: OsmToolDefinition<{

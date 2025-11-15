@@ -123,8 +123,7 @@ describe("validateTagCollection", () => {
 			assert.ok(result.tagResults.access);
 			assert.ok("valid" in result.tagResults.amenity);
 			assert.ok("deprecated" in result.tagResults.amenity);
-			assert.ok("errors" in result.tagResults.amenity);
-			assert.ok("warnings" in result.tagResults.amenity);
+			assert.ok("message" in result.tagResults.amenity);
 		});
 	});
 

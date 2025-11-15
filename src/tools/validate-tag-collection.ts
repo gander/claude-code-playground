@@ -51,18 +51,16 @@ export async function validateTagCollection(
 		if (!tagResult.valid) {
 			result.valid = false;
 			result.errorCount++;
-		}
-
-		if (tagResult.deprecated) {
+			result.errors.push(`${key}: ${tagResult.message}`);
+		} else if (tagResult.deprecated) {
+			// Deprecated tags that are still valid get a warning
 			result.deprecatedCount++;
-		}
-
-		if (tagResult.errors.length > 0) {
-			result.errorCount += tagResult.errors.length - 1; // Already counted once above
-		}
-
-		if (tagResult.warnings.length > 0) {
-			result.warningCount += tagResult.warnings.length;
+			result.warningCount++;
+			result.warnings.push(`${key}=${value}: ${tagResult.message}`);
+		} else if (tagResult.message && !tagResult.message.includes("is valid")) {
+			// Other warnings (e.g., unknown keys, value not in options)
+			result.warningCount++;
+			result.warnings.push(`${key}=${value}: ${tagResult.message}`);
 		}
 	}
 

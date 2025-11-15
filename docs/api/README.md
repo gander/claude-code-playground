@@ -1,17 +1,16 @@
 # API Documentation
 
-Complete reference for all 14 MCP tools provided by the OSM Tagging Schema MCP Server.
+Complete reference for all 7 MCP tools provided by the OSM Tagging Schema MCP Server.
 
 ## Overview
 
-The server provides tools organized into four categories:
+The server provides tools organized into three categories:
 
 | Category | Tools | Description |
 |----------|-------|-------------|
-| **Tag Query** | 4 tools | Query tag information, values, and relationships |
-| **Preset Discovery** | 3 tools | Search and explore OSM presets |
-| **Validation** | 4 tools | Validate tags and get improvements |
-| **Schema Exploration** | 3 tools | Explore schema structure and statistics |
+| **Tag Query** | 2 tools | Query tag information and values |
+| **Preset Discovery** | 2 tools | Search and explore OSM presets |
+| **Validation** | 3 tools | Validate tags and get improvements |
 
 ## Quick Reference
 
@@ -19,9 +18,7 @@ The server provides tools organized into four categories:
 
 | Tool | Description | Input | Output |
 |------|-------------|-------|--------|
-| [`get_tag_info`](./get_tag_info.md) | Get comprehensive information about a tag key | `tagKey` (string) | Values, type, field definition status |
 | [`get_tag_values`](./get_tag_values.md) | Get all possible values for a tag key | `tagKey` (string) | Array of valid values |
-| [`get_related_tags`](./get_related_tags.md) | Find tags commonly used together | `tag` (string), `limit` (optional) | Related tags with frequency counts |
 | [`search_tags`](./search_tags.md) | Search for tags by keyword | `keyword` (string), `limit` (optional) | Matching tags from fields and presets |
 
 ### Preset Discovery Tools
@@ -30,29 +27,19 @@ The server provides tools organized into four categories:
 |------|-------------|-------|--------|
 | [`search_presets`](./search_presets.md) | Search for presets by keyword or tag | `keyword` (string), `limit` (optional), `geometry` (optional) | Matching presets |
 | [`get_preset_details`](./get_preset_details.md) | Get complete preset information | `presetId` (string) | Full preset configuration |
-| [`get_preset_tags`](./get_preset_tags.md) | Get recommended tags for a preset | `presetId` (string) | Identifying tags + addTags |
 
 ### Validation Tools
 
 | Tool | Description | Input | Output |
 |------|-------------|-------|--------|
-| [`validate_tag`](./validate_tag.md) | Validate a single tag key-value pair | `key` (string), `value` (string) | Validation result with errors/warnings |
+| [`validate_tag`](./validate_tag.md) | Validate a single tag key-value pair (includes deprecation checking) | `key` (string), `value` (string) | Validation result with message and replacement |
 | [`validate_tag_collection`](./validate_tag_collection.md) | Validate a collection of tags | `tags` (object/string) | Validation report with statistics |
-| [`check_deprecated`](./check_deprecated.md) | Check if tags are deprecated | `key` (string), `value` (optional) | Deprecation status and replacements |
 | [`suggest_improvements`](./suggest_improvements.md) | Suggest improvements for tag collection | `tags` (object/string) | Suggestions, warnings, matched presets |
 
 **Note:** `validate_tag_collection` and `suggest_improvements` accept tags in multiple formats:
 - **Object**: `{"amenity": "restaurant", "cuisine": "pizza"}`
 - **Text** (key=value lines): `"amenity=restaurant\ncuisine=pizza"`
 - **JSON string**: `'{"amenity": "restaurant"}'`
-
-### Schema Exploration Tools
-
-| Tool | Description | Input | Output |
-|------|-------------|-------|--------|
-| [`get_categories`](./get_categories.md) | List all tag categories | None | Array of categories with counts |
-| [`get_category_tags`](./get_category_tags.md) | Get tags in a specific category | `category` (string) | Preset IDs in category |
-| [`get_schema_stats`](./get_schema_stats.md) | Get schema statistics | None | Counts of presets, fields, categories, deprecated items |
 
 ## Common Patterns
 
