@@ -33,11 +33,30 @@ export interface TagSearchResult {
 
 /**
  * Value information with localized name and optional description
+ * @deprecated Use TagValuesResponse instead (Phase 8.3 refactor)
  */
 export interface ValueInfo {
 	value: string; // The actual value key (e.g., "surface", "underground")
 	name: string; // Localized title (e.g., "Surface", "Underground")
 	description?: string; // Optional description
+}
+
+/**
+ * Detailed value information with localized name (Phase 8.3 format)
+ */
+export interface ValueDetailed {
+	value: string; // The actual value key (e.g., "surface", "underground")
+	valueName: string; // Localized name (e.g., "Surface", "Underground")
+}
+
+/**
+ * Response for get_tag_values tool (Phase 8.3 format)
+ */
+export interface TagValuesResponse {
+	key: string; // The queried key (e.g., "amenity")
+	keyName: string; // Localized key name (e.g., "Amenity")
+	values: string[]; // Simple array of values
+	valuesDetailed: ValueDetailed[]; // Detailed values with names
 }
 
 /**

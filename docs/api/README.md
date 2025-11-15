@@ -18,7 +18,7 @@ The server provides 7 tools organized into three categories:
 
 | Tool | Description | Input | Output |
 |------|-------------|-------|--------|
-| [`get_tag_values`](./get_tag_values.md) | Get all possible values for a tag key | `tagKey` (string) | Array of valid values |
+| [`get_tag_values`](./get_tag_values.md) | Get all possible values for a tag key with localized names | `tagKey` (string) | Object with key, keyName, values array, and valuesDetailed array |
 | [`search_tags`](./search_tags.md) | Search for tags by keyword | `keyword` (string), `limit` (optional) | Matching tags from fields and presets |
 
 ### Preset Discovery Tools

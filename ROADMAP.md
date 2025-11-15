@@ -263,7 +263,7 @@
 - [ ] Update API documentation (`docs/api/validate_tag.md`)
 - [ ] Update usage examples (`docs/examples.md`)
 
-#### 8.3: get_tag_values Refactor ⏳
+#### 8.3: get_tag_values Refactor ✅
 
 **Current Response:**
 ```typescript
@@ -295,18 +295,18 @@
 - **Add:** Two formats: `values` (simple array) and `valuesDetailed` (with names)
 
 **Tasks:**
-- [ ] Update `get-tag-values.ts` implementation
+- [x] Update `get-tag-values.ts` implementation
   - Change from array response to object with `key`, `keyName`, `values`, `valuesDetailed`
   - Remove `description` field
   - Add translation lookup for key name
   - Return both simple values array and detailed array
-- [ ] Update input schema (no changes needed)
-- [ ] Update unit tests (`tests/tools/get-tag-values.test.ts`)
+- [x] Update input schema (no changes needed)
+- [x] Update unit tests (`tests/tools/get-tag-values.test.ts`)
   - Update assertions to match new response structure
   - Test both `values` and `valuesDetailed` arrays
-- [ ] Update integration tests (`tests/integration/get-tag-values.test.ts`)
-- [ ] Update API documentation (`docs/api/get_tag_values.md`)
-- [ ] Update usage examples (`docs/examples.md`)
+- [x] Update integration tests (`tests/integration/get-tag-values.test.ts`)
+- [x] Update API documentation (`docs/api/README.md`)
+- [x] Update usage examples (`docs/examples.md`)
 
 #### 8.4: search_tags Refactor ⏳
 
