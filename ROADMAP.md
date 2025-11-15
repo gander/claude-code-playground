@@ -5,7 +5,7 @@
 **Current Status:** ✅ Production Ready (Phase 6 Complete)
 
 **What's Done:**
-- ✅ 14 fully functional MCP tools for OSM tagging (query, presets, validation, exploration)
+- ✅ 7 fully functional MCP tools for OSM tagging (query, presets, validation)
 - ✅ Comprehensive testing: 406 tests with 100% pass rate, full JSON data integrity validation
 - ✅ Multiple deployment options: npx, Docker, source installation
 - ✅ Security: npm provenance (SLSA Level 3), Docker image signing, SBOM generation
@@ -19,7 +19,7 @@
 
 **Quick Links:**
 - [Installation](./docs/installation.md) - Get started in 2 minutes with npx
-- [API Reference](./docs/api/) - Explore all 14 tools
+- [API Reference](./docs/api/) - Explore all 7 tools
 - [Contributing](./CONTRIBUTING.md) - Join the project
 
 ---
@@ -50,29 +50,29 @@
 
 ### Phase 3: Core Tool Implementation ✅
 
-**Status:** Complete - All 14 Tools Implemented
+**Status:** Complete - All 7 Tools Implemented
 
 **Tag Query Tools:**
-- ✅ `get_tag_info` - Comprehensive tag key information
+- ~~✅ `get_tag_info` - Comprehensive tag key information~~ (removed)
 - ✅ `get_tag_values` - All possible values for a tag
-- ✅ `get_related_tags` - Find commonly used tag combinations
+- ~~✅ `get_related_tags` - Find commonly used tag combinations~~ (removed)
 - ✅ `search_tags` - Search tags by keyword
 
 **Preset Tools:**
 - ✅ `search_presets` - Search presets by keyword/tag
 - ✅ `get_preset_details` - Complete preset configuration
-- ✅ `get_preset_tags` - Recommended tags for presets
+- ~~✅ `get_preset_tags` - Recommended tags for presets~~ (removed)
 
 **Validation Tools:**
 - ✅ `validate_tag` - Single tag validation
 - ✅ `validate_tag_collection` - Collection validation with statistics
-- ✅ `check_deprecated` - Deprecation checking with replacements
+- ~~✅ `check_deprecated` - Deprecation checking with replacements~~ (removed)
 - ✅ `suggest_improvements` - Tag collection improvement suggestions
 
-**Schema Exploration Tools:**
-- ✅ `get_categories` - List all categories
-- ✅ `get_category_tags` - Tags in specific categories
-- ✅ `get_schema_stats` - Schema statistics with version info
+**~~Schema Exploration Tools:~~** (removed)
+- ~~✅ `get_categories` - List all categories~~ (removed)
+- ~~✅ `get_category_tags` - Tags in specific categories~~ (removed)
+- ~~✅ `get_schema_stats` - Schema statistics with version info~~ (removed)
 
 ### Phase 4: Testing ✅
 
@@ -95,7 +95,7 @@
 - ✅ Installation guide (npx, Docker, source)
 - ✅ Configuration guide (Claude Code/Desktop, custom clients)
 - ✅ Usage guide (examples, workflows, best practices)
-- ✅ Complete API reference for all 14 tools
+- ✅ Complete API reference for all 7 tools
 - ✅ Troubleshooting guide
 - ✅ Deployment guide (Docker Compose)
 - ✅ Security documentation (provenance, SLSA, SBOM)
@@ -184,15 +184,18 @@
 **Tasks:**
 - [ ] Add translations loader to `SchemaLoader` class
   - Load `/dist/translations/en.json` from schema package
-  - Index by presets, fields
+  - Index by presets, fields (~~categories removed~~)
   - Cache translations alongside schema data
 - [ ] Create TypeScript interfaces for translation structure
   - `TranslationPreset`: name, terms
   - `TranslationField`: label, options (title, description)
+  - ~~`TranslationCategory`: name~~ (not used)
 - [ ] Add translation lookup utilities
   - `getPresetName(presetId: string): string`
   - `getFieldName(fieldKey: string): string`
   - `getFieldOptionName(fieldKey: string, optionValue: string): { title: string, description: string }`
+  - ~~`getCategoryName(categoryId: string): string`~~ (removed)
+- [ ] Add fallback logic for missing translations (ucfirst + replace _ with spaces)
 - [ ] Unit tests for translation loading and lookups
 - [ ] Integration tests for translation data integrity
 
@@ -215,24 +218,30 @@
 **New Response:**
 ```typescript
 {
-  key: string,  // ADD - original request
-  keyName: string,    // e.g., "Amenity" for "amenity"
-  value: string,  // ADD - original request
-  valueName: string   // e.g., "Restaurant" for "restaurant"
+  key: string,                    // ADD - original request
+  keyName: string,                // ADD - e.g., "Amenity" for "amenity"
+  value: string,                  // ADD - original request
+  valueName: string,              // ADD - e.g., "Restaurant" for "restaurant"
   valid: boolean,
   deprecated: boolean,
   message: string,
   hasOptions: boolean,
   valueInOptions: boolean,
-  replacement?: object
+  replacement?: object,           // Backward compatibility: { "highway": "path", "incline": "steep" }
+  replacementDetailed?: [{        // ADD - detailed replacement with names
+    key: string,
+    keyName: string,
+    value: string,
+    valueName: string
+  }]
 }
 ```
 
 **Changes:**
 - **Remove:** `fieldExists` (internal detail, not useful for API consumers)
 - **Remove:** `availableOptions` (use `get_tag_values` tool instead)
-- **Add:** `key`, `value` - echo back the original request for context
-- **Add:** `keyName`, `valueName` - localized names from translations
+- **Add:** `key`, `keyName`, `value`, `valueName` - original request with localized names
+- **Add:** `replacementDetailed` - detailed replacement info (keep old `replacement` for backward compatibility)
 
 **Validation Logic:**
 - `valid = true` if:
@@ -246,11 +255,13 @@
 - [ ] Update `validate-tag.ts` implementation
   - Add translation lookups for key and value names
   - Remove `fieldExists` and `availableOptions` from response
-  - Add `query` and `names` to response
+  - Add `key`, `keyName`, `value`, `valueName` to response
+  - Add `replacementDetailed` with translation lookups for replacement tags
 - [ ] Update input schema (no changes needed)
 - [ ] Update unit tests (`tests/tools/validate-tag.test.ts`)
   - Update all assertions to match new response format
   - Add tests for translation name lookups
+  - Add tests for replacementDetailed format
 - [ ] Update integration tests (`tests/integration/validate-tag.test.ts`)
 - [ ] Update API documentation (`docs/api/validate_tag.md`)
 - [ ] Update usage examples (`docs/examples.md`)
@@ -270,27 +281,32 @@
 
 **New Response:**
 ```typescript
-[
-  {
+{
+  key: string,                    // ADD - the queried key
+  keyName: string,                // ADD - localized key name
+  values: string[],               // ADD - simple array of values
+  valuesDetailed: [{              // ADD - detailed values with names
     value: string,
     valueName: string
-  }
-]
+  }]
+}
 ```
 
 **Changes:**
-- **Make name mandatory:** Always return `name` field
-  - If translation has description → use it
-  - If no description available → return empty string `""`
-  - Never omit the field
+- **Remove:** `description` field completely
+- **Add:** Response wrapper with `key`, `keyName` for context
+- **Add:** Two formats: `values` (simple array) and `valuesDetailed` (with names)
 
 **Tasks:**
 - [ ] Update `get-tag-values.ts` implementation
-  - Always include `valueName` field in response
-  - Return empty string if no description found
+  - Change from array response to object with `key`, `keyName`, `values`, `valuesDetailed`
+  - Remove `description` field
+  - Add translation lookup for key name
+  - Return both simple values array and detailed array
 - [ ] Update input schema (no changes needed)
 - [ ] Update unit tests (`tests/tools/get-tag-values.test.ts`)
-  - Update assertions to expect `description` field always present
+  - Update assertions to match new response structure
+  - Test both `values` and `valuesDetailed` arrays
 - [ ] Update integration tests (`tests/integration/get-tag-values.test.ts`)
 - [ ] Update API documentation (`docs/api/get_tag_values.md`)
 - [ ] Update usage examples (`docs/examples.md`)
@@ -326,24 +342,21 @@
 **New Response:**
 ```typescript
 {
-  keyMatches: [
-    {
-      key: string,
-      keyName: string,
-      values: Array<{
-        value: string,
-        valueName: string
-      }>
-    }
-  ],
-  valueMatches: [
-    {
-      key: string,
-      keyName: string,
+  keyMatches: [{
+    key: string,
+    keyName: string,
+    values: string[],             // Simple array
+    valuesDetailed: [{            // Detailed values with names
       value: string,
       valueName: string
-    }
-  ]
+    }]
+  }],
+  valueMatches: [{
+    key: string,
+    keyName: string,
+    value: string,
+    valueName: string
+  }]
 }
 ```
 
@@ -390,16 +403,23 @@
 {
   id: string,
   name: string,
-  tags: object,
+  tags: object,                   // Backward compatibility: { "amenity": "restaurant" }
+  tagsDetailed: [{                // ADD - detailed tags with names
+    key: string,
+    keyName: string,
+    value: string,
+    valueName: string
+  }],
   geometry: string[],
-  fields: string[],      // With {field} and @templates expanded
-  moreFields: string[]   // With {field} and @templates expanded
+  fields: string[],               // With {field} and @templates expanded
+  moreFields: string[]            // With {field} and @templates expanded
 }
 ```
 
 **Changes:**
 - **Accept multiple input formats:** Parse preset ID, tag notation, or JSON object
 - **Remove:** `icon` field (not essential for MCP context)
+- **Add:** `tagsDetailed` - detailed tags with names (keep old `tags` for backward compatibility)
 - **Expand field references:**
   - `{amenity}` → Replace with actual field key (e.g., for `amenity=restaurant` → `"restaurant"`)
   - `@templates/contact` → Expand to template fields (e.g., `["email", "website", "phone", "fax"]`)
@@ -422,6 +442,7 @@
   - Load template definitions from schema
 - [ ] Update response format
   - Remove `icon` field
+  - Add `tagsDetailed` with translation lookups for tag names
   - Expand all field references before returning
 - [ ] Update input schema to accept multiple formats
   ```typescript
@@ -499,14 +520,17 @@
 **New Response:**
 ```typescript
 {
-  suggestions: [
-    {
-      operation: "add" | "remove" | "update",
-      message: string,  // "Reason to {operation} the {key} - explanation"
-      key: string
-    }
-  ],
-  matchedPresets: string[]
+  suggestions: [{
+    operation: "add" | "remove" | "update",
+    message: string,
+    key: string,
+    keyName: string               // ADD - localized key name
+  }],
+  matchedPresets: string[],       // Backward compatibility
+  matchedPresetsDetailed: [{      // ADD - detailed preset info
+    id: string,
+    name: string
+  }]
 }
 ```
 
@@ -515,8 +539,9 @@
   - `operation`: Type of change ("add", "remove", "update")
   - `message`: Human-readable explanation with reason
   - `key`: Tag key being suggested
+  - `keyName`: Localized key name (NEW)
 - **Remove:** `warnings` field (deprecation warnings now in `validate_tag_collection`)
-- **Keep:** `matchedPresets`
+- **Add:** `matchedPresetsDetailed` - detailed preset info (keep old `matchedPresets` for backward compatibility)
 
 **Example Suggestions:**
 ```json
@@ -524,22 +549,26 @@
   {
     "operation": "add",
     "message": "Add 'cuisine' to specify the type of food served at this restaurant",
-    "key": "cuisine"
+    "key": "cuisine",
+    "keyName": "Cuisine"
   },
   {
     "operation": "add",
     "message": "Add 'opening_hours' to help visitors know when the restaurant is open",
-    "key": "opening_hours"
+    "key": "opening_hours",
+    "keyName": "Opening Hours"
   },
   {
     "operation": "remove",
     "message": "Remove 'building' because it conflicts with amenity=restaurant point geometry",
-    "key": "building"
+    "key": "building",
+    "keyName": "Building"
   },
   {
     "operation": "update",
     "message": "Update 'wheelchair' to use standard values (yes/no/limited)",
-    "key": "wheelchair"
+    "key": "wheelchair",
+    "keyName": "Wheelchair"
   }
 ]
 ```
@@ -547,28 +576,74 @@
 **Tasks:**
 - [ ] Update `suggest-improvements.ts` implementation
   - Change suggestions from strings to structured objects
+  - Add `keyName` with translation lookup for each suggestion
   - Determine operation type (add/remove/update) based on analysis
   - Generate contextual messages with reasons
+  - Add `matchedPresetsDetailed` with preset IDs and names
   - Remove `warnings` field
 - [ ] Update input schema (no changes needed)
 - [ ] Update unit tests (`tests/tools/suggest-improvements.test.ts`)
   - Update assertions for new suggestion format
   - Test operation type detection
+  - Test keyName translation lookups
+  - Test matchedPresetsDetailed format
 - [ ] Update integration tests (`tests/integration/suggest-improvements.test.ts`)
 - [ ] Update API documentation (`docs/api/suggest_improvements.md`)
 - [ ] Update usage examples (`docs/examples.md`)
 
-#### 8.8: Localization Enhancements ⏳
+#### 8.8: search_presets Refactor ⏳
+
+**Current Response:**
+```typescript
+[{
+  id: string,
+  name: string,
+  tags: object,
+  geometry: string[]
+}]
+```
+
+**New Response:**
+```typescript
+[{
+  id: string,
+  name: string,
+  tags: object,                   // Backward compatibility: { "amenity": "restaurant" }
+  tagsDetailed: [{                // ADD - detailed tags with names
+    key: string,
+    keyName: string,
+    value: string,
+    valueName: string
+  }],
+  geometry: string[]
+}]
+```
+
+**Changes:**
+- **Add:** `tagsDetailed` - detailed tags with names (keep old `tags` for backward compatibility)
+
+**Tasks:**
+- [ ] Update `search-presets.ts` implementation
+  - Add `tagsDetailed` with translation lookups for tag names
+- [ ] Update input schema (no changes needed)
+- [ ] Update unit tests (`tests/tools/search-presets.test.ts`)
+  - Update assertions for new response format
+  - Test tagsDetailed format
+- [ ] Update integration tests (`tests/integration/search-presets.test.ts`)
+- [ ] Update API documentation (`docs/api/search_presets.md`)
+- [ ] Update usage examples (`docs/examples.md`)
+
+#### 8.9: Localization Enhancements ⏳
 
 **Objective:** Add translation lookups to all applicable tools
 
 **Tasks:**
-- [ ] Update `search_presets` to include preset names from translations
 - [ ] Update tool responses to include localized names where applicable
-- [ ] Add translation fallback logic (English → key if missing)
+- [ ] Implement fallback logic: ucfirst value + replace underscores with spaces
+- [ ] Example: "fast_food" → "Fast Food"
 - [ ] Document translation usage in API docs
 
-#### 8.9: Template System Implementation ⏳
+#### 8.10: Template System Implementation ⏳
 
 **Objective:** Support field templates like `@templates/contact`
 
@@ -584,7 +659,7 @@ Common templates used in iD editor:
 - [ ] Add template tests with real schema templates
 - [ ] Document template system in CLAUDE.md
 
-#### 8.10: Documentation & Testing ⏳
+#### 8.11: Documentation & Testing ⏳
 
 **Tasks:**
 - [ ] Update CHANGELOG.md with breaking changes for v1.0.0
@@ -600,6 +675,7 @@ Common templates used in iD editor:
 - [ ] `docs/api/validate_tag.md`
 - [ ] `docs/api/get_tag_values.md`
 - [ ] `docs/api/search_tags.md`
+- [ ] `docs/api/search_presets.md`
 - [ ] `docs/api/get_preset_details.md`
 - [ ] `docs/api/validate_tag_collection.md`
 - [ ] `docs/api/suggest_improvements.md`
