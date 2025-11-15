@@ -985,6 +985,39 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 - ✅ **Docker Compose**: Production, development, and test configurations
 - ✅ **Health Checks**: `/health` (liveness) and `/ready` (readiness) endpoints
 
+**Phase 8: Schema Builder API Refactor 🔄 IN PROGRESS**
+- ✅ **Translation Infrastructure (8.1)**: Full localization support in SchemaLoader
+  - `getPresetName()`, `getFieldLabel()`, `getFieldOptionName()`, `getCategoryName()` methods
+  - Automatic fallback formatting (ucfirst + replace underscores with spaces)
+  - Loads `translations/en.json` from schema package
+- ✅ **validate_tag Refactor (8.2)**: Localized validation results
+  - Returns `keyName`, `valueName`, `replacementDetailed` with human-readable names
+  - Removed redundant `fieldExists` and `availableOptions` fields
+- ✅ **get_tag_values Refactor (8.3)**: Structured response with localization
+  - Returns `key`, `keyName`, `values`, `valuesDetailed` arrays
+  - Removed `description` field (not in Phase 8.3 spec)
+- ✅ **search_tags Refactor (8.4)**: Separate key/value matches with localization
+  - Returns `keyMatches` and `valueMatches` with `keyName`/`valueName`
+  - No more random values for key-only matches
+- ✅ **get_preset_details Refactor (8.5)**: Multiple input formats + field expansion
+  - Accepts preset ID, tag notation, or tags object
+  - Returns `name`, `tagsDetailed` with localized names
+  - Field reference expansion (`{amenity}`, `@templates/contact`)
+- ✅ **validate_tag_collection Refactor (8.6)**: Simplified response using localized validate_tag
+  - Returns `validCount`, `deprecatedCount`, `errorCount`
+  - Removed `errors`, `warnings` arrays
+- ✅ **suggest_improvements Refactor (8.7)**: Structured suggestions with localization
+  - Returns `suggestions[]` with `operation`, `message`, `key`, `keyName`
+  - Returns `matchedPresetsDetailed` with preset names
+- ✅ **search_presets Refactor (8.8)**: Preset search with localization
+  - Returns `name`, `tagsDetailed` with localized names
+- ✅ **Localization Enhancements (8.9)**: Complete localization across all tools
+  - All 7 tools return human-readable names for keys, values, and presets
+  - Comprehensive fallback logic for missing translations
+  - Full documentation in `docs/api/README.md` Localization section
+- ⏳ **Template System Implementation (8.10)**: Field template expansion (IN PROGRESS)
+- ⏳ **Documentation & Testing (8.11)**: Update all documentation for Phase 8 changes
+
 ### Current Status
 
 **All Systems Operational** ✅:

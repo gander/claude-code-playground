@@ -98,6 +98,86 @@ All tools use data from `@openstreetmap/id-tagging-schema` library:
 - **fields.json**: Tag field definitions (799 fields)
 - **deprecated.json**: Deprecated tag mappings (245 entries)
 - **preset_categories.json**: Preset categories (15 categories)
+- **translations/en.json**: English translations for human-readable names (1707 presets, 799 fields)
+
+## Localization
+
+All tools provide **human-readable, localized names** for tags, values, and presets in addition to their technical identifiers.
+
+### What is Localized?
+
+The server translates technical OSM identifiers into human-readable names using English translations from the schema:
+
+| Type | Technical ID | Localized Name | Tools Providing This |
+|------|-------------|----------------|---------------------|
+| **Tag Keys** | `amenity` | "Amenity" | All tools with `keyName` field |
+| **Tag Values** | `restaurant` | "Restaurant" | All tools with `valueName` field |
+| **Presets** | `amenity/restaurant` | "Restaurant" | `get_preset_details`, `search_presets`, `suggest_improvements` |
+| **Field Options** | `fast_food` | "Fast Food" | `get_tag_values`, `search_tags` |
+
+### Tools with Localization Support
+
+All 7 tools include localized names in their responses:
+
+**Tag Query Tools:**
+- ✅ `get_tag_values` - Returns `keyName` and `valuesDetailed[].valueName`
+- ✅ `search_tags` - Returns `keyName` and `valueName` in both key and value matches
+
+**Preset Discovery Tools:**
+- ✅ `search_presets` - Returns `name` (preset name) and `tagsDetailed[].keyName`/`valueName`
+- ✅ `get_preset_details` - Returns `name` and `tagsDetailed[].keyName`/`valueName`
+
+**Validation Tools:**
+- ✅ `validate_tag` - Returns `keyName`, `valueName`, and `replacementDetailed[].keyName`/`valueName`
+- ✅ `validate_tag_collection` - Uses localized `validate_tag` for each tag
+- ✅ `suggest_improvements` - Returns `suggestions[].keyName` and `matchedPresetsDetailed[].name`
+
+### Fallback Logic
+
+When a translation is not available in the schema, the server uses intelligent fallback formatting:
+
+1. **Replace underscores with spaces**: `fast_food` → `fast food`
+2. **Capitalize first letter**: `fast food` → `Fast food`
+
+**Examples:**
+
+| Original Value | Translation Available? | Result |
+|----------------|----------------------|--------|
+| `restaurant` | ✅ Yes | "Restaurant" (from translations) |
+| `fast_food` | ✅ Yes | "Fast Food" (from translations) |
+| `my_custom_tag` | ❌ No | "My custom tag" (fallback) |
+
+### Example: Localized vs Non-Localized Output
+
+**Without Localization** (hypothetical):
+```json
+{
+  "key": "amenity",
+  "value": "fast_food"
+}
+```
+
+**With Localization** (actual output from `validate_tag`):
+```json
+{
+  "key": "amenity",
+  "keyName": "Amenity",
+  "value": "fast_food",
+  "valueName": "Fast Food",
+  "valid": true,
+  "deprecated": false,
+  "message": "Tag amenity=fast_food is valid"
+}
+```
+
+### Backward Compatibility
+
+All tools maintain backward compatibility by providing **both** technical identifiers and localized names:
+
+- **Technical fields**: `key`, `value`, `tags` - Unchanged, machine-readable
+- **Localized fields**: `keyName`, `valueName`, `tagsDetailed`, `name` - New, human-readable
+
+This allows both automated processing (using technical fields) and human-friendly display (using localized fields).
 
 ## Version Information
 
