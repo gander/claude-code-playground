@@ -110,6 +110,55 @@ export interface SchemaMetadata {
 }
 
 /**
+ * Translation structure for a field option (value)
+ */
+export interface TranslationFieldOption {
+	title: string;
+	description?: string;
+}
+
+/**
+ * Translation structure for a field
+ */
+export interface TranslationField {
+	label?: string;
+	options?: Record<string, TranslationFieldOption>;
+}
+
+/**
+ * Translation structure for a preset
+ */
+export interface TranslationPreset {
+	name: string;
+	terms?: string;
+}
+
+/**
+ * Translation structure for a category
+ */
+export interface TranslationCategory {
+	name: string;
+}
+
+/**
+ * Complete English translation data structure
+ */
+export interface EnglishTranslations {
+	presets: {
+		categories: Record<string, TranslationCategory>;
+		fields: Record<string, TranslationField>;
+		presets: Record<string, TranslationPreset>;
+	};
+}
+
+/**
+ * Translation data structure (multi-language support)
+ */
+export interface Translations {
+	en: EnglishTranslations;
+}
+
+/**
  * Complete schema data structure
  */
 export interface SchemaData {
@@ -118,7 +167,7 @@ export interface SchemaData {
 	categories: Record<string, PresetCategory>;
 	deprecated: DeprecatedTag[];
 	defaults: Record<string, { area?: string[]; line?: string[]; point?: string[] }>;
-	translations?: Record<string, unknown>; // Localized strings (e.g., en.json)
+	translations?: Translations; // Localized strings (e.g., en.json)
 	metadata?: SchemaMetadata; // Schema version and load metadata
 }
 

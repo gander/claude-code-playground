@@ -11,6 +11,7 @@ import type {
 	SchemaLoaderConfig,
 	SchemaMetadata,
 	TagIndex,
+	Translations,
 } from "../types/index.js";
 import { logger } from "./logger.js";
 
@@ -65,7 +66,7 @@ export class SchemaLoader {
 				this.loadJSON<Record<string, { area?: string[]; line?: string[]; point?: string[] }>>(
 					"preset_defaults.json",
 				),
-				this.loadJSON<Record<string, unknown>>("translations/en.json"),
+				this.loadJSON<Translations>("translations/en.json"),
 			]);
 
 			// Validate schema structure
