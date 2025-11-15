@@ -121,16 +121,21 @@ sudo usermod -aG docker $USER
 Error response from daemon: manifest for ghcr.io/gander-tools/osm-tagging-schema-mcp:dev not found
 ```
 
+**Cause:** The `:dev` tag has been replaced with `:edge` for development builds.
+
 **Solution:**
 ```bash
 # Check available tags
 # Visit: https://github.com/gander-tools/osm-tagging-schema-mcp/pkgs/container/osm-tagging-schema-mcp
 
-# Try latest instead of dev
+# Use latest stable
 docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 
+# Or use edge for development builds
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
+
 # Or use specific version
-docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:0.1.0
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:0.2.1
 
 # If authentication required
 # Login to GitHub Container Registry
@@ -223,7 +228,7 @@ npx @gander-tools/osm-tagging-schema-mcp --version
 npm cache clean --force
 
 # 4. Try Docker instead
-docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 
 # 5. Check client logs for errors
 ```
@@ -254,7 +259,7 @@ npm list @modelcontextprotocol/sdk
 npm cache clean --force
 
 # 5. Try Docker (isolated environment)
-docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 ```
 
 ---
@@ -358,7 +363,7 @@ top      # CPU
 NODE_OPTIONS="--max-old-space-size=1024" npx @gander-tools/osm-tagging-schema-mcp
 
 # 4. Use Docker with resource limits
-docker run -i --memory="1g" --cpus="2.0" ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+docker run -i --memory="1g" --cpus="2.0" ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 
 # 5. Check for other processes consuming resources
 ps aux | grep node
@@ -385,7 +390,7 @@ Default memory usage is 100-200MB. Higher usage is normal if:
 # kill and restart
 
 # 2. Use Docker with memory limit
-docker run -i --memory="512m" ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+docker run -i --memory="512m" ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 
 # 3. Monitor memory usage
 docker stats
@@ -417,8 +422,8 @@ df -h
 npm cache clean --force
 
 # 4. Use Docker (pre-built image)
-docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
-docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 
 # 5. Check for antivirus scanning node_modules
 # Exclude node_modules from real-time scanning

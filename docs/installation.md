@@ -121,30 +121,48 @@ npx tsx src/index.ts
 
 For containerized deployment:
 
+**Container Version Tags:**
+
+The project uses the following tagging strategy:
+
+| Tag | Description | Example | Recommended Use |
+|-----|-------------|---------|-----------------|
+| `latest` | Latest stable release | `latest` → `0.2.1` | Production (stable) |
+| `edge` | Latest master branch | `edge` | Development (bleeding edge) |
+| `X.Y.Z` | Specific patch version | `0.2.1` | Production (pinned version) |
+| `X.Y` | Latest patch in minor | `0.2` → `0.2.1` | Production (minor updates) |
+| `X` | Latest minor in major | `0` → `0.2.1` | Production (major version) |
+
 **1. Pull the image:**
 ```bash
-# Pull latest dev image (master branch)
-docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
-
-# Or pull latest stable release
+# Pull latest stable release (recommended for production)
 docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 
-# Or pull specific version
-docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:0.1.0
+# Pull latest development version (bleeding edge)
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
 
-# Or pull specific commit (short hash, e.g., 938b0d1)
-docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:938b0d1
+# Pull specific version (pinned)
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:0.2.1
+
+# Pull latest patch in minor version
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:0.2
+
+# Pull latest minor in major version
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:0
 ```
 
 > **Note:** All Docker images are publicly available in GitHub Container Registry (ghcr.io) and can be pulled without authentication.
 
 **2. Run the container:**
 ```bash
-# Run interactively
-docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+# Run with latest stable
+docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+
+# Run with edge (development)
+docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
 
 # Run with automatic cleanup
-docker run -i --rm ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+docker run -i --rm --pull always ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 ```
 
 **3. Verify image signature (optional but recommended):**
@@ -168,12 +186,14 @@ cosign verify ghcr.io/gander-tools/osm-tagging-schema-mcp:latest \
         "run",
         "-i",
         "--rm",
-        "ghcr.io/gander-tools/osm-tagging-schema-mcp:dev"
+        "ghcr.io/gander-tools/osm-tagging-schema-mcp:latest"
       ]
     }
   }
 }
 ```
+
+For development with bleeding edge features, use `:edge` instead of `:latest`.
 
 **Building Docker image locally:**
 ```bash
@@ -202,8 +222,11 @@ echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx @gander-tools/o
 # If running from source
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npm start
 
-# If using Docker
-echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | docker run -i --rm ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+# If using Docker (latest stable)
+echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | docker run -i --rm ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+
+# If using Docker (edge/development)
+echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | docker run -i --rm ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
 ```
 
 **Expected output:** JSON response with list of 14 available tools.
@@ -239,14 +262,32 @@ claude mcp add @gander-tools/osm-tagging-schema-mcp
 # Ask Claude: "What OSM tags are available for restaurants?"
 ```
 
-**Manual MCP client test:**
-```bash
-# Install MCP inspector (optional)
-npm install -g @modelcontextprotocol/inspector
+**MCP Inspector (Interactive Testing):**
 
-# Test the server
-mcp-inspector npx @gander-tools/osm-tagging-schema-mcp
+The MCP Inspector provides an interactive web interface to test and explore MCP servers:
+
+```bash
+# Test with npx
+npx @modelcontextprotocol/inspector npx @gander-tools/osm-tagging-schema-mcp
+
+# Test with Docker (latest stable)
+npx @modelcontextprotocol/inspector docker run -i --rm --pull always \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+
+# Test with Docker (edge/development)
+npx @modelcontextprotocol/inspector docker run -i --rm --pull always \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
+
+# Test with specific version
+npx @modelcontextprotocol/inspector docker run -i --rm --pull always \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:0.2.1
 ```
+
+The inspector opens a web interface where you can:
+- Browse all available tools
+- Test tool calls with custom parameters
+- View request/response JSON
+- Debug MCP protocol communication
 
 ## Updating
 
@@ -273,11 +314,14 @@ npm run build
 ### Update Docker Image
 
 ```bash
-# Pull latest image
-docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
-
-# Or pull specific version
+# Pull latest stable release
 docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+
+# Pull latest development version
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
+
+# Pull specific version
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:0.2.1
 ```
 
 ## Uninstallation
@@ -308,8 +352,9 @@ rm -rf osm-tagging-schema-mcp
 ### Docker Installation
 
 ```bash
-# Remove Docker image
-docker rmi ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+# Remove specific image tag
+docker rmi ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+docker rmi ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
 
 # Remove all versions
 docker images | grep osm-tagging-schema-mcp | awk '{print $3}' | xargs docker rmi
