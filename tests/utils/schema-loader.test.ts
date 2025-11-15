@@ -531,4 +531,264 @@ describe("SchemaLoader", () => {
 			});
 		});
 	});
+
+	describe("translation loading and lookups", () => {
+		it("should load translations data successfully", async () => {
+			const loader = new SchemaLoader();
+			const schema = await loader.loadSchema();
+
+			// Translations should be loaded
+			assert.ok(schema.translations, "Schema should have translations");
+			assert.ok(schema.translations.en, "Translations should have 'en' language");
+			assert.ok(schema.translations.en.presets, "English translations should have presets section");
+			assert.ok(
+				schema.translations.en.presets.presets,
+				"Presets section should have presets translations",
+			);
+			assert.ok(
+				schema.translations.en.presets.fields,
+				"Presets section should have fields translations",
+			);
+			assert.ok(
+				schema.translations.en.presets.categories,
+				"Presets section should have categories translations",
+			);
+		});
+
+		describe("getPresetName", () => {
+			it("should return localized name for preset with translation", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getPresetName("amenity/restaurant");
+
+				assert.ok(name, "Should return a name");
+				assert.strictEqual(name, "Restaurant", "Should return localized preset name");
+			});
+
+			it("should return formatted fallback for preset without translation", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getPresetName("fake/nonexistent_preset");
+
+				// Should format "nonexistent_preset" → "Nonexistent preset"
+				assert.ok(name, "Should return a fallback name");
+				assert.strictEqual(
+					name,
+					"Nonexistent preset",
+					"Should format fallback with ucfirst and spaces",
+				);
+			});
+
+			it("should extract value part from preset ID for fallback", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getPresetName("amenity/fast_food");
+
+				// Should use translation if available, or format "fast_food" → "Fast food"
+				assert.ok(name, "Should return a name");
+			});
+
+			it("should throw error if schema not loaded", () => {
+				const loader = new SchemaLoader();
+
+				assert.throws(
+					() => loader.getPresetName("amenity/restaurant"),
+					/Schema not loaded/,
+					"Should throw error if schema not loaded",
+				);
+			});
+		});
+
+		describe("getFieldLabel", () => {
+			it("should return localized label for field with translation", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const label = loader.getFieldLabel("parking");
+
+				assert.ok(label, "Should return a label");
+				assert.strictEqual(label, "Type", "Should return localized field label");
+			});
+
+			it("should return formatted fallback for field without translation", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const label = loader.getFieldLabel("nonexistent_field");
+
+				// Should format "nonexistent_field" → "Nonexistent field"
+				assert.ok(label, "Should return a fallback label");
+				assert.strictEqual(
+					label,
+					"Nonexistent field",
+					"Should format fallback with ucfirst and spaces",
+				);
+			});
+
+			it("should handle underscores in field keys", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const label = loader.getFieldLabel("opening_hours");
+
+				// Should use translation if available, or format "opening_hours" → "Opening hours"
+				assert.ok(label, "Should return a label");
+			});
+
+			it("should throw error if schema not loaded", () => {
+				const loader = new SchemaLoader();
+
+				assert.throws(
+					() => loader.getFieldLabel("parking"),
+					/Schema not loaded/,
+					"Should throw error if schema not loaded",
+				);
+			});
+		});
+
+		describe("getFieldOptionName", () => {
+			it("should return localized name for field option with translation", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const option = loader.getFieldOptionName("parking", "surface");
+
+				assert.ok(option, "Should return option details");
+				assert.ok(option.title, "Should have title");
+				assert.strictEqual(option.title, "Surface", "Should return localized option title");
+				assert.ok(option.description, "Should have description");
+			});
+
+			it("should return formatted fallback for option without translation", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const option = loader.getFieldOptionName("parking", "nonexistent_option");
+
+				assert.ok(option, "Should return option with fallback");
+				assert.ok(option.title, "Should have title");
+				assert.strictEqual(
+					option.title,
+					"Nonexistent option",
+					"Should format fallback with ucfirst and spaces",
+				);
+				assert.strictEqual(
+					option.description,
+					undefined,
+					"Fallback should not include description",
+				);
+			});
+
+			it("should handle multi-word option values", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const option = loader.getFieldOptionName("parking", "multi-storey");
+
+				// Should use translation if available (multi-storey → "Multilevel")
+				assert.ok(option, "Should return option details");
+				assert.ok(option.title, "Should have title");
+			});
+
+			it("should throw error if schema not loaded", () => {
+				const loader = new SchemaLoader();
+
+				assert.throws(
+					() => loader.getFieldOptionName("parking", "surface"),
+					/Schema not loaded/,
+					"Should throw error if schema not loaded",
+				);
+			});
+		});
+
+		describe("getCategoryName", () => {
+			it("should return localized name for category with translation", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getCategoryName("category-building");
+
+				assert.ok(name, "Should return a name");
+				assert.strictEqual(name, "Building Features", "Should return localized category name");
+			});
+
+			it("should return formatted fallback for category without translation", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getCategoryName("category-nonexistent_category");
+
+				// Should remove "category-" prefix and format "nonexistent_category" → "Nonexistent category"
+				assert.ok(name, "Should return a fallback name");
+				assert.strictEqual(
+					name,
+					"Nonexistent category",
+					"Should format fallback with ucfirst and spaces",
+				);
+			});
+
+			it("should remove category prefix from fallback", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getCategoryName("category-test_category");
+
+				// Should format without "category-" prefix: "test_category" → "Test category"
+				assert.ok(name, "Should return a name");
+				assert.strictEqual(
+					name,
+					"Test category",
+					"Should remove prefix and format with ucfirst and spaces",
+				);
+			});
+
+			it("should throw error if schema not loaded", () => {
+				const loader = new SchemaLoader();
+
+				assert.throws(
+					() => loader.getCategoryName("category-building"),
+					/Schema not loaded/,
+					"Should throw error if schema not loaded",
+				);
+			});
+		});
+
+		describe("fallback formatting", () => {
+			it("should handle empty strings", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const label = loader.getFieldLabel("");
+
+				assert.strictEqual(label, "", "Should return empty string for empty input");
+			});
+
+			it("should handle strings without underscores", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const label = loader.getFieldLabel("simple");
+
+				// Should format "simple" → "Simple"
+				assert.strictEqual(label, "Simple", "Should uppercase first letter");
+			});
+
+			it("should handle strings with multiple underscores", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const label = loader.getFieldLabel("very_long_field_name");
+
+				// Should format "very_long_field_name" → "Very long field name"
+				assert.strictEqual(
+					label,
+					"Very long field name",
+					"Should replace all underscores with spaces",
+				);
+			});
+		});
+	});
 });
