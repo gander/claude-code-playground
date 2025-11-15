@@ -2,38 +2,61 @@ import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { ty
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { z } from "zod";
 import type { OsmToolDefinition } from "../types/index.js";
+import { schemaLoader } from "../utils/schema-loader.js";
 import { parseTagInput } from "../utils/tag-parser.js";
-import { validateTag } from "./validate-tag.js";
+
+/**
+ * Structured suggestion with operation type and details
+ */
+export interface Suggestion {
+	/** Type of operation: add, remove, or update */
+	operation: "add" | "remove" | "update";
+	/** Human-readable explanation with reason */
+	message: string;
+	/** Tag key being suggested */
+	key: string;
+	/** Localized key name */
+	keyName: string;
+}
+
+/**
+ * Detailed preset information
+ */
+export interface PresetDetailed {
+	/** Preset ID (e.g., "amenity/restaurant") */
+	id: string;
+	/** Localized preset name */
+	name: string;
+}
 
 /**
  * Result of improvement suggestions
  */
 export interface ImprovementResult {
-	/** Suggested improvements */
-	suggestions: string[];
-	/** Warnings about existing tags */
-	warnings: string[];
-	/** Matched presets for the tag collection */
+	/** Structured suggestions for improvements */
+	suggestions: Suggestion[];
+	/** Matched presets (backward compatibility) */
 	matchedPresets: string[];
+	/** Detailed preset information */
+	matchedPresetsDetailed: PresetDetailed[];
 }
 
 /**
  * Suggest improvements for an OSM tag collection
  *
- * Analyzes tags and provides suggestions for missing fields,
- * warnings about deprecated tags, and recommendations based on
- * matched presets.
+ * Analyzes tags and provides structured suggestions for missing fields
+ * and recommendations based on matched presets.
  *
  * @param tags - Tag collection to analyze
- * @returns Improvement suggestions and warnings
+ * @returns Improvement suggestions with operations and localized names
  */
 export async function suggestImprovements(
 	tags: Record<string, string>,
 ): Promise<ImprovementResult> {
 	const result: ImprovementResult = {
 		suggestions: [],
-		warnings: [],
 		matchedPresets: [],
+		matchedPresetsDetailed: [],
 	};
 
 	// Handle empty tag collection
@@ -41,17 +64,21 @@ export async function suggestImprovements(
 		return result;
 	}
 
-	// Check for deprecated tags
-	for (const [key, value] of Object.entries(tags)) {
-		const validationResult = await validateTag(key, value);
-		if (validationResult.deprecated) {
-			result.warnings.push(validationResult.message);
-		}
-	}
+	// Load schema for translation lookups
+	await schemaLoader.loadSchema();
 
 	// Find matching presets
 	const matchedPresetIds = findMatchingPresets(tags);
 	result.matchedPresets = matchedPresetIds;
+
+	// Build detailed preset information
+	for (const presetId of matchedPresetIds) {
+		const presetName = schemaLoader.getPresetName(presetId);
+		result.matchedPresetsDetailed.push({
+			id: presetId,
+			name: presetName,
+		});
+	}
 
 	// Suggest missing fields from matched presets
 	if (matchedPresetIds.length > 0) {
@@ -62,13 +89,26 @@ export async function suggestImprovements(
 			const preset = presets[presetId as keyof typeof presets];
 			if (!preset) continue;
 
+			// Get preset name for context
+			const presetName = schemaLoader.getPresetName(presetId);
+
 			// Check fields
 			if ("fields" in preset && preset.fields) {
 				for (const fieldId of preset.fields) {
 					const fieldKey = getFieldKey(fieldId);
 					if (fieldKey && !tags[fieldKey] && !suggestedFields.has(fieldKey)) {
 						suggestedFields.add(fieldKey);
-						result.suggestions.push(`Consider adding '${fieldKey}' tag (common for ${presetId})`);
+
+						// Get localized field name
+						const fieldPath = fieldKey.replace(/:/g, "/");
+						const keyName = schemaLoader.getFieldLabel(fieldPath);
+
+						result.suggestions.push({
+							operation: "add",
+							message: `Add '${fieldKey}' to provide more information about this ${presetName}`,
+							key: fieldKey,
+							keyName,
+						});
 					}
 				}
 			}
@@ -80,7 +120,17 @@ export async function suggestImprovements(
 					const fieldKey = getFieldKey(fieldId);
 					if (fieldKey && !tags[fieldKey] && !suggestedFields.has(fieldKey)) {
 						suggestedFields.add(fieldKey);
-						result.suggestions.push(`Optional: Consider adding '${fieldKey}' tag`);
+
+						// Get localized field name
+						const fieldPath = fieldKey.replace(/:/g, "/");
+						const keyName = schemaLoader.getFieldLabel(fieldPath);
+
+						result.suggestions.push({
+							operation: "add",
+							message: `Optional: Add '${fieldKey}' for additional details about this ${presetName}`,
+							key: fieldKey,
+							keyName,
+						});
 					}
 				}
 			}
