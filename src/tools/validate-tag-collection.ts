@@ -11,16 +11,12 @@ export interface CollectionValidationResult {
 	valid: boolean;
 	/** Validation results for each individual tag */
 	tagResults: Record<string, ValidationResult>;
-	/** Collection-level errors */
-	errors: string[];
-	/** Collection-level warnings */
-	warnings: string[];
+	/** Count of valid tags (no errors) */
+	validCount: number;
 	/** Count of deprecated tags */
 	deprecatedCount: number;
 	/** Count of tags with errors */
 	errorCount: number;
-	/** Count of tags with warnings */
-	warningCount: number;
 }
 
 /**
@@ -35,11 +31,9 @@ export async function validateTagCollection(
 	const result: CollectionValidationResult = {
 		valid: true,
 		tagResults: {},
-		errors: [],
-		warnings: [],
+		validCount: 0,
 		deprecatedCount: 0,
 		errorCount: 0,
-		warningCount: 0,
 	};
 
 	// Validate each tag individually
@@ -51,16 +45,12 @@ export async function validateTagCollection(
 		if (!tagResult.valid) {
 			result.valid = false;
 			result.errorCount++;
-			result.errors.push(`${key}: ${tagResult.message}`);
-		} else if (tagResult.deprecated) {
-			// Deprecated tags that are still valid get a warning
-			result.deprecatedCount++;
-			result.warningCount++;
-			result.warnings.push(`${key}=${value}: ${tagResult.message}`);
-		} else if (tagResult.message && !tagResult.message.includes("is valid")) {
-			// Other warnings (e.g., unknown keys, value not in options)
-			result.warningCount++;
-			result.warnings.push(`${key}=${value}: ${tagResult.message}`);
+		} else {
+			result.validCount++;
+			if (tagResult.deprecated) {
+				// Deprecated tags that are still valid get counted
+				result.deprecatedCount++;
+			}
 		}
 	}
 

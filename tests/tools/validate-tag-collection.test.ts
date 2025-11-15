@@ -18,6 +18,7 @@ describe("validateTagCollection", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, true);
+			assert.strictEqual(result.validCount, 3);
 			assert.strictEqual(result.errorCount, 0);
 			assert.strictEqual(result.deprecatedCount, 0);
 			assert.ok(result.tagResults);
@@ -34,7 +35,8 @@ describe("validateTagCollection", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, false);
-			assert.ok(result.errorCount > 0);
+			assert.strictEqual(result.validCount, 1);
+			assert.strictEqual(result.errorCount, 1);
 			assert.ok(result.tagResults.amenity);
 			assert.strictEqual(result.tagResults.amenity.valid, false);
 		});
@@ -55,6 +57,7 @@ describe("validateTagCollection", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.deprecatedCount, 1);
+			assert.strictEqual(result.validCount, 2);
 			assert.ok(result.tagResults[oldKey]);
 			assert.strictEqual(result.tagResults[oldKey].deprecated, true);
 		});
@@ -66,12 +69,12 @@ describe("validateTagCollection", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, true);
+			assert.strictEqual(result.validCount, 0);
 			assert.strictEqual(result.errorCount, 0);
-			assert.strictEqual(result.warningCount, 0);
 			assert.strictEqual(Object.keys(result.tagResults).length, 0);
 		});
 
-		it("should aggregate warnings from individual tags", async () => {
+		it("should count unknown tags as valid", async () => {
 			const tags = {
 				unknown_tag_key_12345: "value1",
 				another_unknown_key_67890: "value2",
@@ -81,7 +84,7 @@ describe("validateTagCollection", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, true);
-			assert.ok(result.warningCount >= 2);
+			assert.strictEqual(result.validCount, 2);
 		});
 	});
 
@@ -96,18 +99,14 @@ describe("validateTagCollection", () => {
 			assert.ok(result);
 			assert.ok("valid" in result);
 			assert.ok("tagResults" in result);
-			assert.ok("errors" in result);
-			assert.ok("warnings" in result);
+			assert.ok("validCount" in result);
 			assert.ok("deprecatedCount" in result);
 			assert.ok("errorCount" in result);
-			assert.ok("warningCount" in result);
 			assert.strictEqual(typeof result.valid, "boolean");
 			assert.ok(typeof result.tagResults === "object");
-			assert.ok(Array.isArray(result.errors));
-			assert.ok(Array.isArray(result.warnings));
+			assert.strictEqual(typeof result.validCount, "number");
 			assert.strictEqual(typeof result.deprecatedCount, "number");
 			assert.strictEqual(typeof result.errorCount, "number");
-			assert.strictEqual(typeof result.warningCount, "number");
 		});
 
 		it("should include individual tag validation results", async () => {
@@ -199,7 +198,8 @@ describe("validateTagCollection", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, false);
-			assert.ok(result.errorCount > 0);
+			assert.strictEqual(result.validCount, 1);
+			assert.strictEqual(result.errorCount, 1);
 		});
 
 		it("should handle tags with empty values", async () => {
@@ -212,7 +212,8 @@ describe("validateTagCollection", () => {
 
 			assert.ok(result);
 			assert.strictEqual(result.valid, false);
-			assert.ok(result.errorCount > 0);
+			assert.strictEqual(result.validCount, 1);
+			assert.strictEqual(result.errorCount, 1);
 		});
 	});
 });

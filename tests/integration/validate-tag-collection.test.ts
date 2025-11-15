@@ -54,6 +54,7 @@ describe("Integration: validate_tag_collection", () => {
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			assert.strictEqual(result.valid, true);
+			assert.strictEqual(result.validCount, 3);
 			assert.strictEqual(result.errorCount, 0);
 			assert.ok(result.tagResults);
 			assert.strictEqual(Object.keys(result.tagResults).length, 3);
@@ -74,7 +75,8 @@ describe("Integration: validate_tag_collection", () => {
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			assert.strictEqual(result.valid, false);
-			assert.ok(result.errorCount > 0);
+			assert.strictEqual(result.validCount, 1);
+			assert.strictEqual(result.errorCount, 1);
 			assert.ok(result.tagResults.amenity);
 			assert.strictEqual(result.tagResults.amenity.valid, false);
 		});
@@ -100,6 +102,7 @@ describe("Integration: validate_tag_collection", () => {
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			assert.strictEqual(result.deprecatedCount, 1);
+			assert.strictEqual(result.validCount, 2);
 			assert.ok(result.tagResults[oldKey]);
 			assert.strictEqual(result.tagResults[oldKey].deprecated, true);
 		});
@@ -116,8 +119,8 @@ describe("Integration: validate_tag_collection", () => {
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			assert.strictEqual(result.valid, true);
+			assert.strictEqual(result.validCount, 0);
 			assert.strictEqual(result.errorCount, 0);
-			assert.strictEqual(result.warningCount, 0);
 			assert.strictEqual(Object.keys(result.tagResults).length, 0);
 		});
 	});
@@ -138,11 +141,9 @@ describe("Integration: validate_tag_collection", () => {
 
 			assert.ok("valid" in result);
 			assert.ok("tagResults" in result);
-			assert.ok("errors" in result);
-			assert.ok("warnings" in result);
+			assert.ok("validCount" in result);
 			assert.ok("deprecatedCount" in result);
 			assert.ok("errorCount" in result);
-			assert.ok("warningCount" in result);
 		});
 
 		it("should include individual tag validation results", async () => {
@@ -181,7 +182,8 @@ describe("Integration: validate_tag_collection", () => {
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			assert.strictEqual(result.valid, false);
-			assert.ok(result.errorCount > 0);
+			assert.strictEqual(result.validCount, 0);
+			assert.strictEqual(result.errorCount, 1);
 		});
 	});
 
@@ -321,7 +323,7 @@ name=Test`;
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			assert.strictEqual(result.valid, true);
-			assert.ok(result.warningCount >= 2);
+			assert.strictEqual(result.validCount, 3);
 			assert.strictEqual(Object.keys(result.tagResults).length, 3);
 		});
 	});

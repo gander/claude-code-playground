@@ -456,7 +456,7 @@
 - [x] Update API documentation (`docs/api/get_preset_details.md`)
 - [x] Update usage examples (`docs/examples.md`)
 
-#### 8.6: validate_tag_collection Refactor ⏳
+#### 8.6: validate_tag_collection Refactor ✅
 
 **Current Response:**
 ```typescript
@@ -490,18 +490,18 @@
 - **Rename:** `invalidCount` → `errorCount` (clearer terminology)
 
 **Tasks:**
-- [ ] Update `validate-tag-collection.ts` implementation
+- [x] Update `validate-tag-collection.ts` implementation
   - Use refactored `validate_tag` for each tag
   - Add `validCount` calculation
   - Remove `errors`, `warnings`, `warningCount`
   - Rename `invalidCount` to `errorCount`
-- [ ] Update input schema (no changes needed)
-- [ ] Update unit tests (`tests/tools/validate-tag-collection.test.ts`)
+- [x] Update input schema (no changes needed)
+- [x] Update unit tests (`tests/tools/validate-tag-collection.test.ts`)
   - Update assertions for new response format
   - Test validCount calculation
-- [ ] Update integration tests (`tests/integration/validate-tag-collection.test.ts`)
-- [ ] Update API documentation (`docs/api/validate_tag_collection.md`)
-- [ ] Update usage examples (`docs/examples.md`)
+- [x] Update integration tests (`tests/integration/validate-tag-collection.test.ts`)
+- [x] Update API documentation (`docs/api/validate_tag_collection.md`)
+- [x] Update usage examples (`docs/examples.md`)
 
 #### 8.7: suggest_improvements Refactor ⏳
 
