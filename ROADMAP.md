@@ -184,16 +184,15 @@
 **Tasks:**
 - [ ] Add translations loader to `SchemaLoader` class
   - Load `/dist/translations/en.json` from schema package
-  - Index by presets, fields, categories
+  - Index by presets, fields
   - Cache translations alongside schema data
 - [ ] Create TypeScript interfaces for translation structure
   - `TranslationPreset`: name, terms
   - `TranslationField`: label, options (title, description)
-  - `TranslationCategory`: name
 - [ ] Add translation lookup utilities
   - `getPresetName(presetId: string): string`
   - `getFieldName(fieldKey: string): string`
-  - `getFieldOptionName(fieldKey: string, optionValue: string): { title: string, description?: string }`
+  - `getFieldOptionName(fieldKey: string, optionValue: string): { title: string, description: string }`
 - [ ] Unit tests for translation loading and lookups
 - [ ] Integration tests for translation data integrity
 
@@ -216,11 +215,10 @@
 **New Response:**
 ```typescript
 {
-  query: { key: string, value: string },  // ADD - original request
-  names: {                                 // ADD - localized names
-    key?: string,    // e.g., "Amenity" for "amenity"
-    value?: string   // e.g., "Restaurant" for "restaurant"
-  },
+  key: string,  // ADD - original request
+  keyName: string,    // e.g., "Amenity" for "amenity"
+  value: string,  // ADD - original request
+  valueName: string   // e.g., "Restaurant" for "restaurant"
   valid: boolean,
   deprecated: boolean,
   message: string,
@@ -233,8 +231,8 @@
 **Changes:**
 - **Remove:** `fieldExists` (internal detail, not useful for API consumers)
 - **Remove:** `availableOptions` (use `get_tag_values` tool instead)
-- **Add:** `query` - echo back the original request for context
-- **Add:** `names` - localized names from translations
+- **Add:** `key`, `value` - echo back the original request for context
+- **Add:** `keyName`, `valueName` - localized names from translations
 
 **Validation Logic:**
 - `valid = true` if:
@@ -275,21 +273,20 @@
 [
   {
     value: string,
-    name: string,
-    description: string  // MANDATORY - empty string if no description
+    valueName: string
   }
 ]
 ```
 
 **Changes:**
-- **Make description mandatory:** Always return `description` field
+- **Make name mandatory:** Always return `name` field
   - If translation has description → use it
   - If no description available → return empty string `""`
   - Never omit the field
 
 **Tasks:**
 - [ ] Update `get-tag-values.ts` implementation
-  - Always include `description` field in response
+  - Always include `valueName` field in response
   - Return empty string if no description found
 - [ ] Update input schema (no changes needed)
 - [ ] Update unit tests (`tests/tools/get-tag-values.test.ts`)
@@ -326,46 +323,29 @@
 ]
 ```
 
-**New Response (Option A - Unified):**
-```typescript
-[
-  {
-    key: string,
-    value?: string,     // Present if matched by value
-    values?: Array<{    // Present if matched by key
-      value: string,
-      name: string,
-      description: string
-    }>,
-    matchType: "key" | "value"
-  }
-]
-```
-
-**New Response (Option B - Separate Arrays):**
+**New Response:**
 ```typescript
 {
   keyMatches: [
     {
       key: string,
+      keyName: string,
       values: Array<{
         value: string,
-        name: string,
-        description: string
+        valueName: string
       }>
     }
   ],
   valueMatches: [
     {
       key: string,
+      keyName: string,
       value: string,
-      name?: string
+      valueName: string
     }
   ]
 }
 ```
-
-**Recommended:** Option B - clearer distinction, easier to process
 
 **Tasks:**
 - [ ] Update `search-tags.ts` implementation
