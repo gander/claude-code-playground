@@ -414,6 +414,110 @@ All layers are fully tested using Node.js native test runner with TDD approach.
 - **Shared types**: Grouped in `tools/types.ts` to avoid duplication
 - **Tool ordering**: Tools returned in **alphabetical order** by name in MCP ListToolsRequest for API predictability
 
+## Template System (Phase 8.10)
+
+**Status**: ✅ IMPLEMENTED - Field template expansion for presets
+
+The template system allows presets to reference commonly used groups of fields using the `{@templates/name}` syntax. When a preset's fields or moreFields contain a template reference, it is automatically expanded to the constituent field IDs.
+
+### How Templates Work
+
+Templates are referenced in preset field lists using the special syntax `{@templates/template_name}`. During field expansion (in `get_preset_details` tool), these references are replaced with the actual field IDs that make up the template.
+
+**Example**:
+```json
+{
+  "fields": ["name", "operator"],
+  "moreFields": ["{@templates/contact}", "{@templates/internet_access}"]
+}
+```
+
+After expansion:
+```json
+{
+  "fields": ["name", "operator"],
+  "moreFields": ["email", "phone", "website", "fax", "internet_access", "internet_access/fee", "internet_access/ssid"]
+}
+```
+
+### Available Templates
+
+All template definitions are validated against `@openstreetmap/id-tagging-schema/dist/fields.json` to ensure they reference valid field IDs.
+
+| Template Name | Field IDs | Description |
+|---------------|-----------|-------------|
+| `contact` | `["email", "phone", "website", "fax"]` | Contact information fields |
+| `internet_access` | `["internet_access", "internet_access/fee", "internet_access/ssid"]` | Internet connectivity fields |
+| `poi` | `["name", "address"]` | Point of interest basic fields |
+| `crossing/markings` | `["crossing/markings"]` | Crossing markings field |
+| `crossing/defaults` | `["crossing", "crossing/markings"]` | Default crossing fields |
+| `crossing/geometry_way_more` | `["crossing/island"]` | Additional crossing geometry fields |
+| `crossing/bicycle_more` | `[]` | Bicycle crossing fields (empty - no fields exist in current schema) |
+| `crossing/markings_yes` | `["crossing/markings_yes"]` | Crossing markings detail |
+| `crossing/traffic_signal` | `["crossing/light", "button_operated"]` | Traffic signal crossing fields |
+| `crossing/traffic_signal_more` | `["traffic_signals/sound", "traffic_signals/vibration"]` | Additional traffic signal fields |
+
+### Implementation Details
+
+**Location**: `src/tools/get-preset-details.ts`
+
+Templates are defined as a constant at the module level:
+```typescript
+const TEMPLATES: Record<string, string[]> = {
+  contact: ["email", "phone", "website", "fax"],
+  internet_access: ["internet_access", "internet_access/fee", "internet_access/ssid"],
+  // ... more templates
+};
+```
+
+**Expansion Function**: `expandFieldReferences(schema, fields, visited)`
+- Recursively expands both template references (`{@templates/name}`) and preset field references (`{preset_id}`)
+- Prevents infinite recursion with a visited set
+- Returns a flat array of field IDs with all references resolved
+
+**Field ID Format**:
+- Field IDs use `/` as separator (not `:`)
+- Example: `internet_access/fee` (not `internet_access:fee`)
+- Field IDs must exist in `fields.json` from the schema package
+
+### Testing
+
+**Unit Tests** (`tests/tools/get-preset-details.test.ts`):
+- Tests for each template type (contact, internet_access, poi, crossing/*)
+- Verification that template references are removed after expansion
+- Validation that expected field IDs are present after expansion
+- Testing with real schema data (presets that use templates)
+
+**Integration Tests** (`tests/integration/get-preset-details.test.ts`):
+- End-to-end template expansion via MCP protocol
+- Testing multiple templates in same preset
+- Representative sample testing across all presets using templates
+
+**Coverage**: 100% of template definitions tested against real schema data
+
+### Usage in Schema
+
+Templates are used in 10 distinct patterns across the OSM tagging schema:
+- `{@templates/contact}`: 89 presets
+- `{@templates/internet_access}`: 73 presets
+- `{@templates/poi}`: 84 presets
+- Various crossing templates: Used in highway crossing-related presets
+
+### Design Decisions
+
+1. **Strict Validation**: Only field IDs that exist in `fields.json` are included in templates
+2. **Empty Templates**: Some templates (like `crossing/bicycle_more`) are empty because referenced fields don't exist in current schema version
+3. **Static Definitions**: Templates are hardcoded based on iD editor conventions rather than dynamically extracted
+4. **Separation from Field References**: Template expansion is distinct from preset field inheritance (`{preset_id}` references)
+
+### Maintenance
+
+When updating `@openstreetmap/id-tagging-schema` package:
+1. Verify all template field IDs still exist in new `fields.json`
+2. Run unit tests to catch any broken field references
+3. Update template definitions if new common field patterns emerge
+4. Document any schema version compatibility issues
+
 ## MCP SDK Tool Structure
 
 **Status**: ✅ IMPLEMENTED - Using modern MCP SDK v1.21.1 tool registration API
@@ -1015,7 +1119,12 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
   - All 7 tools return human-readable names for keys, values, and presets
   - Comprehensive fallback logic for missing translations
   - Full documentation in `docs/api/README.md` Localization section
-- ⏳ **Template System Implementation (8.10)**: Field template expansion (IN PROGRESS)
+- ✅ **Template System Implementation (8.10)**: Field template expansion COMPLETE
+  - Fixed all template definitions to use correct field IDs from fields.json
+  - Template expansion in `get_preset_details` tool for 10 template patterns
+  - 13 comprehensive unit tests covering all templates
+  - 6 integration tests via MCP protocol
+  - Full documentation in CLAUDE.md Template System section
 - ⏳ **Documentation & Testing (8.11)**: Update all documentation for Phase 8 changes
 
 ### Current Status

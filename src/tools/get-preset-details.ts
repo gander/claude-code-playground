@@ -6,18 +6,25 @@ import type { PresetDetails, TagDetailed } from "./types.js";
 /**
  * Template definitions for field expansion
  * Based on iD editor conventions
+ * Only includes field IDs that exist in @openstreetmap/id-tagging-schema fields.json
+ *
+ * Templates allow presets to reference commonly used field groups using
+ * {@templates/name} syntax. When expanded, they become regular field IDs.
+ *
+ * Note: Some templates may be empty if the referenced fields don't exist
+ * in the current schema version.
  */
 const TEMPLATES: Record<string, string[]> = {
-	contact: ["contact:email", "contact:phone", "contact:website", "contact:fax"],
+	contact: ["email", "phone", "website", "fax"],
 	internet_access: ["internet_access", "internet_access/fee", "internet_access/ssid"],
 	poi: ["name", "address"],
-	"crossing/markings": ["crossing:markings"],
-	"crossing/defaults": ["crossing", "crossing:markings"],
-	"crossing/geometry_way_more": ["crossing:continuous", "crossing:island"],
-	"crossing/bicycle_more": ["crossing:bicycle", "crossing:bicycle:markings"],
-	"crossing/markings_yes": ["crossing:markings:colour"],
-	"crossing/traffic_signal": ["crossing:signals", "button_operated"],
-	"crossing/traffic_signal_more": ["traffic_signals:sound", "traffic_signals:vibration"],
+	"crossing/markings": ["crossing/markings"],
+	"crossing/defaults": ["crossing", "crossing/markings"],
+	"crossing/geometry_way_more": ["crossing/island"],
+	"crossing/bicycle_more": [], // Empty - referenced fields don't exist in schema
+	"crossing/markings_yes": ["crossing/markings_yes"],
+	"crossing/traffic_signal": ["crossing/light", "button_operated"],
+	"crossing/traffic_signal_more": ["traffic_signals/sound", "traffic_signals/vibration"],
 };
 
 /**
