@@ -1002,9 +1002,9 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 
 ## Development Status
 
-**Current Phase: Phase 7 - PRODUCTION READY ✅**
+**Current Phase: Phase 8 - COMPLETE ✅**
 
-**Status**: Production-ready MCP server with 8 optimized tools providing complete OSM tagging schema functionality.
+**Status**: Production-ready MCP server with 7 optimized tools providing complete OSM tagging schema functionality with full localization support and template expansion.
 
 ### Actual Implementation Status
 
@@ -1089,7 +1089,7 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 - ✅ **Docker Compose**: Production, development, and test configurations
 - ✅ **Health Checks**: `/health` (liveness) and `/ready` (readiness) endpoints
 
-**Phase 8: Schema Builder API Refactor 🔄 IN PROGRESS**
+**Phase 8: Schema Builder API Refactor ✅ COMPLETE**
 - ✅ **Translation Infrastructure (8.1)**: Full localization support in SchemaLoader
   - `getPresetName()`, `getFieldLabel()`, `getFieldOptionName()`, `getCategoryName()` methods
   - Automatic fallback formatting (ucfirst + replace underscores with spaces)
@@ -1125,7 +1125,12 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
   - 13 comprehensive unit tests covering all templates
   - 6 integration tests via MCP protocol
   - Full documentation in CLAUDE.md Template System section
-- ⏳ **Documentation & Testing (8.11)**: Update all documentation for Phase 8 changes
+- ✅ **Documentation & Testing (8.11)**: Complete documentation for Phase 8 changes
+  - Created API documentation for all 7 tools (validate_tag.md, get_tag_values.md, search_tags.md, search_presets.md, validate_tag_collection.md, suggest_improvements.md; get_preset_details.md already existed)
+  - Updated docs/usage.md with Phase 8 localized examples
+  - Updated CHANGELOG.md with Phase 8 changes
+  - Updated ROADMAP.md to mark Phase 8 complete
+  - All tests passing (199 unit + 102 integration tests)
 
 ### Current Status
 

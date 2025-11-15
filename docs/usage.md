@@ -206,7 +206,7 @@ const response = await client.callTool({
 
 #### `get_tag_values`
 
-Get all valid values for a tag key.
+Get all valid values for a tag key with localized names.
 
 **Example:**
 ```json
@@ -218,15 +218,34 @@ Get all valid values for a tag key.
 }
 ```
 
-**Returns:** Array of values sorted alphabetically (motorway, trunk, primary, secondary, etc.)
+**Returns:** Object with key information and detailed value list:
+```json
+{
+  "key": "highway",
+  "keyName": "Highway",
+  "values": ["motorway", "trunk", "primary", "secondary", "..."],
+  "valuesDetailed": [
+    {
+      "value": "motorway",
+      "valueName": "Motorway",
+      "description": "A restricted access major divided highway..."
+    },
+    {
+      "value": "trunk",
+      "valueName": "Trunk",
+      "description": "The most important roads in a country's system..."
+    }
+  ]
+}
+```
 
-**Use case:** Building a tag editor dropdown
+**Use case:** Building a tag editor dropdown with human-readable labels
 
 ---
 
 #### `search_tags`
 
-Search for tags by keyword.
+Search for tags by keyword with localized names. Returns separate lists for key matches and value matches.
 
 **Example 1:** Search by keyword
 ```json
@@ -239,7 +258,29 @@ Search for tags by keyword.
 }
 ```
 
-**Returns:** All tags containing "wheelchair" (wheelchair, toilets:wheelchair, etc.)
+**Returns:** Separate key and value matches with localized names:
+```json
+{
+  "keyMatches": [
+    {
+      "key": "wheelchair",
+      "keyName": "Wheelchair"
+    },
+    {
+      "key": "toilets:wheelchair",
+      "keyName": "Toilets Wheelchair"
+    }
+  ],
+  "valueMatches": [
+    {
+      "key": "access",
+      "keyName": "Access",
+      "value": "wheelchair",
+      "valueName": "Wheelchair"
+    }
+  ]
+}
+```
 
 **Example 2:** Find accessibility tags
 ```json
@@ -256,7 +297,7 @@ Search for tags by keyword.
 
 #### `search_presets`
 
-Search for presets by name or tag.
+Search for presets by name or tag with localized preset names.
 
 **Example 1:** Search by keyword
 ```json
@@ -265,6 +306,28 @@ Search for presets by name or tag.
   "arguments": {
     "keyword": "restaurant"
   }
+}
+```
+
+**Returns:** Matching presets with localized names and tags:
+```json
+{
+  "results": [
+    {
+      "id": "amenity/restaurant",
+      "name": "Restaurant",
+      "tags": { "amenity": "restaurant" },
+      "tagsDetailed": [
+        {
+          "key": "amenity",
+          "keyName": "Amenity",
+          "value": "restaurant",
+          "valueName": "Restaurant"
+        }
+      ],
+      "geometry": ["point", "area"]
+    }
+  ]
 }
 ```
 
@@ -289,8 +352,6 @@ Search for presets by name or tag.
   }
 }
 ```
-
-**Returns:** Matching presets with IDs and basic info
 
 ---
 
@@ -336,9 +397,13 @@ Validate a single tag key-value pair. Includes deprecation checking, field optio
 }
 ```
 
-**Returns:**
+**Returns (with localized names):**
 ```json
 {
+  "key": "amenity",
+  "keyName": "Amenity",
+  "value": "restaurant",
+  "valueName": "Restaurant",
   "valid": true,
   "deprecated": false,
   "message": "Tag amenity=restaurant is valid"
@@ -356,15 +421,27 @@ Validate a single tag key-value pair. Includes deprecation checking, field optio
 }
 ```
 
-**Returns:**
+**Returns (with localized replacement details):**
 ```json
 {
+  "key": "amenity",
+  "keyName": "Amenity",
+  "value": "park_bench",
+  "valueName": "Park Bench",
   "valid": true,
   "deprecated": true,
-  "message": "Tag amenity=park_bench is deprecated. Consider using: leisure=picnic_table",
+  "message": "Tag amenity=park_bench is deprecated. Consider using: Leisure=Picnic Table",
   "replacement": {
     "leisure": "picnic_table"
-  }
+  },
+  "replacementDetailed": [
+    {
+      "key": "leisure",
+      "keyName": "Leisure",
+      "value": "picnic_table",
+      "valueName": "Picnic Table"
+    }
+  ]
 }
 ```
 
@@ -392,7 +469,7 @@ Validate a single tag key-value pair. Includes deprecation checking, field optio
 
 #### `validate_tag_collection`
 
-Validate a complete set of tags.
+Validate a complete set of tags with simplified aggregated statistics.
 
 **Example:**
 ```json
@@ -411,20 +488,32 @@ Validate a complete set of tags.
 }
 ```
 
-**Returns:**
+**Returns (simplified Phase 8.6 format):**
 ```json
 {
-  "valid": true,
-  "tagResults": {
-    "amenity": { "valid": true, "errors": [], "warnings": [] },
-    "name": { "valid": true, "errors": [], "warnings": [] },
-    ...
-  },
-  "errors": [],
-  "warnings": [],
+  "validCount": 6,
   "deprecatedCount": 0,
   "errorCount": 0,
-  "warningCount": 0
+  "tagResults": {
+    "amenity": {
+      "key": "amenity",
+      "keyName": "Amenity",
+      "value": "restaurant",
+      "valueName": "Restaurant",
+      "valid": true,
+      "deprecated": false,
+      "message": "Tag amenity=restaurant is valid"
+    },
+    "name": {
+      "key": "name",
+      "keyName": "Name",
+      "value": "Pizza Place",
+      "valueName": "Pizza Place",
+      "valid": true,
+      "deprecated": false,
+      "message": "Tag name=Pizza Place is valid"
+    }
+  }
 }
 ```
 
@@ -434,7 +523,7 @@ Validate a complete set of tags.
 
 #### `suggest_improvements`
 
-Get suggestions for improving a tag collection.
+Get structured suggestions for improving a tag collection with localized names.
 
 **Example:**
 ```json
@@ -449,22 +538,40 @@ Get suggestions for improving a tag collection.
 }
 ```
 
-**Returns:**
+**Returns (structured Phase 8.7 format):**
 ```json
 {
   "suggestions": [
-    "Consider adding 'cuisine' tag (common for amenity/restaurant)",
-    "Consider adding 'phone' tag (common for amenity/restaurant)",
-    "Consider adding 'opening_hours' tag (common for amenity/restaurant)",
-    "Optional: Consider adding 'website' tag",
-    "Optional: Consider adding 'outdoor_seating' tag"
+    {
+      "operation": "add_missing_field",
+      "message": "Consider adding 'cuisine' tag (common for Restaurant preset)",
+      "key": "cuisine",
+      "keyName": "Cuisine"
+    },
+    {
+      "operation": "add_missing_field",
+      "message": "Consider adding 'phone' tag (common for Restaurant preset)",
+      "key": "phone",
+      "keyName": "Phone"
+    },
+    {
+      "operation": "add_missing_field",
+      "message": "Consider adding 'opening_hours' tag (common for Restaurant preset)",
+      "key": "opening_hours",
+      "keyName": "Opening Hours"
+    }
   ],
-  "warnings": [],
-  "matchedPresets": ["amenity/restaurant", "amenity/fast_food"]
+  "matchedPresets": ["amenity/restaurant"],
+  "matchedPresetsDetailed": [
+    {
+      "id": "amenity/restaurant",
+      "name": "Restaurant"
+    }
+  ]
 }
 ```
 
-**Use case:** Quality improvement for OSM features
+**Use case:** Quality improvement for OSM features with structured, actionable suggestions
 
 ## Workflow Examples
 
