@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { GeometryType, OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
-import type { PresetSearchResult } from "./types.js";
+import type { PresetSearchResult, TagDetailed } from "./types.js";
 
 /**
  * Options for searching presets
@@ -80,9 +80,42 @@ export async function searchPresets(
 
 		// Add to results if matches
 		if (matches) {
+			// Get localized preset name
+			const name = schemaLoader.getPresetName(presetId);
+
+			// Build tagsDetailed with localized names
+			const tagsDetailed: TagDetailed[] = Object.entries(preset.tags).map(([key, value]) => {
+				// Get localized key name (field label)
+				const keyName = schemaLoader.getFieldLabel(key);
+
+				// Get localized value name
+				const field = schemaLoader.findFieldByKey(key);
+				let valueName = value;
+
+				if (field && value !== "*") {
+					const optionInfo = schemaLoader.getFieldOptionName(key, value);
+					valueName = optionInfo.title;
+				} else if (value === "*") {
+					// For wildcard values, use asterisk as-is
+					valueName = "*";
+				} else {
+					// No field definition, use formatted fallback
+					valueName = value.charAt(0).toUpperCase() + value.slice(1).replace(/_/g, " ");
+				}
+
+				return {
+					key,
+					keyName,
+					value,
+					valueName,
+				};
+			});
+
 			results.push({
 				id: presetId,
+				name,
 				tags: preset.tags,
+				tagsDetailed,
 				geometry: preset.geometry,
 			});
 

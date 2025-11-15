@@ -588,7 +588,7 @@
 - [ ] Update API documentation (`docs/api/suggest_improvements.md`)
 - [ ] Update usage examples (`docs/examples.md`)
 
-#### 8.8: search_presets Refactor ⏳
+#### 8.8: search_presets Refactor ✅
 
 **Current Response:**
 ```typescript
@@ -620,15 +620,15 @@
 - **Add:** `tagsDetailed` - detailed tags with names (keep old `tags` for backward compatibility)
 
 **Tasks:**
-- [ ] Update `search-presets.ts` implementation
+- [x] Update `search-presets.ts` implementation
   - Add `tagsDetailed` with translation lookups for tag names
-- [ ] Update input schema (no changes needed)
-- [ ] Update unit tests (`tests/tools/search-presets.test.ts`)
+- [x] Update input schema (no changes needed)
+- [x] Update unit tests (`tests/tools/search-presets.test.ts`)
   - Update assertions for new response format
   - Test tagsDetailed format
-- [ ] Update integration tests (`tests/integration/search-presets.test.ts`)
-- [ ] Update API documentation (`docs/api/search_presets.md`)
-- [ ] Update usage examples (`docs/examples.md`)
+- [x] Update integration tests (`tests/integration/search-presets.test.ts`)
+- [x] Update API documentation (`docs/api/README.md`)
+- [x] Update usage examples (`docs/examples.md`)
 
 #### 8.9: Localization Enhancements ⏳
 

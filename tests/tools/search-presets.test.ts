@@ -23,8 +23,20 @@ describe("search_presets", () => {
 			const first = results[0];
 			assert.ok(first, "Should have first result");
 			assert.ok(typeof first.id === "string", "Should have id property");
+			assert.ok(typeof first.name === "string", "Should have name property");
 			assert.ok(typeof first.tags === "object", "Should have tags property");
+			assert.ok(Array.isArray(first.tagsDetailed), "Should have tagsDetailed array");
 			assert.ok(Array.isArray(first.geometry), "Should have geometry array");
+
+			// Verify tagsDetailed structure
+			if (first.tagsDetailed.length > 0) {
+				const firstTag = first.tagsDetailed[0];
+				assert.ok(firstTag, "Should have first tag detail");
+				assert.ok(typeof firstTag.key === "string", "Tag detail should have key");
+				assert.ok(typeof firstTag.keyName === "string", "Tag detail should have keyName");
+				assert.ok(typeof firstTag.value === "string", "Tag detail should have value");
+				assert.ok(typeof firstTag.valueName === "string", "Tag detail should have valueName");
+			}
 		});
 
 		it("should search presets by tag", async () => {
@@ -103,6 +115,15 @@ describe("search_presets", () => {
 					preset.geometry,
 					`Geometry for ${result.id} should match JSON`,
 				);
+
+				// Verify new fields exist
+				assert.ok(result.name, `Preset ${result.id} should have name`);
+				assert.ok(result.tagsDetailed, `Preset ${result.id} should have tagsDetailed`);
+				assert.strictEqual(
+					result.tagsDetailed.length,
+					Object.keys(result.tags).length,
+					`Preset ${result.id} should have same number of tags in tagsDetailed as tags`,
+				);
 			}
 		});
 
@@ -127,7 +148,9 @@ describe("search_presets", () => {
 			// CRITICAL: Validate EACH result individually
 			for (const result of results) {
 				assert.ok(result.id, "Should have preset ID");
+				assert.ok(result.name, "Should have name");
 				assert.ok(result.tags, "Should have tags");
+				assert.ok(result.tagsDetailed, "Should have tagsDetailed");
 				assert.ok(result.geometry, "Should have geometry");
 
 				// Verify in JSON
@@ -138,6 +161,21 @@ describe("search_presets", () => {
 					jsonPreset.tags,
 					`Preset ${result.id} tags should match JSON`,
 				);
+
+				// Verify tagsDetailed structure
+				for (const tagDetail of result.tagsDetailed) {
+					assert.ok(tagDetail.key, "Tag detail should have key");
+					assert.ok(tagDetail.keyName, "Tag detail should have keyName");
+					assert.ok(tagDetail.value !== undefined, "Tag detail should have value");
+					assert.ok(tagDetail.valueName, "Tag detail should have valueName");
+
+					// Verify tag exists in preset tags
+					assert.strictEqual(
+						result.tags[tagDetail.key],
+						tagDetail.value,
+						`Tag ${tagDetail.key} should match in tags and tagsDetailed`,
+					);
+				}
 			}
 		});
 
