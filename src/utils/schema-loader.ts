@@ -240,7 +240,7 @@ export class SchemaLoader {
 	/**
 	 * Get the localized name for a preset
 	 * @param presetId - The preset ID (e.g., "amenity/restaurant")
-	 * @returns The localized name or the preset ID if not found
+	 * @returns The localized name or a formatted fallback name
 	 */
 	getPresetName(presetId: string): string {
 		if (!this.cache?.translations) {
@@ -252,50 +252,61 @@ export class SchemaLoader {
 			return translation.name;
 		}
 
-		// Fallback: return the preset ID as-is
-		return presetId;
+		// Fallback: format the preset ID (ucfirst + replace _ with spaces)
+		// For "amenity/restaurant" → take the value part after "/"
+		const parts = presetId.split("/");
+		const valuePart = parts.length > 1 ? parts[parts.length - 1] : presetId;
+		return this.formatFallbackName(valuePart || presetId);
 	}
 
 	/**
 	 * Get the localized label for a field
 	 * @param fieldKey - The field key (e.g., "parking", "amenity")
-	 * @returns The localized label or undefined if not found
+	 * @returns The localized label or a formatted fallback name
 	 */
-	getFieldLabel(fieldKey: string): string | undefined {
+	getFieldLabel(fieldKey: string): string {
 		if (!this.cache?.translations) {
 			throw new Error("Schema not loaded. Call loadSchema() first.");
 		}
 
 		const translation = this.cache.translations.en.presets.fields[fieldKey];
-		return translation?.label;
+		if (translation?.label) {
+			return translation.label;
+		}
+
+		// Fallback: format the field key (ucfirst + replace _ with spaces)
+		return this.formatFallbackName(fieldKey);
 	}
 
 	/**
 	 * Get the localized name for a field option (value)
 	 * @param fieldKey - The field key (e.g., "parking")
 	 * @param optionValue - The option value (e.g., "surface", "underground")
-	 * @returns The title and description, or undefined if not found
+	 * @returns The title and optional description, with formatted fallback
 	 */
 	getFieldOptionName(
 		fieldKey: string,
 		optionValue: string,
-	): { title: string; description?: string } | undefined {
+	): { title: string; description?: string } {
 		if (!this.cache?.translations) {
 			throw new Error("Schema not loaded. Call loadSchema() first.");
 		}
 
 		const fieldTranslation = this.cache.translations.en.presets.fields[fieldKey];
-		if (!fieldTranslation?.options) {
-			return undefined;
+		const option = fieldTranslation?.options?.[optionValue];
+
+		if (option) {
+			return option;
 		}
 
-		return fieldTranslation.options[optionValue];
+		// Fallback: format the option value (ucfirst + replace _ with spaces)
+		return { title: this.formatFallbackName(optionValue) };
 	}
 
 	/**
 	 * Get the localized name for a category
 	 * @param categoryId - The category ID (e.g., "category-building")
-	 * @returns The localized name or the category ID if not found
+	 * @returns The localized name or a formatted fallback name
 	 */
 	getCategoryName(categoryId: string): string {
 		if (!this.cache?.translations) {
@@ -307,8 +318,28 @@ export class SchemaLoader {
 			return translation.name;
 		}
 
-		// Fallback: return the category ID as-is
-		return categoryId;
+		// Fallback: format the category ID (ucfirst + replace _ with spaces)
+		// Remove "category-" prefix if present
+		const cleanId = categoryId.replace(/^category-/, "");
+		return this.formatFallbackName(cleanId);
+	}
+
+	/**
+	 * Generate a human-readable fallback name from a key/ID
+	 * Applies: uppercase first letter + replace underscores with spaces
+	 * @param key - The key or ID to format (e.g., "fast_food", "amenity/restaurant")
+	 * @returns Formatted name (e.g., "Fast food", "Amenity/restaurant")
+	 */
+	private formatFallbackName(key: string): string {
+		// Replace underscores with spaces
+		const withSpaces = key.replace(/_/g, " ");
+
+		// Uppercase first letter
+		if (withSpaces.length === 0) {
+			return withSpaces;
+		}
+
+		return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
 	}
 
 	/**
