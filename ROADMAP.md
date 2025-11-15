@@ -2,20 +2,20 @@
 
 ## TL;DR
 
-**Current Status:** ✅ Production Ready (Phase 6 Complete)
+**Current Status:** ✅ Production Ready (Phase 7 Complete)
 
 **What's Done:**
 - ✅ 7 fully functional MCP tools for OSM tagging (query, presets, validation)
-- ✅ Comprehensive testing: 406 tests with 100% pass rate, full JSON data integrity validation
+- ✅ Comprehensive testing: 301 tests with 100% pass rate, full JSON data integrity validation
 - ✅ Multiple deployment options: npx, Docker, source installation
 - ✅ Security: npm provenance (SLSA Level 3), Docker image signing, SBOM generation
 - ✅ Transport protocols: stdio (default), HTTP/SSE for web clients
 - ✅ Complete documentation: installation, configuration, usage, API reference, troubleshooting
 
-**What's Next (Phase 7):**
-- Service infrastructure: Authentication, rate limiting
-- Advanced validation: Geometry constraints, field inheritance, quality scoring
-- Additional tools based on community feedback
+**What's Next (Phase 8):**
+- Schema Builder API Refactor: Translation support, improved response formats
+- No new tools planned - focus on enhancing existing 7 tools
+- Advanced validation features in future phases (geometry constraints, field inheritance)
 
 **Quick Links:**
 - [Installation](./docs/installation.md) - Get started in 2 minutes with npx
@@ -50,42 +50,39 @@
 
 ### Phase 3: Core Tool Implementation ✅
 
-**Status:** Complete - All 7 Tools Implemented
+**Status:** Complete - 7 Tools Implemented
 
-**Tag Query Tools:**
-- ~~✅ `get_tag_info` - Comprehensive tag key information~~ (removed)
-- ✅ `get_tag_values` - All possible values for a tag
-- ~~✅ `get_related_tags` - Find commonly used tag combinations~~ (removed)
-- ✅ `search_tags` - Search tags by keyword
+**Tag Query Tools (2 tools):**
+- ✅ `get_tag_values` - Get all possible values for a tag key with descriptions
+- ✅ `search_tags` - Search for tags by keyword in keys and values
 
-**Preset Tools:**
-- ✅ `search_presets` - Search presets by keyword/tag
-- ✅ `get_preset_details` - Complete preset configuration
-- ~~✅ `get_preset_tags` - Recommended tags for presets~~ (removed)
+**Preset Discovery Tools (2 tools):**
+- ✅ `search_presets` - Search presets by keyword/tag with geometry filtering
+- ✅ `get_preset_details` - Get complete preset configuration (tags, geometry, fields)
 
-**Validation Tools:**
-- ✅ `validate_tag` - Single tag validation
-- ✅ `validate_tag_collection` - Collection validation with statistics
-- ~~✅ `check_deprecated` - Deprecation checking with replacements~~ (removed)
-- ✅ `suggest_improvements` - Tag collection improvement suggestions
+**Validation Tools (3 tools):**
+- ✅ `validate_tag` - Validate single tag (includes deprecation checking)
+- ✅ `validate_tag_collection` - Validate tag collections with statistics
+- ✅ `suggest_improvements` - Suggest improvements for tag collections
 
-**~~Schema Exploration Tools:~~** (removed)
-- ~~✅ `get_categories` - List all categories~~ (removed)
-- ~~✅ `get_category_tags` - Tags in specific categories~~ (removed)
-- ~~✅ `get_schema_stats` - Schema statistics with version info~~ (removed)
+**Design Philosophy:**
+- Optimized set with no redundancy - 7 additional tools considered but deemed redundant
+- Removed tools: `get_tag_info`, `get_related_tags`, `get_preset_tags`, `get_categories`, `get_category_tags`, `get_schema_stats`
+- `check_deprecated` merged into `validate_tag` for cleaner API
+- Current 7 tools provide complete functionality without duplication
 
 ### Phase 4: Testing ✅
 
 **Status:** Complete
 
 **Achievements:**
-- 299 unit tests passing
-- 107 integration tests passing
+- 301 total tests (199 unit + 102 integration)
+- 100% pass rate
 - JSON Data Integrity Tests against source schema data
-- 100% coverage: ALL 799 tag keys + ALL 1707 presets validated
+- Complete coverage: ALL 799 tag keys + ALL 1707 presets validated
 - Bidirectional validation for complete data integrity
-- Order-independent test assertions
 - Modular test structure (one file per tool)
+- Shared test utilities and helpers
 
 ### Phase 5: Documentation ✅
 

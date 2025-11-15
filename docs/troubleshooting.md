@@ -219,7 +219,7 @@ Server connected, but no tools available
 # 1. Test server directly
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx @gander-tools/osm-tagging-schema-mcp
 
-# Should return JSON with 14 tools
+# Should return JSON with 7 tools
 
 # 2. Check server version
 npx @gander-tools/osm-tagging-schema-mcp --version
@@ -280,7 +280,7 @@ free -h  # Memory
 top      # CPU usage
 
 # 3. Test specific tool
-echo '{"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "get_schema_stats"}, "id": 1}' | npx @gander-tools/osm-tagging-schema-mcp
+echo '{"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "get_tag_values", "arguments": {"tagKey": "amenity"}}, "id": 1}' | npx @gander-tools/osm-tagging-schema-mcp
 
 # 4. Restart server (clears cache)
 
@@ -320,7 +320,7 @@ npx @gander-tools/osm-tagging-schema-mcp
 
 **Symptom:**
 ```
-Error: Tool 'get_tag_info' not found
+Error: Tool 'get_tag_values' not found
 ```
 
 **Solution:**
@@ -329,8 +329,8 @@ Error: Tool 'get_tag_info' not found
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx @gander-tools/osm-tagging-schema-mcp
 
 # 2. Check tool name spelling
-# Correct: get_tag_info
-# Incorrect: get-tag-info, getTagInfo
+# Correct: get_tag_values, search_tags, validate_tag
+# Incorrect: get-tag-values, getTagValues
 
 # 3. Verify server version
 npx @gander-tools/osm-tagging-schema-mcp --version

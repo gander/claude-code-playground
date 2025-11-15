@@ -17,12 +17,11 @@ A Model Context Protocol (MCP) server that provides tools for querying and valid
 
 ## Features
 
-**14 MCP Tools** organized into 4 categories:
+**7 MCP Tools** organized into 3 categories:
 
-- **Tag Query** (4 tools): Query tag information, values, search tags, find related tags
-- **Preset Discovery** (3 tools): Search and explore OSM presets with detailed configurations
-- **Validation** (4 tools): Validate tags, check for deprecated tags, suggest improvements
-- **Schema Exploration** (3 tools): Browse categories, get statistics, explore schema structure
+- **Tag Query** (2 tools): Query tag values and search tags
+- **Preset Discovery** (2 tools): Search and explore OSM presets with detailed configurations
+- **Validation** (3 tools): Validate tags, check for deprecated tags, suggest improvements
 
 📖 **Full tool reference**: [docs/api/](./docs/api/)
 
@@ -75,11 +74,11 @@ Add to your Claude Desktop configuration:
 📖 **Configuration guides**:
 - [docs/configuration.md](./docs/configuration.md) - Setup for Claude Code/Desktop and custom clients
 - [docs/usage.md](./docs/usage.md) - Usage examples, workflows, and advanced deployment
-- [docs/api/](./docs/api/) - Complete API reference for all 14 tools
+- [docs/api/](./docs/api/) - Complete API reference for all 7 tools
 
 ## Development
 
-Built with **Test-Driven Development (TDD)** - 406 tests (299 unit + 107 integration) with 100% pass rate.
+Built with **Test-Driven Development (TDD)** - 301 tests (199 unit + 102 integration) with 100% pass rate.
 
 ```bash
 npm install    # Install dependencies

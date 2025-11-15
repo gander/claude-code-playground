@@ -145,7 +145,7 @@ console.log("Available tools:", tools.tools.map(t => t.name));
 
 // Call a tool
 const response = await client.callTool({
-  name: "get_tag_info",
+  name: "get_tag_values",
   arguments: {
     tagKey: "amenity"
   }
@@ -430,7 +430,7 @@ After configuration, verify the server is working:
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx @gander-tools/osm-tagging-schema-mcp
 ```
 
-**Expected:** JSON response with 14 tools listed
+**Expected:** JSON response with 7 tools listed
 
 ## Troubleshooting Configuration
 
@@ -465,7 +465,7 @@ echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx @gander-tools/o
 
 ### Tools Not Available
 
-**Symptom:** "Tool 'get_tag_info' not found"
+**Symptom:** "Tool 'get_tag_values' not found"
 
 **Solutions:**
 1. Verify server version: `npx @gander-tools/osm-tagging-schema-mcp --version`

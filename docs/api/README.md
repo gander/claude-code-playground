@@ -4,13 +4,13 @@ Complete reference for all 7 MCP tools provided by the OSM Tagging Schema MCP Se
 
 ## Overview
 
-The server provides tools organized into three categories:
+The server provides 7 tools organized into three categories:
 
 | Category | Tools | Description |
 |----------|-------|-------------|
-| **Tag Query** | 2 tools | Query tag information and values |
+| **Tag Query** | 2 tools | Query tag values and search tags |
 | **Preset Discovery** | 2 tools | Search and explore OSM presets |
-| **Validation** | 3 tools | Validate tags and get improvements |
+| **Validation** | 3 tools | Validate tags and suggest improvements |
 
 ## Quick Reference
 
@@ -101,9 +101,9 @@ All tools use data from `@openstreetmap/id-tagging-schema` library:
 
 ## Version Information
 
-- **MCP Server Version**: 0.1.0
+- **MCP Server Version**: 0.2.1
 - **Schema Library**: @openstreetmap/id-tagging-schema ^6.7.3
-- **MCP SDK**: @modelcontextprotocol/sdk ^1.0.4
+- **MCP SDK**: @modelcontextprotocol/sdk ^1.21.1
 
 ## Tool Details
 
@@ -119,7 +119,7 @@ Click on any tool name above for detailed documentation including:
 ### Basic Query
 ```json
 {
-  "name": "get_tag_info",
+  "name": "get_tag_values",
   "arguments": {
     "tagKey": "amenity"
   }

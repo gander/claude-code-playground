@@ -43,40 +43,39 @@ const response = await client.callTool({
 
 ### 1. Exploring Available Tags
 
-**Question:** "What tags can I use for a parking facility?"
+**Question:** "What values can I use for the parking tag?"
 
-**Tool:** `get_tag_info`
+**Tool:** `get_tag_values`
 
 ```json
 {
-  "name": "get_tag_info",
+  "name": "get_tag_values",
   "arguments": {
     "tagKey": "parking"
   }
 }
 ```
 
-**Response:** All possible values for `parking` tag (surface, underground, multi-storey, etc.)
+**Response:** All possible values for `parking` tag (surface, underground, multi-storey, etc.) with descriptions
 
 ---
 
-### 2. Finding Related Tags
+### 2. Searching for Tags by Keyword
 
-**Question:** "What other tags are commonly used with amenity=restaurant?"
+**Question:** "What tags are related to wheelchair accessibility?"
 
-**Tool:** `get_related_tags`
+**Tool:** `search_tags`
 
 ```json
 {
-  "name": "get_related_tags",
+  "name": "search_tags",
   "arguments": {
-    "tag": "amenity=restaurant",
-    "limit": 10
+    "query": "wheelchair"
   }
 }
 ```
 
-**Response:** Top 10 related tags sorted by frequency (cuisine, opening_hours, wheelchair, etc.)
+**Response:** All tags containing "wheelchair" (wheelchair, toilets:wheelchair, etc.)
 
 ---
 
@@ -205,37 +204,6 @@ const response = await client.callTool({
 
 ### Tag Query Tools
 
-#### `get_tag_info`
-
-Get comprehensive information about a specific tag key.
-
-**Example 1:** Basic tag info
-```json
-{
-  "name": "get_tag_info",
-  "arguments": {
-    "tagKey": "building"
-  }
-}
-```
-
-**Returns:**
-- All possible values (yes, house, commercial, etc.)
-- Value type information
-- Field definition status
-
-**Example 2:** Complex tag with colons
-```json
-{
-  "name": "get_tag_info",
-  "arguments": {
-    "tagKey": "toilets:wheelchair"
-  }
-}
-```
-
----
-
 #### `get_tag_values`
 
 Get all valid values for a tag key.
@@ -280,38 +248,6 @@ Search for tags by keyword.
   "arguments": {
     "keyword": "access",
     "limit": 50
-  }
-}
-```
-
----
-
-#### `get_related_tags`
-
-Find tags commonly used together.
-
-**Example 1:** Related tags for a specific tag
-```json
-{
-  "name": "get_related_tags",
-  "arguments": {
-    "tag": "amenity=cafe"
-  }
-}
-```
-
-**Returns:** Tags sorted by frequency:
-- `cuisine=*` (80% frequency)
-- `opening_hours=*` (65% frequency)
-- `outdoor_seating=*` (45% frequency)
-
-**Example 2:** Related tags by key only
-```json
-{
-  "name": "get_related_tags",
-  "arguments": {
-    "tag": "shop",
-    "limit": 15
   }
 }
 ```
@@ -382,28 +318,6 @@ Get complete information about a preset.
 - Match score
 
 **Use case:** Building a feature editor
-
----
-
-#### `get_preset_tags`
-
-Get recommended tags for a preset.
-
-**Example:**
-```json
-{
-  "name": "get_preset_tags",
-  "arguments": {
-    "presetId": "amenity/parking"
-  }
-}
-```
-
-**Returns:**
-- `tags`: Identifying tags (amenity=parking)
-- `addTags`: Additional recommended tags (if any)
-
-**Use case:** Auto-tagging features
 
 ### Validation Tools
 
@@ -552,74 +466,6 @@ Get suggestions for improving a tag collection.
 
 **Use case:** Quality improvement for OSM features
 
-### Schema Exploration Tools
-
-#### `get_categories`
-
-List all available tag categories.
-
-**Example:**
-```json
-{
-  "name": "get_categories",
-  "arguments": {}
-}
-```
-
-**Returns:** Array of categories sorted alphabetically:
-```json
-[
-  { "name": "Amenity", "count": 245 },
-  { "name": "Building", "count": 89 },
-  { "name": "Highway", "count": 67 },
-  ...
-]
-```
-
----
-
-#### `get_category_tags`
-
-Get all tags in a specific category.
-
-**Example:**
-```json
-{
-  "name": "get_category_tags",
-  "arguments": {
-    "category": "Building"
-  }
-}
-```
-
-**Returns:** Array of preset IDs in that category
-
----
-
-#### `get_schema_stats`
-
-Get statistics about the schema.
-
-**Example:**
-```json
-{
-  "name": "get_schema_stats",
-  "arguments": {}
-}
-```
-
-**Returns:**
-```json
-{
-  "presetCount": 1707,
-  "fieldCount": 799,
-  "categoryCount": 15,
-  "deprecatedCount": 245
-}
-```
-
-**Use case:** Schema overview, debugging
-
 ## Workflow Examples
 
 ### Workflow 1: Adding a New Restaurant
@@ -632,7 +478,7 @@ Get statistics about the schema.
 }
 ```
 
-**Step 2:** Get preset details
+**Step 2:** Get preset details (includes tags and fields)
 ```json
 {
   "name": "get_preset_details",
@@ -640,15 +486,7 @@ Get statistics about the schema.
 }
 ```
 
-**Step 3:** Check recommended tags
-```json
-{
-  "name": "get_preset_tags",
-  "arguments": { "presetId": "amenity/restaurant" }
-}
-```
-
-**Step 4:** Create initial tags
+**Step 3:** Create initial tags
 ```json
 {
   "amenity": "restaurant",
@@ -711,31 +549,18 @@ Get statistics about the schema.
 
 ### Workflow 3: Building a Tag Editor
 
-**Step 1:** Get schema statistics (for UI)
+**Step 1:** Search for presets by category/keyword
 ```json
 {
-  "name": "get_schema_stats",
-  "arguments": {}
+  "name": "search_presets",
+  "arguments": {
+    "keyword": "amenity",
+    "limit": 50
+  }
 }
 ```
 
-**Step 2:** List categories (for navigation)
-```json
-{
-  "name": "get_categories",
-  "arguments": {}
-}
-```
-
-**Step 3:** Get tags in category (for display)
-```json
-{
-  "name": "get_category_tags",
-  "arguments": { "category": "Amenity" }
-}
-```
-
-**Step 4:** Get tag values (for dropdown)
+**Step 2:** Get tag values for dropdowns
 ```json
 {
   "name": "get_tag_values",
@@ -743,7 +568,7 @@ Get statistics about the schema.
 }
 ```
 
-**Step 5:** Validate user input (real-time)
+**Step 3:** Validate user input (real-time)
 ```json
 {
   "name": "validate_tag",
@@ -751,6 +576,14 @@ Get statistics about the schema.
     "key": "amenity",
     "value": "restaurant"
   }
+}
+```
+
+**Step 4:** Get preset details for selected feature
+```json
+{
+  "name": "get_preset_details",
+  "arguments": { "presetId": "amenity/restaurant" }
 }
 ```
 
@@ -1016,17 +849,31 @@ For large queries, use `limit` parameter:
 ### 6. Combine Tools for Rich Experiences
 
 ```typescript
-// Get tag info
-const tagInfo = await client.callTool({
-  name: "get_tag_info",
-  arguments: { tagKey: "amenity" }
+// Search for tags by keyword
+const tagResults = await client.callTool({
+  name: "search_tags",
+  arguments: { query: "wheelchair" }
 });
 
-// For each value, get related tags
-for (const value of tagInfo.values) {
-  const related = await client.callTool({
-    name: "get_related_tags",
-    arguments: { tag: `amenity=${value}` }
+// For each tag, get all possible values
+for (const tag of tagResults) {
+  const values = await client.callTool({
+    name: "get_tag_values",
+    arguments: { tagKey: tag.key }
+  });
+}
+
+// Search for matching presets
+const presets = await client.callTool({
+  name: "search_presets",
+  arguments: { keyword: "restaurant" }
+});
+
+// Get details for each preset
+for (const preset of presets) {
+  const details = await client.callTool({
+    name: "get_preset_details",
+    arguments: { presetId: preset.id }
   });
 }
 ```
