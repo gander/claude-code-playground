@@ -251,4 +251,143 @@ describe("get_preset_details integration", () => {
 			assert.ok(result.fields.includes("building"));
 		});
 	});
+
+	describe("Template System (Phase 8.10)", () => {
+		it("should expand {@templates/contact} template via MCP", async () => {
+			const response = await client.callTool({
+				name: "get_preset_details",
+				arguments: { presetId: "polling_station" },
+			});
+
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			// Contact template should be expanded in moreFields
+			assert.ok(result.moreFields);
+
+			// Template reference should not be present
+			assert.ok(!result.moreFields.includes("{@templates/contact}"));
+
+			// Contact fields should be present
+			const allFields = [...(result.fields || []), ...(result.moreFields || [])];
+			const contactFields = ["email", "phone", "website", "fax"];
+			for (const field of contactFields) {
+				assert.ok(allFields.includes(field), `Contact field "${field}" should be present`);
+			}
+		});
+
+		it("should expand {@templates/internet_access} template via MCP", async () => {
+			const response = await client.callTool({
+				name: "get_preset_details",
+				arguments: { presetId: "shop" },
+			});
+
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			assert.ok(result.moreFields);
+
+			// Template reference should not be present
+			assert.ok(!result.moreFields.includes("{@templates/internet_access}"));
+
+			// Internet access fields should be present
+			const internetFields = ["internet_access", "internet_access/fee", "internet_access/ssid"];
+			for (const field of internetFields) {
+				assert.ok(result.moreFields.includes(field), `Internet field "${field}" should be present`);
+			}
+		});
+
+		it("should expand {@templates/poi} template via MCP", async () => {
+			const response = await client.callTool({
+				name: "get_preset_details",
+				arguments: { presetId: "shop" },
+			});
+
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			// POI template: name, address
+			const allFields = [...(result.fields || []), ...(result.moreFields || [])];
+
+			assert.ok(allFields.includes("name"), "POI field 'name' should be present");
+			assert.ok(allFields.includes("address"), "POI field 'address' should be present");
+
+			// Template reference should not be present
+			assert.ok(!allFields.includes("{@templates/poi}"));
+		});
+
+		it("should expand crossing templates via MCP", async () => {
+			const response = await client.callTool({
+				name: "get_preset_details",
+				arguments: { presetId: "highway/crossing" },
+			});
+
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			const allFields = [...(result.fields || []), ...(result.moreFields || [])];
+
+			// No template references should remain
+			for (const field of allFields) {
+				assert.ok(
+					!field.startsWith("{@templates/"),
+					`Field "${field}" should not be a template reference`,
+				);
+			}
+
+			// Should have crossing fields
+			const hasCrossingFields = allFields.some((f) => f.startsWith("crossing"));
+			assert.ok(hasCrossingFields, "Should have crossing fields after template expansion");
+		});
+
+		it("should handle multiple templates in same preset via MCP", async () => {
+			const response = await client.callTool({
+				name: "get_preset_details",
+				arguments: { presetId: "office" },
+			});
+
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			const allFields = [...(result.fields || []), ...(result.moreFields || [])];
+
+			// Office has both contact and internet_access templates
+			// No template references should remain
+			assert.ok(!allFields.includes("{@templates/contact}"));
+			assert.ok(!allFields.includes("{@templates/internet_access}"));
+
+			// Should have fields from both templates
+			const hasContactField = allFields.some((f) =>
+				["email", "phone", "website", "fax"].includes(f),
+			);
+			const hasInternetField = allFields.includes("internet_access");
+
+			assert.ok(hasContactField, "Should have contact field after template expansion");
+			assert.ok(hasInternetField, "Should have internet_access field after template expansion");
+		});
+
+		it("should expand templates for all presets in representative sample via MCP", async () => {
+			// Test that template expansion works consistently across schema
+			const presetsWithTemplates = Object.entries(presets).filter(([_, preset]) => {
+				const allFields = [...(preset.fields || []), ...(preset.moreFields || [])];
+				return allFields.some((f) => f.startsWith("{@templates/"));
+			});
+
+			// Test a sample
+			const sampleIds = presetsWithTemplates.slice(0, 20).map(([id, _]) => id);
+
+			for (const presetId of sampleIds) {
+				const response = await client.callTool({
+					name: "get_preset_details",
+					arguments: { presetId },
+				});
+
+				const result = JSON.parse((response.content[0] as { text: string }).text);
+				const allFields = [...(result.fields || []), ...(result.moreFields || [])];
+
+				// No template references should remain
+				for (const field of allFields) {
+					assert.ok(
+						!field.startsWith("{@templates/"),
+						`Preset ${presetId} should have all templates expanded (found ${field})`,
+					);
+				}
+			}
+		});
+	});
 });

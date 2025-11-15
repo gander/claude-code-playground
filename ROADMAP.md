@@ -670,21 +670,31 @@
   - Documented all localized fields, fallback logic, and examples
   - Added backward compatibility notes
 
-#### 8.10: Template System Implementation ⏳
+#### 8.10: Template System Implementation ✅
 
 **Objective:** Support field templates like `@templates/contact`
 
-**Template Definitions (from schema):**
-Common templates used in iD editor:
-- `@templates/contact`: `["contact:email", "contact:phone", "contact:website", "contact:fax"]`
-- `@templates/internet_access`: `["internet_access", "internet_access/fee", "internet_access/ssid"]`
-- `@templates/building_fields`: `["building:levels", "building:material", "roof:shape", "roof:colour"]`
+**Status:** COMPLETE - Field template expansion fully implemented
+
+**Template Definitions:**
+All 10 templates defined and validated against schema:
+- `contact`: `["email", "phone", "website", "fax"]` (89 presets)
+- `internet_access`: `["internet_access", "internet_access/fee", "internet_access/ssid"]` (73 presets)
+- `poi`: `["name", "address"]` (84 presets)
+- `crossing/markings`: `["crossing/markings"]`
+- `crossing/defaults`: `["crossing", "crossing/markings"]`
+- `crossing/geometry_way_more`: `["crossing/island"]`
+- `crossing/bicycle_more`: `[]` (empty - no fields exist in schema)
+- `crossing/markings_yes`: `["crossing/markings_yes"]`
+- `crossing/traffic_signal`: `["crossing/light", "button_operated"]`
+- `crossing/traffic_signal_more`: `["traffic_signals/sound", "traffic_signals/vibration"]`
 
 **Tasks:**
-- [ ] Extract template definitions from schema data
-- [ ] Create template expansion utility
-- [ ] Add template tests with real schema templates
-- [ ] Document template system in CLAUDE.md
+- [x] Verified template definitions against schema data (corrected field IDs)
+- [x] Fixed template expansion utility in `get-preset-details.ts`
+- [x] Added comprehensive unit tests (13 new tests covering all templates)
+- [x] Added integration tests (6 new tests via MCP protocol)
+- [x] Documented template system in CLAUDE.md (full specification)
 
 #### 8.11: Documentation & Testing ⏳
 
