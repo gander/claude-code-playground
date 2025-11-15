@@ -372,7 +372,7 @@
 - [ ] Update API documentation (`docs/api/search_tags.md`)
 - [ ] Update usage examples (`docs/examples.md`)
 
-#### 8.5: get_preset_details Refactor ⏳
+#### 8.5: get_preset_details Refactor ✅
 
 **Current Input:**
 - Only accepts preset ID: `"amenity/restaurant"`
@@ -429,32 +429,32 @@
   - Template definitions stored in schema data structure
 
 **Tasks:**
-- [ ] Update `get-preset-details.ts` input parsing
+- [x] Update `get-preset-details.ts` input parsing
   - Add parser for `"key=value"` format → lookup preset by tag
   - Add parser for `{"key": "value"}` format → lookup preset by tags
   - Keep existing `"preset/id"` format support
-- [ ] Implement field reference expansion
+- [x] Implement field reference expansion
   - Create utility to expand `{fieldRef}` references
   - Create utility to expand `@templates/X` references
   - Load template definitions from schema
-- [ ] Update response format
+- [x] Update response format
   - Remove `icon` field
   - Add `tagsDetailed` with translation lookups for tag names
   - Expand all field references before returning
-- [ ] Update input schema to accept multiple formats
+- [x] Update input schema to accept multiple formats
   ```typescript
   presetId: z.union([
     z.string(),  // "amenity/restaurant" or "amenity=restaurant"
     z.record(z.string())  // {"amenity": "restaurant"}
   ])
   ```
-- [ ] Unit tests (`tests/tools/get-preset-details.test.ts`)
+- [x] Unit tests (`tests/tools/get-preset-details.test.ts`)
   - Test all three input formats
   - Test field reference expansion
   - Test template expansion
-- [ ] Integration tests (`tests/integration/get-preset-details.test.ts`)
-- [ ] Update API documentation (`docs/api/get_preset_details.md`)
-- [ ] Update usage examples (`docs/examples.md`)
+- [x] Integration tests (`tests/integration/get-preset-details.test.ts`)
+- [x] Update API documentation (`docs/api/get_preset_details.md`)
+- [x] Update usage examples (`docs/examples.md`)
 
 #### 8.6: validate_tag_collection Refactor ⏳
 

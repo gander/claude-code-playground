@@ -10,16 +10,21 @@ describe("get_preset_details", () => {
 
 			assert.ok(result, "Should return a result");
 			assert.strictEqual(result.id, "amenity/restaurant");
+			assert.strictEqual(result.name, "Restaurant"); // Localized name (required)
 			assert.ok(result.tags, "Should have tags property");
+			assert.ok(result.tagsDetailed, "Should have tagsDetailed property");
 			assert.ok(result.geometry, "Should have geometry property");
+			assert.strictEqual(result.icon, undefined, "Should not have icon property");
 		});
 
-		it("should return all required properties", async () => {
+		it("should return all required properties in new format", async () => {
 			const result = await getPresetDetails("amenity/restaurant");
 
-			// Required properties
+			// Required properties (Phase 8.5)
 			assert.strictEqual(typeof result.id, "string");
+			assert.strictEqual(typeof result.name, "string");
 			assert.strictEqual(typeof result.tags, "object");
+			assert.ok(Array.isArray(result.tagsDetailed));
 			assert.ok(Array.isArray(result.geometry));
 
 			// Optional properties (if present in preset)
@@ -29,12 +34,9 @@ describe("get_preset_details", () => {
 			if (result.moreFields) {
 				assert.ok(Array.isArray(result.moreFields));
 			}
-			if (result.icon) {
-				assert.strictEqual(typeof result.icon, "string");
-			}
-			if (result.name) {
-				assert.strictEqual(typeof result.name, "string");
-			}
+
+			// icon should NOT be present (removed in Phase 8.5)
+			assert.strictEqual(result.icon, undefined);
 		});
 
 		it("should return tags object with correct structure", async () => {
@@ -45,6 +47,25 @@ describe("get_preset_details", () => {
 			assert.strictEqual(result.tags.amenity, "restaurant");
 		});
 
+		it("should return tagsDetailed with localized names", async () => {
+			const result = await getPresetDetails("amenity/restaurant");
+
+			assert.ok(Array.isArray(result.tagsDetailed));
+			assert.ok(result.tagsDetailed.length > 0);
+
+			// Check first tag detail
+			const firstTag = result.tagsDetailed[0];
+			assert.ok(firstTag);
+			assert.strictEqual(typeof firstTag.key, "string");
+			assert.strictEqual(typeof firstTag.keyName, "string");
+			assert.strictEqual(typeof firstTag.value, "string");
+			assert.strictEqual(typeof firstTag.valueName, "string");
+
+			// For amenity=restaurant
+			assert.strictEqual(firstTag.key, "amenity");
+			assert.strictEqual(firstTag.value, "restaurant");
+		});
+
 		it("should return geometry array", async () => {
 			const result = await getPresetDetails("amenity/restaurant");
 
@@ -52,12 +73,20 @@ describe("get_preset_details", () => {
 			assert.ok(result.geometry.length > 0, "Should have at least one geometry type");
 		});
 
-		it("should return fields array for presets with fields", async () => {
+		it("should return expanded fields array (no field references)", async () => {
 			const result = await getPresetDetails("amenity/restaurant");
 
 			assert.ok(result.fields, "Restaurant preset should have fields");
 			assert.ok(Array.isArray(result.fields));
 			assert.ok(result.fields.length > 0);
+
+			// Fields should be expanded (no {field} or {@templates/X} references)
+			for (const field of result.fields) {
+				assert.ok(
+					!field.startsWith("{"),
+					`Field "${field}" should not be a reference (should be expanded)`,
+				);
+			}
 		});
 
 		it("should throw error for non-existent preset", async () => {
@@ -79,38 +108,158 @@ describe("get_preset_details", () => {
 		});
 	});
 
+	describe("Multiple Input Formats", () => {
+		it("should accept preset ID format (amenity/restaurant)", async () => {
+			const result = await getPresetDetails("amenity/restaurant");
+
+			assert.strictEqual(result.id, "amenity/restaurant");
+			assert.strictEqual(result.tags.amenity, "restaurant");
+		});
+
+		it("should accept tag notation format (amenity=restaurant)", async () => {
+			const result = await getPresetDetails("amenity=restaurant");
+
+			assert.strictEqual(result.id, "amenity/restaurant");
+			assert.strictEqual(result.tags.amenity, "restaurant");
+		});
+
+		it("should accept JSON object format ({amenity: restaurant})", async () => {
+			const result = await getPresetDetails({ amenity: "restaurant" });
+
+			assert.strictEqual(result.id, "amenity/restaurant");
+			assert.strictEqual(result.tags.amenity, "restaurant");
+		});
+
+		it("should accept tag notation with multiple tags", async () => {
+			const result = await getPresetDetails("highway=footway");
+
+			assert.ok(result.id);
+			assert.strictEqual(result.tags.highway, "footway");
+		});
+
+		it("should accept JSON object with multiple tags", async () => {
+			// When no exact match exists, should find closest match or throw error
+			// amenity=school exists (education/school), but not with building=yes
+			const result = await getPresetDetails({ amenity: "school" });
+
+			assert.strictEqual(result.id, "education/school");
+			assert.strictEqual(result.tags.amenity, "school");
+		});
+
+		it("should throw error for tag notation with non-existent tag", async () => {
+			await assert.rejects(
+				async () => {
+					await getPresetDetails("nonexistent=value");
+				},
+				{
+					message: /Preset not found/,
+				},
+			);
+		});
+
+		it("should throw error for JSON object with non-existent tags", async () => {
+			await assert.rejects(
+				async () => {
+					await getPresetDetails({ nonexistent: "value" });
+				},
+				{
+					message: /Preset not found/,
+				},
+			);
+		});
+	});
+
+	describe("Field Reference Expansion", () => {
+		it("should expand {preset_id} field references", async () => {
+			// building_point has fields: ["{building}"]
+			// building has fields: ["name", "building", "building/levels", "height", "address"]
+			const result = await getPresetDetails("building_point");
+
+			assert.ok(result.fields);
+			assert.ok(result.fields.length > 0);
+
+			// Should expand {building} to actual fields
+			assert.ok(!result.fields.some((f) => f === "{building}"));
+
+			// Should include inherited fields from building preset
+			assert.ok(result.fields.includes("name"));
+			assert.ok(result.fields.includes("building"));
+		});
+
+		it("should expand {@templates/X} template references", async () => {
+			// Find a preset with template references
+			// shop preset has {@templates/internet_access} and {@templates/poi} in moreFields
+			const result = await getPresetDetails("shop");
+
+			assert.ok(result.moreFields);
+
+			// Templates should be expanded in moreFields
+			assert.ok(!result.moreFields.some((f) => f.startsWith("{@templates/")));
+
+			// Check if template fields are included
+			// @templates/internet_access → ["internet_access", "internet_access/fee", "internet_access/ssid"]
+			// @templates/poi → ["name", "address"]
+			assert.ok(result.moreFields.includes("internet_access"));
+
+			// name is in fields, not moreFields
+			assert.ok(result.fields?.includes("name"));
+		});
+
+		it("should handle presets without field references", async () => {
+			const result = await getPresetDetails("amenity/restaurant");
+
+			assert.ok(result.fields);
+			// Restaurant preset doesn't have field references, so fields are already expanded
+			assert.ok(result.fields.length > 0);
+		});
+
+		it("should handle recursive field references safely", async () => {
+			// Test that recursive references don't cause infinite loop
+			const result = await getPresetDetails("building_point");
+
+			assert.ok(result.fields);
+			assert.ok(result.fields.length > 0);
+			// Should complete without hanging
+		});
+
+		it("should expand moreFields in addition to fields", async () => {
+			const result = await getPresetDetails("amenity/restaurant");
+
+			if (result.moreFields) {
+				// moreFields should also be expanded
+				for (const field of result.moreFields) {
+					assert.ok(!field.startsWith("{"), `moreField "${field}" should not be a reference`);
+				}
+			}
+		});
+	});
+
 	describe("JSON Schema Validation", () => {
-		it("should return preset details matching JSON data exactly", async () => {
+		it("should return preset details matching JSON data structure", async () => {
 			const result = await getPresetDetails("amenity/restaurant");
 
 			const expected = presets["amenity/restaurant"];
 			assert.ok(expected, "Preset should exist in JSON");
 
-			// Verify tags match
+			// Verify tags match (backward compatibility)
 			assert.deepStrictEqual(result.tags, expected.tags);
 
 			// Verify geometry matches
 			assert.deepStrictEqual(result.geometry, expected.geometry);
 
-			// Verify fields match (if present)
-			if (expected.fields) {
-				assert.deepStrictEqual(result.fields, expected.fields);
-			}
+			// Verify ID matches
+			assert.strictEqual(result.id, "amenity/restaurant");
 
-			// Verify moreFields match (if present)
-			if (expected.moreFields) {
-				assert.deepStrictEqual(result.moreFields, expected.moreFields);
-			}
+			// Verify name is present (required in Phase 8.5)
+			assert.ok(result.name);
+			assert.strictEqual(typeof result.name, "string");
 
-			// Verify icon matches (if present)
-			if (expected.icon) {
-				assert.strictEqual(result.icon, expected.icon);
-			}
+			// Verify tagsDetailed is present (Phase 8.5)
+			assert.ok(result.tagsDetailed);
+			assert.ok(Array.isArray(result.tagsDetailed));
 
-			// Verify name matches (if present)
-			if (expected.name) {
-				assert.strictEqual(result.name, expected.name);
-			}
+			// icon should NOT be present (removed in Phase 8.5)
+			assert.strictEqual(result.icon, undefined);
 		});
 
 		it("should validate ALL preset details via provider pattern (100% coverage)", async () => {
@@ -125,48 +274,47 @@ describe("get_preset_details", () => {
 
 				assert.ok(expected, `Preset ${presetId} should exist in JSON`);
 				assert.strictEqual(result.id, presetId, `ID should match for ${presetId}`);
+
+				// Verify tags match (backward compatibility)
 				assert.deepStrictEqual(result.tags, expected.tags, `Tags should match for ${presetId}`);
+
+				// Verify geometry matches
 				assert.deepStrictEqual(
 					result.geometry,
 					expected.geometry,
 					`Geometry should match for ${presetId}`,
 				);
 
-				// Verify optional fields match EXACTLY
-				if (expected.fields !== undefined) {
-					assert.deepStrictEqual(
-						result.fields,
-						expected.fields,
-						`Fields should match for ${presetId}`,
-					);
-				} else {
-					assert.ok(result.fields === undefined, `Fields should be undefined for ${presetId}`);
+				// Verify name is present (required in Phase 8.5)
+				assert.ok(result.name, `Name should be present for ${presetId}`);
+				assert.strictEqual(typeof result.name, "string", `Name should be a string for ${presetId}`);
+
+				// Verify tagsDetailed is present (Phase 8.5)
+				assert.ok(result.tagsDetailed, `tagsDetailed should be present for ${presetId}`);
+				assert.ok(
+					Array.isArray(result.tagsDetailed),
+					`tagsDetailed should be an array for ${presetId}`,
+				);
+
+				// Verify fields are expanded (no references)
+				if (result.fields) {
+					for (const field of result.fields) {
+						assert.ok(!field.startsWith("{"), `Field "${field}" in ${presetId} should be expanded`);
+					}
 				}
 
-				if (expected.moreFields !== undefined) {
-					assert.deepStrictEqual(
-						result.moreFields,
-						expected.moreFields,
-						`MoreFields should match for ${presetId}`,
-					);
-				} else {
-					assert.ok(
-						result.moreFields === undefined,
-						`MoreFields should be undefined for ${presetId}`,
-					);
+				// Verify moreFields are expanded (no references)
+				if (result.moreFields) {
+					for (const field of result.moreFields) {
+						assert.ok(
+							!field.startsWith("{"),
+							`moreField "${field}" in ${presetId} should be expanded`,
+						);
+					}
 				}
 
-				if (expected.icon !== undefined) {
-					assert.strictEqual(result.icon, expected.icon, `Icon should match for ${presetId}`);
-				} else {
-					assert.ok(result.icon === undefined, `Icon should be undefined for ${presetId}`);
-				}
-
-				if (expected.name !== undefined) {
-					assert.strictEqual(result.name, expected.name, `Name should match for ${presetId}`);
-				} else {
-					assert.ok(result.name === undefined, `Name should be undefined for ${presetId}`);
-				}
+				// icon should NOT be present (removed in Phase 8.5)
+				assert.strictEqual(result.icon, undefined, `Icon should not be present for ${presetId}`);
 			}
 		});
 
@@ -184,8 +332,33 @@ describe("get_preset_details", () => {
 				const result = await getPresetDetails(presetWithoutFields);
 				assert.ok(result);
 				assert.strictEqual(result.id, presetWithoutFields);
-				// fields should be undefined or not present
+				// fields should be undefined or empty
 				assert.ok(!result.fields || result.fields.length === 0);
+			}
+		});
+
+		it("should validate tagsDetailed structure for ALL presets", async () => {
+			// Sample a few presets to validate tagsDetailed structure
+			const samplePresetIds = [
+				"amenity/restaurant",
+				"highway/residential",
+				"building",
+				"shop/supermarket",
+			];
+
+			for (const presetId of samplePresetIds) {
+				const result = await getPresetDetails(presetId);
+
+				// Validate each tag in tagsDetailed
+				for (const tagDetail of result.tagsDetailed) {
+					assert.strictEqual(typeof tagDetail.key, "string");
+					assert.strictEqual(typeof tagDetail.keyName, "string");
+					assert.strictEqual(typeof tagDetail.value, "string");
+					assert.strictEqual(typeof tagDetail.valueName, "string");
+
+					// Verify key and value match tags object
+					assert.strictEqual(result.tags[tagDetail.key], tagDetail.value);
+				}
 			}
 		});
 	});

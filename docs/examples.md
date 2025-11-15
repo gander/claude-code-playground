@@ -608,11 +608,18 @@ This document provides comprehensive examples for all 7 tools in the OSM Tagging
 
 ## 4. get_preset_details
 
-**Purpose**: Get complete details for a specific preset by its ID.
+**Purpose**: Get complete details for a specific preset including tags, geometry, fields, and metadata. Accepts multiple input formats (preset ID, tag notation, or tags object) and automatically expands field references.
 
-**Input**: `presetId` (string) - required
+**Input**: `presetId` (string | object) - required
 
-### Example 4.1: Valid Preset ID
+**Phase 8.5 Updates**:
+- Accepts three input formats (preset ID, tag notation, tags object)
+- Returns `tagsDetailed` with localized key/value names
+- Automatically expands field references and templates
+- Icon field removed (not essential for MCP context)
+- Name field now required (always includes localized preset name)
+
+### Example 4.1: Preset ID Format
 
 **Request**:
 ```json
@@ -629,70 +636,135 @@ This document provides comprehensive examples for all 7 tools in the OSM Tagging
   "tags": {
     "amenity": "restaurant"
   },
+  "tagsDetailed": [
+    {
+      "key": "amenity",
+      "keyName": "Amenity",
+      "value": "restaurant",
+      "valueName": "Restaurant"
+    }
+  ],
   "geometry": ["point", "area"],
-  "icon": "maki-restaurant",
   "fields": [
     "name",
     "cuisine",
     "diet_multi",
     "address",
-    "building_area",
+    "building_area_yes",
     "opening_hours",
     "capacity",
-    "takeaway",
-    "delivery",
-    "outdoor_seating",
-    "phone",
-    "payment_multi_fee",
-    "website",
-    "email",
-    "stars",
-    "internet_access/fee",
-    "wheelchair"
+    "takeaway"
   ],
   "moreFields": [
-    "{amenity}",
-    "air_conditioning",
-    "baby_feeding",
-    "changing_table",
-    "level",
-    "operator",
-    "smoking"
+    "contact:email",
+    "contact:phone",
+    "contact:website",
+    "contact:fax",
+    "internet_access",
+    "internet_access/fee",
+    "internet_access/ssid",
+    "outdoor_seating",
+    "delivery",
+    "smoking",
+    "wheelchair"
   ]
 }
 ```
 
-### Example 4.2: Valid Preset ID (Minimal Preset)
+### Example 4.2: Tag Notation Format (Phase 8.5)
 
 **Request**:
 ```json
 {
-  "presetId": "barrier/fence"
+  "presetId": "amenity=parking"
 }
 ```
 
 **Response**:
 ```json
 {
-  "id": "barrier/fence",
-  "name": "Fence",
+  "id": "amenity/parking",
+  "name": "Parking Lot",
   "tags": {
-    "barrier": "fence"
+    "amenity": "parking"
   },
-  "geometry": ["line", "area"],
-  "icon": "maki-fence",
-  "fields": [
-    "fence_type",
-    "height"
+  "tagsDetailed": [
+    {
+      "key": "amenity",
+      "keyName": "Amenity",
+      "value": "parking",
+      "valueName": "Parking"
+    }
   ],
-  "moreFields": [
-    "colour",
-    "material"
+  "geometry": ["point", "area"],
+  "fields": ["name", "parking", "operator", "address", "capacity"]
+}
+```
+
+### Example 4.3: Tags Object Format (Phase 8.5)
+
+**Request**:
+```json
+{
+  "presetId": {
+    "highway": "residential"
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "id": "highway/residential",
+  "name": "Residential Road",
+  "tags": {
+    "highway": "residential"
+  },
+  "tagsDetailed": [
+    {
+      "key": "highway",
+      "keyName": "Highway",
+      "value": "residential",
+      "valueName": "Residential"
+    }
+  ],
+  "geometry": ["line", "area"],
+  "fields": ["name", "ref", "surface", "maxspeed", "lanes", "oneway"]
+}
+```
+
+### Example 4.4: Field Reference Expansion (Phase 8.5)
+
+**Request**:
+```json
+{
+  "presetId": "building_point"
+}
+```
+
+**Response** (field references like `{building}` are automatically expanded):
+```json
+{
+  "id": "building_point",
+  "name": "Building",
+  "tags": {
+    "building": "*"
+  },
+  "tagsDetailed": [],
+  "geometry": ["point"],
+  "fields": [
+    "name",
+    "building",
+    "building/levels",
+    "height",
+    "address"
   ]
 }
 ```
 
-### Example 4.3: Invalid Preset ID (Non-Existent)
+_Note: The original preset has `fields: ["{building}"]`, which is expanded to the actual fields from the `building` preset._
+
+### Example 4.5: Invalid Preset ID (Non-Existent)
 
 **Request**:
 ```json
@@ -704,7 +776,7 @@ This document provides comprehensive examples for all 7 tools in the OSM Tagging
 **Response**: Error thrown:
 ```json
 {
-  "error": "Preset 'nonexistent/preset' not found in schema"
+  "error": "Preset 'nonexistent/preset' not found"
 }
 ```
 

@@ -121,16 +121,27 @@ export interface PresetSearchResult {
 }
 
 /**
- * Preset details interface
+ * Detailed tag information with localized names (Phase 8.5)
+ */
+export interface TagDetailed {
+	key: string; // Tag key (e.g., "amenity")
+	keyName: string; // Localized key name (e.g., "Amenity")
+	value: string; // Tag value (e.g., "restaurant")
+	valueName: string; // Localized value name (e.g., "Restaurant")
+}
+
+/**
+ * Preset details interface (Phase 8.5 format)
  */
 export interface PresetDetails {
 	id: string;
-	tags: Record<string, string>;
+	name: string; // Localized preset name (now required, not optional)
+	tags: Record<string, string>; // Backward compatibility: { "amenity": "restaurant" }
+	tagsDetailed: TagDetailed[]; // Detailed tags with names (Phase 8.5)
 	geometry: string[];
-	name?: string;
-	fields?: string[];
-	moreFields?: string[];
-	icon?: string;
+	fields?: string[]; // Expanded field references
+	moreFields?: string[]; // Expanded field references
+	// icon removed in Phase 8.5
 }
 
 /**
