@@ -1,85 +1,123 @@
 import { z } from "zod";
 import type { OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
-import type { TagSearchResult } from "./types.js";
+import { getTagValues } from "./get-tag-values.js";
+import type { KeyMatch, SearchTagsResponse, ValueMatch } from "./types.js";
 
 /**
- * Search for tags by keyword
+ * Search for tags by keyword (Phase 8.4 refactored version)
  *
- * @param keyword - Keyword to search for in tag keys (from fields), values, and preset names
- * @param limit - Maximum number of results to return (optional, returns all by default)
- * @returns Array of matching tags with key, value, and optional preset name
+ * @param keyword - Keyword to search for in tag keys and values
+ * @param limit - Maximum number of results to return (optional, default: 100)
+ * @returns Response object with keyMatches and valueMatches
  */
-export async function searchTags(keyword: string, limit?: number): Promise<TagSearchResult[]> {
+export async function searchTags(keyword: string, limit?: number): Promise<SearchTagsResponse> {
 	const schema = await schemaLoader.loadSchema();
-	const results: TagSearchResult[] = [];
-	const seen = new Set<string>(); // Track unique key-value pairs
+	const keyMatches: KeyMatch[] = [];
+	const valueMatches: ValueMatch[] = [];
+	const seenKeys = new Set<string>(); // Track keys we've already added to keyMatches
+	const seenValuePairs = new Set<string>(); // Track key=value pairs we've added to valueMatches
 
 	// Normalize keyword for case-insensitive search
 	const normalizedKeyword = keyword.toLowerCase();
 
+	// Apply limit (default: 100)
+	const effectiveLimit = limit ?? 100;
+	let totalResults = 0;
+
+	// Helper function to check if we've hit the limit
+	const hitLimit = (): boolean => {
+		totalResults = keyMatches.length + valueMatches.length;
+		return totalResults >= effectiveLimit;
+	};
+
 	// FIRST: Search through fields for matching tag keys
-	// This finds keys like "wheelchair" that exist in fields.json but not in preset tags
-	// Note: Field map keys are FILE PATHS (e.g., "toilets/wheelchair" → data/fields/toilets/wheelchair.json)
+	// This finds keys like "wheelchair" that exist in fields.json
+	// Field map keys are FILE PATHS (e.g., "toilets/wheelchair" → data/fields/toilets/wheelchair.json)
 	// The actual OSM tag is in field.key property (e.g., "toilets:wheelchair")
 	for (const [_fieldKey, field] of Object.entries(schema.fields)) {
 		// Use the actual OSM tag key from field.key (with colon separator)
-		// Some fields don't have a 'key' property, skip those
 		if (!field.key) continue;
 
 		const actualKey = field.key; // This is the real OSM tag (e.g., "parking:both")
-		if (actualKey.toLowerCase().includes(normalizedKeyword)) {
-			// If the field has predefined options, return them as search results
-			if (field.options && Array.isArray(field.options)) {
-				for (const option of field.options) {
-					if (typeof option === "string") {
-						const tagId = `${actualKey}=${option}`;
-						if (!seen.has(tagId)) {
-							seen.add(tagId);
-							results.push({
-								key: actualKey, // Use actual OSM key with colon
-								value: option,
-								presetName: undefined, // Field-based results don't have preset names
-							});
 
-							if (limit !== undefined && results.length >= limit) {
-								return results;
-							}
-						}
-					}
+		// Check if key matches the keyword
+		if (actualKey.toLowerCase().includes(normalizedKeyword)) {
+			// Key match: Get ALL values for this key
+			if (!seenKeys.has(actualKey)) {
+				seenKeys.add(actualKey);
+
+				// Use getTagValues to get all values for this key (with translations)
+				const tagValuesResponse = await getTagValues(actualKey);
+
+				keyMatches.push({
+					key: tagValuesResponse.key,
+					keyName: tagValuesResponse.keyName,
+					values: tagValuesResponse.values,
+					valuesDetailed: tagValuesResponse.valuesDetailed,
+				});
+
+				if (hitLimit()) {
+					return { keyMatches, valueMatches };
 				}
 			}
 		}
 	}
 
-	// THEN: Search through all presets
-	for (const [_presetId, preset] of Object.entries(schema.presets)) {
-		// Check preset name
-		const presetName = preset.name || "";
-		const matchesPresetName = presetName.toLowerCase().includes(normalizedKeyword);
-
-		// Check tags
+	// SECOND: Search through all presets for matching keys and values
+	for (const preset of Object.values(schema.presets)) {
+		// Search in preset.tags
 		for (const [key, value] of Object.entries(preset.tags)) {
 			const keyMatch = key.toLowerCase().includes(normalizedKeyword);
 			const valueMatch =
 				typeof value === "string" && value.toLowerCase().includes(normalizedKeyword);
 
-			if (keyMatch || valueMatch || matchesPresetName) {
-				// Skip wildcards and complex patterns
-				if (value && value !== "*" && !value.includes("|")) {
-					const tagId = `${key}=${value}`;
-					if (!seen.has(tagId)) {
-						seen.add(tagId);
-						results.push({
-							key,
-							value,
-							presetName: preset.name,
-						});
+			// Skip wildcards and complex patterns
+			if (!value || value === "*" || value.includes("|")) {
+				continue;
+			}
 
-						// Stop if we reached the limit (if limit is specified)
-						if (limit !== undefined && results.length >= limit) {
-							return results;
-						}
+			// KEY MATCH: Return ALL values for this key
+			if (keyMatch && !seenKeys.has(key)) {
+				seenKeys.add(key);
+
+				// Use getTagValues to get all values for this key (with translations)
+				const tagValuesResponse = await getTagValues(key);
+
+				keyMatches.push({
+					key: tagValuesResponse.key,
+					keyName: tagValuesResponse.keyName,
+					values: tagValuesResponse.values,
+					valuesDetailed: tagValuesResponse.valuesDetailed,
+				});
+
+				if (hitLimit()) {
+					return { keyMatches, valueMatches };
+				}
+			}
+
+			// VALUE MATCH: Return specific key-value pair
+			if (valueMatch && typeof value === "string") {
+				const pairId = `${key}=${value}`;
+				if (!seenValuePairs.has(pairId)) {
+					seenValuePairs.add(pairId);
+
+					// Get field key for translation lookup
+					const fieldKey = key.replace(/:/g, "/");
+
+					// Get localized names using schema loader's translation utilities
+					const keyName = schemaLoader.getFieldLabel(fieldKey);
+					const { title: valueName } = schemaLoader.getFieldOptionName(fieldKey, value);
+
+					valueMatches.push({
+						key,
+						keyName,
+						value,
+						valueName,
+					});
+
+					if (hitLimit()) {
+						return { keyMatches, valueMatches };
 					}
 				}
 			}
@@ -92,20 +130,47 @@ export async function searchTags(keyword: string, limit?: number): Promise<TagSe
 				const valueMatch =
 					typeof value === "string" && value.toLowerCase().includes(normalizedKeyword);
 
-				if (keyMatch || valueMatch || matchesPresetName) {
-					if (value && value !== "*" && !value.includes("|")) {
-						const tagId = `${key}=${value}`;
-						if (!seen.has(tagId)) {
-							seen.add(tagId);
-							results.push({
-								key,
-								value,
-								presetName: preset.name,
-							});
+				if (!value || value === "*" || value.includes("|")) {
+					continue;
+				}
 
-							if (limit !== undefined && results.length >= limit) {
-								return results;
-							}
+				// KEY MATCH
+				if (keyMatch && !seenKeys.has(key)) {
+					seenKeys.add(key);
+
+					const tagValuesResponse = await getTagValues(key);
+
+					keyMatches.push({
+						key: tagValuesResponse.key,
+						keyName: tagValuesResponse.keyName,
+						values: tagValuesResponse.values,
+						valuesDetailed: tagValuesResponse.valuesDetailed,
+					});
+
+					if (hitLimit()) {
+						return { keyMatches, valueMatches };
+					}
+				}
+
+				// VALUE MATCH
+				if (valueMatch && typeof value === "string") {
+					const pairId = `${key}=${value}`;
+					if (!seenValuePairs.has(pairId)) {
+						seenValuePairs.add(pairId);
+
+						const fieldKey = key.replace(/:/g, "/");
+						const keyName = schemaLoader.getFieldLabel(fieldKey);
+						const { title: valueName } = schemaLoader.getFieldOptionName(fieldKey, value);
+
+						valueMatches.push({
+							key,
+							keyName,
+							value,
+							valueName,
+						});
+
+						if (hitLimit()) {
+							return { keyMatches, valueMatches };
 						}
 					}
 				}
@@ -113,13 +178,14 @@ export async function searchTags(keyword: string, limit?: number): Promise<TagSe
 		}
 	}
 
-	return results;
+	return { keyMatches, valueMatches };
 }
 
 /**
  * Tool definition for search_tags following new OsmToolDefinition interface
  *
- * Search for tags by keyword in tag keys, values, and preset names.
+ * Search for tags by keyword in tag keys and values.
+ * Phase 8.4 refactored version with separate keyMatches and valueMatches.
  */
 const SearchTags: OsmToolDefinition<{
 	keyword: z.ZodString;
@@ -128,7 +194,8 @@ const SearchTags: OsmToolDefinition<{
 	name: "search_tags" as const,
 
 	config: () => ({
-		description: "Search for tags by keyword in tag keys, values, and preset names",
+		description:
+			"Search for tags by keyword in tag keys and values. Returns keyMatches (when keyword matches a tag key, shows all values) and valueMatches (when keyword matches a specific value).",
 		inputSchema: {
 			keyword: z.string().describe("Keyword to search for (case-insensitive)"),
 			limit: z.number().optional().describe("Maximum number of results to return (default: 100)"),
@@ -136,13 +203,13 @@ const SearchTags: OsmToolDefinition<{
 	}),
 
 	handler: async ({ keyword, limit }, _extra) => {
-		const results = await searchTags(keyword.trim(), limit);
+		const response = await searchTags(keyword.trim(), limit);
 
 		return {
 			content: [
 				{
 					type: "text" as const,
-					text: JSON.stringify(results, null, 2),
+					text: JSON.stringify(response, null, 2),
 				},
 			],
 		};

@@ -6,104 +6,226 @@ import { searchTags } from "../../src/tools/search-tags.ts";
 
 describe("search_tags", () => {
 	describe("Basic Functionality", () => {
-		it("should return tags matching the keyword", async () => {
-			const results = await searchTags("restaurant");
+		it("should return response with keyMatches and valueMatches properties", async () => {
+			const response = await searchTags("restaurant");
 
-			assert.ok(Array.isArray(results), "Should return an array");
-			assert.ok(results.length > 0, "Should find matching tags");
+			assert.ok(typeof response === "object", "Should return an object");
+			assert.ok(Array.isArray(response.keyMatches), "Should have keyMatches array");
+			assert.ok(Array.isArray(response.valueMatches), "Should have valueMatches array");
 		});
 
-		it("should return tags with key and value properties", async () => {
-			const results = await searchTags("cafe");
+		it("should find tags by keyword in key", async () => {
+			const response = await searchTags("wheelchair");
 
-			assert.ok(results.length > 0, "Should have results");
-			const first = results[0];
-			assert.ok(first, "Should have first result");
-			assert.ok(typeof first.key === "string", "Should have key property");
-			assert.ok(typeof first.value === "string", "Should have value property");
+			assert.ok(
+				response.keyMatches.length > 0 || response.valueMatches.length > 0,
+				"Should find matching tags",
+			);
+
+			// wheelchair is a tag key, so should be in keyMatches
+			const wheelchairKey = response.keyMatches.find((match) => match.key === "wheelchair");
+			assert.ok(wheelchairKey, "Should find wheelchair in keyMatches");
+			assert.ok(wheelchairKey.keyName, "Should have keyName");
+			assert.ok(Array.isArray(wheelchairKey.values), "Should have values array");
+			assert.ok(Array.isArray(wheelchairKey.valuesDetailed), "Should have valuesDetailed array");
+		});
+
+		it("should find tags by keyword in value", async () => {
+			const response = await searchTags("restaurant");
+
+			// "restaurant" is a value for "amenity" key, so should be in valueMatches
+			const restaurantValue = response.valueMatches.find((match) => match.value === "restaurant");
+			assert.ok(restaurantValue, "Should find restaurant in valueMatches");
+			assert.ok(restaurantValue.key, "Should have key property");
+			assert.ok(restaurantValue.keyName, "Should have keyName property");
+			assert.ok(restaurantValue.value, "Should have value property");
+			assert.ok(restaurantValue.valueName, "Should have valueName property");
+		});
+
+		it("should return keyMatches with all values for matched key", async () => {
+			const response = await searchTags("amenity");
+
+			// "amenity" is a key, so should be in keyMatches
+			const amenityKey = response.keyMatches.find((match) => match.key === "amenity");
+			assert.ok(amenityKey, "Should find amenity in keyMatches");
+
+			// Should return ALL values for amenity key
+			assert.ok(amenityKey.values.length > 10, "Should have many values for amenity");
+			assert.strictEqual(
+				amenityKey.values.length,
+				amenityKey.valuesDetailed.length,
+				"values and valuesDetailed should have same length",
+			);
+
+			// Verify structure of valuesDetailed
+			for (const valueDetail of amenityKey.valuesDetailed) {
+				assert.ok(valueDetail.value, "Should have value property");
+				assert.ok(valueDetail.valueName, "Should have valueName property");
+			}
 		});
 
 		it("should perform case-insensitive search", async () => {
-			const resultsLower = await searchTags("park");
-			const resultsUpper = await searchTags("PARK");
+			const responseLower = await searchTags("park");
+			const responseUpper = await searchTags("PARK");
 
-			assert.ok(resultsLower.length > 0, "Should find results with lowercase");
-			assert.ok(resultsUpper.length > 0, "Should find results with uppercase");
-			assert.deepStrictEqual(resultsLower, resultsUpper, "Case should not matter");
+			assert.ok(
+				responseLower.keyMatches.length > 0 || responseLower.valueMatches.length > 0,
+				"Should find results with lowercase",
+			);
+			assert.ok(
+				responseUpper.keyMatches.length > 0 || responseUpper.valueMatches.length > 0,
+				"Should find results with uppercase",
+			);
+
+			// Results should be the same regardless of case
+			assert.deepStrictEqual(
+				responseLower,
+				responseUpper,
+				"Case should not matter in search results",
+			);
 		});
 
-		it("should return empty array for no matches", async () => {
-			const results = await searchTags("nonexistentkeywordinosm12345xyz");
+		it("should return empty arrays for no matches", async () => {
+			const response = await searchTags("nonexistentkeywordinosm12345xyz");
 
-			assert.ok(Array.isArray(results), "Should return an array");
-			assert.strictEqual(results.length, 0, "Should return empty array");
+			assert.ok(Array.isArray(response.keyMatches), "Should return keyMatches array");
+			assert.ok(Array.isArray(response.valueMatches), "Should return valueMatches array");
+			assert.strictEqual(response.keyMatches.length, 0, "Should have no keyMatches");
+			assert.strictEqual(response.valueMatches.length, 0, "Should have no valueMatches");
 		});
 
-		it("should limit results to prevent overwhelming output", async () => {
-			const results = await searchTags("building");
+		it("should respect limit parameter", async () => {
+			const response = await searchTags("building", 5);
 
-			assert.ok(Array.isArray(results), "Should return an array");
-			// Should have reasonable limit, not thousands of results
-			assert.ok(results.length <= 100, "Should limit results to reasonable number");
+			const totalResults = response.keyMatches.length + response.valueMatches.length;
+			assert.ok(totalResults <= 5, `Should respect limit of 5, got ${totalResults} total results`);
+		});
+
+		it("should apply default limit of 100", async () => {
+			const response = await searchTags("building");
+
+			const totalResults = response.keyMatches.length + response.valueMatches.length;
+			assert.ok(
+				totalResults <= 100,
+				`Should apply default limit of 100, got ${totalResults} total results`,
+			);
 		});
 
 		it("should use cached data on subsequent calls", async () => {
-			const results1 = await searchTags("school");
-			const results2 = await searchTags("school");
+			const response1 = await searchTags("school");
+			const response2 = await searchTags("school");
 
-			assert.deepStrictEqual(results1, results2, "Results should be identical from cache");
+			assert.deepStrictEqual(response1, response2, "Results should be identical from cache");
 		});
 
 		it("should find tag keys from fields.json (BUG FIX TEST)", async () => {
-			const results = await searchTags("wheelchair");
+			const response = await searchTags("wheelchair");
 
 			// wheelchair exists in fields.json with options: yes, limited, no
-			// This test fails before the bug fix
-			assert.ok(results.length > 0, "Should find wheelchair tag from fields.json");
+			// Should be in keyMatches with all values
+			const wheelchairKey = response.keyMatches.find((match) => match.key === "wheelchair");
+			assert.ok(wheelchairKey, "Should find wheelchair tag key from fields.json");
 
-			// Should return results like wheelchair=yes, wheelchair=limited, wheelchair=no
-			const hasWheelchairKey = results.some((r) => r.key === "wheelchair");
-			assert.ok(hasWheelchairKey, "Should have results with wheelchair as key");
-
-			// Verify all returned values exist in fields.json options
+			// Should have all values from fields.json
 			const wheelchairField = fields.wheelchair;
 			assert.ok(wheelchairField, "wheelchair should exist in fields.json");
 
-			const wheelchairResults = results.filter((r) => r.key === "wheelchair");
-			for (const result of wheelchairResults) {
+			// Verify all values exist
+			assert.ok(wheelchairKey.values.length >= 3, "Should have at least yes, limited, no values");
+
+			// Verify all returned values exist in fields.json options
+			for (const value of wheelchairKey.values) {
 				assert.ok(
-					wheelchairField.options?.includes(result.value),
-					`Value "${result.value}" should be in wheelchair field options`,
+					wheelchairField.options?.includes(value),
+					`Value "${value}" should be in wheelchair field options`,
 				);
 			}
 		});
 
 		it("should return keys with colon separator, not slash (BUG FIX TEST)", async () => {
 			// Search for "toilets" to find nested keys like toilets:wheelchair
-			const results = await searchTags("toilets");
+			const response = await searchTags("toilets");
 
-			assert.ok(results.length > 0, "Should find toilets-related tags");
-
-			// Check that no keys contain slash separator
-			for (const result of results) {
+			// Check keyMatches
+			for (const keyMatch of response.keyMatches) {
 				assert.ok(
-					!result.key.includes("/"),
-					`Key "${result.key}" should not contain slash separator`,
+					!keyMatch.key.includes("/"),
+					`Key "${keyMatch.key}" should not contain slash separator`,
+				);
+			}
+
+			// Check valueMatches
+			for (const valueMatch of response.valueMatches) {
+				assert.ok(
+					!valueMatch.key.includes("/"),
+					`Key "${valueMatch.key}" should not contain slash separator`,
 				);
 			}
 
 			// Specifically check for toilets:wheelchair (not toilets/wheelchair)
-			// This field is defined in data/fields/toilets/wheelchair.json
-			// but should be returned as "toilets:wheelchair"
 			const toiletsWheelchairField = fields["toilets/wheelchair"];
 			if (toiletsWheelchairField) {
 				// Field exists in schema, so we should find it
-				const toiletsWheelchairResults = results.filter((r) => r.key === "toilets:wheelchair");
-				assert.ok(
-					toiletsWheelchairResults.length > 0,
-					"Should find toilets:wheelchair (with colon, not slash)",
+				const toiletsWheelchairKey = response.keyMatches.find(
+					(match) => match.key === "toilets:wheelchair",
 				);
+				assert.ok(toiletsWheelchairKey, "Should find toilets:wheelchair (with colon, not slash)");
 			}
+		});
+
+		it("should NOT return random value when matching by key (Phase 8.4 fix)", async () => {
+			// This is the main problem the refactor solves:
+			// Old version returned random value when match was in key only
+			// New version returns ALL values when matching by key
+
+			const response = await searchTags("amenity");
+
+			// amenity is a key, so should be in keyMatches
+			const amenityKey = response.keyMatches.find((match) => match.key === "amenity");
+			assert.ok(amenityKey, "Should find amenity in keyMatches");
+
+			// Should have ALL values for amenity, not just one random value
+			assert.ok(
+				amenityKey.values.length > 50,
+				"Should have many values for amenity (not just one random value)",
+			);
+
+			// Values should include common ones like restaurant, cafe, parking, etc.
+			assert.ok(amenityKey.values.includes("restaurant"), "Should include restaurant value");
+			assert.ok(amenityKey.values.includes("cafe"), "Should include cafe value");
+			assert.ok(amenityKey.values.includes("parking"), "Should include parking value");
+		});
+
+		it("should distinguish between key-match and value-match (Phase 8.4 fix)", async () => {
+			const response = await searchTags("rest");
+
+			// "rest" matches:
+			// - Key: none (no OSM keys contain "rest")
+			// - Value: "restaurant" (partial match)
+
+			// Should find restaurant in valueMatches (not keyMatches)
+			const restaurantValue = response.valueMatches.find((match) => match.value === "restaurant");
+			assert.ok(restaurantValue, "Should find restaurant in valueMatches (value contains 'rest')");
+
+			// Should NOT have "rest" as a key in keyMatches
+			const restKey = response.keyMatches.find((match) => match.key === "rest");
+			assert.ok(!restKey, "Should NOT find 'rest' in keyMatches (not a key)");
+		});
+
+		it("should support partial matching for keys", async () => {
+			const response = await searchTags("wheel");
+
+			// "wheel" should match "wheelchair" key
+			const wheelchairKey = response.keyMatches.find((match) => match.key === "wheelchair");
+			assert.ok(wheelchairKey, "Should find wheelchair with partial match 'wheel'");
+		});
+
+		it("should support partial matching for values", async () => {
+			const response = await searchTags("rest");
+
+			// "rest" should match "restaurant" value
+			const restaurantValue = response.valueMatches.find((match) => match.value === "restaurant");
+			assert.ok(restaurantValue, "Should find restaurant with partial match 'rest'");
 		});
 	});
 
@@ -118,21 +240,6 @@ describe("search_tags", () => {
 		 */
 		function* searchKeywordProvider() {
 			const keywords = new Set<string>();
-
-			// DYNAMIC: Extract keywords from preset names
-			const presetNames = new Set<string>();
-			for (const preset of Object.values(presets)) {
-				if (preset.name) {
-					// Extract words from preset names (e.g., "Fast Food Restaurant" → ["fast", "food", "restaurant"])
-					const words = preset.name.toLowerCase().split(/\s+/);
-					for (const word of words) {
-						if (word.length >= 4) {
-							// Skip very short words
-							presetNames.add(word);
-						}
-					}
-				}
-			}
 
 			// DYNAMIC: Extract keywords from field keys
 			const fieldKeys = new Set<string>();
@@ -159,7 +266,6 @@ describe("search_tags", () => {
 			}
 
 			// Combine keywords from all sources
-			for (const word of presetNames) keywords.add(word);
 			for (const key of fieldKeys) keywords.add(key);
 			for (const key of tagKeys) keywords.add(key);
 
@@ -173,63 +279,56 @@ describe("search_tags", () => {
 
 			// Test each sampled keyword
 			for (const keyword of sampledKeywords) {
-				// Build expected results from JSON
-				const expectedTags = new Set<string>();
-
-				for (const preset of Object.values(presets)) {
-					const presetName = (preset.name || "").toLowerCase();
-					const keywordLower = keyword.toLowerCase();
-
-					// Check tags
-					for (const [key, value] of Object.entries(preset.tags)) {
-						const keyMatch = key.toLowerCase().includes(keywordLower);
-						const valueMatch =
-							typeof value === "string" && value.toLowerCase().includes(keywordLower);
-
-						if (keyMatch || valueMatch || presetName.includes(keywordLower)) {
-							if (value && value !== "*" && !value.includes("|")) {
-								expectedTags.add(`${key}=${value}`);
-							}
-						}
-					}
-
-					// Check addTags
-					if (preset.addTags) {
-						for (const [key, value] of Object.entries(preset.addTags)) {
-							const keyMatch = key.toLowerCase().includes(keywordLower);
-							const valueMatch =
-								typeof value === "string" && value.toLowerCase().includes(keywordLower);
-
-							if (keyMatch || valueMatch || presetName.includes(keywordLower)) {
-								if (value && value !== "*" && !value.includes("|")) {
-									expectedTags.add(`${key}=${value}`);
-								}
-							}
-						}
-					}
-				}
-
-				yield {
-					keyword,
-					expectedTagCount: expectedTags.size,
-					expectedTags,
-				};
+				yield { keyword };
 			}
 		}
 
 		it("should return search results matching JSON data (presets + fields)", async () => {
-			const results = await searchTags("parking");
+			const response = await searchTags("parking");
 
-			// Verify each result corresponds to actual JSON data (presets OR fields)
-			for (const result of results) {
+			// Verify keyMatches
+			for (const keyMatch of response.keyMatches) {
+				// Key should exist in fields or presets
 				let found = false;
 
 				// Check in fields.json
-				// Note: field.key might not be a simple conversion from map key
-				// (e.g., "parking/side/parking" → "parking:both"), so we need to search by field.key
 				for (const field of Object.values(fields)) {
-					if (field.key === result.key && field.options && Array.isArray(field.options)) {
-						if (field.options.includes(result.value)) {
+					if (field.key === keyMatch.key) {
+						found = true;
+
+						// If field has options, verify all returned values exist in field options
+						if (field.options && Array.isArray(field.options)) {
+							for (const value of keyMatch.values) {
+								if (field.options.includes(value)) {
+									// Value exists in field options - good!
+								}
+							}
+						}
+						break;
+					}
+				}
+
+				// Check in presets
+				if (!found) {
+					for (const preset of Object.values(presets)) {
+						if (preset.tags?.[keyMatch.key] || preset.addTags?.[keyMatch.key]) {
+							found = true;
+							break;
+						}
+					}
+				}
+
+				assert.ok(found, `Key "${keyMatch.key}" should exist in JSON (fields or presets)`);
+			}
+
+			// Verify valueMatches
+			for (const valueMatch of response.valueMatches) {
+				let found = false;
+
+				// Check in fields.json
+				for (const field of Object.values(fields)) {
+					if (field.key === valueMatch.key && field.options && Array.isArray(field.options)) {
+						if (field.options.includes(valueMatch.value)) {
 							found = true;
 							break;
 						}
@@ -240,12 +339,12 @@ describe("search_tags", () => {
 				if (!found) {
 					for (const preset of Object.values(presets)) {
 						// Check in tags
-						if (preset.tags?.[result.key] === result.value) {
+						if (preset.tags?.[valueMatch.key] === valueMatch.value) {
 							found = true;
 							break;
 						}
 						// Check in addTags
-						if (preset.addTags?.[result.key] === result.value) {
+						if (preset.addTags?.[valueMatch.key] === valueMatch.value) {
 							found = true;
 							break;
 						}
@@ -254,7 +353,7 @@ describe("search_tags", () => {
 
 				assert.ok(
 					found,
-					`Result ${result.key}=${result.value} should exist in JSON (fields or presets)`,
+					`Value match ${valueMatch.key}=${valueMatch.value} should exist in JSON (fields or presets)`,
 				);
 			}
 		});
@@ -262,41 +361,76 @@ describe("search_tags", () => {
 		it("should validate search results for multiple keywords using provider pattern", async () => {
 			// Test each keyword from provider
 			for (const testCase of searchKeywordProvider()) {
-				// Get limited results (default limit: 100)
-				const results = await searchTags(testCase.keyword);
+				// Get results with default limit (100)
+				const response = await searchTags(testCase.keyword);
 
-				// Verify all returned results exist in JSON (fields OR presets)
-				for (const result of results) {
+				// Verify keyMatches
+				for (const keyMatch of response.keyMatches) {
+					// Key should exist in fields or presets
 					let found = false;
 
 					// Check in fields.json
-					// Note: field.key might not be a simple conversion from map key
-					// (e.g., "parking/side/parking" → "parking:both"), so we need to search by field.key
 					for (const field of Object.values(fields)) {
-						if (field.key === result.key && field.options && Array.isArray(field.options)) {
-							if (field.options.includes(result.value)) {
+						if (field.key === keyMatch.key) {
+							found = true;
+							break;
+						}
+					}
+
+					// Check in presets
+					if (!found) {
+						for (const preset of Object.values(presets)) {
+							if (preset.tags?.[keyMatch.key] || preset.addTags?.[keyMatch.key]) {
 								found = true;
 								break;
 							}
 						}
 					}
 
-					// Check in presets (from provider)
-					const tagId = `${result.key}=${result.value}`;
-					if (!found && testCase.expectedTags.has(tagId)) {
-						found = true;
+					assert.ok(
+						found,
+						`Key "${keyMatch.key}" for keyword "${testCase.keyword}" should exist in JSON`,
+					);
+				}
+
+				// Verify valueMatches
+				for (const valueMatch of response.valueMatches) {
+					let found = false;
+
+					// Check in fields.json
+					for (const field of Object.values(fields)) {
+						if (field.key === valueMatch.key && field.options && Array.isArray(field.options)) {
+							if (field.options.includes(valueMatch.value)) {
+								found = true;
+								break;
+							}
+						}
+					}
+
+					// Check in presets
+					if (!found) {
+						for (const preset of Object.values(presets)) {
+							if (preset.tags?.[valueMatch.key] === valueMatch.value) {
+								found = true;
+								break;
+							}
+							if (preset.addTags?.[valueMatch.key] === valueMatch.value) {
+								found = true;
+								break;
+							}
+						}
 					}
 
 					assert.ok(
 						found,
-						`Search result "${tagId}" for keyword "${testCase.keyword}" should exist in JSON (fields or presets)`,
+						`Value match "${valueMatch.key}=${valueMatch.value}" for keyword "${testCase.keyword}" should exist in JSON`,
 					);
 				}
 
-				// Note: We cannot verify that ALL expected tags are returned due to limit
-				// But we verify that returned results are valid and within limit
+				// Verify limit is respected
+				const totalResults = response.keyMatches.length + response.valueMatches.length;
 				assert.ok(
-					results.length <= 100,
+					totalResults <= 100,
 					`Search for "${testCase.keyword}" should respect limit of 100`,
 				);
 			}

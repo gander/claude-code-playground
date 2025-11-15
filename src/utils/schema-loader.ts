@@ -296,6 +296,10 @@ export class SchemaLoader {
 		const option = fieldTranslation?.options?.[optionValue];
 
 		if (option) {
+			// Options can be either strings or objects with title/description
+			if (typeof option === "string") {
+				return { title: option };
+			}
 			return option;
 		}
 

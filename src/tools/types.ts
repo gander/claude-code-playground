@@ -24,11 +24,42 @@ export interface CategoryInfo {
 
 /**
  * Tag search result interface
+ * @deprecated Use SearchTagsResponse instead (Phase 8.4 refactor)
  */
 export interface TagSearchResult {
 	key: string;
 	value: string;
 	presetName?: string;
+}
+
+/**
+ * Key match result (Phase 8.4 format)
+ * When a keyword matches a tag key, return ALL values for that key
+ */
+export interface KeyMatch {
+	key: string; // The matched key (e.g., "amenity")
+	keyName: string; // Localized key name (e.g., "Amenity")
+	values: string[]; // Simple array of all values
+	valuesDetailed: ValueDetailed[]; // Detailed values with names
+}
+
+/**
+ * Value match result (Phase 8.4 format)
+ * When a keyword matches a tag value, return specific key-value pair
+ */
+export interface ValueMatch {
+	key: string; // The key (e.g., "amenity")
+	keyName: string; // Localized key name (e.g., "Amenity")
+	value: string; // The matched value (e.g., "restaurant")
+	valueName: string; // Localized value name (e.g., "Restaurant")
+}
+
+/**
+ * Response for search_tags tool (Phase 8.4 format)
+ */
+export interface SearchTagsResponse {
+	keyMatches: KeyMatch[]; // Tags matched by key
+	valueMatches: ValueMatch[]; // Tags matched by value
 }
 
 /**
