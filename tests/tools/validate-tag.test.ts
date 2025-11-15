@@ -12,8 +12,14 @@ describe("validateTag", () => {
 			const result = await validateTag("access", "yes");
 
 			assert.ok(result);
+			assert.strictEqual(result.key, "access");
+			assert.ok(result.keyName); // Should have localized name
+			assert.strictEqual(result.value, "yes");
+			assert.ok(result.valueName); // Should have localized name
 			assert.strictEqual(result.valid, true);
 			assert.strictEqual(result.deprecated, false);
+			assert.strictEqual(result.hasOptions, true);
+			assert.strictEqual(result.valueInOptions, true);
 			assert.ok(result.message);
 			assert.match(result.message, /valid/i);
 		});
@@ -23,7 +29,13 @@ describe("validateTag", () => {
 			const result = await validateTag("building", "custom_value");
 
 			assert.ok(result);
+			assert.strictEqual(result.key, "building");
+			assert.ok(result.keyName); // Should have localized name
+			assert.strictEqual(result.value, "custom_value");
+			assert.ok(result.valueName); // Should have localized name (fallback)
 			assert.strictEqual(result.valid, true);
+			assert.strictEqual(result.hasOptions, true);
+			assert.strictEqual(result.valueInOptions, false); // Not in standard options
 			// May have a warning that it's not in the standard options
 			assert.strictEqual(result.deprecated, false);
 			assert.ok(result.message);
@@ -38,8 +50,21 @@ describe("validateTag", () => {
 			const result = await validateTag(oldKey, oldValue);
 
 			assert.ok(result);
+			assert.strictEqual(result.key, oldKey);
+			assert.ok(result.keyName); // Should have localized name
+			assert.strictEqual(result.value, oldValue);
+			assert.ok(result.valueName); // Should have localized name
 			assert.strictEqual(result.deprecated, true);
-			assert.ok(result.replacement);
+			assert.ok(result.replacement); // Backward compatibility
+			assert.ok(result.replacementDetailed); // New detailed replacement
+			assert.ok(Array.isArray(result.replacementDetailed));
+			assert.ok(result.replacementDetailed.length > 0);
+			// Check first replacement detail
+			const firstReplacement = result.replacementDetailed[0];
+			assert.ok(firstReplacement.key);
+			assert.ok(firstReplacement.keyName);
+			assert.ok(firstReplacement.value);
+			assert.ok(firstReplacement.valueName);
 			assert.strictEqual(result.valid, true); // Still valid, but deprecated
 			assert.ok(result.message);
 			assert.match(result.message, /deprecated/i);
@@ -49,7 +74,13 @@ describe("validateTag", () => {
 			const result = await validateTag("nonexistent_key_12345", "some_value");
 
 			assert.ok(result);
+			assert.strictEqual(result.key, "nonexistent_key_12345");
+			assert.ok(result.keyName); // Should have fallback name
+			assert.strictEqual(result.value, "some_value");
+			assert.ok(result.valueName); // Should have fallback name
 			assert.strictEqual(result.valid, true); // Unknown keys are allowed in OSM
+			assert.strictEqual(result.hasOptions, false);
+			assert.strictEqual(result.valueInOptions, false);
 			assert.ok(result.message);
 			assert.match(result.message, /not found in schema/i);
 		});
@@ -59,8 +90,14 @@ describe("validateTag", () => {
 			const result = await validateTag("maxspeed", "50");
 
 			assert.ok(result);
+			assert.strictEqual(result.key, "maxspeed");
+			assert.ok(result.keyName); // Should have localized name
+			assert.strictEqual(result.value, "50");
+			assert.ok(result.valueName); // Should have fallback name
 			assert.strictEqual(result.valid, true);
 			assert.strictEqual(result.deprecated, false);
+			assert.strictEqual(result.hasOptions, false); // maxspeed has no options
+			assert.strictEqual(result.valueInOptions, false);
 			assert.ok(result.message);
 		});
 	});
@@ -135,7 +172,13 @@ describe("validateTag", () => {
 			const result = await validateTag("", "value");
 
 			assert.ok(result);
+			assert.strictEqual(result.key, "");
+			assert.strictEqual(result.keyName, "");
+			assert.strictEqual(result.value, "value");
+			assert.strictEqual(result.valueName, "");
 			assert.strictEqual(result.valid, false);
+			assert.strictEqual(result.hasOptions, false);
+			assert.strictEqual(result.valueInOptions, false);
 			assert.ok(result.message);
 			assert.match(result.message, /empty/i);
 		});
@@ -144,7 +187,13 @@ describe("validateTag", () => {
 			const result = await validateTag("amenity", "");
 
 			assert.ok(result);
+			assert.strictEqual(result.key, "amenity");
+			assert.ok(result.keyName); // Should have localized name for amenity
+			assert.strictEqual(result.value, "");
+			assert.strictEqual(result.valueName, "");
 			assert.strictEqual(result.valid, false);
+			assert.strictEqual(result.hasOptions, false);
+			assert.strictEqual(result.valueInOptions, false);
 			assert.ok(result.message);
 			assert.match(result.message, /empty/i);
 		});
