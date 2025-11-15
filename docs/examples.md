@@ -1031,7 +1031,7 @@ _Note: The original preset has `fields: ["{building}"]`, which is expanded to th
 
 ## 6. validate_tag_collection
 
-**Purpose**: Validate a collection of tags and provide aggregated statistics about errors, warnings, and deprecated tags.
+**Purpose**: Validate a collection of tags and provide aggregated statistics about valid tags, errors, and deprecated tags.
 
 **Input**: `tags` (object) - required (key-value pairs)
 
@@ -1086,11 +1086,9 @@ _Note: The original preset has `fields: ["{building}"]`, which is expanded to th
       "valueInOptions": true
     }
   },
-  "errors": [],
-  "warnings": [],
+  "validCount": 4,
   "deprecatedCount": 0,
-  "errorCount": 0,
-  "warningCount": 0
+  "errorCount": 0
 }
 ```
 
@@ -1125,13 +1123,9 @@ _Note: The original preset has `fields: ["{building}"]`, which is expanded to th
       "valueInOptions": true
     }
   },
-  "errors": [
-    "amenity: Tag value cannot be empty"
-  ],
-  "warnings": [],
+  "validCount": 1,
   "deprecatedCount": 0,
-  "errorCount": 1,
-  "warningCount": 0
+  "errorCount": 1
 }
 ```
 
@@ -1171,17 +1165,13 @@ _Note: The original preset has `fields: ["{building}"]`, which is expanded to th
       "valueInOptions": true
     }
   },
-  "errors": [],
-  "warnings": [
-    "highway=incline_steep: Tag 'highway=incline_steep' is valid but deprecated. Consider using the replacement."
-  ],
+  "validCount": 2,
   "deprecatedCount": 1,
-  "errorCount": 0,
-  "warningCount": 1
+  "errorCount": 0
 }
 ```
 
-### Example 6.4: Collection with Unknown Keys (Warnings)
+### Example 6.4: Collection with Unknown Keys
 
 **Request**:
 ```json
@@ -1211,14 +1201,9 @@ _Note: The original preset has `fields: ["{building}"]`, which is expanded to th
       "fieldExists": false
     }
   },
-  "errors": [],
-  "warnings": [
-    "unknown_key_12345: Tag 'unknown_key_12345=value1' is valid. Key not found in schema, but OSM allows custom tags.",
-    "another_unknown_key: Tag 'another_unknown_key=value2' is valid. Key not found in schema, but OSM allows custom tags."
-  ],
+  "validCount": 2,
   "deprecatedCount": 0,
-  "errorCount": 0,
-  "warningCount": 2
+  "errorCount": 0
 }
 ```
 
@@ -1236,11 +1221,9 @@ _Note: The original preset has `fields: ["{building}"]`, which is expanded to th
 {
   "valid": true,
   "tagResults": {},
-  "errors": [],
-  "warnings": [],
+  "validCount": 0,
   "deprecatedCount": 0,
-  "errorCount": 0,
-  "warningCount": 0
+  "errorCount": 0
 }
 ```
 
