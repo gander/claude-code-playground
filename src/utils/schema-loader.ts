@@ -238,6 +238,80 @@ export class SchemaLoader {
 	}
 
 	/**
+	 * Get the localized name for a preset
+	 * @param presetId - The preset ID (e.g., "amenity/restaurant")
+	 * @returns The localized name or the preset ID if not found
+	 */
+	getPresetName(presetId: string): string {
+		if (!this.cache?.translations) {
+			throw new Error("Schema not loaded. Call loadSchema() first.");
+		}
+
+		const translation = this.cache.translations.en.presets.presets[presetId];
+		if (translation?.name) {
+			return translation.name;
+		}
+
+		// Fallback: return the preset ID as-is
+		return presetId;
+	}
+
+	/**
+	 * Get the localized label for a field
+	 * @param fieldKey - The field key (e.g., "parking", "amenity")
+	 * @returns The localized label or undefined if not found
+	 */
+	getFieldLabel(fieldKey: string): string | undefined {
+		if (!this.cache?.translations) {
+			throw new Error("Schema not loaded. Call loadSchema() first.");
+		}
+
+		const translation = this.cache.translations.en.presets.fields[fieldKey];
+		return translation?.label;
+	}
+
+	/**
+	 * Get the localized name for a field option (value)
+	 * @param fieldKey - The field key (e.g., "parking")
+	 * @param optionValue - The option value (e.g., "surface", "underground")
+	 * @returns The title and description, or undefined if not found
+	 */
+	getFieldOptionName(
+		fieldKey: string,
+		optionValue: string,
+	): { title: string; description?: string } | undefined {
+		if (!this.cache?.translations) {
+			throw new Error("Schema not loaded. Call loadSchema() first.");
+		}
+
+		const fieldTranslation = this.cache.translations.en.presets.fields[fieldKey];
+		if (!fieldTranslation?.options) {
+			return undefined;
+		}
+
+		return fieldTranslation.options[optionValue];
+	}
+
+	/**
+	 * Get the localized name for a category
+	 * @param categoryId - The category ID (e.g., "category-building")
+	 * @returns The localized name or the category ID if not found
+	 */
+	getCategoryName(categoryId: string): string {
+		if (!this.cache?.translations) {
+			throw new Error("Schema not loaded. Call loadSchema() first.");
+		}
+
+		const translation = this.cache.translations.en.presets.categories[categoryId];
+		if (translation?.name) {
+			return translation.name;
+		}
+
+		// Fallback: return the category ID as-is
+		return categoryId;
+	}
+
+	/**
 	 * Load JSON file from schema package
 	 */
 	private async loadJSON<T>(filename: string): Promise<T> {
