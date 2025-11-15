@@ -5,9 +5,6 @@
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
-	type: "json",
-};
 import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { setupClientServer, type TestServer, teardownClientServer } from "./helpers.js";
 
@@ -53,11 +50,11 @@ describe("Integration: suggest_improvements", () => {
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			assert.ok("suggestions" in result);
-			assert.ok("warnings" in result);
 			assert.ok("matchedPresets" in result);
+			assert.ok("matchedPresetsDetailed" in result);
 			assert.ok(Array.isArray(result.suggestions));
-			assert.ok(Array.isArray(result.warnings));
 			assert.ok(Array.isArray(result.matchedPresets));
+			assert.ok(Array.isArray(result.matchedPresetsDetailed));
 		});
 
 		it("should suggest missing common tags", async () => {
@@ -77,17 +74,12 @@ describe("Integration: suggest_improvements", () => {
 			// Parking should have suggestions like capacity, fee, surface, etc.
 		});
 
-		it("should warn about deprecated tags", async () => {
-			// Use first deprecated entry
-			const entry = deprecated[0];
-			const key = Object.keys(entry.old)[0];
-			const value = entry.old[key as keyof typeof entry.old];
-
+		it("should return structured suggestions", async () => {
 			const response = await client.callTool({
 				name: "suggest_improvements",
 				arguments: {
 					tags: {
-						[key]: value as string,
+						amenity: "restaurant",
 					},
 				},
 			});
@@ -95,8 +87,14 @@ describe("Integration: suggest_improvements", () => {
 			assert.ok(response.content);
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
-			assert.ok(result.warnings.length > 0);
-			assert.ok(result.warnings.some((w: string) => w.includes("deprecated")));
+			if (result.suggestions.length > 0) {
+				const firstSuggestion = result.suggestions[0];
+				assert.ok("operation" in firstSuggestion);
+				assert.ok("message" in firstSuggestion);
+				assert.ok("key" in firstSuggestion);
+				assert.ok("keyName" in firstSuggestion);
+				assert.ok(["add", "remove", "update"].includes(firstSuggestion.operation));
+			}
 		});
 
 		it("should handle empty tag collection", async () => {
@@ -111,8 +109,8 @@ describe("Integration: suggest_improvements", () => {
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			assert.strictEqual(result.suggestions.length, 0);
-			assert.strictEqual(result.warnings.length, 0);
 			assert.strictEqual(result.matchedPresets.length, 0);
+			assert.strictEqual(result.matchedPresetsDetailed.length, 0);
 		});
 	});
 
@@ -172,11 +170,33 @@ describe("Integration: suggest_improvements", () => {
 			const result = JSON.parse((response.content[0] as { text: string }).text);
 
 			assert.ok("suggestions" in result);
-			assert.ok("warnings" in result);
 			assert.ok("matchedPresets" in result);
+			assert.ok("matchedPresetsDetailed" in result);
 			assert.ok(Array.isArray(result.suggestions));
-			assert.ok(Array.isArray(result.warnings));
 			assert.ok(Array.isArray(result.matchedPresets));
+			assert.ok(Array.isArray(result.matchedPresetsDetailed));
+		});
+
+		it("should include detailed preset information", async () => {
+			const response = await client.callTool({
+				name: "suggest_improvements",
+				arguments: {
+					tags: {
+						amenity: "restaurant",
+					},
+				},
+			});
+
+			assert.ok(response.content);
+			const result = JSON.parse((response.content[0] as { text: string }).text);
+
+			if (result.matchedPresetsDetailed.length > 0) {
+				const firstPreset = result.matchedPresetsDetailed[0];
+				assert.ok("id" in firstPreset);
+				assert.ok("name" in firstPreset);
+				assert.ok(typeof firstPreset.id === "string");
+				assert.ok(typeof firstPreset.name === "string");
+			}
 		});
 
 		it("should have meaningful suggestion messages", async () => {
@@ -194,8 +214,10 @@ describe("Integration: suggest_improvements", () => {
 
 			if (result.suggestions.length > 0) {
 				for (const suggestion of result.suggestions) {
-					assert.ok(typeof suggestion === "string");
-					assert.ok(suggestion.length > 0);
+					assert.ok(typeof suggestion === "object");
+					assert.ok(suggestion.message.length > 0);
+					assert.ok(suggestion.key.length > 0);
+					assert.ok(suggestion.keyName.length > 0);
 				}
 			}
 		});
@@ -274,29 +296,6 @@ amenity=restaurant`;
 
 			assert.ok(result.matchedPresets.length > 0);
 		});
-
-		it("should warn about deprecated tags in text format", async () => {
-			const deprecatedEntry = deprecated[0];
-			const oldKey = Object.keys(deprecatedEntry.old)[0];
-			if (!oldKey) return;
-			const oldValue = deprecatedEntry.old[oldKey as keyof typeof deprecatedEntry.old];
-
-			const textInput = `${oldKey}=${oldValue}
-name=Test`;
-
-			const response = await client.callTool({
-				name: "suggest_improvements",
-				arguments: {
-					tags: textInput,
-				},
-			});
-
-			assert.ok(response.content);
-			const result = JSON.parse((response.content[0] as { text: string }).text);
-
-			assert.ok(result.warnings.length > 0);
-			assert.ok(result.warnings[0].includes("deprecated"));
-		});
 	});
 
 	describe("JSON Schema Data Integrity", () => {
@@ -326,37 +325,6 @@ name=Test`;
 				const matched = result.matchedPresets.some((p: string) => p.includes("restaurant"));
 				assert.ok(matched || result.matchedPresets.length > 0);
 			}
-		});
-
-		it("should warn about all deprecated tags from JSON", async () => {
-			// Use first two deprecated entries
-			const deprecatedTags: Record<string, string> = {};
-
-			for (let i = 0; i < Math.min(2, deprecated.length); i++) {
-				const entry = deprecated[i];
-				const oldKeys = Object.keys(entry.old);
-				if (oldKeys.length === 1) {
-					const key = oldKeys[0];
-					if (key) {
-						const value = entry.old[key as keyof typeof entry.old];
-						if (value && typeof value === "string") {
-							deprecatedTags[key] = value;
-						}
-					}
-				}
-			}
-
-			const response = await client.callTool({
-				name: "suggest_improvements",
-				arguments: {
-					tags: deprecatedTags,
-				},
-			});
-
-			assert.ok(response.content);
-			const result = JSON.parse((response.content[0] as { text: string }).text);
-
-			assert.ok(result.warnings.length >= 1);
 		});
 	});
 });
