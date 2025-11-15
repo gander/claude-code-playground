@@ -7,7 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No unreleased changes.
+### Changed
+
+#### Phase 8: Schema Builder API Refactor (Complete)
+
+**Translation Infrastructure (8.1):**
+- Added full localization support to `SchemaLoader` class
+- Implemented `getPresetName()`, `getFieldLabel()`, `getFieldOptionName()`, `getCategoryName()` methods
+- Automatic fallback formatting for missing translations (ucfirst + replace underscores with spaces)
+- Loads `translations/en.json` from schema package
+
+**Tool API Refactors (8.2-8.8):**
+All 7 tools updated with localized responses and enhanced functionality:
+
+- **validate_tag (8.2)**: Returns `keyName`, `valueName`, `replacementDetailed` with localized names; removed redundant `fieldExists` and `availableOptions` fields
+- **get_tag_values (8.3)**: Structured response with `key`, `keyName`, `values`, `valuesDetailed`; removed `description` field
+- **search_tags (8.4)**: Separate `keyMatches` and `valueMatches` with localized names; no more random values for key-only matches
+- **get_preset_details (8.5)**: Accepts multiple input formats (preset ID, tag notation, JSON object); returns `name`, `tagsDetailed` with localized names; automatic field reference expansion (`{preset_id}`, `@templates/name`)
+- **validate_tag_collection (8.6)**: Simplified response with `validCount`, `deprecatedCount`, `errorCount`; uses localized `validate_tag` for each tag
+- **suggest_improvements (8.7)**: Structured suggestions with `operation`, `message`, `key`, `keyName`; returns `matchedPresetsDetailed` with preset names
+- **search_presets (8.8)**: Returns `name` and `tagsDetailed` with localized names for each preset
+
+**Localization Enhancements (8.9):**
+- All 7 tools include human-readable, localized names for keys, values, and presets
+- Comprehensive fallback logic for missing translations
+- Full documentation in `docs/api/README.md` Localization section
+
+**Template System (8.10):**
+- Field template expansion for `{@templates/name}` references in `get_preset_details`
+- 10 template patterns supported (contact, internet_access, poi, crossing/*, etc.)
+- All template definitions validated against `fields.json` from schema
+- 13 comprehensive unit tests + 6 integration tests
+- Full documentation in CLAUDE.md Template System section
+
+**Documentation & Testing (8.11):**
+- Created API documentation for all 7 tools (`docs/api/*.md`)
+- Updated `docs/usage.md` with Phase 8 examples showing localized responses
+- Updated `docs/api/README.md` with comprehensive localization documentation
+- All tests passing (199 unit + 102 integration tests)
 
 ## [0.1.0] - 2025-01-15
 
