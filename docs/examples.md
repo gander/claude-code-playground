@@ -788,14 +788,21 @@ _Note: The original preset has `fields: ["{building}"]`, which is expanded to th
 
 **Purpose**: Search for presets by keyword, tag filter, or geometry type.
 
-**Input**: `query` (string, optional), `geometry` (string, optional), `limit` (number, optional)
+**Input**: `keyword` (string, required), `geometry` (string, optional), `limit` (number, optional)
+
+**Output** (Phase 8.8 format): Each preset includes:
+- `id`: Preset identifier (e.g., "amenity/restaurant")
+- `name`: Localized preset name (e.g., "Restaurant")
+- `tags`: Tag key-value pairs (e.g., `{"amenity": "restaurant"}`)
+- `tagsDetailed`: Array of tag details with localized names for keys and values
+- `geometry`: Supported geometry types (e.g., `["point", "area"]`)
 
 ### Example 5.1: Query with Results (Keyword Search)
 
 **Request**:
 ```json
 {
-  "query": "restaurant"
+  "keyword": "restaurant"
 }
 ```
 
@@ -825,6 +832,20 @@ _Note: The original preset has `fields: ["{building}"]`, which is expanded to th
       "amenity": "restaurant",
       "cuisine": "american"
     },
+    "tagsDetailed": [
+      {
+        "key": "amenity",
+        "keyName": "Amenity",
+        "value": "restaurant",
+        "valueName": "Restaurant"
+      },
+      {
+        "key": "cuisine",
+        "keyName": "Cuisine",
+        "value": "american",
+        "valueName": "American"
+      }
+    ],
     "geometry": ["point", "area"]
   },
   {
@@ -900,7 +921,7 @@ _Note: The original preset has `fields: ["{building}"]`, which is expanded to th
 **Request**:
 ```json
 {
-  "query": "nonexistentpresetxyz12345"
+  "keyword": "nonexistentpresetxyz12345"
 }
 ```
 
@@ -914,7 +935,7 @@ _Note: The original preset has `fields: ["{building}"]`, which is expanded to th
 **Request**:
 ```json
 {
-  "query": "amenity=cafe"
+  "keyword": "amenity=cafe"
 }
 ```
 
@@ -927,19 +948,27 @@ _Note: The original preset has `fields: ["{building}"]`, which is expanded to th
     "tags": {
       "amenity": "cafe"
     },
+    "tagsDetailed": [
+      {
+        "key": "amenity",
+        "keyName": "Amenity",
+        "value": "cafe",
+        "valueName": "Cafe"
+      }
+    ],
     "geometry": ["point", "area"]
   }
 ]
 ```
 
-**Note**: Tag filters use `key=value` format. Only presets with an exact tag match are returned.
+**Note**: Tag filters use `key=value` format. Only presets with an exact tag match are returned. The `tagsDetailed` array provides localized names for both keys and values (Phase 8.8).
 
 ### Example 5.4: Geometry Filter
 
 **Request**:
 ```json
 {
-  "query": "restaurant",
+  "keyword": "restaurant",
   "geometry": "area"
 }
 ```
@@ -974,7 +1003,7 @@ _Note: The original preset has `fields: ["{building}"]`, which is expanded to th
 **Request**:
 ```json
 {
-  "query": "building",
+  "keyword": "building",
   "limit": 5
 }
 ```

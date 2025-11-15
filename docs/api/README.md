@@ -25,8 +25,8 @@ The server provides 7 tools organized into three categories:
 
 | Tool | Description | Input | Output |
 |------|-------------|-------|--------|
-| [`search_presets`](./search_presets.md) | Search for presets by keyword or tag | `keyword` (string), `limit` (optional), `geometry` (optional) | Matching presets |
-| [`get_preset_details`](./get_preset_details.md) | Get complete preset information | `presetId` (string) | Full preset configuration |
+| [`search_presets`](./search_presets.md) | Search for presets by keyword or tag | `keyword` (string), `limit` (optional), `geometry` (optional) | Matching presets with localized names |
+| [`get_preset_details`](./get_preset_details.md) | Get complete preset information | `presetId` (string) | Full preset configuration with localized names |
 
 ### Validation Tools
 

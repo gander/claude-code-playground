@@ -112,11 +112,13 @@ export interface RelatedTag {
 }
 
 /**
- * Preset search result interface
+ * Preset search result interface (Phase 8.8 format)
  */
 export interface PresetSearchResult {
 	id: string;
-	tags: Record<string, string>;
+	name: string; // Localized preset name (Phase 8.8)
+	tags: Record<string, string>; // Backward compatibility
+	tagsDetailed: TagDetailed[]; // Detailed tags with names (Phase 8.8)
 	geometry: string[];
 }
 

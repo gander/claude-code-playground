@@ -146,6 +146,15 @@ describe("search_presets integration", () => {
 					preset.geometry,
 					`Geometry for ${result.id} should match JSON`,
 				);
+
+				// Verify new fields exist (Phase 8.8)
+				assert.ok(result.name, `Preset ${result.id} should have name`);
+				assert.ok(result.tagsDetailed, `Preset ${result.id} should have tagsDetailed`);
+				assert.strictEqual(
+					result.tagsDetailed.length,
+					Object.keys(result.tags).length,
+					`Preset ${result.id} should have same number of tags in tagsDetailed as tags`,
+				);
 			}
 		});
 
@@ -178,7 +187,9 @@ describe("search_presets integration", () => {
 			// CRITICAL: Validate EACH result individually
 			for (const result of results) {
 				assert.ok(result.id, "Should have preset ID");
+				assert.ok(result.name, "Should have name");
 				assert.ok(result.tags, "Should have tags");
+				assert.ok(result.tagsDetailed, "Should have tagsDetailed");
 				assert.ok(result.geometry, "Should have geometry");
 
 				// Verify in JSON
@@ -189,6 +200,29 @@ describe("search_presets integration", () => {
 					jsonPreset.tags,
 					`Preset ${result.id} tags should match JSON`,
 				);
+
+				// Verify tagsDetailed structure
+				assert.ok(Array.isArray(result.tagsDetailed), "tagsDetailed should be an array");
+				assert.strictEqual(
+					result.tagsDetailed.length,
+					Object.keys(result.tags).length,
+					"tagsDetailed should have same number of items as tags",
+				);
+
+				// Verify each tag detail
+				for (const tagDetail of result.tagsDetailed) {
+					assert.ok(tagDetail.key, "Tag detail should have key");
+					assert.ok(tagDetail.keyName, "Tag detail should have keyName");
+					assert.ok(tagDetail.value !== undefined, "Tag detail should have value");
+					assert.ok(tagDetail.valueName, "Tag detail should have valueName");
+
+					// Verify tag exists in preset tags
+					assert.strictEqual(
+						result.tags[tagDetail.key],
+						tagDetail.value,
+						`Tag ${tagDetail.key} should match in tags and tagsDetailed`,
+					);
+				}
 			}
 		});
 
