@@ -1148,11 +1148,23 @@ GNU General Public License v3.0 (GPL-3.0)
   - Scans for CRITICAL and HIGH severity vulnerabilities
   - Results uploaded to GitHub Security tab (SARIF format)
   - Runs on every build
-- ✅ **Versioning**: Semantic versioning + `latest` tag
+- ✅ **Versioning Strategy**: Comprehensive tagging scheme
+  - **Semantic versions**: `X.Y.Z`, `X.Y`, `X` (from version tag vX.Y.Z)
+  - **Latest stable**: `latest` (latest X.Y.Z release)
+  - **Development**: `edge` (latest master branch merge)
 - ✅ **Image Signing**: Cosign keyless signatures for image verification
   - Uses Sigstore with OIDC (GitHub Actions identity)
   - Signature verification with `cosign verify`
   - Tamper-proof supply chain
+
+**Container Version Tags**:
+| Tag | Description | Example | Use Case |
+|-----|-------------|---------|----------|
+| `latest` | Latest stable release | `latest` → `0.2.1` | Production (stable) |
+| `edge` | Latest master branch | `edge` | Development (bleeding edge) |
+| `X.Y.Z` | Specific patch version | `0.2.1` | Production (pinned) |
+| `X.Y` | Latest patch in minor version | `0.2` → `0.2.1` | Production (minor updates) |
+| `X` | Latest minor in major version | `0` → `0.2.1` | Production (major version) |
 
 **Benefits**:
 - Portable deployment across environments
@@ -1160,16 +1172,30 @@ GNU General Public License v3.0 (GPL-3.0)
 - Easy orchestration with Kubernetes/Docker Compose
 - Reproducible builds
 - **Security**: Vulnerability scanning and signed images for supply chain security
+- **Flexibility**: Choose between stable (latest), bleeding edge (edge), or pinned versions
 
 **Usage**:
 ```bash
-# Pull and run
+# Pull latest stable release
 docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+
+# Pull latest development version
+docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
+
+# Pull specific version
+docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:0.2.1
 
 # Verify image signature
 cosign verify ghcr.io/gander-tools/osm-tagging-schema-mcp:latest \
   --certificate-identity-regexp=https://github.com/gander-tools \
   --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+
+# Test with MCP Inspector
+npx @modelcontextprotocol/inspector docker run -i --rm --pull always \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
+
+npx @modelcontextprotocol/inspector docker run -i --rm --pull always \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 ```
 
 ### 3. Additional Transport Protocols ✅ IMPLEMENTED
@@ -1227,9 +1253,13 @@ npm run start:sse   # Start with SSE transport on port 3000 (legacy)
 npm run dev:http    # Development mode with HTTP transport
 npm run dev:sse     # Development mode with SSE transport (legacy)
 
-# Docker with HTTP
+# Docker with HTTP (using latest stable)
 docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
-  ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+
+# Docker with HTTP (using edge/development)
+docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
 ```
 
 **Implementation Details** ✅:

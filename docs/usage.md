@@ -876,7 +876,7 @@ version: '3.8'
 
 services:
   osm-tagging-schema-mcp:
-    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
     container_name: osm-tagging-schema-mcp-dev
 
     environment:

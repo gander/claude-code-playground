@@ -1,9 +1,9 @@
 # Docker Compose configuration for development
-# This configuration uses the latest development image with debug logging
+# This configuration uses the latest development image (edge) with debug logging
 
 services:
   osm-tagging-mcp-dev:
-    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
     container_name: osm-tagging-mcp-dev
     restart: unless-stopped
 

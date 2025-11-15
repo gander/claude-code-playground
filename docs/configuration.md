@@ -89,12 +89,14 @@ Claude Desktop supports MCP servers through its configuration file.
         "run",
         "-i",
         "--rm",
-        "ghcr.io/gander-tools/osm-tagging-schema-mcp:dev"
+        "ghcr.io/gander-tools/osm-tagging-schema-mcp:latest"
       ]
     }
   }
 }
 ```
+
+For development/testing with bleeding edge features, use `:edge` instead of `:latest`.
 
 **Using local installation:**
 ```json
@@ -222,7 +224,7 @@ Run multiple instances with different names:
 **Custom network:**
 ```bash
 docker network create mcp-network
-docker run -i --rm --network mcp-network ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+docker run -i --rm --network mcp-network ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 ```
 
 **Resource limits:**
@@ -230,7 +232,7 @@ docker run -i --rm --network mcp-network ghcr.io/gander-tools/osm-tagging-schema
 docker run -i --rm \
   --memory="512m" \
   --cpus="1.0" \
-  ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 ```
 
 **Volume mounting** (for development):
@@ -332,8 +334,13 @@ npm run dev:sse         # Development mode with SSE transport (legacy)
 
 **Docker with HTTP transport:**
 ```bash
+# Using latest stable
 docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
-  ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+
+# Using edge (development)
+docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
 ```
 
 ### Logging Configuration
@@ -373,7 +380,7 @@ Default memory usage is approximately 100-200 MB.
 NODE_OPTIONS="--max-old-space-size=1024" npx @gander-tools/osm-tagging-schema-mcp
 
 # Using Docker
-docker run -i --rm --memory="1g" ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+docker run -i --rm --memory="1g" ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 ```
 
 ### Cache Settings

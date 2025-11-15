@@ -606,7 +606,7 @@ environment:
 
 ## Best Practices
 
-1. **Always use tagged versions** in production (not `:latest` or `:dev`)
+1. **Use stable versions in production**: Use specific version tags (e.g., `0.2.1`) or stable tags (`:latest`, `:0.2`), not `:edge`
 2. **Set resource limits** to prevent resource exhaustion
 3. **Enable health checks** for automatic recovery
 4. **Monitor logs** for errors and warnings
@@ -615,6 +615,20 @@ environment:
 7. **Test updates** in staging before production
 8. **Back up configuration** (docker-compose.yml)
 9. **Document changes** to configuration
+
+### Container Version Selection
+
+Choose the appropriate Docker image tag based on your use case:
+
+| Environment | Recommended Tag | Example | Update Frequency |
+|-------------|----------------|---------|------------------|
+| Production (stable) | Specific version | `0.2.1` | Manual (controlled) |
+| Production (auto-update minor) | Minor version | `0.2` | Automatic (minor patches) |
+| Production (auto-update major) | Major version | `0` | Automatic (all updates) |
+| Production (latest stable) | `latest` | `latest` | Automatic (stable releases) |
+| Development/Testing | `edge` | `edge` | Automatic (bleeding edge) |
+
+**Note:** For production deployments, specific version tags (`0.2.1`) are recommended for maximum control and predictability.
 
 ## Next Steps
 

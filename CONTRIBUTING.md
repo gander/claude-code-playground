@@ -792,24 +792,25 @@ Docker images are automatically built and published to GitHub Container Registry
 
 **Master Branch Push:**
 - Builds multi-architecture images (amd64, arm64)
-- Tags: `dev`, `latest`, and short commit hash (e.g., `938b0d1`)
+- Tags: `edge` (bleeding edge development builds)
 
 **Version Tag Push:**
 - Triggered when pushing tags like `v1.0.0`
-- Tags: `1.0.0`, `1.0`, `1`, `latest`, and short commit hash
+- Tags: `1.0.0`, `1.0`, `1`, `latest`
 
 #### Image Tags
 
 The following tags are created automatically:
 
-| Tag | Description | Example |
-|-----|-------------|---------|
-| `dev` | Latest master branch | `ghcr.io/gander-tools/osm-tagging-schema-mcp:dev` |
-| `latest` | Latest stable release | `ghcr.io/gander-tools/osm-tagging-schema-mcp:latest` |
-| `X.Y.Z` | Specific version | `ghcr.io/gander-tools/osm-tagging-schema-mcp:0.1.0` |
-| `X.Y` | Major.minor version | `ghcr.io/gander-tools/osm-tagging-schema-mcp:0.1` |
-| `X` | Major version | `ghcr.io/gander-tools/osm-tagging-schema-mcp:0` |
-| `abc1234` | Short commit hash (7 chars) | `ghcr.io/gander-tools/osm-tagging-schema-mcp:938b0d1` |
+| Tag | Description | Example | Recommended Use |
+|-----|-------------|---------|-----------------|
+| `edge` | Latest master branch | `ghcr.io/gander-tools/osm-tagging-schema-mcp:edge` | Development/Testing |
+| `latest` | Latest stable release | `ghcr.io/gander-tools/osm-tagging-schema-mcp:latest` | Production (auto-update) |
+| `X.Y.Z` | Specific patch version | `ghcr.io/gander-tools/osm-tagging-schema-mcp:0.2.1` | Production (pinned) |
+| `X.Y` | Latest patch in minor | `ghcr.io/gander-tools/osm-tagging-schema-mcp:0.2` | Production (minor updates) |
+| `X` | Latest minor in major | `ghcr.io/gander-tools/osm-tagging-schema-mcp:0` | Production (major version) |
+
+**Note:** The `dev` tag has been replaced with `edge`. Short commit hash tags are no longer created.
 
 #### Ensuring Images Are Public
 
@@ -828,7 +829,8 @@ The following tags are created automatically:
 3. **Verify Public Access:**
    ```bash
    # Should work without authentication
-   docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:dev
+   docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+   docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
    ```
 
 **Note:** This step only needs to be done once per package. All subsequent images will inherit the public visibility.
