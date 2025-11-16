@@ -316,6 +316,80 @@ npx @gander-tools/osm-tagging-schema-mcp
 
 ---
 
+### HTTP Transport / CORS Issues
+
+**Symptom 1:** MCP Inspector UI shows "Connection failed" or "Network error"
+
+**Solution:**
+```bash
+# 1. Verify server is running with HTTP transport
+TRANSPORT=http PORT=3000 npm start
+# Or: npm run start:http
+
+# 2. Check server logs for CORS message
+# Should see: "CORS enabled for origins: http://localhost:6274, https://mcp.ziziyi.com"
+
+# 3. Verify Inspector is using correct URL
+npx @modelcontextprotocol/inspector --transport http --server-url http://localhost:3000/
+
+# 4. Check if server is listening
+curl http://localhost:3000/health
+# Expected: {"status":"ok","service":"osm-tagging-schema-mcp","timestamp":"..."}
+
+# 5. Test CORS headers
+curl -i -X OPTIONS http://localhost:3000/ \
+  -H "Origin: http://localhost:6274" \
+  -H "Access-Control-Request-Method: POST"
+# Expected: Access-Control-Allow-Origin: http://localhost:6274
+```
+
+**Symptom 2:** "Origin not allowed" error in browser console
+
+**Solution:**
+```bash
+# Add your origin to CORS_ORIGINS
+CORS_ORIGINS="http://localhost:6274,http://localhost:8080" TRANSPORT=http npm start
+
+# For testing only (NOT for production)
+CORS_ORIGINS="*" TRANSPORT=http npm start
+```
+
+**Symptom 3:** Inspector connects but tools don't appear
+
+**Solution:**
+```bash
+# 1. Check server readiness
+curl http://localhost:3000/ready
+# Expected: {"status":"ready","schema":{...}}
+
+# 2. Test MCP protocol directly
+curl -X POST http://localhost:3000/ \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+# Expected: JSON response with tool list
+
+# 3. Check browser console for errors
+# Open DevTools in Inspector UI and look for errors
+
+# 4. Try increasing timeout or restart server
+```
+
+**Symptom 4:** Connection works with CLI but not with Inspector UI
+
+**Cause:** CLI uses stdio transport directly, Inspector UI requires HTTP transport with CORS headers
+
+**Solution:**
+```bash
+# CLI uses stdio (default)
+npx @gander-tools/osm-tagging-schema-mcp  # ✓ Works
+
+# Inspector requires HTTP transport
+TRANSPORT=http npm start  # Required for Inspector UI
+npx @modelcontextprotocol/inspector --transport http --server-url http://localhost:3000/
+```
+
+---
+
 ### Tool Not Found Error
 
 **Symptom:**

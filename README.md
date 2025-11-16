@@ -77,6 +77,22 @@ Add to your Claude Desktop configuration:
 - [docs/usage.md](./docs/usage.md) - Usage examples, workflows, and advanced deployment
 - [docs/api/](./docs/api/) - Complete API reference for all 7 tools
 
+### Testing with MCP Inspector
+
+Test and debug the server using the official [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
+
+```bash
+# Start server with HTTP transport
+npm run start:http
+
+# In another terminal, launch Inspector
+npx @modelcontextprotocol/inspector --transport http --server-url http://localhost:3000/
+```
+
+The Inspector UI will open in your browser at `http://localhost:6274` with a visual interface to test all 7 tools.
+
+📖 **More details**: [docs/configuration.md#cors-configuration](./docs/configuration.md#cors-configuration)
+
 ## Development
 
 Built with **Test-Driven Development (TDD)** - 301 tests (199 unit + 102 integration) with 100% pass rate.
