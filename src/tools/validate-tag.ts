@@ -77,7 +77,7 @@ export async function validateTag(key: string, value: string): Promise<Validatio
 	}
 
 	if (!value || value.trim() === "") {
-		const keyName = schemaLoader.getFieldLabel(key);
+		const keyName = schemaLoader.getTagKeyName(key);
 		return {
 			key,
 			keyName,
@@ -119,10 +119,9 @@ export async function validateTag(key: string, value: string): Promise<Validatio
 				replacementTags[k] = v;
 
 				// Get localized names for replacement tags
-				// Convert key to field path for translation lookup
-				const replFieldPath = k.replace(/:/g, "/");
-				const replKeyName = schemaLoader.getFieldLabel(replFieldPath);
-				const replValueName = schemaLoader.getFieldOptionName(replFieldPath, v).title;
+				// IMPORTANT: Use getTagKeyName/getTagValueName (same as get_tag_values)
+				const replKeyName = schemaLoader.getTagKeyName(k);
+				const replValueName = schemaLoader.getTagValueName(k, v);
 
 				replacementDetails.push({
 					key: k,
@@ -146,11 +145,9 @@ export async function validateTag(key: string, value: string): Promise<Validatio
 	const fieldPath = key.replace(/:/g, "/"); // Convert colon to slash for field lookup
 	type FieldsType = typeof fields;
 	let fieldDef: (typeof fields)[keyof typeof fields] | undefined;
-	let actualFieldPath = fieldPath; // Track the actual field path for translations
 
 	// Try direct path lookup first (most common case)
 	fieldDef = (fields as FieldsType)[fieldPath as keyof FieldsType];
-	actualFieldPath = fieldPath;
 
 	// If not found, search for field by matching field.key
 	if (!fieldDef) {
@@ -159,28 +156,23 @@ export async function validateTag(key: string, value: string): Promise<Validatio
 		);
 		if (matchingField) {
 			fieldDef = matchingField[1];
-			actualFieldPath = matchingField[0]; // Use the found field path for translations
 		}
 	}
 
-	// Get localized names for key and value using the field path (not the OSM key)
+	// Get localized names for key and value using tag deduction (NOT field labels!)
+	// IMPORTANT: Use getTagKeyName/getTagValueName (same as get_tag_values) NOT getFieldLabel/getFieldOptionName
 	let keyName = "";
 	let valueName = "";
 
 	try {
-		keyName = schemaLoader.getFieldLabel(actualFieldPath);
+		keyName = schemaLoader.getTagKeyName(key);
 	} catch (_error) {
 		// Fallback if translation lookup fails
 		keyName = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, " ");
 	}
 
 	try {
-		const optionName = schemaLoader.getFieldOptionName(actualFieldPath, value);
-		valueName = optionName?.title || "";
-		// Ensure we always have a valueName, use fallback if empty
-		if (!valueName) {
-			valueName = value.charAt(0).toUpperCase() + value.slice(1).replace(/_/g, " ");
-		}
+		valueName = schemaLoader.getTagValueName(key, value);
 	} catch (_error) {
 		// Fallback if translation lookup fails
 		valueName = value.charAt(0).toUpperCase() + value.slice(1).replace(/_/g, " ");
