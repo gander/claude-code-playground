@@ -334,7 +334,6 @@ src/
 ├── tools/                           # Tool implementations (one file per tool)
 │   ├── index.ts                     # Tool registry exports
 │   ├── types.ts                     # Shared type definitions for tools
-│   ├── check-deprecated.ts          # ✅ Validation tool
 │   ├── get-preset-details.ts        # ✅ Preset tool
 │   ├── get-tag-values.ts            # ✅ Tag query tool
 │   ├── search-presets.ts            # ✅ Preset tool
@@ -352,7 +351,6 @@ src/
 tests/                               # Test files (TDD - one test file per tool)
 ├── index.test.ts                    # Server tests
 ├── tools/                           # Unit tests (one file per tool)
-│   ├── check-deprecated.test.ts     # ✅ Present
 │   ├── get-preset-details.test.ts   # ✅ Present
 │   ├── get-tag-values.test.ts       # ✅ Present
 │   ├── search-presets.test.ts       # ✅ Present
@@ -368,7 +366,6 @@ tests/                               # Test files (TDD - one test file per tool)
     ├── helpers.ts                   # ✅ Shared test utilities
     ├── server-init.test.ts          # ✅ Server initialization tests
     ├── sse-transport.test.ts        # ✅ HTTP/SSE transport tests
-    ├── check-deprecated.test.ts     # ✅ Present
     ├── get-preset-details.test.ts   # ✅ Present
     ├── get-tag-values.test.ts       # ✅ Present
     ├── search-presets.test.ts       # ✅ Present
@@ -1047,8 +1044,8 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 **Phase 4: Testing ✅ COMPLETE**
 - ✅ Node.js test runner configured
 - ✅ Comprehensive test suite for all 7 tools
-- ✅ 199 unit tests passing (11 skipped)
-- ✅ 102 integration tests passing (11 skipped)
+- ✅ 319 unit tests passing (0 skipped)
+- ✅ 105 integration tests passing (0 skipped)
 - ✅ Modular structure: One integration test file per tool
 - ✅ Shared test utilities in `helpers.ts`
 - ✅ Testing with real OpenStreetMap data
@@ -1130,13 +1127,13 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
   - Updated docs/usage.md with Phase 8 localized examples
   - Updated CHANGELOG.md with Phase 8 changes
   - Updated ROADMAP.md to mark Phase 8 complete
-  - All tests passing (199 unit + 102 integration tests)
+  - All tests passing (319 unit + 105 integration tests)
 
 ### Current Status
 
 **All Systems Operational** ✅:
 - Build: Passing
-- Tests: 199 unit tests + 102 integration tests passing (11 skipped)
+- Tests: 319 unit tests + 105 integration tests passing (0 skipped)
 - Type checking: No errors
 - Linting: Clean
 
@@ -1145,7 +1142,7 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 - ✅ **Modular Architecture**: One file per tool for clarity and maintainability
 - ✅ **Alphabetical Tool Ordering**: Tools returned in alphabetical order for predictable API
 - ✅ **Tool Definition Interface**: `OsmToolDefinition` interface established
-- ✅ **Optimized Tool Set**: 8 non-redundant tools providing complete functionality
+- ✅ **Optimized Tool Set**: 7 non-redundant tools providing complete functionality
 
 **Historical Bug Fixes** (from previous development):
 - ✅ search_tags fields.json coverage (searches both fields.json and presets)
