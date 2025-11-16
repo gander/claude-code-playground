@@ -214,8 +214,11 @@ function buildTagsDetailed(tags: Record<string, string>): TagDetailed[] {
 			continue;
 		}
 
-		const keyName = schemaLoader.getFieldLabel(key);
-		const valueName = schemaLoader.getFieldOptionName(key, value).title;
+		// Get localized key name using tag key deduction (NOT field label!)
+		const keyName = schemaLoader.getTagKeyName(key);
+
+		// Get localized value name from presets first, then field options
+		const valueName = schemaLoader.getTagValueName(key, value);
 
 		tagsDetailed.push({
 			key,

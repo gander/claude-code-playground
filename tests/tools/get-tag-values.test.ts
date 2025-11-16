@@ -26,12 +26,37 @@ describe("get_tag_values", () => {
 			assert.strictEqual(response.key, "amenity", "key should match input");
 		});
 
-		it("should return keyName as localized field label", async () => {
+		it("should return keyName as title case formatted name (NOT field label)", async () => {
 			const response = await getTagValues("amenity");
 
-			// keyName should be localized (e.g., "Amenity" or formatted fallback)
+			// keyName should be title case formatted, NOT field label from fields.json
 			assert.ok(response.keyName.length > 0, "keyName should not be empty");
 			assert.strictEqual(typeof response.keyName, "string", "keyName should be a string");
+			assert.strictEqual(response.keyName, "Amenity", "keyName should be title case formatted");
+		});
+
+		it("should NOT use field label for parking key", async () => {
+			const response = await getTagValues("parking");
+
+			// CRITICAL: Should NOT return "Type" (field label from fields.json)
+			// Should return "Parking" (title case formatted name)
+			assert.strictEqual(
+				response.keyName,
+				"Parking",
+				"Should use title case formatting, NOT field label 'Type'",
+			);
+		});
+
+		it("should NOT use field label for parking_space key", async () => {
+			const response = await getTagValues("parking_space");
+
+			// CRITICAL: Should NOT return "Type" (field label from fields.json)
+			// Should return "Parking Space" (title case formatted name)
+			assert.strictEqual(
+				response.keyName,
+				"Parking Space",
+				"Should use title case formatting, NOT field label 'Type'",
+			);
 		});
 
 		it("should return values as simple string array", async () => {
@@ -66,6 +91,28 @@ describe("get_tag_values", () => {
 					"Should NOT have 'description' field (removed in refactor)",
 				);
 			}
+		});
+
+		it("should use preset names for valueName when preset exists", async () => {
+			const response = await getTagValues("amenity");
+
+			// Find "parking" value - should have valueName from preset "amenity/parking"
+			const parkingValue = response.valuesDetailed.find((v) => v.value === "parking");
+			assert.ok(parkingValue, "Should have parking value");
+			assert.strictEqual(
+				parkingValue.valueName,
+				"Parking Lot",
+				"Should use preset name 'Parking Lot' from amenity/parking preset",
+			);
+
+			// Find "restaurant" value - should have valueName from preset
+			const restaurantValue = response.valuesDetailed.find((v) => v.value === "restaurant");
+			assert.ok(restaurantValue, "Should have restaurant value");
+			assert.strictEqual(
+				restaurantValue.valueName,
+				"Restaurant",
+				"Should use preset name from amenity/restaurant preset",
+			);
 		});
 
 		it("should have matching counts between values and valuesDetailed", async () => {

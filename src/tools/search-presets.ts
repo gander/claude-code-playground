@@ -85,22 +85,17 @@ export async function searchPresets(
 
 			// Build tagsDetailed with localized names
 			const tagsDetailed: TagDetailed[] = Object.entries(preset.tags).map(([key, value]) => {
-				// Get localized key name (field label)
-				const keyName = schemaLoader.getFieldLabel(key);
+				// Get localized key name using tag key deduction (NOT field label!)
+				const keyName = schemaLoader.getTagKeyName(key);
 
-				// Get localized value name
-				const field = schemaLoader.findFieldByKey(key);
-				let valueName = value;
-
-				if (field && value !== "*") {
-					const optionInfo = schemaLoader.getFieldOptionName(key, value);
-					valueName = optionInfo.title;
-				} else if (value === "*") {
+				// Get localized value name from presets first, then field options
+				let valueName: string;
+				if (value === "*") {
 					// For wildcard values, use asterisk as-is
 					valueName = "*";
 				} else {
-					// No field definition, use formatted fallback
-					valueName = value.charAt(0).toUpperCase() + value.slice(1).replace(/_/g, " ");
+					// Use getTagValueName() which checks presets first
+					valueName = schemaLoader.getTagValueName(key, value);
 				}
 
 				return {

@@ -756,6 +756,156 @@ describe("SchemaLoader", () => {
 			});
 		});
 
+		describe("getTagKeyName", () => {
+			it("should return title case formatted name for single word keys", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagKeyName("parking");
+
+				// Should NOT use field label "Type" from fields.json
+				// Should use title case formatting: "parking" → "Parking"
+				assert.strictEqual(
+					name,
+					"Parking",
+					"Should return title case formatted name, not field label",
+				);
+			});
+
+			it("should return title case formatted name for multi-word keys", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagKeyName("parking_space");
+
+				// Should NOT use field label "Type" from fields.json
+				// Should use title case formatting: "parking_space" → "Parking Space"
+				assert.strictEqual(name, "Parking Space", "Should capitalize each word in multi-word keys");
+			});
+
+			it("should format keys with multiple underscores", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagKeyName("street_side_parking");
+
+				// "street_side_parking" → "Street Side Parking"
+				assert.strictEqual(
+					name,
+					"Street Side Parking",
+					"Should replace all underscores and capitalize each word",
+				);
+			});
+
+			it("should handle keys without underscores", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagKeyName("amenity");
+
+				// "amenity" → "Amenity"
+				assert.strictEqual(name, "Amenity", "Should capitalize single word keys");
+			});
+
+			it("should handle empty strings", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagKeyName("");
+
+				assert.strictEqual(name, "", "Should return empty string for empty input");
+			});
+
+			it("should throw error if schema not loaded", () => {
+				const loader = new SchemaLoader();
+
+				assert.throws(
+					() => loader.getTagKeyName("parking"),
+					/Schema not loaded/,
+					"Should throw error if schema not loaded",
+				);
+			});
+		});
+
+		describe("getTagValueName", () => {
+			it("should return preset name for value with matching preset", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagValueName("amenity", "parking");
+
+				// Should find preset "amenity/parking" and return its name "Parking Lot"
+				assert.strictEqual(name, "Parking Lot", "Should return preset name for amenity=parking");
+			});
+
+			it("should return preset name for parking_space", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagValueName("amenity", "parking_space");
+
+				// Should find preset "amenity/parking_space" and return its name
+				assert.strictEqual(
+					name,
+					"Parking Space",
+					"Should return preset name for amenity=parking_space",
+				);
+			});
+
+			it("should return preset name for restaurant", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagValueName("amenity", "restaurant");
+
+				// Should find preset "amenity/restaurant" and return its name
+				assert.strictEqual(name, "Restaurant", "Should return preset name for amenity=restaurant");
+			});
+
+			it("should fallback to field options when no preset exists", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagValueName("parking", "surface");
+
+				// No preset "parking/surface", should use field options or title case
+				assert.strictEqual(name, "Surface", "Should fallback to field options or title case");
+			});
+
+			it("should use title case for values without preset or field option", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagValueName("custom_key", "multi_word_value");
+
+				// No preset, no field option - should use title case
+				assert.strictEqual(
+					name,
+					"Multi word value",
+					"Should apply title case formatting as final fallback",
+				);
+			});
+
+			it("should handle empty value", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagValueName("amenity", "");
+
+				assert.strictEqual(name, "", "Should return empty string for empty value");
+			});
+
+			it("should throw error if schema not loaded", () => {
+				const loader = new SchemaLoader();
+
+				assert.throws(
+					() => loader.getTagValueName("amenity", "parking"),
+					/Schema not loaded/,
+					"Should throw error if schema not loaded",
+				);
+			});
+		});
+
 		describe("fallback formatting", () => {
 			it("should handle empty strings", async () => {
 				const loader = new SchemaLoader();
