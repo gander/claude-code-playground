@@ -329,6 +329,89 @@ export class SchemaLoader {
 	}
 
 	/**
+	 * Get the display name for a tag key (NOT field label!)
+	 *
+	 * IMPORTANT: This method does NOT use field labels from fields.json.
+	 * Field labels are UI strings for form fields, not tag key names.
+	 *
+	 * Algorithm:
+	 * - Replace underscores with spaces
+	 * - Apply title case (capitalize first letter of each word)
+	 *
+	 * Examples:
+	 * - "parking" → "Parking"
+	 * - "parking_space" → "Parking Space"
+	 * - "street_side" → "Street Side"
+	 *
+	 * @param tagKey - The OSM tag key (e.g., "parking", "parking_space")
+	 * @returns The formatted display name for the tag key
+	 */
+	getTagKeyName(tagKey: string): string {
+		if (!this.cache) {
+			throw new Error("Schema not loaded. Call loadSchema() first.");
+		}
+
+		// Handle empty or undefined input
+		if (!tagKey || tagKey.length === 0) {
+			return "";
+		}
+
+		// Replace underscores with spaces
+		const withSpaces = tagKey.replace(/_/g, " ");
+
+		// Title case - uppercase first letter of each word
+		return withSpaces
+			.split(" ")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+			.join(" ");
+	}
+
+	/**
+	 * Get the display name for a tag value
+	 *
+	 * Algorithm:
+	 * 1. Try to find a preset with ID "{key}/{value}" (e.g., "amenity/parking")
+	 * 2. If found, return the preset's localized name (e.g., "Parking Lot")
+	 * 3. If not found, try field options from fields.json
+	 * 4. If not found, apply title case formatting to the value
+	 *
+	 * Examples:
+	 * - getTagValueName("amenity", "parking") → "Parking Lot" (from preset amenity/parking)
+	 * - getTagValueName("parking", "surface") → "Surface" (from field options or title case)
+	 *
+	 * @param key - The OSM tag key (e.g., "amenity")
+	 * @param value - The OSM tag value (e.g., "parking")
+	 * @returns The display name for the tag value
+	 */
+	getTagValueName(key: string, value: string): string {
+		if (!this.cache) {
+			throw new Error("Schema not loaded. Call loadSchema() first.");
+		}
+
+		// Handle empty input
+		if (!key || key.length === 0 || !value || value.length === 0) {
+			return "";
+		}
+
+		// Try to find preset with ID "{key}/{value}"
+		const presetId = `${key}/${value}`;
+		if (this.cache.presets[presetId]) {
+			return this.getPresetName(presetId);
+		}
+
+		// Fallback to field options
+		const fieldKeyLookup = key.replace(/:/g, "/");
+		const fieldOption = this.getFieldOptionName(fieldKeyLookup, value);
+		if (fieldOption.title !== this.formatFallbackName(value)) {
+			// Field option exists and is not just formatted fallback
+			return fieldOption.title;
+		}
+
+		// Final fallback: title case formatting
+		return this.formatFallbackName(value);
+	}
+
+	/**
 	 * Generate a human-readable fallback name from a key/ID
 	 * Applies: uppercase first letter + replace underscores with spaces
 	 * @param key - The key or ID to format (e.g., "fast_food", "amenity/restaurant")

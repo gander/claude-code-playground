@@ -95,6 +95,47 @@ describe("search_presets", () => {
 
 			assert.deepStrictEqual(results1, results2, "Results should be identical from cache");
 		});
+
+		it("should use preset names for tagsDetailed valueName", async () => {
+			const results = await searchPresets("amenity=parking");
+			const parkingPreset = results.find((r) => r.id === "amenity/parking");
+
+			assert.ok(parkingPreset, "Should find amenity/parking preset");
+
+			const amenityTag = parkingPreset.tagsDetailed.find((t) => t.key === "amenity");
+			assert.ok(amenityTag, "Should have amenity tag in tagsDetailed");
+
+			// keyName should use title case formatting, NOT field label "Type"
+			assert.strictEqual(
+				amenityTag.keyName,
+				"Amenity",
+				"keyName should be 'Amenity', not field label 'Type'",
+			);
+
+			// valueName should use preset name "Parking Lot", NOT "Parking"
+			assert.strictEqual(
+				amenityTag.valueName,
+				"Parking Lot",
+				"valueName should be 'Parking Lot' from preset amenity/parking",
+			);
+		});
+
+		it("should use preset names for multiple presets", async () => {
+			const results = await searchPresets("amenity=restaurant");
+			const restaurantPreset = results.find((r) => r.id === "amenity/restaurant");
+
+			assert.ok(restaurantPreset, "Should find amenity/restaurant preset");
+
+			const amenityTag = restaurantPreset.tagsDetailed.find((t) => t.key === "amenity");
+			assert.ok(amenityTag, "Should have amenity tag in tagsDetailed");
+
+			assert.strictEqual(amenityTag.keyName, "Amenity", "keyName should be 'Amenity'");
+			assert.strictEqual(
+				amenityTag.valueName,
+				"Restaurant",
+				"valueName should be 'Restaurant' from preset",
+			);
+		});
 	});
 
 	describe("JSON Schema Validation", () => {
