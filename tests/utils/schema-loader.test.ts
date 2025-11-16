@@ -756,6 +756,77 @@ describe("SchemaLoader", () => {
 			});
 		});
 
+		describe("getTagKeyName", () => {
+			it("should return title case formatted name for single word keys", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagKeyName("parking");
+
+				// Should NOT use field label "Type" from fields.json
+				// Should use title case formatting: "parking" → "Parking"
+				assert.strictEqual(
+					name,
+					"Parking",
+					"Should return title case formatted name, not field label",
+				);
+			});
+
+			it("should return title case formatted name for multi-word keys", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagKeyName("parking_space");
+
+				// Should NOT use field label "Type" from fields.json
+				// Should use title case formatting: "parking_space" → "Parking Space"
+				assert.strictEqual(name, "Parking Space", "Should capitalize each word in multi-word keys");
+			});
+
+			it("should format keys with multiple underscores", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagKeyName("street_side_parking");
+
+				// "street_side_parking" → "Street Side Parking"
+				assert.strictEqual(
+					name,
+					"Street Side Parking",
+					"Should replace all underscores and capitalize each word",
+				);
+			});
+
+			it("should handle keys without underscores", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagKeyName("amenity");
+
+				// "amenity" → "Amenity"
+				assert.strictEqual(name, "Amenity", "Should capitalize single word keys");
+			});
+
+			it("should handle empty strings", async () => {
+				const loader = new SchemaLoader();
+				await loader.loadSchema();
+
+				const name = loader.getTagKeyName("");
+
+				assert.strictEqual(name, "", "Should return empty string for empty input");
+			});
+
+			it("should throw error if schema not loaded", () => {
+				const loader = new SchemaLoader();
+
+				assert.throws(
+					() => loader.getTagKeyName("parking"),
+					/Schema not loaded/,
+					"Should throw error if schema not loaded",
+				);
+			});
+		});
+
 		describe("fallback formatting", () => {
 			it("should handle empty strings", async () => {
 				const loader = new SchemaLoader();

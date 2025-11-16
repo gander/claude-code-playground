@@ -56,8 +56,9 @@ export async function getTagValues(tagKey: string): Promise<TagValuesResponse> {
 		}
 	}
 
-	// Get localized key name using schema loader's translation utilities
-	const keyName = schemaLoader.getFieldLabel(fieldKeyLookup);
+	// Get localized key name using tag key deduction (NOT field label!)
+	// IMPORTANT: Do NOT use getFieldLabel() - that returns form field labels, not tag names
+	const keyName = schemaLoader.getTagKeyName(actualKey);
 
 	// Build simple values array and detailed values array
 	const values: string[] = [];
