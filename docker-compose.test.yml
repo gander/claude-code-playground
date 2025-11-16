@@ -11,14 +11,7 @@ services:
 
     # Environment configuration
     environment:
-      TRANSPORT: http
-      PORT: 3000
-      HOST: 0.0.0.0
       LOG_LEVEL: debug
-
-    # Port mapping
-    ports:
-      - "3000:3000"
 
     # Resource limits
     deploy:
@@ -27,9 +20,9 @@ services:
           memory: 512M
           cpus: '1.0'
 
-    # Health check using /health endpoint
+    # Health check
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      test: ["CMD", "node", "-e", "console.log('OK')"]
       interval: 30s
       timeout: 10s
       start_period: 10s

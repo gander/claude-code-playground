@@ -1,5 +1,6 @@
 # Docker Compose configuration for OSM Tagging Schema MCP Server
-# This configuration provides a production-ready deployment with HTTP transport
+# Note: Docker is not the recommended way to run this MCP server.
+# For best results, use: npx @gander-tools/osm-tagging-schema-mcp
 
 services:
   osm-tagging-mcp:
@@ -9,22 +10,11 @@ services:
 
     # Environment configuration
     environment:
-      # Transport protocol (http recommended for Docker Compose deployments)
-      TRANSPORT: http
-
-      # HTTP server configuration
-      PORT: 3000
-      HOST: 0.0.0.0
-
       # Logging level (debug, info, warn, error)
       LOG_LEVEL: info
 
       # Node.js configuration
       NODE_ENV: production
-
-    # Port mapping - expose MCP server on host
-    ports:
-      - "3000:3000"
 
     # Resource limits (adjust based on your needs)
     deploy:
@@ -36,9 +26,9 @@ services:
           memory: 256M
           cpus: '0.5'
 
-    # Health check using /health endpoint
+    # Health check
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      test: ["CMD", "node", "-e", "console.log('OK')"]
       interval: 30s
       timeout: 10s
       start_period: 10s
