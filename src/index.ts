@@ -40,6 +40,7 @@ interface TransportConfig {
 	type: "stdio" | "sse" | "http";
 	port: number;
 	host: string;
+	corsOrigins: string[];
 }
 
 /**
@@ -56,7 +57,15 @@ function getTransportConfig(): TransportConfig {
 	const port = Number.parseInt(process.env.PORT || "3000", 10);
 	const host = process.env.HOST || "0.0.0.0";
 
-	return { type, port, host };
+	// Parse CORS origins from environment variable
+	// Default origins: MCP Inspector UI (localhost:6274) and web-based Inspector (mcp.ziziyi.com)
+	const defaultOrigins = ["http://localhost:6274", "https://mcp.ziziyi.com"];
+	const corsOriginsEnv = process.env.CORS_ORIGINS;
+	const corsOrigins = corsOriginsEnv
+		? corsOriginsEnv.split(",").map((o) => o.trim())
+		: defaultOrigins;
+
+	return { type, port, host, corsOrigins };
 }
 
 /**
@@ -157,6 +166,33 @@ export function wrapResponseWithKeepAlive(
 }
 
 /**
+ * Set CORS headers on HTTP response
+ * @param req - The incoming HTTP request
+ * @param res - The HTTP server response
+ * @param allowedOrigins - Array of allowed origins
+ * @internal - Exported for testing purposes
+ */
+export function setCorsHeaders(
+	req: http.IncomingMessage,
+	res: http.ServerResponse,
+	allowedOrigins: string[],
+): void {
+	const origin = req.headers.origin;
+
+	// Check if origin is allowed
+	if (origin && allowedOrigins.includes(origin)) {
+		res.setHeader("Access-Control-Allow-Origin", origin);
+	} else if (allowedOrigins.includes("*")) {
+		res.setHeader("Access-Control-Allow-Origin", "*");
+	}
+
+	res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE");
+	res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, mcp-session-id");
+	res.setHeader("Access-Control-Allow-Credentials", "true");
+	res.setHeader("Access-Control-Max-Age", "86400"); // 24 hours
+}
+
+/**
  * Create and start HTTP server with SSE transport
  */
 async function startHttpServer(server: McpServer, config: TransportConfig): Promise<void> {
@@ -166,6 +202,16 @@ async function startHttpServer(server: McpServer, config: TransportConfig): Prom
 
 		const httpServer = http.createServer(async (req, res) => {
 			try {
+				// Set CORS headers for all requests
+				setCorsHeaders(req, res, config.corsOrigins);
+
+				// Handle OPTIONS preflight requests
+				if (req.method === "OPTIONS") {
+					res.writeHead(204);
+					res.end();
+					return;
+				}
+
 				// Health check endpoints
 				if (req.url === "/health" && req.method === "GET") {
 					// Liveness probe - is the server running?
@@ -273,9 +319,11 @@ async function startHttpServer(server: McpServer, config: TransportConfig): Prom
 				`OSM Tagging Schema MCP Server running on http://${config.host}:${config.port}`,
 				"main",
 			);
+			logger.info(`CORS enabled for origins: ${config.corsOrigins.join(", ")}`, "main");
 			console.error(
 				`OSM Tagging Schema MCP Server running on http://${config.host}:${config.port}`,
 			);
+			console.error(`CORS enabled for origins: ${config.corsOrigins.join(", ")}`);
 			resolve();
 		});
 	});
