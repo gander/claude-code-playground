@@ -66,6 +66,41 @@ describe("get_preset_details", () => {
 			assert.strictEqual(firstTag.value, "restaurant");
 		});
 
+		it("should use preset names for tagsDetailed valueName", async () => {
+			const result = await getPresetDetails("amenity/parking");
+
+			const amenityTag = result.tagsDetailed.find((t) => t.key === "amenity");
+			assert.ok(amenityTag, "Should have amenity tag in tagsDetailed");
+
+			// keyName should use title case formatting, NOT field label "Type"
+			assert.strictEqual(
+				amenityTag.keyName,
+				"Amenity",
+				"keyName should be 'Amenity', not field label 'Type'",
+			);
+
+			// valueName should use preset name "Parking Lot", NOT "Parking"
+			assert.strictEqual(
+				amenityTag.valueName,
+				"Parking Lot",
+				"valueName should be 'Parking Lot' from preset amenity/parking",
+			);
+		});
+
+		it("should use preset names for tagsDetailed in multiple presets", async () => {
+			const result = await getPresetDetails("amenity/restaurant");
+
+			const amenityTag = result.tagsDetailed.find((t) => t.key === "amenity");
+			assert.ok(amenityTag, "Should have amenity tag in tagsDetailed");
+
+			assert.strictEqual(amenityTag.keyName, "Amenity", "keyName should be 'Amenity'");
+			assert.strictEqual(
+				amenityTag.valueName,
+				"Restaurant",
+				"valueName should be 'Restaurant' from preset",
+			);
+		});
+
 		it("should return geometry array", async () => {
 			const result = await getPresetDetails("amenity/restaurant");
 
