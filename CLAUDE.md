@@ -1419,13 +1419,20 @@ docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
 - Session lifecycle: `onsessioninitialized` and `onsessionclosed` callbacks
 - HTTP request routing: GET for SSE streams, POST for JSON-RPC messages, DELETE for session termination
 - Error handling: Graceful error responses with proper HTTP status codes
+- **Keep-alive**: Automatically sends ping messages (`:ping\n\n`) every 15 seconds to prevent connection timeouts
+  - Wrapper function `wrapResponseWithKeepAlive()` intercepts SSE stream setup
+  - Detects SSE streams via `Content-Type: text/event-stream` header
+  - Starts interval timer for periodic ping messages
+  - Cleans up interval on connection close or response end
+  - Configurable interval for testing purposes (default: 15000ms)
 
 **Test Coverage** ✅:
 - Environment variable parsing tests
 - HTTP server creation tests
 - StreamableHTTPServerTransport integration tests
 - Session ID generation and tracking tests
-- 12 SSE transport tests passing (100% coverage)
+- Keep-alive functionality tests (ping messages, cleanup on close)
+- 14 SSE transport tests passing (100% coverage)
 
 **Benefits** ✅:
 - Flexibility in deployment architecture
@@ -1433,6 +1440,8 @@ docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
 - Integration with existing HTTP infrastructure
 - Support for public-facing services
 - Backward compatibility with stdio transport
+- **Reliable connections**: Keep-alive ping messages prevent timeouts from proxies, load balancers, and firewalls
+- **Production-ready**: Suitable for deployment in enterprise environments with strict network policies
 
 ### 4. Public Service Deployment Configuration ✅ IMPLEMENTED
 

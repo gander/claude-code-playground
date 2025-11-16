@@ -60,6 +60,103 @@ function getTransportConfig(): TransportConfig {
 }
 
 /**
+ * Wraps a ServerResponse to add SSE keep-alive functionality
+ * When the response becomes an SSE stream, automatically sends ping messages every 15 seconds
+ * @param res - The HTTP server response to wrap
+ * @param req - The HTTP incoming request
+ * @param keepAliveIntervalMs - Keep-alive ping interval in milliseconds (default: 15000ms = 15s)
+ * @internal - Exported for testing purposes
+ */
+export function wrapResponseWithKeepAlive(
+	res: http.ServerResponse,
+	req: http.IncomingMessage,
+	keepAliveIntervalMs = 15000,
+): http.ServerResponse {
+	let keepAliveInterval: NodeJS.Timeout | undefined;
+
+	// Store original methods
+	const originalWriteHead = res.writeHead.bind(res);
+	const originalEnd = res.end.bind(res);
+
+	// Override writeHead to detect SSE streams
+	res.writeHead = ((
+		statusCode: number,
+		statusMessage?: string | http.OutgoingHttpHeaders,
+		headers?: http.OutgoingHttpHeaders,
+	): http.ServerResponse => {
+		// Handle overloaded writeHead signature
+		let finalHeaders: http.OutgoingHttpHeaders = {};
+
+		if (typeof statusMessage === "object") {
+			finalHeaders = statusMessage;
+		} else if (headers) {
+			finalHeaders = headers;
+		}
+
+		// Check if this is an SSE stream
+		const contentType = finalHeaders["Content-Type"] || finalHeaders["content-type"];
+		if (contentType === "text/event-stream") {
+			logger.debug("SSE stream detected, enabling keep-alive", "KeepAlive");
+
+			// Start keep-alive ping interval
+			keepAliveInterval = setInterval(() => {
+				try {
+					if (!res.writableEnded) {
+						res.write(":ping\n\n");
+						logger.debug("Keep-alive ping sent", "KeepAlive");
+					} else {
+						// Stream ended, clear interval
+						if (keepAliveInterval) {
+							clearInterval(keepAliveInterval);
+							keepAliveInterval = undefined;
+						}
+					}
+				} catch (error) {
+					logger.error(
+						"Error sending keep-alive ping",
+						"KeepAlive",
+						error instanceof Error ? error : new Error(String(error)),
+					);
+					if (keepAliveInterval) {
+						clearInterval(keepAliveInterval);
+						keepAliveInterval = undefined;
+					}
+				}
+			}, keepAliveIntervalMs);
+
+			logger.info(`Keep-alive interval started (${keepAliveIntervalMs}ms)`, "KeepAlive");
+		}
+
+		// Call original writeHead
+		if (typeof statusMessage === "string") {
+			return originalWriteHead(statusCode, statusMessage, finalHeaders);
+		}
+		return originalWriteHead(statusCode, finalHeaders);
+	}) as typeof res.writeHead;
+
+	// Override end to clean up interval
+	res.end = ((...args: Parameters<typeof originalEnd>): http.ServerResponse => {
+		if (keepAliveInterval) {
+			clearInterval(keepAliveInterval);
+			keepAliveInterval = undefined;
+			logger.info("Keep-alive interval stopped (response ended)", "KeepAlive");
+		}
+		return originalEnd(...args);
+	}) as typeof res.end;
+
+	// Clean up on connection close
+	req.on("close", () => {
+		if (keepAliveInterval) {
+			clearInterval(keepAliveInterval);
+			keepAliveInterval = undefined;
+			logger.info("Keep-alive interval stopped (connection closed)", "KeepAlive");
+		}
+	});
+
+	return res;
+}
+
+/**
  * Create and start HTTP server with SSE transport
  */
 async function startHttpServer(server: McpServer, config: TransportConfig): Promise<void> {
@@ -115,6 +212,9 @@ async function startHttpServer(server: McpServer, config: TransportConfig): Prom
 					return;
 				}
 
+				// Wrap response with keep-alive functionality for SSE streams
+				const wrappedRes = wrapResponseWithKeepAlive(res, req);
+
 				// Get session ID from header if present
 				const sessionId =
 					typeof req.headers["mcp-session-id"] === "string"
@@ -148,8 +248,8 @@ async function startHttpServer(server: McpServer, config: TransportConfig): Prom
 					await server.connect(transport);
 				}
 
-				// Handle the HTTP request
-				await transport.handleRequest(req, res);
+				// Handle the HTTP request with wrapped response
+				await transport.handleRequest(req, wrappedRes);
 			} catch (error) {
 				logger.error(
 					"Error handling HTTP request",
