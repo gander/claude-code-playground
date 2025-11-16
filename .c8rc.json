@@ -1,0 +1,18 @@
+{
+	"all": true,
+	"include": ["src/**/*.ts"],
+	"exclude": [
+		"**/*.test.ts",
+		"**/*.spec.ts",
+		"**/tests/**",
+		"**/dist/**",
+		"**/coverage/**",
+		"**/node_modules/**",
+		"**/src/types/**",
+		"**/src/tools/types.ts",
+		"**/src/index.ts"
+	],
+	"reporter": ["text", "lcov", "html"],
+	"clean": true,
+	"check-coverage": false
+}
