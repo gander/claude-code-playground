@@ -69,13 +69,14 @@ export async function getTagValues(tagKey: string): Promise<TagValuesResponse> {
 		// Add to simple values array
 		values.push(valueKey);
 
-		// Get localized value name using schema loader's translation utilities
-		const { title } = schemaLoader.getFieldOptionName(fieldKeyLookup, valueKey);
+		// Get localized value name from presets first, then field options
+		// IMPORTANT: Use getTagValueName() which checks presets (e.g., amenity/parking → "Parking Lot")
+		const valueName = schemaLoader.getTagValueName(actualKey, valueKey);
 
 		// Add to detailed values array (NO description field in Phase 8.3 format)
 		valuesDetailed.push({
 			value: valueKey,
-			valueName: title,
+			valueName,
 		});
 	}
 

@@ -93,6 +93,28 @@ describe("get_tag_values", () => {
 			}
 		});
 
+		it("should use preset names for valueName when preset exists", async () => {
+			const response = await getTagValues("amenity");
+
+			// Find "parking" value - should have valueName from preset "amenity/parking"
+			const parkingValue = response.valuesDetailed.find((v) => v.value === "parking");
+			assert.ok(parkingValue, "Should have parking value");
+			assert.strictEqual(
+				parkingValue.valueName,
+				"Parking Lot",
+				"Should use preset name 'Parking Lot' from amenity/parking preset",
+			);
+
+			// Find "restaurant" value - should have valueName from preset
+			const restaurantValue = response.valuesDetailed.find((v) => v.value === "restaurant");
+			assert.ok(restaurantValue, "Should have restaurant value");
+			assert.strictEqual(
+				restaurantValue.valueName,
+				"Restaurant",
+				"Should use preset name from amenity/restaurant preset",
+			);
+		});
+
 		it("should have matching counts between values and valuesDetailed", async () => {
 			const response = await getTagValues("amenity");
 
