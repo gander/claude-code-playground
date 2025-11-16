@@ -365,7 +365,6 @@ tests/                               # Test files (TDD - one test file per tool)
 └── integration/                     # Integration tests (one file per tool)
     ├── helpers.ts                   # ✅ Shared test utilities
     ├── server-init.test.ts          # ✅ Server initialization tests
-    ├── sse-transport.test.ts        # ✅ HTTP/SSE transport tests
     ├── get-preset-details.test.ts   # ✅ Present
     ├── get-tag-values.test.ts       # ✅ Present
     ├── search-presets.test.ts       # ✅ Present
@@ -1082,9 +1081,8 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 - ✅ **Docker Support**: Multi-stage builds, multi-arch (amd64/arm64), image signing (Cosign)
 - ✅ **Container Registry**: Images published to GitHub Container Registry (ghcr.io)
 - ✅ **Security Scanning**: Trivy vulnerability scanning, security reports
-- ✅ **Transport Protocols**: stdio (default), HTTP/SSE for web clients
-- ✅ **Docker Compose**: Production, development, and test configurations
-- ✅ **Health Checks**: `/health` (liveness) and `/ready` (readiness) endpoints
+- ✅ **Transport Protocol**: stdio only (HTTP/SSE support removed)
+- ✅ **Docker Compose**: Simplified configurations for stdio transport
 
 **Phase 8: Schema Builder API Refactor ✅ COMPLETE**
 - ✅ **Translation Infrastructure (8.1)**: Full localization support in SchemaLoader
@@ -1236,7 +1234,7 @@ GNU General Public License v3.0 (GPL-3.0)
 - OpenStreetMap Tagging Schema: https://github.com/openstreetmap/id-tagging-schema
 - OSM Wiki Tags: https://wiki.openstreetmap.org/wiki/Tags
 
-## Future Plans (Phase 7: Distribution & Deployment)
+## Distribution & Deployment (Phase 7 - Complete)
 
 ### 1. NPM Publishing with Provenance ✅ IMPLEMENTED
 
@@ -1349,148 +1347,28 @@ npx @modelcontextprotocol/inspector docker run -i --rm --pull always \
   ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 ```
 
-### 3. Additional Transport Protocols ✅ IMPLEMENTED
+### 3. Docker Deployment Configuration ✅ IMPLEMENTED
 
-**Goal**: Support multiple transport protocols beyond stdio for diverse deployment scenarios.
+**Goal**: Provide containerized deployment option for stdio-based MCP server.
 
-**Status**: ✅ **COMPLETED** - HTTP Streamable transport implemented with SSE support
-
-**Supported Transports**:
-
-**a) stdio (Standard Input/Output)** ✅
-- Default transport for MCP clients
-- Process-based communication
-- Use case: CLI tools, Claude Desktop integration
-- **Configuration**: No environment variables needed (default)
-
-**b) HTTP Streamable** ✅
-- HTTP-based streaming with Server-Sent Events
-- Full MCP Streamable HTTP transport specification
-- Stateful session management with UUID session IDs
-- Compatible with web browsers and HTTP clients
-- Use case: Web applications, API gateways, scalable deployments
-- **Configuration**: `TRANSPORT=http` (recommended)
-
-**c) SSE (Server-Sent Events)** ✅
-- Alias for HTTP transport (backward compatibility)
-- Same implementation as HTTP transport
-- **Configuration**: `TRANSPORT=sse` (legacy, kept for compatibility)
-
-**Transport Configuration** ✅:
-```bash
-# Environment variables
-TRANSPORT=stdio|http|sse    # Default: stdio
-PORT=3000                   # Default: 3000 (HTTP/SSE only)
-HOST=0.0.0.0                # Default: 0.0.0.0 (HTTP/SSE only)
-```
-
-**Usage Examples** ✅:
-```bash
-# stdio transport (default)
-npx @gander-tools/osm-tagging-schema-mcp
-
-# HTTP transport (recommended)
-TRANSPORT=http npx @gander-tools/osm-tagging-schema-mcp
-
-# SSE transport (legacy, same as http)
-TRANSPORT=sse npx @gander-tools/osm-tagging-schema-mcp
-
-# HTTP with custom port
-TRANSPORT=http PORT=8080 npx @gander-tools/osm-tagging-schema-mcp
-
-# npm scripts
-npm run start:http  # Start with HTTP transport on port 3000
-npm run start:sse   # Start with SSE transport on port 3000 (legacy)
-npm run dev:http    # Development mode with HTTP transport
-npm run dev:sse     # Development mode with SSE transport (legacy)
-
-# Docker with HTTP (using latest stable)
-docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
-  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
-
-# Docker with HTTP (using edge/development)
-docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
-  ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
-```
-
-**Implementation Details** ✅:
-- Uses `StreamableHTTPServerTransport` from MCP SDK (not deprecated `SSEServerTransport`)
-- Session management: Tracks multiple sessions with UUID-based session IDs
-- Session lifecycle: `onsessioninitialized` and `onsessionclosed` callbacks
-- HTTP request routing: GET for SSE streams, POST for JSON-RPC messages, DELETE for session termination
-- Error handling: Graceful error responses with proper HTTP status codes
-- **Keep-alive**: Automatically sends ping messages (`:ping\n\n`) every 15 seconds to prevent connection timeouts
-  - Wrapper function `wrapResponseWithKeepAlive()` intercepts SSE stream setup
-  - Detects SSE streams via `Content-Type: text/event-stream` header
-  - Starts interval timer for periodic ping messages
-  - Cleans up interval on connection close or response end
-  - Configurable interval for testing purposes (default: 15000ms)
-
-**Test Coverage** ✅:
-- Environment variable parsing tests
-- HTTP server creation tests
-- StreamableHTTPServerTransport integration tests
-- Session ID generation and tracking tests
-- Keep-alive functionality tests (ping messages, cleanup on close)
-- 14 SSE transport tests passing (100% coverage)
-
-**Benefits** ✅:
-- Flexibility in deployment architecture
-- Web browser accessibility
-- Integration with existing HTTP infrastructure
-- Support for public-facing services
-- Backward compatibility with stdio transport
-- **Reliable connections**: Keep-alive ping messages prevent timeouts from proxies, load balancers, and firewalls
-- **Production-ready**: Suitable for deployment in enterprise environments with strict network policies
-
-### 4. Public Service Deployment Configuration ✅ IMPLEMENTED
-
-**Goal**: Enable deployment as a publicly accessible service with proper security and operations.
-
-**Status**: ✅ **COMPLETED** - Production-ready Docker Compose deployment with health checks
+**Status**: ✅ **COMPLETED** - Simplified Docker deployment for stdio transport
 
 **Implementation**:
-
-**Health Check Endpoints** ✅:
-- **Liveness probe**: `/health` endpoint returns server status
-  - Simple check: Is the server running?
-  - Response: `{ status: "ok", service: "osm-tagging-schema-mcp", timestamp: "..." }`
-- **Readiness probe**: `/ready` endpoint validates schema loaded
-  - Complex check: Is the server ready to handle requests?
-  - Response includes schema stats: presets count, fields count, version
-  - Returns 503 if schema not loaded yet
-- **Docker integration**: Health checks work with both stdio and HTTP transports
-  - HTTP: Uses `/health` endpoint
-  - stdio: Falls back to Node.js check
 
 **Docker Compose Configurations** ✅:
 - **Production**: `docker-compose.yml`
   - Latest stable image
-  - HTTP transport on port 3000
+  - stdio transport (only supported protocol)
   - Resource limits: 512MB RAM, 1 CPU
   - Read-only filesystem for security
-  - Automated health checks
+  - Basic health checks
   - Network isolation
 - **Development**: `docker-compose.dev.yml`
   - Development image with debug logging
   - Higher resource limits (1GB RAM, 2 CPU)
-  - Hot reload support
 - **Testing**: `docker-compose.test.yml`
   - Local build configuration
   - Debug logging enabled
-
-**Documentation** ✅:
-- Comprehensive deployment guide: `docs/deployment.md`
-  - Quick start instructions
-  - Production deployment checklist
-  - Configuration options (environment variables, ports, resources)
-  - Health check documentation
-  - Monitoring and logging
-  - Scaling strategies (vertical and horizontal)
-  - Security best practices
-  - Troubleshooting guide
-- Docker Compose quick start in `docs/configuration.md`
-- Updated README.md with deployment link
 
 **Security Features** ✅:
 - **No new privileges**: Security option enabled
@@ -1498,17 +1376,13 @@ docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
 - **Non-root user**: Container runs as unprivileged user
 - **Network isolation**: Bridge network with optional custom configuration
 
-**Future Security Enhancements** (not yet implemented):
-- **Authentication**: API key, JWT, OAuth 2.0
-- **Rate Limiting**: Per-IP and per-user quotas
-- **TLS/HTTPS**: Certificate management (Let's Encrypt)
+**Note**: Docker is not the recommended deployment method for this MCP server. For best results, use `npx @gander-tools/osm-tagging-schema-mcp` directly.
 
 **Benefits** ✅:
-- Production-ready deployment with Docker Compose
-- Automated health monitoring and recovery
-- Easy configuration and management
-- Reproducible deployments
+- Isolated execution environment
+- Reproducible builds
 - Security-hardened containers
+- Simple health checks
 
 ## Future Enhancements (Schema-Builder Inspired)
 
