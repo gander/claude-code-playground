@@ -357,6 +357,54 @@ docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
 LOG_LEVEL=debug npx @gander-tools/osm-tagging-schema-mcp
 ```
 
+### CORS Configuration
+
+**`CORS_ORIGINS`** - Configure allowed origins for HTTP transport (default: `http://localhost:6274,https://mcp.ziziyi.com`)
+
+When using HTTP transport, the server supports CORS (Cross-Origin Resource Sharing) to allow web browsers and HTTP clients to connect. By default, the server allows connections from:
+- `http://localhost:6274` - MCP Inspector UI
+- `https://mcp.ziziyi.com` - Web-based MCP Inspector
+
+**Custom CORS origins:**
+```bash
+# Allow custom origins
+CORS_ORIGINS="http://example.com,https://example.org" TRANSPORT=http npm start
+
+# Allow all origins (NOT recommended for production)
+CORS_ORIGINS="*" TRANSPORT=http npm start
+```
+
+**Testing with MCP Inspector:**
+
+The [MCP Inspector](https://github.com/modelcontextprotocol/inspector) is an official tool for testing and debugging MCP servers.
+
+**Start server with HTTP transport:**
+```bash
+# Using npm script
+npm run start:http
+
+# Or manually
+TRANSPORT=http PORT=3000 npm start
+```
+
+**Connect using MCP Inspector:**
+```bash
+# Launch Inspector with HTTP transport
+npx @modelcontextprotocol/inspector --transport http --server-url http://localhost:3000/
+```
+
+**Connection type:** The Inspector uses a proxy connection to bridge browser-based UI with the HTTP server.
+
+**Verify connection:**
+1. Inspector UI opens in browser (default: http://localhost:6274)
+2. Click "Connect" button
+3. Server tools should appear in the UI
+
+**Common CORS issues:**
+- **Error: "Connection failed"** → Check CORS_ORIGINS includes `http://localhost:6274`
+- **Error: "Network error"** → Ensure server is running on correct port
+- **Error: "Origin not allowed"** → Add your origin to CORS_ORIGINS
+
 ### Node.js Configuration
 
 **For development**, you can also use standard Node.js environment variables:

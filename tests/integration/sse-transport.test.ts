@@ -52,6 +52,22 @@ describe("SSE Transport Integration Tests", () => {
 			process.env.HOST = "127.0.0.1";
 			assert.strictEqual(process.env.HOST, "127.0.0.1");
 		});
+
+		it("should use default CORS origins when CORS_ORIGINS is not set", () => {
+			delete process.env.CORS_ORIGINS;
+			const defaultOrigins = ["http://localhost:6274", "https://mcp.ziziyi.com"];
+			const corsOriginsEnv = process.env.CORS_ORIGINS;
+			const corsOrigins = corsOriginsEnv
+				? corsOriginsEnv.split(",").map((o) => o.trim())
+				: defaultOrigins;
+			assert.deepStrictEqual(corsOrigins, defaultOrigins);
+		});
+
+		it("should use custom CORS origins when CORS_ORIGINS is set", () => {
+			process.env.CORS_ORIGINS = "http://example.com, https://example.org";
+			const corsOrigins = process.env.CORS_ORIGINS.split(",").map((o) => o.trim());
+			assert.deepStrictEqual(corsOrigins, ["http://example.com", "https://example.org"]);
+		});
 	});
 
 	describe("HTTP Server Creation", () => {
@@ -338,6 +354,158 @@ describe("SSE Transport Integration Tests", () => {
 				/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(generatedSessionId),
 				"Session ID should be a valid UUID",
 			);
+		});
+	});
+
+	describe("CORS Functionality", () => {
+		let server: http.Server | null = null;
+
+		afterEach(async () => {
+			if (server) {
+				await new Promise<void>((resolve) => {
+					server?.close(() => {
+						server = null;
+						resolve();
+					});
+				});
+			}
+		});
+
+		it("should add CORS headers to responses", async () => {
+			const { setCorsHeaders } = await import("../../src/index.js");
+
+			server = http.createServer((req, res) => {
+				setCorsHeaders(req, res, ["http://localhost:6274", "https://mcp.ziziyi.com"]);
+				res.writeHead(200);
+				res.end("OK");
+			});
+
+			await new Promise<void>((resolve) => {
+				server?.listen(0, () => {
+					const address = server?.address();
+					assert.ok(address && typeof address === "object");
+
+					if (typeof address === "object" && address) {
+						const options = {
+							hostname: "localhost",
+							port: address.port,
+							path: "/",
+							method: "GET",
+							headers: {
+								Origin: "http://localhost:6274",
+							},
+						};
+
+						const req = http.request(options, (res) => {
+							assert.strictEqual(res.statusCode, 200);
+							assert.strictEqual(
+								res.headers["access-control-allow-origin"],
+								"http://localhost:6274",
+							);
+							assert.strictEqual(
+								res.headers["access-control-allow-methods"],
+								"GET, POST, OPTIONS, DELETE",
+							);
+							assert.ok(res.headers["access-control-allow-headers"]);
+							assert.strictEqual(res.headers["access-control-allow-credentials"], "true");
+							resolve();
+						});
+
+						req.end();
+					}
+				});
+			});
+		});
+
+		it("should handle OPTIONS preflight requests", async () => {
+			const { setCorsHeaders } = await import("../../src/index.js");
+
+			server = http.createServer((req, res) => {
+				setCorsHeaders(req, res, ["http://localhost:6274"]);
+
+				if (req.method === "OPTIONS") {
+					res.writeHead(204);
+					res.end();
+					return;
+				}
+
+				res.writeHead(200);
+				res.end("OK");
+			});
+
+			await new Promise<void>((resolve) => {
+				server?.listen(0, () => {
+					const address = server?.address();
+					assert.ok(address && typeof address === "object");
+
+					if (typeof address === "object" && address) {
+						const options = {
+							hostname: "localhost",
+							port: address.port,
+							path: "/",
+							method: "OPTIONS",
+							headers: {
+								Origin: "http://localhost:6274",
+								"Access-Control-Request-Method": "POST",
+								"Access-Control-Request-Headers": "Content-Type",
+							},
+						};
+
+						const req = http.request(options, (res) => {
+							assert.strictEqual(res.statusCode, 204);
+							assert.strictEqual(
+								res.headers["access-control-allow-origin"],
+								"http://localhost:6274",
+							);
+							assert.strictEqual(
+								res.headers["access-control-allow-methods"],
+								"GET, POST, OPTIONS, DELETE",
+							);
+							resolve();
+						});
+
+						req.end();
+					}
+				});
+			});
+		});
+
+		it("should not set CORS origin header for disallowed origins", async () => {
+			const { setCorsHeaders } = await import("../../src/index.js");
+
+			server = http.createServer((req, res) => {
+				setCorsHeaders(req, res, ["http://localhost:6274"]);
+				res.writeHead(200);
+				res.end("OK");
+			});
+
+			await new Promise<void>((resolve) => {
+				server?.listen(0, () => {
+					const address = server?.address();
+					assert.ok(address && typeof address === "object");
+
+					if (typeof address === "object" && address) {
+						const options = {
+							hostname: "localhost",
+							port: address.port,
+							path: "/",
+							method: "GET",
+							headers: {
+								Origin: "http://evil.com",
+							},
+						};
+
+						const req = http.request(options, (res) => {
+							assert.strictEqual(res.statusCode, 200);
+							// Should not set Access-Control-Allow-Origin for disallowed origins
+							assert.strictEqual(res.headers["access-control-allow-origin"], undefined);
+							resolve();
+						});
+
+						req.end();
+					}
+				});
+			});
 		});
 	});
 
