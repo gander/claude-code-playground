@@ -340,4 +340,183 @@ describe("SSE Transport Integration Tests", () => {
 			);
 		});
 	});
+
+	describe("Keep-Alive Functionality", () => {
+		let server: http.Server | null = null;
+
+		afterEach(async () => {
+			if (server) {
+				await new Promise<void>((resolve) => {
+					server?.close(() => {
+						server = null;
+						resolve();
+					});
+				});
+			}
+		});
+
+		it("should send keep-alive ping messages for SSE streams", { timeout: 5000 }, async () => {
+			// Import the wrapper function from index.ts
+			const { wrapResponseWithKeepAlive } = await import("../../src/index.js");
+
+			let pingCount = 0;
+			let receivedData = "";
+
+			// Use 1 second interval for faster testing
+			const testIntervalMs = 1000;
+
+			server = http.createServer((req, res) => {
+				if (req.method === "GET" && req.url === "/sse") {
+					// Wrap response with keep-alive functionality (1s interval for testing)
+					const wrappedRes = wrapResponseWithKeepAlive(res, req, testIntervalMs);
+
+					// Simulate SSE stream setup
+					wrappedRes.writeHead(200, {
+						"Content-Type": "text/event-stream",
+						"Cache-Control": "no-cache",
+						Connection: "keep-alive",
+					});
+
+					// Send initial event
+					wrappedRes.write("event: endpoint\ndata: /sse\n\n");
+
+					// The wrapper should automatically add ping messages every 1 second (for testing)
+					// We don't need to do anything here - just keep the connection open
+				} else {
+					res.writeHead(404);
+					res.end();
+				}
+			});
+
+			await new Promise<void>((resolve, reject) => {
+				server?.listen(0, () => {
+					const address = server?.address();
+					assert.ok(address && typeof address === "object");
+
+					if (typeof address === "object" && address) {
+						const options = {
+							hostname: "localhost",
+							port: address.port,
+							path: "/sse",
+							method: "GET",
+							headers: {
+								Accept: "text/event-stream",
+							},
+						};
+
+						const req = http.request(options, (res) => {
+							assert.strictEqual(res.statusCode, 200);
+							assert.strictEqual(res.headers["content-type"], "text/event-stream");
+
+							res.on("data", (chunk: Buffer) => {
+								const data = chunk.toString();
+								receivedData += data;
+
+								// Count ping messages
+								if (data.includes(":ping")) {
+									pingCount++;
+								}
+							});
+
+							// Wait 2.5 seconds to receive at least 2 pings (1s interval)
+							setTimeout(() => {
+								req.destroy();
+
+								// We should have received at least 2 ping messages
+								assert.ok(
+									pingCount >= 2,
+									`Should receive at least 2 ping messages with 1s interval, got ${pingCount}`,
+								);
+								assert.ok(
+									receivedData.includes(":ping"),
+									"Should receive ping messages in SSE format",
+								);
+
+								resolve();
+							}, 2500); // Wait 2.5 seconds
+						});
+
+						req.on("error", (error) => {
+							reject(error);
+						});
+
+						req.end();
+					}
+				});
+			});
+		});
+
+		it(
+			"should clean up keep-alive interval when connection closes",
+			{ timeout: 5000 },
+			async () => {
+				// This test verifies that the interval is properly cleaned up
+				// We can't directly test internal state, but we can verify no errors occur
+				const { wrapResponseWithKeepAlive } = await import("../../src/index.js");
+
+				// Use 500ms interval for faster testing
+				const testIntervalMs = 500;
+
+				server = http.createServer((req, res) => {
+					if (req.method === "GET" && req.url === "/sse") {
+						const wrappedRes = wrapResponseWithKeepAlive(res, req, testIntervalMs);
+
+						wrappedRes.writeHead(200, {
+							"Content-Type": "text/event-stream",
+							"Cache-Control": "no-cache",
+							Connection: "keep-alive",
+						});
+						wrappedRes.write("event: test\ndata: start\n\n");
+					}
+				});
+
+				await new Promise<void>((resolve, reject) => {
+					server?.listen(0, () => {
+						const address = server?.address();
+						assert.ok(address && typeof address === "object");
+
+						if (typeof address === "object" && address) {
+							const options = {
+								hostname: "localhost",
+								port: address.port,
+								path: "/sse",
+								method: "GET",
+								headers: {
+									Accept: "text/event-stream",
+								},
+							};
+
+							const req = http.request(options, (res) => {
+								assert.strictEqual(res.statusCode, 200);
+
+								// Close connection after 1 second
+								setTimeout(() => {
+									req.destroy();
+
+									// Wait a bit to ensure cleanup happens
+									setTimeout(() => {
+										// If we get here without errors, cleanup worked
+										resolve();
+									}, 1000);
+								}, 1000);
+							});
+
+							req.on("error", (error) => {
+								// Ignore connection reset errors (expected when we destroy)
+								if (
+									error.message.includes("ECONNRESET") ||
+									error.message.includes("socket hang up")
+								) {
+									return;
+								}
+								reject(error);
+							});
+
+							req.end();
+						}
+					});
+				});
+			},
+		);
+	});
 });

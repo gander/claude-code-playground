@@ -302,6 +302,8 @@ The server supports the following environment variables for configuration:
 **`TRANSPORT`** - Select transport protocol (default: `stdio`)
 - `stdio`: Standard input/output (default, for MCP clients like Claude Code/Desktop)
 - `http`: HTTP Streamable transport (recommended for web applications and HTTP clients)
+  - Automatically sends keep-alive ping messages every 15 seconds to prevent connection timeouts
+  - Suitable for deployment behind proxies, load balancers, and firewalls
 - `sse`: Server-Sent Events transport (alias for `http`, kept for backward compatibility)
 
 **`PORT`** - HTTP server port when using HTTP/SSE transport (default: `3000`)
