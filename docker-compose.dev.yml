@@ -1,6 +1,5 @@
 # Docker Compose configuration for development
-# Note: Docker is not the recommended way to run this MCP server.
-# For development, use: npm run dev
+# This configuration uses the latest development image (edge) with debug logging
 
 services:
   osm-tagging-mcp-dev:
@@ -10,11 +9,22 @@ services:
 
     # Environment configuration
     environment:
+      # Transport protocol
+      TRANSPORT: http
+
+      # HTTP server configuration
+      PORT: 3000
+      HOST: 0.0.0.0
+
       # Debug logging for development
       LOG_LEVEL: debug
 
       # Node.js configuration
       NODE_ENV: development
+
+    # Port mapping - expose MCP server on host
+    ports:
+      - "3000:3000"
 
     # Higher resource limits for development
     deploy:
@@ -26,9 +36,9 @@ services:
           memory: 256M
           cpus: '0.5'
 
-    # Health check
+    # Health check using /health endpoint
     healthcheck:
-      test: ["CMD", "node", "-e", "console.log('OK')"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
       start_period: 10s
