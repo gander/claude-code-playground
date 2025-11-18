@@ -365,7 +365,7 @@ tests/                               # Test files (TDD - one test file per tool)
 └── integration/                     # Integration tests (one file per tool)
     ├── helpers.ts                   # ✅ Shared test utilities
     ├── server-init.test.ts          # ✅ Server initialization tests
-    ├── sse-transport.test.ts        # ✅ HTTP/SSE transport tests
+    ├── http-transport.test.ts       # ✅ HTTP transport tests
     ├── get-preset-details.test.ts   # ✅ Present
     ├── get-tag-values.test.ts       # ✅ Present
     ├── search-presets.test.ts       # ✅ Present
@@ -1082,7 +1082,7 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 - ✅ **Docker Support**: Multi-stage builds, multi-arch (amd64/arm64), image signing (Cosign)
 - ✅ **Container Registry**: Images published to GitHub Container Registry (ghcr.io)
 - ✅ **Security Scanning**: Trivy vulnerability scanning, security reports
-- ✅ **Transport Protocols**: stdio (default), HTTP/SSE for web clients
+- ✅ **Transport Protocols**: stdio (default), HTTP for web clients
 - ✅ **Docker Compose**: Production, development, and test configurations
 - ✅ **Health Checks**: `/health` (liveness) and `/ready` (readiness) endpoints
 
@@ -1353,7 +1353,7 @@ npx @modelcontextprotocol/inspector docker run -i --rm --pull always \
 
 **Goal**: Support multiple transport protocols beyond stdio for diverse deployment scenarios.
 
-**Status**: ✅ **COMPLETED** - HTTP Streamable transport implemented with SSE support
+**Status**: ✅ **COMPLETED** - HTTP Streamable transport implemented
 
 **Supported Transports**:
 
@@ -1369,19 +1369,14 @@ npx @modelcontextprotocol/inspector docker run -i --rm --pull always \
 - Stateful session management with UUID session IDs
 - Compatible with web browsers and HTTP clients
 - Use case: Web applications, API gateways, scalable deployments
-- **Configuration**: `TRANSPORT=http` (recommended)
-
-**c) SSE (Server-Sent Events)** ✅
-- Alias for HTTP transport (backward compatibility)
-- Same implementation as HTTP transport
-- **Configuration**: `TRANSPORT=sse` (legacy, kept for compatibility)
+- **Configuration**: `TRANSPORT=http`
 
 **Transport Configuration** ✅:
 ```bash
 # Environment variables
-TRANSPORT=stdio|http|sse    # Default: stdio
-PORT=3000                   # Default: 3000 (HTTP/SSE only)
-HOST=0.0.0.0                # Default: 0.0.0.0 (HTTP/SSE only)
+TRANSPORT=stdio|http    # Default: stdio
+PORT=3000               # Default: 3000 (HTTP only)
+HOST=0.0.0.0            # Default: 0.0.0.0 (HTTP only)
 ```
 
 **Usage Examples** ✅:
@@ -1389,20 +1384,15 @@ HOST=0.0.0.0                # Default: 0.0.0.0 (HTTP/SSE only)
 # stdio transport (default)
 npx @gander-tools/osm-tagging-schema-mcp
 
-# HTTP transport (recommended)
+# HTTP transport
 TRANSPORT=http npx @gander-tools/osm-tagging-schema-mcp
-
-# SSE transport (legacy, same as http)
-TRANSPORT=sse npx @gander-tools/osm-tagging-schema-mcp
 
 # HTTP with custom port
 TRANSPORT=http PORT=8080 npx @gander-tools/osm-tagging-schema-mcp
 
 # npm scripts
 npm run start:http  # Start with HTTP transport on port 3000
-npm run start:sse   # Start with SSE transport on port 3000 (legacy)
 npm run dev:http    # Development mode with HTTP transport
-npm run dev:sse     # Development mode with SSE transport (legacy)
 
 # Docker with HTTP (using latest stable)
 docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
@@ -1414,14 +1404,14 @@ docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
 ```
 
 **Implementation Details** ✅:
-- Uses `StreamableHTTPServerTransport` from MCP SDK (not deprecated `SSEServerTransport`)
+- Uses `StreamableHTTPServerTransport` from MCP SDK
 - Session management: Tracks multiple sessions with UUID-based session IDs
 - Session lifecycle: `onsessioninitialized` and `onsessionclosed` callbacks
-- HTTP request routing: GET for SSE streams, POST for JSON-RPC messages, DELETE for session termination
+- HTTP request routing: GET for event streams, POST for JSON-RPC messages, DELETE for session termination
 - Error handling: Graceful error responses with proper HTTP status codes
 - **Keep-alive**: Automatically sends ping messages (`:ping\n\n`) every 15 seconds to prevent connection timeouts
-  - Wrapper function `wrapResponseWithKeepAlive()` intercepts SSE stream setup
-  - Detects SSE streams via `Content-Type: text/event-stream` header
+  - Wrapper function `wrapResponseWithKeepAlive()` intercepts event stream setup
+  - Detects event streams via `Content-Type: text/event-stream` header
   - Starts interval timer for periodic ping messages
   - Cleans up interval on connection close or response end
   - Configurable interval for testing purposes (default: 15000ms)
@@ -1432,7 +1422,7 @@ docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
 - StreamableHTTPServerTransport integration tests
 - Session ID generation and tracking tests
 - Keep-alive functionality tests (ping messages, cleanup on close)
-- 14 SSE transport tests passing (100% coverage)
+- 13 HTTP transport tests passing (100% coverage)
 
 **Benefits** ✅:
 - Flexibility in deployment architecture

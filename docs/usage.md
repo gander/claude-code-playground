@@ -718,29 +718,17 @@ docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
 ```
 
 **Environment Variables:**
-- `TRANSPORT` - Transport type: `stdio` (default), `http`, or `sse`
+- `TRANSPORT` - Transport type: `stdio` (default) or `http`
 - `PORT` - HTTP server port (default: 3000)
 - `HOST` - HTTP server host (default: 0.0.0.0)
 - `LOG_LEVEL` - Logging level: `SILENT`, `ERROR`, `WARN`, `INFO`, `DEBUG`
 
 **HTTP Endpoints:**
-- `GET /sse` - Server-Sent Events stream for MCP messages
-- `POST /sse` - Send JSON-RPC messages to MCP server
-- `DELETE /sse/:sessionId` - Close a session
+- `GET /mcp` - Server-Sent Events stream for MCP messages
+- `POST /mcp` - Send JSON-RPC messages to MCP server
+- `DELETE /mcp/:sessionId` - Close a session
 - `GET /health` - Liveness probe (server status)
 - `GET /ready` - Readiness probe (schema loaded status)
-
-### SSE Transport (Legacy)
-
-SSE transport is a legacy alias for HTTP transport. Use `TRANSPORT=http` for new deployments:
-
-```bash
-# Legacy SSE transport (same as http)
-TRANSPORT=sse PORT=3000 npx @gander-tools/osm-tagging-schema-mcp
-
-# Recommended: Use http instead
-TRANSPORT=http PORT=3000 npx @gander-tools/osm-tagging-schema-mcp
-```
 
 ### Docker Compose Deployment
 

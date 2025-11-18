@@ -2,7 +2,7 @@ import assert from "node:assert";
 import http from "node:http";
 import { afterEach, beforeEach, describe, it } from "node:test";
 
-describe("SSE Transport Integration Tests", () => {
+describe("HTTP Transport Integration Tests", () => {
 	describe("Environment Configuration", () => {
 		let originalEnv: NodeJS.ProcessEnv;
 
@@ -18,11 +18,6 @@ describe("SSE Transport Integration Tests", () => {
 			delete process.env.TRANSPORT;
 			const transport = process.env.TRANSPORT || "stdio";
 			assert.strictEqual(transport, "stdio");
-		});
-
-		it("should use sse transport when TRANSPORT=sse", () => {
-			process.env.TRANSPORT = "sse";
-			assert.strictEqual(process.env.TRANSPORT, "sse");
 		});
 
 		it("should use http transport when TRANSPORT=http", () => {
@@ -145,7 +140,7 @@ describe("SSE Transport Integration Tests", () => {
 			});
 		});
 
-		it("should handle GET requests to /mcp endpoint for SSE", async () => {
+		it("should handle GET requests to /mcp endpoint for event streams", async () => {
 			let requestReceived = false;
 
 			server = http.createServer((req, res) => {
@@ -290,7 +285,7 @@ describe("SSE Transport Integration Tests", () => {
 			// We expect this to not throw
 			await transport.handleRequest(mockReq, mockRes, initRequest);
 
-			// The transport should accept the request (status 200 for SSE stream)
+			// The transport should accept the request (status 200 for HTTP stream)
 			assert.ok(
 				statusCode === 200 || statusCode === 202,
 				`Should return 200 or 202, got ${statusCode}`,
@@ -523,7 +518,7 @@ describe("SSE Transport Integration Tests", () => {
 			}
 		});
 
-		it("should send keep-alive ping messages for SSE streams", { timeout: 5000 }, async () => {
+		it("should send keep-alive ping messages for event streams", { timeout: 5000 }, async () => {
 			// Import the wrapper function from index.ts
 			const { wrapResponseWithKeepAlive } = await import("../../src/index.js");
 
@@ -538,7 +533,7 @@ describe("SSE Transport Integration Tests", () => {
 					// Wrap response with keep-alive functionality (1s interval for testing)
 					const wrappedRes = wrapResponseWithKeepAlive(res, req, testIntervalMs);
 
-					// Simulate SSE stream setup
+					// Simulate event stream setup
 					wrappedRes.writeHead(200, {
 						"Content-Type": "text/event-stream",
 						"Cache-Control": "no-cache",
@@ -597,7 +592,7 @@ describe("SSE Transport Integration Tests", () => {
 								);
 								assert.ok(
 									receivedData.includes(":ping"),
-									"Should receive ping messages in SSE format",
+									"Should receive ping messages in event stream format",
 								);
 
 								resolve();

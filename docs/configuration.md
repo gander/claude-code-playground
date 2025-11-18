@@ -301,14 +301,13 @@ The server supports the following environment variables for configuration:
 
 **`TRANSPORT`** - Select transport protocol (default: `stdio`)
 - `stdio`: Standard input/output (default, for MCP clients like Claude Code/Desktop)
-- `http`: HTTP Streamable transport (recommended for web applications and HTTP clients)
+- `http`: HTTP Streamable transport (for web applications and HTTP clients)
   - Automatically sends keep-alive ping messages every 15 seconds to prevent connection timeouts
   - Suitable for deployment behind proxies, load balancers, and firewalls
-- `sse`: Server-Sent Events transport (alias for `http`, kept for backward compatibility)
 
-**`PORT`** - HTTP server port when using HTTP/SSE transport (default: `3000`)
+**`PORT`** - HTTP server port when using HTTP transport (default: `3000`)
 
-**`HOST`** - HTTP server host when using HTTP/SSE transport (default: `0.0.0.0`)
+**`HOST`** - HTTP server host when using HTTP transport (default: `0.0.0.0`)
 
 **Examples:**
 
@@ -316,11 +315,8 @@ The server supports the following environment variables for configuration:
 # Run with stdio (default)
 npx @gander-tools/osm-tagging-schema-mcp
 
-# Run with HTTP transport (recommended)
+# Run with HTTP transport
 TRANSPORT=http npx @gander-tools/osm-tagging-schema-mcp
-
-# Run with SSE transport (legacy, same as http)
-TRANSPORT=sse npx @gander-tools/osm-tagging-schema-mcp
 
 # Run with HTTP on custom port and host
 TRANSPORT=http PORT=8080 HOST=127.0.0.1 npx @gander-tools/osm-tagging-schema-mcp
@@ -329,9 +325,7 @@ TRANSPORT=http PORT=8080 HOST=127.0.0.1 npx @gander-tools/osm-tagging-schema-mcp
 **Using with npm scripts:**
 ```bash
 npm run start:http      # Start with HTTP transport (port 3000)
-npm run start:sse       # Start with SSE transport (port 3000, legacy)
 npm run dev:http        # Development mode with HTTP transport
-npm run dev:sse         # Development mode with SSE transport (legacy)
 ```
 
 **Docker with HTTP transport:**
@@ -414,7 +408,7 @@ npx @modelcontextprotocol/inspector --transport http --server-url http://localho
 NODE_OPTIONS="--max-old-space-size=512" npx @gander-tools/osm-tagging-schema-mcp
 
 # Combine with transport configuration
-TRANSPORT=sse PORT=3000 NODE_OPTIONS="--max-old-space-size=512" \
+TRANSPORT=http PORT=3000 NODE_OPTIONS="--max-old-space-size=512" \
 DEBUG="mcp:*" npx @gander-tools/osm-tagging-schema-mcp
 ```
 
