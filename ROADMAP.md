@@ -9,9 +9,9 @@
 - ✅ **Phase 8 Complete**: Full localization support with human-readable names for all tools
 - ✅ Template system for field expansion in presets
 - ✅ Comprehensive testing: 301 tests with 100% pass rate, full JSON data integrity validation
-- ✅ Multiple deployment options: npx (recommended), Docker, source installation
+- ✅ Multiple deployment options: npx, Docker, source installation
 - ✅ Security: npm provenance (SLSA Level 3), Docker image signing, SBOM generation
-- ✅ Transport: stdio (only supported protocol)
+- ✅ Transport protocols: stdio (default), HTTP/SSE for web clients
 - ✅ Complete documentation: installation, configuration, usage, API reference, troubleshooting
 
 **What's Next (Phase 9):**
@@ -153,13 +153,13 @@
 - ✅ GitHub Container Registry publishing
 
 **Transport & Deployment:**
-- ✅ stdio transport (default and only supported transport)
-- ✅ Docker support (stdio-based)
+- ✅ stdio transport (default for CLI/desktop)
+- ✅ HTTP Streamable transport (web clients)
+- ✅ SSE transport (legacy alias)
 - ✅ Docker Compose configurations
+- ✅ Health check endpoints (/health, /ready)
 - ✅ Resource limits and security hardening
 - ✅ Comprehensive deployment documentation
-
-**Note:** HTTP/SSE transport support was removed. This server is designed for stdio-based MCP clients (Claude Desktop, Claude Code, etc.). Use `npx @gander-tools/osm-tagging-schema-mcp` for best results.
 
 ### Phase 8: Schema Builder API Refactor ✅
 

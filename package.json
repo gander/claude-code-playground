@@ -17,8 +17,12 @@
 	},
 	"scripts": {
 		"dev": "tsx --watch src/index.ts",
+		"dev:http": "TRANSPORT=http tsx --watch src/index.ts",
+		"dev:sse": "TRANSPORT=sse tsx --watch src/index.ts",
 		"build": "tsc",
 		"start": "node dist/index.js",
+		"start:http": "TRANSPORT=http node dist/index.js",
+		"start:sse": "TRANSPORT=sse node dist/index.js",
 		"test": "node --import tsx --test tests/**/*.test.ts",
 		"test:unit": "node --import tsx --test tests/**/*.test.ts --exclude tests/integration/**",
 		"test:integration": "node --import tsx --test tests/integration/**/*.test.ts",
