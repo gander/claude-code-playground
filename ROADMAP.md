@@ -155,7 +155,6 @@
 **Transport & Deployment:**
 - ✅ stdio transport (default for CLI/desktop)
 - ✅ HTTP Streamable transport (web clients)
-- ✅ SSE transport (legacy alias)
 - ✅ Docker Compose configurations
 - ✅ Health check endpoints (/health, /ready)
 - ✅ Resource limits and security hardening

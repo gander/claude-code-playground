@@ -177,7 +177,7 @@ Edit the `environment` section in `docker-compose.yml`:
 ```yaml
 environment:
   # Transport protocol
-  TRANSPORT: http        # Options: stdio, http, sse
+  TRANSPORT: http        # Options: stdio, http
 
   # HTTP server configuration
   PORT: 3000             # HTTP port (default: 3000)

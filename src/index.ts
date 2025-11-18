@@ -37,7 +37,7 @@ export function createServer(): McpServer {
  * Configuration for transport selection
  */
 interface TransportConfig {
-	type: "stdio" | "sse" | "http";
+	type: "stdio" | "http";
 	port: number;
 	host: string;
 	corsOrigins: string[];
@@ -48,12 +48,7 @@ interface TransportConfig {
  */
 function getTransportConfig(): TransportConfig {
 	const transportEnv = process.env.TRANSPORT?.toLowerCase() || "stdio";
-	// Support both 'sse' and 'http' for StreamableHTTPServerTransport
-	// 'sse' is kept for backward compatibility
-	const type = (transportEnv === "sse" || transportEnv === "http" ? transportEnv : "stdio") as
-		| "stdio"
-		| "sse"
-		| "http";
+	const type = (transportEnv === "http" ? "http" : "stdio") as "stdio" | "http";
 	const port = Number.parseInt(process.env.PORT || "3000", 10);
 	const host = process.env.HOST || "0.0.0.0";
 
@@ -348,7 +343,7 @@ async function main() {
 	logger.info("Schema preloaded successfully", "main");
 
 	// Start appropriate transport
-	if (config.type === "sse" || config.type === "http") {
+	if (config.type === "http") {
 		await startHttpServer(server, config);
 	} else {
 		const transport = new StdioServerTransport();
