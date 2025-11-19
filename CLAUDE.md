@@ -65,8 +65,9 @@ During development, 7 additional tools were considered but **intentionally not i
 - **Schema Library**: @openstreetmap/id-tagging-schema ^6.7.3
 - **Build Tool**: TypeScript compiler
 - **Testing**: Node.js native test runner with TDD methodology
+- **Fuzzing**: fast-check (property-based testing) with CI integration
 - **Code Quality**: BiomeJS 2.3.4 (linting & formatting)
-- **CI/CD**: GitHub Actions (automated testing, Docker builds)
+- **CI/CD**: GitHub Actions (automated testing, fuzzing, Docker builds)
 - **Dependencies**: Dependabot (automated updates)
 - **Distribution**: npm registry (via npx), GitHub Container Registry (Docker images)
 - **Containerization**: Docker with multistage builds (Alpine Linux base)
@@ -243,10 +244,67 @@ Every feature implementation MUST follow this workflow:
 
 ### CI/CD Pipeline
 - **Automated Testing**: GitHub Actions runs Node.js tests on every push/PR
+- **Fuzzing**: Property-based testing with fast-check runs on every push/PR and weekly
 - **Code Quality**: BiomeJS checks for linting and formatting issues
 - **Dependabot**: Automated dependency updates and security patches
 - **Release**: Automated npm releases with semantic versioning
 - **Distribution**: Package available via `npx` command
+
+### Fuzzing and Security Testing
+
+**Status**: ✅ IMPLEMENTED - Property-based testing with fast-check
+
+The project implements continuous fuzzing using property-based testing to discover edge cases and potential vulnerabilities.
+
+**Fuzzing Approach**:
+- **Library**: [fast-check](https://github.com/dubzzz/fast-check) - Property-based testing framework recognized by OpenSSF Scorecard
+- **Coverage**: Critical input parsing and validation components
+- **Automation**: Integrated into CI/CD pipeline (GitHub Actions)
+
+**Fuzz Targets** (3 critical components):
+
+1. **Tag Parser** (`tests/fuzz/tag-parser.fuzz.test.ts`)
+   - Random string inputs (unicode, special characters, very long strings)
+   - JSON parsing edge cases
+   - Key=value format parsing
+   - Mixed valid/invalid formats
+   - ~7,000 test cases per run
+
+2. **Tag Validation** (`tests/fuzz/validate-tag.fuzz.test.ts`)
+   - Random key-value pairs
+   - OSM-like tag patterns
+   - Empty and whitespace inputs
+   - Deprecated tag handling
+   - Unicode and special characters
+   - ~4,500 test cases per run
+
+3. **Schema Loader** (`tests/fuzz/schema-loader.fuzz.test.ts`)
+   - Translation method lookups with random inputs
+   - Preset/field/category name resolution
+   - Unicode and special characters
+   - Very long strings
+   - ~3,500 test cases per run
+
+**Fuzzing Schedule**:
+- **Pull Requests**: Fast fuzzing run (5 minutes, ~15,000 test cases)
+- **Push to Master**: Extended fuzzing (30 minutes, ~75,000 test cases with increased iterations)
+- **Weekly**: Scheduled extended fuzzing (Monday 2 AM UTC)
+
+**Running Fuzz Tests Locally**:
+```bash
+# Run all fuzz tests
+npm run test:fuzz
+
+# Run with coverage
+npm run test:coverage:fuzz
+```
+
+**Future OSS-Fuzz Integration**:
+- Configuration files prepared in `.ossfuzz/` directory
+- Ready for submission to [OSS-Fuzz](https://google.github.io/oss-fuzz/) when project meets acceptance criteria
+- See `.ossfuzz/README.md` for submission process
+
+**Scorecard Impact**: Property-based testing with fast-check is recognized by OpenSSF Scorecard as fuzzing infrastructure, improving the project's security score.
 
 ### Documentation Guidelines
 
