@@ -58,7 +58,7 @@ jobs:
         run: npm ci
 
       - name: Generate SBOM with CycloneDX
-        run: npx @cyclonedx/cyclonedx-npm --output-file sbom.json
+        run: npx --yes @cyclonedx/cyclonedx-npm@4.1.0 --output-file sbom.json
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.5.0
@@ -121,8 +121,8 @@ jobs:
 
       - name: Check licenses
         run: |
-          npx license-checker --summary
-          npx license-checker --production --json > licenses.json
+          npx --yes license-checker@25.0.1 --summary
+          npx --yes license-checker@25.0.1 --production --json > licenses.json
 
       - name: Upload license report
         uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.5.0
