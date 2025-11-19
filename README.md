@@ -2,6 +2,7 @@
 
 [![Test](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/test.yml?branch=master&label=tests)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/test.yml)
 [![Tests](https://img.shields.io/badge/tests-424%20passing-brightgreen)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/test.yml)
+[![Fuzzing](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/fuzz.yml?branch=master&label=fuzzing)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/fuzz.yml)
 [![Docker](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/docker.yml?branch=master&label=docker)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/docker.yml)
 [![npm version](https://img.shields.io/npm/v/@gander-tools/osm-tagging-schema-mcp)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/@gander-tools/osm-tagging-schema-mcp)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
@@ -95,15 +96,19 @@ The Inspector UI will open in your browser at `http://localhost:6274` with a vis
 
 ## Development
 
-Built with **Test-Driven Development (TDD)** - 301 tests (199 unit + 102 integration) with 100% pass rate.
+Built with **Test-Driven Development (TDD)** and **Property-Based Fuzzing**:
+- 424 tests (319 unit + 105 integration) with 100% pass rate
+- 22 fuzz tests (~15,000 test cases per run with fast-check)
+- Continuous fuzzing in CI/CD (weekly schedule + on every push/PR)
 
 ```bash
-npm install    # Install dependencies
-npm test       # Run all tests
-npm run build  # Build for production
+npm install      # Install dependencies
+npm test         # Run all tests
+npm run test:fuzz # Run fuzz tests
+npm run build    # Build for production
 ```
 
-📖 **Development guide**: [DEVELOPMENT.md](./DEVELOPMENT.md)
+📖 **Development guides**: [DEVELOPMENT.md](./DEVELOPMENT.md) | [FUZZING.md](./FUZZING.md)
 
 ## Contributing
 
@@ -130,6 +135,7 @@ Contributions welcome! This project follows **Test-Driven Development (TDD)**.
 **Developer Docs:**
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
 - [DEVELOPMENT.md](./DEVELOPMENT.md) - Development setup
+- [FUZZING.md](./FUZZING.md) - Fuzzing infrastructure and security testing
 - [ROADMAP.md](./ROADMAP.md) - Project roadmap
 - [CHANGELOG.md](./CHANGELOG.md) - Version history
 

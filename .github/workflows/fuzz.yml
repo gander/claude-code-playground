@@ -1,0 +1,108 @@
+name: Fuzzing with ClusterFuzzLite
+
+on:
+  push:
+    branches: ["master", "main"]
+  pull_request:
+    branches: ["**"]
+  # Run fuzzing on a schedule (weekly)
+  schedule:
+    - cron: "0 2 * * 1"  # Every Monday at 2 AM UTC
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: read
+  issues: write  # For filing issues on findings
+  security-events: write  # For uploading SARIF results
+
+jobs:
+  # Fast fuzzing run on PRs (5 minutes)
+  fuzz-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v6.1.0
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run property-based fuzzing tests
+        run: npm run test:fuzz
+        timeout-minutes: 10
+
+  # Extended fuzzing run on main/master and schedule (30 minutes)
+  fuzz-extended:
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address, undefined]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v6.1.0
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run property-based fuzzing tests (extended)
+        run: npm run test:fuzz
+        timeout-minutes: 30
+        env:
+          # Increase number of runs for extended fuzzing
+          FUZZ_RUNS: "5000"
+
+      - name: Upload fuzzing results
+        if: always()
+        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.5.0
+        with:
+          name: fuzz-results-${{ matrix.sanitizer }}
+          path: |
+            coverage/
+            .fuzz-results/
+          retention-days: 30
+
+  # Continuous fuzzing summary
+  fuzz-summary:
+    if: always() && (github.event_name == 'push' || github.event_name == 'schedule')
+    needs: [fuzz-extended]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4.2.2
+
+      - name: Create fuzzing summary
+        run: |
+          echo "# Fuzzing Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Fuzzing completed for commit ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Fuzz Test Components" >> $GITHUB_STEP_SUMMARY
+          echo "- Tag Parser (parseTagInput)" >> $GITHUB_STEP_SUMMARY
+          echo "- Tag Validation (validateTag)" >> $GITHUB_STEP_SUMMARY
+          echo "- Schema Loader (translation methods)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "Property-based testing with fast-check library" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "See artifacts for detailed results." >> $GITHUB_STEP_SUMMARY

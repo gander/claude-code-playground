@@ -1,0 +1,32 @@
+# OSS-Fuzz project configuration
+# This file is prepared for potential future OSS-Fuzz submission
+# See: https://google.github.io/oss-fuzz/getting-started/new-project-guide/
+
+homepage: "https://github.com/gander-tools/osm-tagging-schema-mcp"
+language: javascript
+primary_contact: "security@example.com"  # Update with actual security contact
+auto_ccs:
+  - "maintainer@example.com"  # Update with maintainer email
+
+# Sanitizers to use
+sanitizers:
+  - address
+  - undefined
+
+# Fuzzing engines
+fuzzing_engines:
+  - libfuzzer
+
+# Vendor code detection (if applicable)
+vendor_ccs: []
+
+# Main language
+main_repo: "https://github.com/gander-tools/osm-tagging-schema-mcp.git"
+
+# File issue tracker
+file_github_issue: true
+
+# Issue labels
+labels:
+  - security
+  - fuzzing
