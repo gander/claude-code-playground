@@ -55,7 +55,6 @@ jobs:
           exclude-tags: |
             ^latest$
             ^master$
-            ^main$
             ^edge$
             ^[0-9]+$
             ^[0-9]+\.[0-9]+$

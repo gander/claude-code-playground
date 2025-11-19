@@ -2,7 +2,7 @@ name: Security Checks
 
 on:
   pull_request:
-    branches: ["master", "main"]
+    branches: ["master"]
   schedule:
     # Run daily at 02:00 UTC
     - cron: '0 2 * * *'
