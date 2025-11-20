@@ -1,6 +1,6 @@
 # OpenStreetMap Tagging Schema MCP Server
 
-[![Build Status](https://img.shields.io/github/check-runs/gander-tools/osm-tagging-schema-mcp/master?label=master)](https://github.com/gander-tools/osm-tagging-schema-mcp/commits/master)
+[![Build Status](https://img.shields.io/github/check-runs/gander-tools/osm-tagging-schema-mcp/master?label=repo%20status)](https://github.com/gander-tools/osm-tagging-schema-mcp/commits/master)
 [![Test](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/test.yml?branch=master&label=tests)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/test.yml)
 [![Fuzzing](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/fuzz.yml?branch=master&label=fuzzing)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/fuzz.yml)
 [![Publish](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/publish.yml?label=npm)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/publish.yml)
