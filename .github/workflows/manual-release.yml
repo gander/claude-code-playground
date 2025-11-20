@@ -64,16 +64,12 @@ jobs:
       - name: Run integration tests
         run: npm run test:integration
 
-      - name: Dry run release
-        run: npm run release:dry -- --release-as ${{ github.event.inputs.version_bump }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create release branch and update version
+      - name: Bump version
         run: |
-          npm run release -- --release-as ${{ github.event.inputs.version_bump }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Bump version using npm version (creates commit and tag)
+          npm version ${{ github.event.inputs.version_bump }} --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "Bumped version to: ${NEW_VERSION}"
 
       - name: Get new version
         id: get_version
@@ -81,6 +77,19 @@ jobs:
           NEW_VERSION=$(node -p "require('./package.json').version")
           echo "new_version=v${NEW_VERSION}" >> $GITHUB_OUTPUT
           echo "New version: v${NEW_VERSION}"
+
+      - name: Generate changelog
+        run: |
+          # Generate changelog using git-cliff
+          npx git-cliff --tag v${{ steps.get_version.outputs.new_version }} --output CHANGELOG.md
+          echo "Changelog generated"
+
+      - name: Commit version bump and changelog
+        run: |
+          git add package.json package-lock.json CHANGELOG.md
+          git commit -m "chore(release): release osm-tagging-schema-mcp@${{ steps.get_version.outputs.new_version }}"
+          git tag v${{ steps.get_version.outputs.new_version }}
+          echo "Version bump and changelog committed"
 
       - name: Push release branch
         run: |
