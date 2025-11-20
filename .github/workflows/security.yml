@@ -70,6 +70,10 @@ jobs:
   openssf-scorecard:
     name: OpenSSF Scorecard
     runs-on: ubuntu-latest
+    # Only run on schedule and manual trigger, not on pull requests
+    # This prevents "configuration not found" warnings in PRs for checks
+    # like branch-protection that are only relevant for the main branch
+    if: github.event_name != 'pull_request'
     permissions:
       contents: read
       security-events: write
