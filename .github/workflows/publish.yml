@@ -47,7 +47,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install latest npm
-        run: npm install -g npm@11.6.3
+        run: npm install -g npm@11.5.1
 
       - name: Validate version tag format
         id: validate-version
