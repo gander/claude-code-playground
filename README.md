@@ -14,7 +14,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![MCP](https://img.shields.io/badge/MCP-1.21-orange)](https://modelcontextprotocol.io)
-[![Built with Claude Code](https://img.shields.io/badge/Built%20with-Claude%20Code%20v2-blueviolet?logo=anthropic)](https://claude.ai/code)
+[![Built with Claude Code](https://img.shields.io/badge/Built%20with-Claude%20Code-blueviolet?logo=anthropic)](https://claude.ai/code)
 
 A Model Context Protocol (MCP) server that provides tools for querying and validating OpenStreetMap tags using the official `@openstreetmap/id-tagging-schema` library.
 
