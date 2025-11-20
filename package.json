@@ -87,7 +87,8 @@
 		"zod": "^3.24.1"
 	},
 	"engines": {
-		"node": ">=22.0.0"
+		"node": ">=22.0.0",
+		"npm": ">=11.5.1"
 	},
 	"overrides": {
 		"@conventional-changelog/git-client": "^2.5.1"
