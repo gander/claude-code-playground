@@ -1,11 +1,12 @@
 # OpenStreetMap Tagging Schema MCP Server
 
+[![Build Status](https://img.shields.io/github/check-runs/gander-tools/osm-tagging-schema-mcp/master?label=master)](https://github.com/gander-tools/osm-tagging-schema-mcp/commits/master)
 [![Test](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/test.yml?branch=master&label=tests)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/test.yml)
 [![Fuzzing](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/fuzz.yml?branch=master&label=fuzzing)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/fuzz.yml)
+[![Publish](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/publish.yml?label=npm)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/publish.yml)
 [![Docker](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/docker.yml?branch=master&label=docker)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/docker.yml)
 [![npm version](https://img.shields.io/npm/v/@gander-tools/osm-tagging-schema-mcp)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/@gander-tools/osm-tagging-schema-mcp)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
-[![package size](https://img.shields.io/bundlephobia/minzip/@gander-tools/osm-tagging-schema-mcp)](https://bundlephobia.com/package/@gander-tools/osm-tagging-schema-mcp)
 [![NPM Provenance](https://img.shields.io/badge/provenance-npm-CB3837?logo=npm)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
 [![SLSA 3](https://img.shields.io/badge/SLSA-Level%203-green?logo=github)](docs/security.md#slsa-build-provenance)
 [![Docker Image](https://img.shields.io/badge/docker-ghcr.io-blue?logo=docker)](https://github.com/gander-tools/osm-tagging-schema-mcp/pkgs/container/osm-tagging-schema-mcp)
