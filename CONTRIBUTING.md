@@ -570,6 +570,56 @@ For significant features, update `CLAUDE.md`:
 
 This section is for maintainers preparing a new release.
 
+### Manual Release Workflow (Recommended)
+
+The easiest way to create a release is using the **Manual Release** GitHub Actions workflow:
+
+**Steps:**
+
+1. **Go to GitHub Actions**
+   - Navigate to: `Actions` → `Manual Release`
+   - Click "Run workflow"
+
+2. **Configure Release**
+   - **Branch**: Select `main` (or your default branch)
+   - **Version bump type**: Choose `patch`, `minor`, or `major`
+   - **Push tag**:
+     - ✅ `true` - Tag will be pushed immediately, triggering npm publish
+     - ❌ `false` - Creates PR for review, push tag manually later
+
+3. **What Happens**
+   - ✅ Runs all tests (unit, integration, linting, type checking)
+   - ✅ Updates `package.json` version
+   - ✅ Generates/updates `CHANGELOG.md` with release notes
+   - ✅ Creates git commit with changes
+   - ✅ Creates git tag (`v1.2.3`)
+   - ✅ Pushes release branch (`release/v1.2.3`)
+   - If **push_tag = true**: Pushes tag → triggers npm publish workflow
+   - If **push_tag = false**: Creates PR for review
+
+4. **After Workflow Completes**
+
+   **Option A: Automatic publish** (push_tag = true)
+   - Tag is pushed automatically
+   - `publish.yml` workflow is triggered
+   - Package is published to npm with provenance
+   - GitHub release is created
+
+   **Option B: Manual review** (push_tag = false)
+   - Review the PR created by the workflow
+   - Merge the PR
+   - Push the tag manually:
+     ```bash
+     git fetch origin
+     git push origin v1.2.3
+     ```
+
+**Benefits:**
+- 🚀 Fully automated (tests, version bump, changelog, tag, push)
+- 🔍 Optional review step before publishing
+- 🛡️ All checks pass before creating release
+- 📝 Consistent changelog generation
+
 ### Quick Release with Cliff Jumper
 
 This project uses [@favware/cliff-jumper](https://github.com/favware/cliff-jumper) and [git-cliff](https://git-cliff.org/) for automated releases.
