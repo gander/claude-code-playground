@@ -16,7 +16,23 @@
 [![MCP](https://img.shields.io/badge/MCP-1.21-orange)](https://modelcontextprotocol.io)
 [![Built with Claude Code](https://img.shields.io/badge/Built%20with-Claude%20Code-blueviolet?logo=anthropic)](https://claude.ai/code)
 
-A Model Context Protocol (MCP) server that provides tools for querying and validating OpenStreetMap tags using the official `@openstreetmap/id-tagging-schema` library.
+## What is this?
+
+This is a **Model Context Protocol (MCP) server** designed specifically for AI agents and LLM applications. It acts as a bridge between artificial intelligence systems and the comprehensive OpenStreetMap tagging knowledge base provided by the official `@openstreetmap/id-tagging-schema` library.
+
+**Current Status**: Version 1.0.0 is now publicly available as a production-ready MVP, actively maintained and continuously improved. The service is deployed and accessible at [https://mcp.gander.tools/osm-tagging/](https://mcp.gander.tools/osm-tagging/).
+
+**We welcome your feedback!** Have ideas for improvements? Found a bug? Want to discuss features? Please open an [issue](https://github.com/gander-tools/osm-tagging-schema-mcp/issues) or start a [discussion](https://github.com/gander-tools/osm-tagging-schema-mcp/discussions).
+
+## What this is NOT
+
+⚠️ **Important clarifications:**
+
+- **Not a standalone application**: This server requires integration with AI systems (like Claude Code or Claude Desktop) to be useful. It has no user interface or web frontend.
+- **Not for direct human use**: Without an AI agent as an intermediary, this tool provides no value to end users. It's designed exclusively for programmatic access by LLM applications.
+- **Not a public API for general use**: The deployed service at mcp.gander.tools is intended for integration with AI agents, not for direct HTTP requests or high-volume automated queries. Please do not attempt to abuse the service with DDoS attacks or excessive traffic.
+
+If you're looking for a user-facing OSM tagging tool, consider [iD editor](https://github.com/openstreetmap/iD) or [JOSM](https://josm.openstreetmap.de/) instead.
 
 ## Features
 
