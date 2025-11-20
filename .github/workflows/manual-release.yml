@@ -94,13 +94,13 @@ jobs:
       - name: Push release branch
         run: |
           BRANCH_NAME="release/${{ steps.get_version.outputs.new_version }}"
-          git push origin HEAD:${BRANCH_NAME}
+          git push --force origin HEAD:${BRANCH_NAME}
           echo "Release branch pushed: ${BRANCH_NAME}"
 
       - name: Push tag (optional)
         if: github.event.inputs.push_tag == 'true'
         run: |
-          git push origin ${{ steps.get_version.outputs.new_version }}
+          git push --force origin ${{ steps.get_version.outputs.new_version }}
           echo "Tag pushed: ${{ steps.get_version.outputs.new_version }}"
           echo "This will trigger the publish workflow."
 
