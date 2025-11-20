@@ -81,14 +81,14 @@ jobs:
       - name: Generate changelog
         run: |
           # Generate changelog using git-cliff
-          npx git-cliff --tag v${{ steps.get_version.outputs.new_version }} --output CHANGELOG.md
+          npx git-cliff --tag ${{ steps.get_version.outputs.new_version }} --output CHANGELOG.md
           echo "Changelog generated"
 
       - name: Commit version bump and changelog
         run: |
           git add package.json package-lock.json CHANGELOG.md
           git commit -m "chore(release): release osm-tagging-schema-mcp@${{ steps.get_version.outputs.new_version }}"
-          git tag v${{ steps.get_version.outputs.new_version }}
+          git tag ${{ steps.get_version.outputs.new_version }}
           echo "Version bump and changelog committed"
 
       - name: Push release branch
