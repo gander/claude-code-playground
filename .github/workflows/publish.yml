@@ -45,7 +45,9 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          registry-url: 'https://registry.npmjs.org'
+          # registry-url removed - not needed for Trusted Publishers with OIDC
+          # Removing this prevents actions/setup-node from adding deprecated
+          # 'always-auth=true' to .npmrc (causes warnings in npm 11+)
 
       - name: Install latest npm
         run: npm install -g npm@11.6.3
