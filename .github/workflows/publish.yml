@@ -44,7 +44,9 @@ jobs:
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v6.1.0
         with:
           node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
+          # registry-url removed - not needed for Trusted Publishers with OIDC
+          # Removing this prevents actions/setup-node from adding deprecated
+          # 'always-auth=true' to .npmrc (causes warnings in npm 11+)
 
       - name: Install latest npm
         run: npm install -g npm@11.5.1
