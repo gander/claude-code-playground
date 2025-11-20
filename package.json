@@ -34,7 +34,7 @@
 		"format": "biome format --write .",
 		"check": "biome check --write .",
 		"typecheck": "tsc --noEmit",
-		"postinstall": "lefthook install",
+		"prepare": "lefthook install",
 		"release:dry": "cliff-jumper --dry-run",
 		"release": "cliff-jumper",
 		"release:push": "cliff-jumper --push-tag"
