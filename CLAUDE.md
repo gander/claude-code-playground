@@ -1,7 +1,6 @@
 # Project: OpenStreetMap Tagging Schema MCP Server
 
 > **⚠️ IMPORTANT**: This document reflects the ACTUAL current state of the codebase.
-> **Last Updated**: 2025-11-15
 > **Current Status**: 7 tools (optimized set) | All systems operational ✅ | Production-ready
 
 ## Project Overview
@@ -59,14 +58,14 @@ During development, 7 additional tools were considered but **intentionally not i
 ## Technical Stack
 
 - **Runtime**: Node.js 22+
-- **Language**: TypeScript 5.9
+- **Language**: TypeScript 5.x
 - **Package**: @gander-tools/osm-tagging-schema-mcp
-- **MCP SDK**: @modelcontextprotocol/sdk ^1.21.1
-- **Schema Library**: @openstreetmap/id-tagging-schema ^6.7.3
+- **MCP SDK**: @modelcontextprotocol/sdk ^1.x
+- **Schema Library**: @openstreetmap/id-tagging-schema ^6.x
 - **Build Tool**: TypeScript compiler
 - **Testing**: Node.js native test runner with TDD methodology
 - **Fuzzing**: fast-check (property-based testing) with CI integration
-- **Code Quality**: BiomeJS 2.3.4 (linting & formatting)
+- **Code Quality**: BiomeJS (linting & formatting)
 - **CI/CD**: GitHub Actions (automated testing, fuzzing, Docker builds)
 - **Dependencies**: Dependabot (automated updates)
 - **Distribution**: npm registry (via npx), GitHub Container Registry (Docker images)
@@ -130,7 +129,7 @@ All features must have corresponding tests written BEFORE implementation.
 5. **NO Hardcoded Values**: Tests MUST read ALL values dynamically from JSON files at runtime
    - Collect ALL unique tag keys from fields.json + presets.json
    - Provider pattern MUST yield EVERY key, not a hardcoded subset
-   - Example: ~799 tag keys from JSON, not 5 hardcoded keys like ["amenity", "building", "highway", "natural", "shop"]
+   - Example: All tag keys from JSON, not 5 hardcoded keys like ["amenity", "building", "highway", "natural", "shop"]
 6. **Bidirectional Validation**:
    - Check ALL returned values exist in expected JSON data
    - Check ALL expected JSON values are returned by the tool
@@ -204,7 +203,7 @@ for (const preset of Object.values(presets)) {
   }
 }
 
-// Test EVERY key (~799 keys)
+// Test EVERY key
 for (const key of allKeys) {
   // validate each key individually...
 }
@@ -268,7 +267,6 @@ The project implements continuous fuzzing using property-based testing to discov
    - JSON parsing edge cases
    - Key=value format parsing
    - Mixed valid/invalid formats
-   - ~7,000 test cases per run
 
 2. **Tag Validation** (`tests/fuzz/validate-tag.fuzz.test.ts`)
    - Random key-value pairs
@@ -276,18 +274,16 @@ The project implements continuous fuzzing using property-based testing to discov
    - Empty and whitespace inputs
    - Deprecated tag handling
    - Unicode and special characters
-   - ~4,500 test cases per run
 
 3. **Schema Loader** (`tests/fuzz/schema-loader.fuzz.test.ts`)
    - Translation method lookups with random inputs
    - Preset/field/category name resolution
    - Unicode and special characters
    - Very long strings
-   - ~3,500 test cases per run
 
 **Fuzzing Schedule**:
-- **Pull Requests**: Fast fuzzing run (5 minutes, ~15,000 test cases)
-- **Push to Master**: Extended fuzzing (30 minutes, ~75,000 test cases with increased iterations)
+- **Pull Requests**: Fast fuzzing run
+- **Push to Master**: Extended fuzzing with increased iterations
 - **Weekly**: Scheduled extended fuzzing (Monday 2 AM UTC)
 
 **Running Fuzz Tests Locally**:
@@ -316,7 +312,7 @@ The project maintains comprehensive documentation in multiple locations:
 - `docs/installation.md` - Installation instructions for all methods (npx, source, Docker)
 - `docs/configuration.md` - Configuration for Claude Code/Desktop and custom clients
 - `docs/usage.md` - Usage examples, workflows, and best practices
-- `docs/api/` - API reference for all 14 tools
+- `docs/api/` - API reference for all tools
   - `docs/api/README.md` - API overview and quick reference
   - `docs/api/{tool_name}.md` - Detailed documentation per tool (pattern established)
   - `docs/api/NOTE.md` - Documentation pattern guide
@@ -552,10 +548,10 @@ const TEMPLATES: Record<string, string[]> = {
 
 ### Usage in Schema
 
-Templates are used in 10 distinct patterns across the OSM tagging schema:
-- `{@templates/contact}`: 89 presets
-- `{@templates/internet_access}`: 73 presets
-- `{@templates/poi}`: 84 presets
+Templates are used in multiple distinct patterns across the OSM tagging schema:
+- `{@templates/contact}`: Contact information fields
+- `{@templates/internet_access}`: Internet connectivity fields
+- `{@templates/poi}`: Point of interest fields
 - Various crossing templates: Used in highway crossing-related presets
 
 ### Design Decisions
@@ -575,7 +571,7 @@ When updating `@openstreetmap/id-tagging-schema` package:
 
 ## MCP SDK Tool Structure
 
-**Status**: ✅ IMPLEMENTED - Using modern MCP SDK v1.21.1 tool registration API
+**Status**: ✅ IMPLEMENTED - Using modern MCP SDK tool registration API
 
 This section documents the tool structure pattern used throughout the codebase. The migration from deprecated `Server` class to `McpServer` class is complete.
 
@@ -588,7 +584,7 @@ This section documents the tool structure pattern used throughout the codebase. 
 
 ### Current Architecture
 
-**MCP SDK v1.21.1 - McpServer API**:
+**MCP SDK - McpServer API**:
 
 ```typescript
 McpServer.registerTool<InputArgs extends ZodRawShape | ZodType<object>, OutputArgs extends ZodRawShape | ZodType<object>>(
@@ -851,7 +847,7 @@ export default GetTagInfo;
 
 ### References
 
-- MCP SDK v1.21.1 Documentation: https://modelcontextprotocol.io
+- MCP SDK Documentation: https://modelcontextprotocol.io
 - GitHub Repository: https://github.com/modelcontextprotocol/typescript-sdk
 - Tool Definition Interface: `src/types/tool-definition.ts`
 
@@ -863,14 +859,14 @@ This section documents key architectural decisions about data sources from `@ope
 
 The schema library provides multiple JSON data files, each serving a distinct purpose:
 
-| File | Size | Entries | Purpose | Usage in Project |
-|------|------|---------|---------|------------------|
-| `presets.json` | 672 KB | 1,707 | Feature presets with tags, geometry, fields | ✅ Core data - ALL tools |
-| `fields.json` | 150 KB | 714 | Tag field definitions (types, options, validation) | ✅ Core data - ALL tools |
-| `translations/en.json` | 476 KB | 1,707 presets<br>714 fields<br>17 categories | **UI strings only**: names, labels, descriptions | ⚠️ LIMITED - 2 tools only |
-| `deprecated.json` | 81 KB | 529 | Deprecated tag mappings | ✅ Validation tools (4 tools) |
-| `preset_categories.json` | 7 KB | 17 | Category membership | ✅ Category tools (2 tools) |
-| `preset_defaults.json` | 1.5 KB | ~10 | Default presets per geometry | ✅ Schema exploration |
+| File | Purpose | Usage in Project |
+|------|---------|------------------|
+| `presets.json` | Feature presets with tags, geometry, fields | ✅ Core data - ALL tools |
+| `fields.json` | Tag field definitions (types, options, validation) | ✅ Core data - ALL tools |
+| `translations/en.json` | **UI strings only**: names, labels, descriptions | ⚠️ LIMITED - 2 tools only |
+| `deprecated.json` | Deprecated tag mappings | ✅ Validation tools |
+| `preset_categories.json` | Category membership | ✅ Category tools |
+| `preset_defaults.json` | Default presets per geometry | ✅ Schema exploration |
 
 **IMPORTANT**: Files are **complementary** - each contains unique data that cannot be replaced by others.
 
@@ -911,7 +907,7 @@ The schema library provides multiple JSON data files, each serving a distinct pu
 - ❌ Deprecated tag mappings (that's in `deprecated.json`)
 - ❌ Geometry types, preset membership (that's in `presets.json`)
 
-**Current usage** (2/14 tools):
+**Current usage**:
 1. `get_tag_info` - Uses preset names and field option descriptions
 2. `get_tag_values` - Uses field option titles and descriptions
 
@@ -933,7 +929,7 @@ const fieldStrings = (schema.translations as Record<string, any>)?.en?.presets?.
 
 **Recommendations**:
 - ✅ **Keep all data files** - each serves unique purpose
-- ✅ **Expand translations usage** - only 2/14 tools currently use them
+- ✅ **Expand translations usage** - currently limited use across tools
 - ⚠️ **Add TypeScript interfaces** for translations structure (type safety)
 - ✅ **Schema loader loads all files** in parallel for optimal performance
 
@@ -1051,7 +1047,7 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 
 **Validation in MCP context**:
 - **Purpose**: Data quality, education, error detection (NOT form building)
-- **Current tools**: All 4 validation tools are useful and should be kept
+- **Current tools**: All validation tools are useful and should be kept
 - **Omit**: Form-specific features like `prerequisiteTag` logic
 - **Expand**: Geometry validation, type validation, combination checks
 
@@ -1064,9 +1060,9 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 ### Actual Implementation Status
 
 **Phase 1: Project Setup ✅ COMPLETE**
-- ✅ Project structure initialized with TypeScript 5.9
+- ✅ Project structure initialized with TypeScript
 - ✅ Dependencies installed (@modelcontextprotocol/sdk, @openstreetmap/id-tagging-schema)
-- ✅ BiomeJS 2.3.4 configured for code quality
+- ✅ BiomeJS configured for code quality
 - ✅ Node.js test runner configured
 - ✅ GitHub Actions CI/CD pipeline set up
 - ✅ Dependabot configured for automated dependency updates
@@ -1102,8 +1098,8 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 **Phase 4: Testing ✅ COMPLETE**
 - ✅ Node.js test runner configured
 - ✅ Comprehensive test suite for all 7 tools
-- ✅ 319 unit tests passing (0 skipped)
-- ✅ 105 integration tests passing (0 skipped)
+- ✅ All unit tests passing
+- ✅ All integration tests passing
 - ✅ Modular structure: One integration test file per tool
 - ✅ Shared test utilities in `helpers.ts`
 - ✅ Testing with real OpenStreetMap data
@@ -1176,22 +1172,22 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
   - Full documentation in `docs/api/README.md` Localization section
 - ✅ **Template System Implementation (8.10)**: Field template expansion COMPLETE
   - Fixed all template definitions to use correct field IDs from fields.json
-  - Template expansion in `get_preset_details` tool for 10 template patterns
-  - 13 comprehensive unit tests covering all templates
-  - 6 integration tests via MCP protocol
+  - Template expansion in `get_preset_details` tool for template patterns
+  - Comprehensive unit tests covering all templates
+  - Integration tests via MCP protocol
   - Full documentation in CLAUDE.md Template System section
 - ✅ **Documentation & Testing (8.11)**: Complete documentation for Phase 8 changes
   - Created API documentation for all 7 tools (validate_tag.md, get_tag_values.md, search_tags.md, search_presets.md, validate_tag_collection.md, suggest_improvements.md; get_preset_details.md already existed)
   - Updated docs/usage.md with Phase 8 localized examples
   - Updated CHANGELOG.md with Phase 8 changes
   - Updated ROADMAP.md to mark Phase 8 complete
-  - All tests passing (319 unit + 105 integration tests)
+  - All tests passing
 
 ### Current Status
 
 **All Systems Operational** ✅:
 - Build: Passing
-- Tests: 319 unit tests + 105 integration tests passing (0 skipped)
+- Tests: All unit and integration tests passing
 - Type checking: No errors
 - Linting: Clean
 
@@ -1480,7 +1476,7 @@ docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
 - StreamableHTTPServerTransport integration tests
 - Session ID generation and tracking tests
 - Keep-alive functionality tests (ping messages, cleanup on close)
-- 13 HTTP transport tests passing (100% coverage)
+- Full HTTP transport test coverage
 
 **Benefits** ✅:
 - Flexibility in deployment architecture
