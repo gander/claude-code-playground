@@ -618,92 +618,33 @@ For significant features, update `CLAUDE.md`:
 
 This section is for maintainers preparing a new release.
 
-### Manual Release Workflow (Recommended)
+> **📖 For detailed release instructions, see [docs/release-process.md](./docs/release-process.md)**
 
-The easiest way to create a release is using the **Manual Release** GitHub Actions workflow:
+### Quick Release Workflow
 
-**Steps:**
+This project uses [@favware/cliff-jumper](https://github.com/favware/cliff-jumper) and [git-cliff](https://git-cliff.org/) for local release preparation.
 
-1. **Go to GitHub Actions**
-   - Navigate to: `Actions` → `Manual Release`
-   - Click "Run workflow"
-
-2. **Configure Release**
-   - **Branch**: Select `main` (or your default branch)
-   - **Version bump type**: Choose `patch`, `minor`, or `major`
-   - **Push tag**:
-     - ✅ `true` - Tag will be pushed immediately, triggering npm publish
-     - ❌ `false` - Creates PR for review, push tag manually later
-
-3. **What Happens**
-   - ✅ Runs all tests (unit, integration, linting, type checking)
-   - ✅ Updates `package.json` version
-   - ✅ Generates/updates `CHANGELOG.md` with release notes
-   - ✅ Creates git commit with changes
-   - ✅ Creates git tag (`v1.2.3`)
-   - ✅ Pushes release branch (`release/v1.2.3`)
-   - If **push_tag = true**: Pushes tag → triggers npm publish workflow
-   - If **push_tag = false**: Creates PR for review
-
-4. **After Workflow Completes**
-
-   **Option A: Automatic publish** (push_tag = true)
-   - Tag is pushed automatically
-   - `publish-npm.yml` workflow is triggered
-   - Package is published to npm with provenance
-   - GitHub release is created
-
-   **Option B: Manual review** (push_tag = false)
-   - Review the PR created by the workflow
-   - Merge the PR
-   - Push the tag manually:
-     ```bash
-     git fetch origin
-     git push origin v1.2.3
-     ```
-
-**Benefits:**
-- 🚀 Fully automated (tests, version bump, changelog, tag, push)
-- 🔍 Optional review step before publishing
-- 🛡️ All checks pass before creating release
-- 📝 Consistent changelog generation
-
-### Quick Release with Cliff Jumper
-
-This project uses [@favware/cliff-jumper](https://github.com/favware/cliff-jumper) and [git-cliff](https://git-cliff.org/) for automated releases.
-
-**Cliff-jumper** automatically:
-1. Analyzes commits since last release (using Conventional Commits)
-2. Determines version bump (major/minor/patch)
-3. Updates `package.json` version
-4. Generates/updates `CHANGELOG.md` using git-cliff
-5. Creates git commit and tag
-6. Optionally pushes to remote
-
-**Quick release workflow:**
+**Release from local environment:**
 
 ```bash
-# 1. Dry-run to preview changes (no modifications)
+# 1. Preview release (dry run - no changes)
 npm run release:dry
 
-# 2. Create release locally (commit + tag)
+# 2. Create release locally (updates version, CHANGELOG, creates commit + tag)
 npm run release
 
-# 3. Push release to trigger automated publishing
+# 3. Push to trigger automated publishing
 npm run release:push
-# OR manually push:
-git push && git push --tags
 ```
 
-**What happens next:**
-- Git tag triggers GitHub Actions workflow (`.github/workflows/publish-npm.yml`)
-- Automated pipeline: tests → build → SBOM → attestations → npm publish
-- GitHub release created automatically with security information
+**What happens after push:**
+- Git tag triggers `.github/workflows/publish-npm.yml`
+- Automated pipeline: tests → build → SBOM → SLSA attestations → npm publish
+- Git tag triggers `.github/workflows/publish-docker.yml`
+- Docker images built and published to GHCR with image signing
+- Draft GitHub release created (requires manual publish)
 
-**How versioning works:**
-
-Cliff-jumper determines version bump based on your commit messages:
-
+**Version bumps (determined by commit messages):**
 - **Patch** (0.1.0 → 0.1.1): `fix:`, `chore:`, `docs:`, `style:`, `refactor:`
 - **Minor** (0.1.0 → 0.2.0): `feat:`, `add:`
 - **Major** (0.1.0 → 1.0.0): Any commit with `BREAKING CHANGE:` in body/footer
@@ -712,7 +653,7 @@ Cliff-jumper determines version bump based on your commit messages:
 - `.cliff-jumperrc.json` - Cliff-jumper settings
 - `cliff.toml` - git-cliff changelog configuration
 
-**Tip**: Always run `npm run release:dry` first to verify the version bump is correct!
+**For complete instructions**, including troubleshooting, manual release, and step-by-step guide, see [docs/release-process.md](./docs/release-process.md)
 
 ### Pre-Publication Checklist
 
