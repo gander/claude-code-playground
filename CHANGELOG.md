@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-11-21
+
+### Added
+
+- Add safe release workflow with manual approval ([#180](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/180))
+
+### Changed
+
+- Reorganize and rename GitHub workflows
+- Split security workflow into PR and main branch workflows ([#207](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/207))
+
+### Documentation
+
+- Add GitHub Actions workflow requirements to CLAUDE.md
+
+### Fixed
+
+- Update changeset config to use master branch instead of main
+- Use npm pkg set for reliable version updates in prepare-release workflow ([#208](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/208))
+
+### Miscellaneous
+
+- Remove manual release workflow file
+
 ## [1.0.1] - 2025-11-20
 
 ### Added
