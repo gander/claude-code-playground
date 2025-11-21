@@ -622,19 +622,23 @@ This section is for maintainers preparing a new release.
 
 ### Quick Release Workflow
 
-This project uses [@favware/cliff-jumper](https://github.com/favware/cliff-jumper) and [git-cliff](https://git-cliff.org/) for local release preparation.
+Releases are created manually from local environment using git-cliff for changelog generation.
 
 **Release from local environment:**
 
 ```bash
-# 1. Preview release (dry run - no changes)
-npm run release:dry
+# 1. Bump version (creates commit + tag)
+npm version patch  # or: minor, major
 
-# 2. Create release locally (updates version, CHANGELOG, creates commit + tag)
-npm run release
+# 2. Generate changelog
+npx git-cliff --output CHANGELOG.md
 
-# 3. Push to trigger automated publishing
-npm run release:push
+# 3. Amend commit to include CHANGELOG
+git add CHANGELOG.md
+git commit --amend --no-edit
+
+# 4. Push to trigger automated publishing
+git push && git push --tags
 ```
 
 **What happens after push:**
@@ -644,16 +648,15 @@ npm run release:push
 - Docker images built and published to GHCR with image signing
 - Draft GitHub release created (requires manual publish)
 
-**Version bumps (determined by commit messages):**
-- **Patch** (0.1.0 → 0.1.1): `fix:`, `chore:`, `docs:`, `style:`, `refactor:`
-- **Minor** (0.1.0 → 0.2.0): `feat:`, `add:`
-- **Major** (0.1.0 → 1.0.0): Any commit with `BREAKING CHANGE:` in body/footer
+**Version bumps:**
+- **Patch** (0.1.0 → 0.1.1): Bug fixes, documentation, chores
+- **Minor** (0.1.0 → 0.2.0): New features, backwards-compatible changes
+- **Major** (0.1.0 → 1.0.0): Breaking changes
 
-**Configuration files:**
-- `.cliff-jumperrc.json` - Cliff-jumper settings
+**Configuration:**
 - `cliff.toml` - git-cliff changelog configuration
 
-**For complete instructions**, including troubleshooting, manual release, and step-by-step guide, see [docs/release-process.md](./docs/release-process.md)
+**For complete instructions**, including troubleshooting and step-by-step guide, see [docs/release-process.md](./docs/release-process.md)
 
 ### Pre-Publication Checklist
 

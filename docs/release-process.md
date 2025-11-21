@@ -1,12 +1,12 @@
 # Release Process
 
-This document describes the local release workflow using cliff-jumper and GitHub Actions.
+This document describes the manual release workflow using git-cliff and GitHub Actions.
 
 ## Overview
 
 The release process is initiated locally and automated through GitHub Actions:
 
-1. **Local environment** - Prepare release using cliff-jumper (version bump + changelog)
+1. **Local environment** - Prepare release manually (version bump + changelog with git-cliff)
 2. **publish-npm.yml** - Automatically triggered by tag creation (npm publish)
 3. **publish-docker.yml** - Automatically triggered by tag creation (Docker publish)
 
@@ -35,64 +35,87 @@ git pull origin master
 git status
 ```
 
-### Step 2: Preview Release (Dry Run)
+### Step 2: Determine Version Bump
 
-Before making any changes, preview what will be released:
+Decide on the version bump based on changes since last release:
 
-```bash
-# Preview version bump and changelog
-npm run release:dry
-```
+- **Patch** (0.1.0 → 0.1.1): Bug fixes, documentation, chores
+- **Minor** (0.1.0 → 0.2.0): New features, backwards-compatible changes
+- **Major** (0.1.0 → 1.0.0): Breaking changes
 
-**What this shows:**
-- ✅ Version bump type (patch/minor/major)
-- ✅ New version number
-- ✅ Commits included in release
-- ✅ CHANGELOG.md preview
-
-**Verify:**
-- [ ] Version bump is correct (patch/minor/major)
-- [ ] All expected commits are included
-- [ ] No unexpected commits are included
-
-### Step 3: Create Release Locally
-
-If the dry run looks good, create the release locally:
+Review commits since last release:
 
 ```bash
-# Create release (updates package.json, CHANGELOG.md, creates commit + tag)
-npm run release
+# View commits since last tag
+git log $(git describe --tags --abbrev=0)..HEAD --oneline
 ```
 
-**What happens:**
-- ✅ Bumps version in `package.json` and `package-lock.json`
-- ✅ Generates CHANGELOG.md entry using git-cliff
-- ✅ Creates git commit: `chore(release): release <package-name>@X.Y.Z`
+### Step 3: Update Version
+
+Bump version in `package.json` and `package-lock.json`:
+
+```bash
+# Choose one:
+npm version patch   # 0.1.0 → 0.1.1 (bug fixes)
+npm version minor   # 0.1.0 → 0.2.0 (new features)
+npm version major   # 0.1.0 → 1.0.0 (breaking changes)
+```
+
+This command:
+- ✅ Updates `package.json` version
+- ✅ Updates `package-lock.json` version
+- ✅ Creates git commit with message: `X.Y.Z`
 - ✅ Creates git tag: `vX.Y.Z`
-- ⚠️ Changes are LOCAL only (not pushed yet)
 
-**Verify:**
-- [ ] `package.json` version is correct
-- [ ] `CHANGELOG.md` entry is accurate
-- [ ] Git tag created: `git tag -l`
-- [ ] Git commit created: `git log -1`
+### Step 4: Generate CHANGELOG
 
-### Step 4: Review Changes
+Generate changelog entry using git-cliff:
 
-Review the generated release:
+```bash
+# Generate changelog for all versions
+npx git-cliff --output CHANGELOG.md
+
+# Or generate for specific version range
+npx git-cliff --tag vX.Y.Z --output CHANGELOG.md
+```
+
+**Manually verify CHANGELOG.md:**
+- [ ] New version entry added at top
+- [ ] All commits categorized correctly
+- [ ] Breaking changes highlighted
+- [ ] Links to PRs/commits working
+
+### Step 5: Amend Release Commit
+
+Add CHANGELOG.md to the release commit:
+
+```bash
+# Stage CHANGELOG.md
+git add CHANGELOG.md
+
+# Amend the version commit
+git commit --amend --no-edit
+```
+
+Now you have a single commit with:
+- ✅ Version bump in package.json
+- ✅ Version bump in package-lock.json
+- ✅ Updated CHANGELOG.md
+- ✅ Git tag vX.Y.Z
+
+### Step 6: Review Changes
+
+Review the release commit and tag:
 
 ```bash
 # View the commit
-git log -1
+git show HEAD
 
-# View the tag
-git tag -l
+# Verify the tag
+git tag -l vX.Y.Z
 
-# View CHANGELOG.md changes
+# View CHANGELOG.md entry
 git diff HEAD~1 CHANGELOG.md
-
-# View package.json changes
-git diff HEAD~1 package.json
 ```
 
 **If you need to make changes:**
@@ -102,28 +125,22 @@ git diff HEAD~1 package.json
 git tag -d vX.Y.Z
 
 # Reset the commit (keep changes)
-git reset HEAD~1
+git reset --soft HEAD~1
 
 # Make your changes to CHANGELOG.md or package.json
-# Then commit manually:
-git add package.json package-lock.json CHANGELOG.md
-git commit -m "chore(release): release <package-name>@X.Y.Z"
-git tag -a vX.Y.Z -m "Release version X.Y.Z"
+# Then repeat steps 3-5
 ```
 
-### Step 5: Push Release to Trigger Publishing
+### Step 7: Push Release to Trigger Publishing
 
 When you're satisfied with the release, push to trigger automated publishing:
 
 ```bash
 # Push commit and tag together
-npm run release:push
-
-# OR push manually:
 git push && git push --tags
 ```
 
-### Step 6: Automatic Publishing (Triggered by Tag)
+### Step 8: Automatic Publishing (Triggered by Tag)
 
 When the tag is pushed, GitHub Actions automatically:
 
@@ -147,32 +164,13 @@ When the tag is pushed, GitHub Actions automatically:
 - npm package: https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp
 - Docker images: https://github.com/gander-tools/osm-tagging-schema-mcp/pkgs/container/osm-tagging-schema-mcp
 
-### Step 7: Publish GitHub Release (Manual)
+### Step 9: Publish GitHub Release (Manual)
 
 1. Go to **Releases** on GitHub
 2. Find the draft release for your version
 3. Review the release notes
 4. Edit if needed (add highlights, breaking changes, etc.)
 5. Click **Publish release**
-
-## Version Format
-
-This project uses semantic versioning: `MAJOR.MINOR.PATCH`
-
-**How cliff-jumper determines version:**
-
-Based on conventional commit messages since last release:
-
-| Commit Type | Version Bump | Example |
-|-------------|--------------|---------|
-| `fix:`, `chore:`, `docs:`, `style:`, `refactor:` | **Patch** | `0.2.1` → `0.2.2` |
-| `feat:`, `add:` | **Minor** | `0.2.1` → `0.3.0` |
-| Any commit with `BREAKING CHANGE:` in body/footer | **Major** | `0.2.1` → `1.0.0` |
-
-**Examples:**
-- Bug fix release: `0.2.1` → `0.2.2`
-- New feature release: `0.2.1` → `0.3.0`
-- Breaking change release: `0.2.1` → `1.0.0`
 
 ## Troubleshooting
 
@@ -226,37 +224,25 @@ git push
 
 **⚠️ Warning:** If the package was already published to npm, you cannot unpublish it (npm policy). You'll need to publish a new patch version.
 
-## Manual Release (Without cliff-jumper)
+### git-cliff not generating changelog correctly
 
-If cliff-jumper fails or you need full manual control:
+Check `cliff.toml` configuration:
 
 ```bash
-# 1. Update version in package.json
-npm version patch  # or: minor, major
+# Preview what git-cliff will generate
+npx git-cliff --unreleased
 
-# 2. Edit CHANGELOG.md manually
-# Add entry for new version
-
-# 3. Commit changes
-git add package.json package-lock.json CHANGELOG.md
-git commit -m "chore(release): release <package-name>@X.Y.Z"
-
-# 4. Create tag
-git tag -a vX.Y.Z -m "Release version X.Y.Z"
-
-# 5. Push commit and tag
-git push && git push --tags
-
-# 6. Wait for publish-npm.yml to complete
-# 7. Publish the draft release through GitHub UI
+# Test with specific tag range
+npx git-cliff --tag vX.Y.Z --unreleased
 ```
 
 ## Tools
 
-- **cliff-jumper**: Automated changelog generation and version management
-  - Configuration: `.cliff-jumperrc.json`
 - **git-cliff**: Changelog generator
   - Configuration: `cliff.toml`
+  - Documentation: https://git-cliff.org/
+- **npm version**: Version bumping
+  - Built into npm
 - **GitHub Actions**: CI/CD automation
   - `publish-npm.yml`: npm publishing with SLSA attestations
   - `publish-docker.yml`: Docker image publishing
@@ -268,5 +254,4 @@ git push && git push --tags
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines
 - [CHANGELOG.md](../CHANGELOG.md) - Version history
 - [docs/security.md](./security.md) - Security and provenance documentation
-- [Cliff-jumper docs](https://github.com/favware/cliff-jumper) - Release automation tool
 - [git-cliff docs](https://git-cliff.org/) - Changelog generator
