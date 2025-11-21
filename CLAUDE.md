@@ -289,6 +289,7 @@ Every feature implementation MUST follow this workflow:
 
 5. **Workflow File Locations**:
    - `.github/workflows/test.yml` - CI testing
+   - `.github/workflows/release.yml` - Release management (changesets)
    - `.github/workflows/docker.yml` - Docker builds
    - `.github/workflows/publish.yml` - npm publishing
    - `.github/workflows/security.yml` - Security scanning
@@ -1259,6 +1260,7 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 - ✅ **Transport Protocols**: stdio (default), HTTP for web clients
 - ✅ **Docker Compose**: Production, development, and test configurations
 - ✅ **Health Checks**: `/health` (liveness) and `/ready` (readiness) endpoints
+- ✅ **Release Management**: Changesets integration with 100% GitHub UI workflow
 
 **Phase 8: Schema Builder API Refactor ✅ COMPLETE**
 - ✅ **Translation Infrastructure (8.1)**: Full localization support in SchemaLoader
@@ -1673,6 +1675,69 @@ docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
 - Easy configuration and management
 - Reproducible deployments
 - Security-hardened containers
+
+### 5. Release Management with Changesets ✅ IMPLEMENTED
+
+**Goal**: Streamline the release process with automated version management and changelog generation, accessible 100% through GitHub UI.
+
+**Status**: ✅ **COMPLETED** - Full implementation with changesets and GitHub Actions
+
+**Implementation**:
+- ✅ **Changesets Integration**: Using `@changesets/cli` for version management
+  - Installed and configured `@changesets/cli@^2.29.7`
+  - Configuration in `.changeset/config.json` with `access: public`
+  - Automated changelog generation following Keep a Changelog format
+- ✅ **GitHub Actions Workflow**: `.github/workflows/release.yml`
+  - Automated workflow using `changesets/action@v1.5.3`
+  - Creates "Version Packages" PR automatically when changesets detected
+  - Supports manual trigger via `workflow_dispatch` for 100% GitHub UI workflow
+  - Version pinning with commit SHA for security
+- ✅ **Manual Release Creation (GitHub UI)**:
+  - Workflow dispatch inputs:
+    - `bump_type`: Select patch/minor/major version bump
+    - `description`: Enter change description
+  - Automatically creates changeset file
+  - Commits and pushes to main branch
+  - Creates Version Packages PR
+- ✅ **Integration with Publishing**: Seamless integration with existing `publish.yml`
+  - After merging Version Packages PR, create GitHub Release through UI
+  - Pushing version tag triggers automated npm publish with SLSA attestations
+  - Complete end-to-end release process
+
+**Release Process (100% GitHub UI)**:
+1. **Create Release**: Actions → Release → Run workflow
+   - Select version bump type (patch/minor/major)
+   - Enter change description
+2. **Review PR**: Changesets automatically creates "Version Packages" PR
+   - Reviews version bump in `package.json`
+   - Reviews updated `CHANGELOG.md`
+3. **Merge PR**: Merge through GitHub UI
+4. **Create GitHub Release**: Create release with version tag through UI
+5. **Automated Publishing**: `publish.yml` automatically publishes to npm with full SLSA attestations
+
+**Alternative Process (Developer Workflow)**:
+```bash
+# Local environment (optional)
+npx changeset
+# Select version bump and describe changes
+git add .changeset/*.md
+git commit -m "chore: add changeset"
+git push
+# Workflow automatically creates PR
+```
+
+**Benefits** ✅:
+- ✅ 100% GitHub UI workflow - no local environment needed for releases
+- ✅ Automated version bumping and changelog generation
+- ✅ Consistent release process across team
+- ✅ Integration with existing SLSA Level 3 publishing pipeline
+- ✅ Clear audit trail of all version changes
+- ✅ Prevents manual version conflicts
+
+**Resources**:
+- Changesets documentation: https://github.com/changesets/changesets
+- GitHub Actions workflow: `.github/workflows/release.yml`
+- Configuration: `.changeset/config.json`
 
 ## Future Enhancements (Schema-Builder Inspired)
 
