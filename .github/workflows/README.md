@@ -96,16 +96,17 @@ git push origin claude/add-new-feature-abc123
 
 The workflow automatically:
 1. ✅ Detects the branch push
-2. ✅ Extracts feature description from branch name
-3. ✅ Creates a PR targeting the default branch
+2. ✅ Creates a PR with title: `[CLAUDE] <first commit title>`
+3. ✅ Targets the default branch
 4. ✅ Includes recent commits in PR description
 5. ✅ Adds labels: `auto-created`, `claude-branch`
 
 **Branch naming format:** `claude/<feature-description>-<session-id>`
 
 Example: `claude/improve-validation-01Y1fZwRf7bd`
-- Feature: "Improve Validation"
 - Session ID: `01Y1fZwRf7bd`
+- First commit: "Improve tag validation logic"
+- **PR Title**: `[CLAUDE] Improve tag validation logic`
 
 #### Troubleshooting
 

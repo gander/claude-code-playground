@@ -1678,7 +1678,7 @@ This project follows an **intent-based workflow** where development is organized
    - Branch naming: `claude/<feature-description>-<session-id>`
    - One branch per feature (not per command)
    - Master branch is protected - all changes must go through feature branches
-   - **Auto-PR**: Pushing to `claude/*` branches automatically creates a Pull Request (see `.github/workflows/auto-pr.yml`)
+   - **Auto-PR**: Pushing to `claude/*` branches automatically creates a Pull Request with title `[CLAUDE] <first commit title>` (see `.github/workflows/auto-pr.yml`)
 
 3. **Feature Branch Lifecycle**
    - Once a feature branch is created and pushed, continue using it for all related changes

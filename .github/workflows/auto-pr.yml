@@ -51,6 +51,10 @@ jobs:
           BASE_BRANCH="${{ steps.branch.outputs.base }}"
           COMMITS=$(git log origin/${BASE_BRANCH}..HEAD --pretty=format:"- %s" | head -n 10)
 
+          # Get first commit title for PR title
+          FIRST_COMMIT_TITLE=$(git log origin/${BASE_BRANCH}..HEAD --pretty=format:"%s" | tail -n 1)
+          echo "first_title=${FIRST_COMMIT_TITLE}" >> $GITHUB_OUTPUT
+
           # Escape newlines for GitHub output
           COMMITS="${COMMITS//'%'/'%25'}"
           COMMITS="${COMMITS//$'\n'/'%0A'}"
@@ -72,7 +76,7 @@ jobs:
           if gh pr create \
             --base "${{ steps.branch.outputs.base }}" \
             --head "${{ steps.branch.outputs.name }}" \
-            --title "[${{ steps.branch.outputs.feature }}] Auto-created PR from claude branch" \
+            --title "[CLAUDE] ${{ steps.commits.outputs.first_title }}" \
             --body "$(cat <<'EOF'
           ## 🤖 Auto-created Pull Request
 

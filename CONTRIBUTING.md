@@ -218,8 +218,8 @@ git push origin claude/add-new-feature-abc123
 
 The auto-PR workflow will:
 - ✅ Detect the `claude/*` branch push
-- ✅ Extract feature description from branch name
-- ✅ Create a PR targeting the default branch (main/master)
+- ✅ Create a PR with title: `[CLAUDE] <first commit title>`
+- ✅ Target the default branch (main/master)
 - ✅ Include recent commits in the PR description
 - ✅ Add labels: `auto-created`, `claude-branch`
 - ✅ Skip creation if a PR already exists
@@ -227,8 +227,9 @@ The auto-PR workflow will:
 **Branch naming format:** `claude/<feature-description>-<session-id>`
 
 Example: `claude/add-tag-validation-01Y1fZwRf7bd`
-- Feature: "Add Tag Validation"
 - Session ID: `01Y1fZwRf7bd`
+- First commit: "Add tag validation for OSM keys"
+- **PR Title**: `[CLAUDE] Add tag validation for OSM keys`
 
 **⚠️ Setup Required:**
 
