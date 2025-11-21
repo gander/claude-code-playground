@@ -35,6 +35,7 @@
 		"check": "biome check --write .",
 		"typecheck": "tsc --noEmit",
 		"prepare": "lefthook install",
+		"prepublishOnly": "npm run build",
 		"release:dry": "cliff-jumper --dry-run",
 		"release": "cliff-jumper",
 		"release:push": "cliff-jumper --push-tag"
