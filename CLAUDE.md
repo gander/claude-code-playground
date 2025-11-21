@@ -1133,7 +1133,13 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 
 **Phase 7: Distribution & Deployment ✅ COMPLETE**
 - ✅ **NPM Publishing**: Package published with SLSA Level 3 provenance and SBOM
-- ✅ **Docker Support**: Multi-stage builds, multi-arch (amd64/arm64), image signing (Cosign)
+- ✅ **Docker Support**: Dual Dockerfile strategy (release vs development builds)
+  - Release builds use shared `dist/` artifact from NPM publish
+  - Development builds use multi-stage TypeScript compilation
+  - Multi-arch support (amd64/arm64), image signing (Cosign)
+- ✅ **Shared Build Artifact**: NPM and Docker use identical compiled code
+  - `dist.tar.gz` attached to GitHub Releases
+  - Complete provenance chain: Docker → dist.tar.gz → NPM (SLSA Level 3)
 - ✅ **Container Registry**: Images published to GitHub Container Registry (ghcr.io)
 - ✅ **Security Scanning**: Trivy vulnerability scanning, security reports
 - ✅ **Transport Protocols**: stdio (default), HTTP for web clients
@@ -1342,11 +1348,19 @@ GNU General Public License v3.0 (GPL-3.0)
 **Status**: ✅ **COMPLETED** - Full implementation with security scanning and image signing
 
 **Implementation**:
-- ✅ **Dockerfile**: Multi-stage build optimized for size and security
-  - Stage 1: Build TypeScript sources
-  - Stage 2: Production runtime with minimal dependencies
-  - Non-root user execution
-  - Health check support
+- ✅ **Dual Dockerfile Strategy**: Optimized builds for different use cases
+  - **Dockerfile**: Multi-stage build for development (PRs, master branch)
+    - Stage 1: Build TypeScript sources
+    - Stage 2: Production runtime with minimal dependencies
+  - **Dockerfile.release**: Simplified build for releases (version tags)
+    - Uses pre-built `dist/` from NPM publish workflow
+    - Ensures Docker image contains identical code to NPM package
+    - Single-stage runtime-only build (faster, smaller)
+- ✅ **Shared Build Artifact**: NPM and Docker builds use same compiled code
+  - NPM publish workflow uploads `dist/` artifact
+  - Artifact attached to GitHub Release as `dist.tar.gz`
+  - Docker workflow downloads and uses artifact for release builds
+  - **Provenance chain**: Docker image → dist.tar.gz → NPM package (SLSA Level 3)
 - ✅ **GitHub Container Registry (ghcr.io)**: Publish container images
 - ✅ **Multi-Architecture**: Support amd64 and arm64 (Apple Silicon, AWS Graviton)
 - ✅ **Image Scanning**: Automated vulnerability scanning with Trivy
@@ -1361,6 +1375,8 @@ GNU General Public License v3.0 (GPL-3.0)
   - Uses Sigstore with OIDC (GitHub Actions identity)
   - Signature verification with `cosign verify`
   - Tamper-proof supply chain
+- ✅ **Non-root user execution**: Security-hardened container
+- ✅ **Health check support**: Liveness and readiness probes
 
 **Container Version Tags**:
 | Tag | Description | Example | Use Case |
@@ -1372,6 +1388,10 @@ GNU General Public License v3.0 (GPL-3.0)
 | `X` | Latest minor in major version | `0` → `0.2.1` | Production (major version) |
 
 **Benefits**:
+- **Build Consistency**: Docker images use identical `dist/` as NPM packages (same SLSA attestations)
+- **Faster Release Builds**: No TypeScript compilation in Docker (uses pre-built artifact)
+- **Provenance Chain**: Complete traceability from Docker image to NPM package to source code
+- **Supply Chain Security**: Single build artifact with SLSA Level 3 attestations used by both distributions
 - Portable deployment across environments
 - Isolated execution environment
 - Easy orchestration with Kubernetes/Docker Compose
