@@ -289,12 +289,11 @@ Every feature implementation MUST follow this workflow:
 
 5. **Workflow File Locations**:
    - `.github/workflows/test.yml` - CI testing
-   - `.github/workflows/release.yml` - Release management (changesets)
-   - `.github/workflows/docker.yml` - Docker builds
-   - `.github/workflows/publish.yml` - npm publishing
+   - `.github/workflows/publish-docker.yml` - Docker builds
+   - `.github/workflows/publish-npm.yml` - npm publishing
    - `.github/workflows/security.yml` - Security scanning
    - `.github/workflows/codeql.yml` - Code scanning
-   - `.github/workflows/cleanup.yml` - Package cleanup
+   - `.github/workflows/auto-cleanup.yml` - Package cleanup
    - `.github/workflows/dependency-review.yml` - Dependency review
    - `.github/workflows/auto-pr.yml` - Auto PR creation
 
@@ -547,11 +546,11 @@ tests/                               # Test files (TDD - one test file per tool)
     └── schema-loader.fuzz.test.ts   # ✅ Schema loader fuzzing
 .github/workflows/                   # CI/CD workflows
     ├── test.yml                     # ✅ CI testing workflow
-    ├── docker.yml                   # ✅ Docker build & publish
-    ├── publish.yml                  # ✅ npm publishing
+    ├── publish-docker.yml           # ✅ Docker build & publish
+    ├── publish-npm.yml              # ✅ npm publishing
     ├── security.yml                 # ✅ Security scanning
     ├── codeql.yml                   # ✅ Code scanning
-    ├── cleanup.yml                  # ✅ Auto cleanup (dev/tagged packages)
+    ├── auto-cleanup.yml             # ✅ Auto cleanup (dev/tagged packages)
     ├── dependency-review.yml        # ✅ Dependency review
     └── auto-pr.yml                  # ✅ Auto-create PRs for claude/* branches
 docs/                                # User documentation
@@ -1421,7 +1420,7 @@ GNU General Public License v3.0 (GPL-3.0)
 **Status**: ✅ **COMPLETED** - Full implementation with SLSA Level 3 attestations
 
 **Implementation**:
-- ✅ **GitHub Actions Workflow**: Automated publishing triggered by version tags (.github/workflows/publish.yml)
+- ✅ **GitHub Actions Workflow**: Automated publishing triggered by version tags (.github/workflows/publish-npm.yml)
   - Comprehensive validation (tests, linting, type checking)
   - Automated version verification
   - GitHub release creation with security information
@@ -1680,63 +1679,50 @@ docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
 
 **Goal**: Streamline the release process with automated version management and changelog generation, accessible 100% through GitHub UI.
 
-**Status**: ✅ **COMPLETED** - Full implementation with changesets and GitHub Actions
+**Status**: ⚠️ **PARTIAL** - Changesets configured, automated workflow removed
 
 **Implementation**:
 - ✅ **Changesets Integration**: Using `@changesets/cli` for version management
   - Installed and configured `@changesets/cli@^2.29.7`
   - Configuration in `.changeset/config.json` with `access: public`
   - Automated changelog generation following Keep a Changelog format
-- ✅ **GitHub Actions Workflow**: `.github/workflows/release.yml`
-  - Automated workflow using `changesets/action@v1.5.3`
-  - Creates "Version Packages" PR automatically when changesets detected
-  - Supports manual trigger via `workflow_dispatch` for 100% GitHub UI workflow
-  - Version pinning with commit SHA for security
-- ✅ **Manual Release Creation (GitHub UI)**:
-  - Workflow dispatch inputs:
-    - `bump_type`: Select patch/minor/major version bump
-    - `description`: Enter change description
-  - Automatically creates changeset file
-  - Commits and pushes to main branch
-  - Creates Version Packages PR
-- ✅ **Integration with Publishing**: Seamless integration with existing `publish.yml`
-  - After merging Version Packages PR, create GitHub Release through UI
+- ⚠️ **GitHub Actions Workflow**: Removed (was `.github/workflows/release.yml`)
+  - Automated "Version Packages" PR creation no longer available
+  - Manual changeset workflow still available
+- ✅ **Integration with Publishing**: Seamless integration with existing `publish-npm.yml`
+  - Create GitHub Release through UI with version tag
   - Pushing version tag triggers automated npm publish with SLSA attestations
   - Complete end-to-end release process
 
-**Release Process (100% GitHub UI)**:
-1. **Create Release**: Actions → Release → Run workflow
-   - Select version bump type (patch/minor/major)
-   - Enter change description
-2. **Review PR**: Changesets automatically creates "Version Packages" PR
-   - Reviews version bump in `package.json`
-   - Reviews updated `CHANGELOG.md`
-3. **Merge PR**: Merge through GitHub UI
-4. **Create GitHub Release**: Create release with version tag through UI
-5. **Automated Publishing**: `publish.yml` automatically publishes to npm with full SLSA attestations
-
-**Alternative Process (Developer Workflow)**:
-```bash
-# Local environment (optional)
-npx changeset
-# Select version bump and describe changes
-git add .changeset/*.md
-git commit -m "chore: add changeset"
-git push
-# Workflow automatically creates PR
-```
+**Release Process (Manual Workflow)**:
+1. **Create Changeset**: Use local environment
+   ```bash
+   npx changeset
+   # Select version bump and describe changes
+   git add .changeset/*.md
+   git commit -m "chore: add changeset"
+   git push
+   ```
+2. **Version Bump**: Run changesets version command
+   ```bash
+   npx changeset version
+   # Updates package.json and CHANGELOG.md
+   git add .
+   git commit -m "chore: version packages"
+   git push
+   ```
+3. **Create GitHub Release**: Create release with version tag through UI
+4. **Automated Publishing**: `publish-npm.yml` automatically publishes to npm with full SLSA attestations
 
 **Benefits** ✅:
-- ✅ 100% GitHub UI workflow - no local environment needed for releases
-- ✅ Automated version bumping and changelog generation
-- ✅ Consistent release process across team
+- ✅ Manual control over release process
+- ✅ Automated changelog generation
 - ✅ Integration with existing SLSA Level 3 publishing pipeline
 - ✅ Clear audit trail of all version changes
 - ✅ Prevents manual version conflicts
 
 **Resources**:
 - Changesets documentation: https://github.com/changesets/changesets
-- GitHub Actions workflow: `.github/workflows/release.yml`
 - Configuration: `.changeset/config.json`
 
 ## Future Enhancements (Schema-Builder Inspired)
