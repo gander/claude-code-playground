@@ -56,7 +56,9 @@ if [ ! -f "$TARBALL" ]; then
     echo -e "${RED}Failed to create package tarball${NC}"
     exit 1
 fi
+TARBALL_SIZE=$(du -h "$TARBALL" | cut -f1)
 echo -e "${GREEN}✓ Package created: $TARBALL${NC}"
+echo "  Package size: $TARBALL_SIZE"
 echo ""
 
 # Step 2: Create test directory and install package
@@ -79,7 +81,10 @@ EOF
 npm install "./$TARBALL" --loglevel=error 2>&1 | grep -v "EBADENGINE" || true
 cd "$PROJECT_ROOT"
 
+# Check installed package version
+INSTALLED_VERSION=$(node -e "console.log(require('$TEST_DIR/node_modules/@gander-tools/osm-tagging-schema-mcp/package.json').version)")
 echo -e "${GREEN}✓ Package installed successfully${NC}"
+echo "  Installed version: $INSTALLED_VERSION"
 echo ""
 
 # Helper to run MCP server
@@ -92,7 +97,7 @@ fi
 
 # Step 3: Test STDIO mode
 echo "Step 3: Testing STDIO mode..."
-echo "  Testing if server launches and accepts input..."
+echo "  Sending initialize request to STDIO transport..."
 
 # Create a simple test: send initialize request and check if process accepts it
 # We'll use a timeout to prevent hanging
@@ -108,6 +113,12 @@ else
     # Check if output contains JSON-RPC response structure
     if echo "$STDIO_OUTPUT" | grep -q "jsonrpc\|result\|capabilities"; then
         echo -e "${GREEN}✓ STDIO mode working - received valid response${NC}"
+
+        # Extract and show server info
+        SERVER_NAME=$(echo "$STDIO_OUTPUT" | grep -o '"name":"[^"]*"' | head -1 | cut -d'"' -f4)
+        if [ ! -z "$SERVER_NAME" ]; then
+            echo "  Server name: $SERVER_NAME"
+        fi
     else
         echo -e "${YELLOW}⚠ STDIO mode started but response unclear${NC}"
         echo "Output: $STDIO_OUTPUT"
@@ -119,9 +130,10 @@ echo ""
 echo "Step 4: Testing HTTP mode..."
 
 # Start server in background
-echo "  Starting HTTP server in background..."
+echo "  Starting HTTP server on port 3000..."
 TRANSPORT=http PORT=3000 node "$MCP_BIN" > /tmp/mcp-server.log 2>&1 &
 HTTP_PID=$!
+echo "  Server PID: $HTTP_PID"
 
 # Wait for server to start (check health endpoint)
 echo "  Waiting for server to be ready..."
@@ -146,12 +158,17 @@ if [ "$READY" = false ]; then
 fi
 
 echo -e "${GREEN}✓ HTTP server started successfully${NC}"
+echo "  Server ready after ${RETRY_COUNT}s"
 
 # Test /health endpoint
 echo "  Testing /health endpoint..."
 HEALTH_RESPONSE=$(curl -s http://localhost:3000/health)
 if echo "$HEALTH_RESPONSE" | jq -e '.status == "ok"' > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Health endpoint working${NC}"
+
+    # Show service name
+    SERVICE_NAME=$(echo "$HEALTH_RESPONSE" | jq -r '.service')
+    echo "  Service: $SERVICE_NAME"
 else
     echo -e "${RED}✗ Health endpoint failed${NC}"
     echo "Response: $HEALTH_RESPONSE"
@@ -165,8 +182,8 @@ if echo "$READY_RESPONSE" | jq -e '.status == "ready"' > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Ready endpoint working${NC}"
 
     # Display schema stats
-    PRESETS_COUNT=$(echo "$READY_RESPONSE" | jq -r '.schema.presetsCount')
-    FIELDS_COUNT=$(echo "$READY_RESPONSE" | jq -r '.schema.fieldsCount')
+    PRESETS_COUNT=$(echo "$READY_RESPONSE" | jq -r '.schema.presets')
+    FIELDS_COUNT=$(echo "$READY_RESPONSE" | jq -r '.schema.fields')
     echo "  Schema loaded: $PRESETS_COUNT presets, $FIELDS_COUNT fields"
 else
     echo -e "${RED}✗ Ready endpoint failed${NC}"
@@ -174,24 +191,51 @@ else
     exit 1
 fi
 
-# Test basic MCP functionality via HTTP
-echo "  Testing MCP protocol via HTTP (basic smoke test)..."
+# Test MCP protocol - send initialize request and verify SSE response
+echo "  Testing MCP protocol (initialize request via SSE)..."
+echo "  Sending POST /initialize to http://localhost:3000/"
 
-# Just verify server accepts HTTP requests (SSE format is complex to test in bash)
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:3000/sse \
+# Send initialize request with both Accept headers (required by StreamableHTTPServerTransport)
+MCP_RESPONSE=$(timeout 3s curl -s -N -X POST http://localhost:3000/ \
     -H "Content-Type: application/json" \
+    -H "Accept: application/json, text/event-stream" \
     -d '{
         "jsonrpc": "2.0",
         "id": 1,
-        "method": "ping"
-    }')
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "clientInfo": {"name": "e2e-test", "version": "1.0"}
+        }
+    }' 2>&1 || echo "TIMEOUT_OK")
 
-# We expect 200 for valid SSE connection
-if [ "$HTTP_CODE" = "200" ]; then
-    echo -e "${GREEN}✓ HTTP transport accepting MCP requests${NC}"
+# Check if we got SSE response with message event containing server info
+if echo "$MCP_RESPONSE" | grep -q "event: message"; then
+    echo -e "${GREEN}✓ MCP protocol working - received SSE stream${NC}"
+
+    # Extract server info from response
+    SERVER_INFO=$(echo "$MCP_RESPONSE" | grep "data:" | sed 's/data: //' | jq -r '.result.serverInfo.name' 2>/dev/null || echo "")
+    SERVER_VERSION=$(echo "$MCP_RESPONSE" | grep "data:" | sed 's/data: //' | jq -r '.result.serverInfo.version' 2>/dev/null || echo "")
+    PROTOCOL_VERSION=$(echo "$MCP_RESPONSE" | grep "data:" | sed 's/data: //' | jq -r '.result.protocolVersion' 2>/dev/null || echo "")
+
+    if [ "$SERVER_INFO" = "osm-tagging-schema" ]; then
+        echo "  Server: $SERVER_INFO v$SERVER_VERSION"
+        echo "  Protocol: $PROTOCOL_VERSION"
+
+        # Count capabilities
+        TOOLS_SUPPORTED=$(echo "$MCP_RESPONSE" | grep "data:" | sed 's/data: //' | jq -r '.result.capabilities.tools' 2>/dev/null || echo "")
+        if [ ! -z "$TOOLS_SUPPORTED" ] && [ "$TOOLS_SUPPORTED" != "null" ]; then
+            echo "  Capabilities: tools supported"
+        fi
+    else
+        echo -e "${YELLOW}⚠ MCP protocol response received but server info unclear${NC}"
+        echo "Response: ${MCP_RESPONSE:0:200}"
+    fi
 else
-    echo -e "${YELLOW}⚠ Unexpected HTTP code: $HTTP_CODE (expected 200)${NC}"
-    # Don't fail - SSE format might return different code
+    echo -e "${RED}✗ MCP protocol test failed - no message event in response${NC}"
+    echo "Response: ${MCP_RESPONSE:0:500}"
+    exit 1
 fi
 
 echo ""
@@ -209,8 +253,15 @@ echo "=== Test Summary ==="
 echo -e "${GREEN}✓ Package builds successfully${NC}"
 echo -e "${GREEN}✓ Package installs successfully${NC}"
 echo -e "${GREEN}✓ STDIO mode works${NC}"
-echo -e "${GREEN}✓ HTTP mode works${NC}"
-echo -e "${GREEN}✓ Health endpoints work${NC}"
-echo -e "${GREEN}✓ MCP protocol works${NC}"
+echo -e "${GREEN}✓ HTTP transport works${NC}"
+echo -e "${GREEN}✓ Health and readiness endpoints work${NC}"
+echo -e "${GREEN}✓ MCP protocol works (SSE stream)${NC}"
 echo ""
 echo -e "${GREEN}All tests passed!${NC}"
+echo ""
+echo "Test Results:"
+echo "  Package: $TARBALL ($TARBALL_SIZE)"
+echo "  Version: $INSTALLED_VERSION"
+echo "  Schema: $PRESETS_COUNT presets, $FIELDS_COUNT fields"
+echo "  Transports: STDIO ✓, HTTP ✓"
+echo "  MCP Protocol: ✓"
