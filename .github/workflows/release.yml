@@ -96,6 +96,47 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Configure Git (for automatic tag creation)
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create and push version tag
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v$VERSION"
+
+          echo "Creating version tag: $TAG"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+          echo "✅ Tag $TAG created and pushed successfully"
+          echo "🚀 This will trigger npm publish workflow automatically"
+
+      - name: Summary - Published (Tag Created)
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "## 🚀 Release Published!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: v$VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Automated Steps Completed:" >> $GITHUB_STEP_SUMMARY
+          echo "1. ✅ Version Packages PR was merged" >> $GITHUB_STEP_SUMMARY
+          echo "2. ✅ package.json updated to v$VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "3. ✅ CHANGELOG.md updated" >> $GITHUB_STEP_SUMMARY
+          echo "4. ✅ Git tag v$VERSION created and pushed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### What Happens Next (Automatic):" >> $GITHUB_STEP_SUMMARY
+          echo "1. 🔄 Publish workflow will start automatically" >> $GITHUB_STEP_SUMMARY
+          echo "2. 🧪 Package will be tested and built" >> $GITHUB_STEP_SUMMARY
+          echo "3. 📦 Package will be published to npm with SLSA attestations" >> $GITHUB_STEP_SUMMARY
+          echo "4. 📝 GitHub Release will be created automatically" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**No manual steps required!** 🎉" >> $GITHUB_STEP_SUMMARY
+
       - name: Summary - Manual Trigger
         if: github.event_name == 'workflow_dispatch' && steps.changesets.outputs.pullRequestNumber
         run: |
@@ -106,12 +147,11 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Release PR**: #${{ steps.changesets.outputs.pullRequestNumber }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Next Steps (100% GitHub UI)" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "1. ✅ Changeset created and pushed automatically" >> $GITHUB_STEP_SUMMARY
           echo "2. ✅ Version PR created automatically" >> $GITHUB_STEP_SUMMARY
-          echo "3. 👉 Review and merge PR #${{ steps.changesets.outputs.pullRequestNumber }}" >> $GITHUB_STEP_SUMMARY
-          echo "4. 👉 Create GitHub Release with the version tag (through UI)" >> $GITHUB_STEP_SUMMARY
-          echo "5. ✅ npm publish will trigger automatically" >> $GITHUB_STEP_SUMMARY
+          echo "3. 👉 **Review and merge PR** #${{ steps.changesets.outputs.pullRequestNumber }}" >> $GITHUB_STEP_SUMMARY
+          echo "4. ✅ After merge: Tag, npm publish, and GitHub Release will happen **automatically**" >> $GITHUB_STEP_SUMMARY
 
       - name: Summary - Auto Trigger
         if: github.event_name == 'push' && steps.changesets.outputs.pullRequestNumber
@@ -122,11 +162,13 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "1. Review the version bump and changelog in the PR" >> $GITHUB_STEP_SUMMARY
-          echo "2. Merge the PR to update package.json and CHANGELOG.md" >> $GITHUB_STEP_SUMMARY
-          echo "3. Create GitHub Release with the version tag (through UI) to trigger npm publish" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Merge the PR** - this triggers full automation:" >> $GITHUB_STEP_SUMMARY
+          echo "   - ✅ Version tag created automatically" >> $GITHUB_STEP_SUMMARY
+          echo "   - ✅ npm publish happens automatically" >> $GITHUB_STEP_SUMMARY
+          echo "   - ✅ GitHub Release created automatically" >> $GITHUB_STEP_SUMMARY
 
       - name: No changesets found
-        if: steps.changesets.outputs.pullRequestNumber == ''
+        if: steps.changesets.outputs.pullRequestNumber == '' && steps.changesets.outputs.published != 'true'
         run: |
           echo "## No Release Needed ℹ️" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -136,9 +178,10 @@ jobs:
           echo "Run this workflow manually (Actions → Release → Run workflow)" >> $GITHUB_STEP_SUMMARY
           echo "- Select version bump type (patch/minor/major)" >> $GITHUB_STEP_SUMMARY
           echo "- Enter change description" >> $GITHUB_STEP_SUMMARY
-          echo "- Everything else happens automatically!" >> $GITHUB_STEP_SUMMARY
+          echo "- Creates PR → Merge PR → **Fully automated release!**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Option 2: Local environment" >> $GITHUB_STEP_SUMMARY
           echo "1. Add a changeset: \`npx changeset\`" >> $GITHUB_STEP_SUMMARY
           echo "2. Commit and push the changeset" >> $GITHUB_STEP_SUMMARY
           echo "3. This workflow will create a version PR automatically" >> $GITHUB_STEP_SUMMARY
+          echo "4. Merge PR → **Fully automated release!**" >> $GITHUB_STEP_SUMMARY
