@@ -5,6 +5,19 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      description:
+        description: 'Change description (what changed?)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -35,6 +48,41 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Configure Git (for manual changeset creation)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create changeset (manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          # Generate unique changeset filename
+          TIMESTAMP=$(date +%s)
+          RANDOM_ID=$(openssl rand -hex 4)
+          CHANGESET_FILE=".changeset/${TIMESTAMP}-${RANDOM_ID}.md"
+
+          # Create changeset file with frontmatter
+          cat > "$CHANGESET_FILE" << 'EOF'
+          ---
+          "@gander-tools/osm-tagging-schema-mcp": ${{ github.event.inputs.bump_type }}
+          ---
+
+          ${{ github.event.inputs.description }}
+          EOF
+
+          echo "Created changeset: $CHANGESET_FILE"
+          cat "$CHANGESET_FILE"
+
+      - name: Commit and push changeset (manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git add .changeset/*.md
+          git commit -m "chore: add changeset for ${{ github.event.inputs.bump_type }} release
+
+          ${{ github.event.inputs.description }}"
+          git push origin main
+
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@3de3850952bec538fde60aac71731376e57b9b57 # v1.5.3
@@ -48,8 +96,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Summary
-        if: steps.changesets.outputs.pullRequestNumber
+      - name: Summary - Manual Trigger
+        if: github.event_name == 'workflow_dispatch' && steps.changesets.outputs.pullRequestNumber
+        run: |
+          echo "## Release PR Created 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Changeset created**: ${{ github.event.inputs.bump_type }} bump" >> $GITHUB_STEP_SUMMARY
+          echo "**Description**: ${{ github.event.inputs.description }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Release PR**: #${{ steps.changesets.outputs.pullRequestNumber }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps (100% GitHub UI)" >> $GITHUB_STEP_SUMMARY
+          echo "1. ✅ Changeset created and pushed automatically" >> $GITHUB_STEP_SUMMARY
+          echo "2. ✅ Version PR created automatically" >> $GITHUB_STEP_SUMMARY
+          echo "3. 👉 Review and merge PR #${{ steps.changesets.outputs.pullRequestNumber }}" >> $GITHUB_STEP_SUMMARY
+          echo "4. 👉 Create GitHub Release with the version tag (through UI)" >> $GITHUB_STEP_SUMMARY
+          echo "5. ✅ npm publish will trigger automatically" >> $GITHUB_STEP_SUMMARY
+
+      - name: Summary - Auto Trigger
+        if: github.event_name == 'push' && steps.changesets.outputs.pullRequestNumber
         run: |
           echo "## Release PR Created 🎉" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -58,12 +123,7 @@ jobs:
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "1. Review the version bump and changelog in the PR" >> $GITHUB_STEP_SUMMARY
           echo "2. Merge the PR to update package.json and CHANGELOG.md" >> $GITHUB_STEP_SUMMARY
-          echo "3. After merge, manually push the version tag to trigger npm publish:" >> $GITHUB_STEP_SUMMARY
-          echo '   ```bash' >> $GITHUB_STEP_SUMMARY
-          echo "   git push origin v<VERSION>" >> $GITHUB_STEP_SUMMARY
-          echo '   ```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Or use GitHub UI to create a release with the tag." >> $GITHUB_STEP_SUMMARY
+          echo "3. Create GitHub Release with the version tag (through UI) to trigger npm publish" >> $GITHUB_STEP_SUMMARY
 
       - name: No changesets found
         if: steps.changesets.outputs.pullRequestNumber == ''
@@ -71,6 +131,14 @@ jobs:
           echo "## No Release Needed ℹ️" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "No changesets found. To create a release:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Option 1: GitHub UI (recommended)" >> $GITHUB_STEP_SUMMARY
+          echo "Run this workflow manually (Actions → Release → Run workflow)" >> $GITHUB_STEP_SUMMARY
+          echo "- Select version bump type (patch/minor/major)" >> $GITHUB_STEP_SUMMARY
+          echo "- Enter change description" >> $GITHUB_STEP_SUMMARY
+          echo "- Everything else happens automatically!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Option 2: Local environment" >> $GITHUB_STEP_SUMMARY
           echo "1. Add a changeset: \`npx changeset\`" >> $GITHUB_STEP_SUMMARY
           echo "2. Commit and push the changeset" >> $GITHUB_STEP_SUMMARY
           echo "3. This workflow will create a version PR automatically" >> $GITHUB_STEP_SUMMARY
