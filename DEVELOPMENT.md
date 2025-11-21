@@ -80,8 +80,8 @@ osm-tagging-schema-mcp/
 ├── .github/                      # GitHub workflows
 │   └── workflows/
 │       ├── test.yml              # CI testing
-│       ├── docker.yml            # Docker builds
-│       └── release.yml           # NPM releases
+│       ├── publish-docker.yml    # Docker builds
+│       └── publish-npm.yml       # NPM releases
 ├── package.json                  # Project metadata
 ├── tsconfig.json                 # TypeScript configuration
 ├── biome.json                    # Biome configuration

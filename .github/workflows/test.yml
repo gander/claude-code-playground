@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   test:
+    name: Unit and Integration Test
     runs-on: ubuntu-latest
 
     steps:

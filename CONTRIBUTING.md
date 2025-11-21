@@ -649,7 +649,7 @@ The easiest way to create a release is using the **Manual Release** GitHub Actio
 
    **Option A: Automatic publish** (push_tag = true)
    - Tag is pushed automatically
-   - `publish.yml` workflow is triggered
+   - `publish-npm.yml` workflow is triggered
    - Package is published to npm with provenance
    - GitHub release is created
 
@@ -696,7 +696,7 @@ git push && git push --tags
 ```
 
 **What happens next:**
-- Git tag triggers GitHub Actions workflow (`.github/workflows/publish.yml`)
+- Git tag triggers GitHub Actions workflow (`.github/workflows/publish-npm.yml`)
 - Automated pipeline: tests → build → SBOM → attestations → npm publish
 - GitHub release created automatically with security information
 
@@ -884,7 +884,7 @@ cat sbom.json | jq .
 
 ### Docker Image Publishing
 
-Docker images are automatically built and published to GitHub Container Registry (GHCR) by the `.github/workflows/docker.yml` workflow.
+Docker images are automatically built and published to GitHub Container Registry (GHCR) by the `.github/workflows/publish-docker.yml` workflow.
 
 #### Automated Build Triggers
 
