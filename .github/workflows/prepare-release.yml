@@ -145,3 +145,4 @@ jobs:
           PR_URL=$(gh pr view "$BRANCH" --json url --jq '.url')
           echo "🔗 PR URL: ${PR_URL}"
           echo "::notice title=Release PR Created::Release PR created at ${PR_URL}"
+# Trigger CI
