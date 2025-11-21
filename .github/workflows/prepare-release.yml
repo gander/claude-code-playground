@@ -76,6 +76,7 @@ jobs:
       - name: Prepare release branch and changelog
         run: |
           echo "📦 Preparing release v$VERSION"
+          echo "Input version: $VERSION"
 
           # 1. Create and checkout release branch
           BRANCH="release/v${VERSION}"
@@ -83,8 +84,21 @@ jobs:
           echo "✅ Created branch: $BRANCH"
 
           # 2. Bump version in package.json (no git tag yet)
-          npm version "$VERSION" --no-git-tag-version
-          echo "✅ Bumped version to $VERSION in package.json"
+          # Use npm pkg set instead of npm version for more reliable behavior
+          npm pkg set version="$VERSION"
+
+          # Update package-lock.json to match
+          npm install --package-lock-only
+
+          # Verify the version was set correctly
+          ACTUAL_VERSION=$(node -p "require('./package.json').version")
+          if [ "$ACTUAL_VERSION" != "$VERSION" ]; then
+            echo "❌ Error: Version mismatch!"
+            echo "Expected: $VERSION"
+            echo "Actual: $ACTUAL_VERSION"
+            exit 1
+          fi
+          echo "✅ Bumped version to $VERSION in package.json (verified)"
 
           # 3. Generate CHANGELOG.md entry using cliff-jumper
           # cliff-jumper will read the new version from package.json
