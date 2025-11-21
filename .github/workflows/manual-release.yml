@@ -241,33 +241,34 @@ jobs:
           echo "📝 Updating GitHub release..."
 
           # Get current release body
-          RELEASE_BODY=$(gh release view ${{ needs.pre-release.outputs.version_tag }} --json body -q .body)
+          gh release view ${{ needs.pre-release.outputs.version_tag }} --json body -q .body > current-release.md
 
           # Append npm install instructions
-          UPDATED_BODY="${RELEASE_BODY}
+          cat >> current-release.md << 'EOF'
 
 ## 📦 Installation
 
-\`\`\`bash
+```bash
 npx @gander-tools/osm-tagging-schema-mcp@${{ needs.pre-release.outputs.version }}
-\`\`\`
+```
 
 ## 🔐 Security & Provenance
 
 ### npm Provenance
-\`\`\`bash
+```bash
 npm audit signatures @gander-tools/osm-tagging-schema-mcp@${{ needs.pre-release.outputs.version }}
-\`\`\`
+```
 
 ### SLSA Attestations (SLSA Level 3)
-\`\`\`bash
+```bash
 gh attestation verify oci://registry.npmjs.org/@gander-tools/osm-tagging-schema-mcp@${{ needs.pre-release.outputs.version }} --owner gander-tools
-\`\`\`"
+```
+EOF
 
           # Update release (publish draft)
           gh release edit ${{ needs.pre-release.outputs.version_tag }} \
             --draft=false \
-            --notes="${UPDATED_BODY}"
+            --notes-file=current-release.md
 
           echo "✅ GitHub release published"
 
