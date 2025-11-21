@@ -38,10 +38,7 @@
 		"prepare": "lefthook install",
 		"prepublishOnly": "npm run build",
 		"release": "release-it",
-		"release:dry": "release-it --dry-run",
-		"release:patch": "release-it patch",
-		"release:minor": "release-it minor",
-		"release:major": "release-it major"
+		"release:dry": "release-it --dry-run"
 	},
 	"keywords": [
 		"mcp",

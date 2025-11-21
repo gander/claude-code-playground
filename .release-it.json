@@ -6,15 +6,16 @@
 		"requireBranch": "master",
 		"requireCleanWorkingDir": true,
 		"requireUpstream": true,
-		"addUntrackedFiles": false
+		"addUntrackedFiles": false,
+		"push": true,
+		"tag": false
 	},
 	"hooks": {
-		"after:bump": "npx git-cliff --tag v${version} --output CHANGELOG.md"
+		"after:bump": "npx git-cliff --tag v${version} --output CHANGELOG.md",
+		"before:git:release": "git switch -c release/v${version} || git switch release/v${version}"
 	},
 	"github": {
-		"release": true,
-		"draft": true,
-		"releaseName": "Release v${version}"
+		"release": false
 	},
 	"npm": {
 		"publish": false

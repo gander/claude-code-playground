@@ -630,27 +630,24 @@ Releases are created using release-it with git-cliff for changelog generation.
 # Interactive mode (prompts for version)
 npm run release
 
-# Or specify version bump:
-npm run release:patch  # Bug fixes (1.0.0 → 1.0.1)
-npm run release:minor  # New features (1.0.0 → 1.1.0)
-npm run release:major  # Breaking changes (1.0.0 → 2.0.0)
-
 # Dry run (preview without changes)
 npm run release:dry
 ```
 
 **What release-it does:**
-1. ✅ Bumps version in package.json and package-lock.json
-2. ✅ Generates CHANGELOG using git-cliff
-3. ✅ Creates commit and tag
-4. ✅ Pushes to GitHub
-5. ✅ Creates draft GitHub Release
+1. ✅ Prompts for version bump (patch/minor/major/custom)
+2. ✅ Bumps version in package.json and package-lock.json
+3. ✅ Generates CHANGELOG using git-cliff
+4. ✅ Creates release branch: `release/vX.Y.Z`
+5. ✅ Commits changes and pushes branch to GitHub
 
-**What happens after push:**
-- Git tag triggers `.github/workflows/publish-npm.yml`
-- Automated pipeline: tests → build → SBOM → SLSA attestations → npm publish
-- Git tag triggers `.github/workflows/publish-docker.yml`
-- Docker images built and published to GHCR with image signing
+**After release-it:**
+1. 📝 Create Pull Request from release branch
+2. 👀 Review PR (version, CHANGELOG, tests passing)
+3. ✅ Merge PR to master
+4. 🏷️ Manually create and push tag: `git tag vX.Y.Z && git push --tags`
+5. 🤖 GitHub Actions automatically publish to npm + Docker
+6. 📦 Manually publish draft GitHub Release
 
 **Configuration:**
 - `.release-it.json` - release-it configuration

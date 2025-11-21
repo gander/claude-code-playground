@@ -23,20 +23,12 @@ The release process is initiated locally using release-it and automated through 
 
 ### Quick Start
 
-For most releases, use these simple commands:
-
 ```bash
-# Patch release (bug fixes): 1.0.0 → 1.0.1
-npm run release:patch
-
-# Minor release (new features): 1.0.0 → 1.1.0
-npm run release:minor
-
-# Major release (breaking changes): 1.0.0 → 2.0.0
-npm run release:major
-
-# Or let release-it prompt you interactively:
+# Interactive release (prompts for version)
 npm run release
+
+# Dry run (preview without changes)
+npm run release:dry
 ```
 
 ### Detailed Steps
@@ -84,27 +76,51 @@ Run release-it to create the release:
 ```bash
 # Interactive mode (prompts for version bump)
 npm run release
-
-# Or specify version bump directly:
-npm run release:patch  # Bug fixes (1.0.0 → 1.0.1)
-npm run release:minor  # New features (1.0.0 → 1.1.0)
-npm run release:major  # Breaking changes (1.0.0 → 2.0.0)
 ```
 
 **What happens:**
-1. ✅ Bumps version in `package.json` and `package-lock.json`
-2. ✅ Generates CHANGELOG.md using git-cliff
-3. ✅ Creates git commit: `chore(release): release vX.Y.Z`
-4. ✅ Creates git tag: `vX.Y.Z`
-5. ✅ Pushes commit and tag to GitHub
-6. ✅ Creates draft GitHub Release
+1. ✅ Prompts for version bump (patch/minor/major/custom)
+2. ✅ Bumps version in `package.json` and `package-lock.json`
+3. ✅ Generates CHANGELOG.md using git-cliff
+4. ✅ Creates release branch: `release/vX.Y.Z`
+5. ✅ Creates git commit: `chore(release): release vX.Y.Z`
+6. ✅ Pushes release branch to GitHub
+7. ⏸️  **No tag created** (tag created after merging to master)
+8. ⏸️  **No GitHub release** (created by workflow after merge)
 
 **Interactive prompts:**
-- Version bump selection (if not specified)
-- Confirmation before pushing
-- Confirmation before creating GitHub release
+- Version bump selection
+- Confirmation before each step
 
-### Step 4: Automatic Publishing (Triggered by Tag)
+### Step 4: Create Pull Request
+
+After release-it finishes:
+
+1. Go to GitHub repository
+2. You'll see a notification about new branch `release/vX.Y.Z`
+3. Click "Create Pull Request" (or auto-PR workflow creates it)
+4. Review the PR:
+   - ✅ Check version in package.json
+   - ✅ Review CHANGELOG.md entry
+   - ✅ Verify commit message
+5. Get review/approval (if required)
+6. Merge PR to master
+
+### Step 5: Create and Push Tag
+
+After merging the PR, create the version tag:
+
+```bash
+# Switch to master and pull merged changes
+git checkout master
+git pull origin master
+
+# Create and push tag
+git tag -a vX.Y.Z -m "Release version X.Y.Z"
+git push origin vX.Y.Z
+```
+
+### Step 6: Automatic Publishing (Triggered by Tag)
 
 When the tag is pushed, GitHub Actions automatically:
 
@@ -128,7 +144,7 @@ When the tag is pushed, GitHub Actions automatically:
 - npm package: https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp
 - Docker images: https://github.com/gander-tools/osm-tagging-schema-mcp/pkgs/container/osm-tagging-schema-mcp
 
-### Step 5: Publish GitHub Release (Manual)
+### Step 7: Publish GitHub Release (Manual)
 
 1. Go to **Releases** on GitHub
 2. Find the draft release for your version
@@ -140,15 +156,19 @@ When the tag is pushed, GitHub Actions automatically:
 
 Configuration is in `.release-it.json`:
 
-- **Git**: Commit message format, tag format, branch requirements
-- **Hooks**: Runs git-cliff after version bump
-- **GitHub**: Creates draft releases automatically
+- **Git**: Commit message format, branch requirements, no tagging
+- **Hooks**:
+  - `after:bump` - Runs git-cliff to generate CHANGELOG
+  - `before:git:release` - Creates release branch
+- **GitHub**: Disabled (releases created by workflow)
 - **npm**: Publishing disabled (done by GitHub Actions workflow)
 
 **Key settings:**
-- `requireBranch: "master"` - Only allow releases from master
+- `requireBranch: "master"` - Start releases from master branch
 - `requireCleanWorkingDir: true` - No uncommitted changes
-- `hooks.after:bump` - Runs git-cliff to generate CHANGELOG
+- `git.tag: false` - Don't create tag (done manually after merge)
+- `git.push: true` - Push release branch to GitHub
+- `github.release: false` - Don't create GitHub release (done by workflow)
 
 ## Troubleshooting
 
@@ -199,19 +219,19 @@ Check GitHub Actions logs:
 If release-it failed or you want to undo before pushing:
 
 ```bash
-# Cancel release-it when prompted
-# Or if commit was already created:
+# Cancel release-it when prompted (press Ctrl+C)
+# Or if branch was already pushed:
 
-# Delete the tag
-git tag -d vX.Y.Z
+# Delete remote release branch
+git push origin --delete release/vX.Y.Z
 
-# Reset the commit
-git reset --hard HEAD~1
+# Delete local release branch
+git branch -D release/vX.Y.Z
 ```
 
-### Need to undo a release (after push)
+### Need to undo a release (after PR merge)
 
-If you already pushed the tag:
+If you already merged the release PR but want to undo:
 
 ```bash
 # Delete remote tag (stops automatic publishing)
@@ -261,12 +281,17 @@ npm run release
 
 # Dry run (preview without changes)
 npm run release:dry
-
-# Specific version bumps
-npm run release:patch  # Bug fixes
-npm run release:minor  # New features
-npm run release:major  # Breaking changes
 ```
+
+## Release Workflow Summary
+
+1. **Local**: `npm run release` → creates `release/vX.Y.Z` branch
+2. **GitHub**: Create PR from release branch
+3. **Review**: Check version, CHANGELOG, get approval
+4. **Merge**: Merge PR to master
+5. **Tag**: Manually create and push `vX.Y.Z` tag
+6. **Automation**: GitHub Actions publish to npm + Docker
+7. **Publish**: Manually publish draft GitHub Release
 
 ## Related Documentation
 
