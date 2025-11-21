@@ -63,10 +63,13 @@ jobs:
       - name: Create Pull Request
         if: steps.pr-check.outputs.exists == '0'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use PAT if available, otherwise use GITHUB_TOKEN
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        id: create-pr
         run: |
           # Create PR with informative title and body
-          gh pr create \
+          if gh pr create \
             --base "${{ steps.branch.outputs.base }}" \
             --head "${{ steps.branch.outputs.name }}" \
             --title "[${{ steps.branch.outputs.feature }}] Auto-created PR from claude branch" \
@@ -91,12 +94,38 @@ jobs:
 
           **Note**: This is an automated PR. Please review the changes and update the description as needed.
           EOF
-          )"
+          )"; then
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "success=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Setup Instructions (if PR creation failed)
+        if: steps.pr-check.outputs.exists == '0' && steps.create-pr.outcome == 'failure'
+        run: |
+          echo "::error title=PR Creation Failed::Failed to create Pull Request automatically"
+          echo ""
+          echo "❌ Auto-PR creation failed. This is likely due to GitHub repository settings."
+          echo ""
+          echo "📋 To enable automatic PR creation, follow these steps:"
+          echo ""
+          echo "1. Go to: Settings > Actions > General > Workflow permissions"
+          echo "2. Enable: 'Allow GitHub Actions to create and approve pull requests'"
+          echo "3. Click 'Save'"
+          echo ""
+          echo "Alternatively, you can:"
+          echo "- Create a Personal Access Token (PAT) with 'repo' scope"
+          echo "- Add it as a repository secret named 'PAT_TOKEN'"
+          echo ""
+          echo "📖 Manual PR creation:"
+          echo "   Visit: https://github.com/${{ github.repository }}/pull/new/${{ steps.branch.outputs.name }}"
+          echo ""
 
       - name: Add labels
-        if: steps.pr-check.outputs.exists == '0'
+        if: steps.pr-check.outputs.exists == '0' && steps.create-pr.outcome == 'success'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
         continue-on-error: true
         run: |
           # Add labels to the PR (continue even if labels don't exist)
@@ -104,9 +133,9 @@ jobs:
             --add-label "auto-created,claude-branch" || true
 
       - name: PR Info
-        if: steps.pr-check.outputs.exists == '0'
+        if: steps.pr-check.outputs.exists == '0' && steps.create-pr.outcome == 'success'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           PR_URL=$(gh pr view "${{ steps.branch.outputs.name }}" --json url --jq '.url')
           echo "✅ Pull Request created: ${PR_URL}"

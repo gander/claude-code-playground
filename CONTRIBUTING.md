@@ -230,6 +230,23 @@ Example: `claude/add-tag-validation-01Y1fZwRf7bd`
 - Feature: "Add Tag Validation"
 - Session ID: `01Y1fZwRf7bd`
 
+**⚠️ Setup Required:**
+
+The auto-PR workflow requires additional repository configuration. **Repository maintainers** must enable one of the following:
+
+**Option 1: Enable GitHub Actions PR creation (Recommended)**
+1. Go to **Settings** → **Actions** → **General** → **Workflow permissions**
+2. Enable: ✅ **"Allow GitHub Actions to create and approve pull requests"**
+3. Click **Save**
+
+**Option 2: Use Personal Access Token (PAT)**
+1. Create a PAT with `repo` scope at https://github.com/settings/tokens/new
+2. Add it as repository secret named `PAT_TOKEN`
+
+See `.github/workflows/README.md` for detailed setup instructions.
+
+If auto-PR creation fails, you can still create PRs manually (see below).
+
 #### Manual PR Creation (Other Branches)
 
 For standard feature branches, create PRs manually:
