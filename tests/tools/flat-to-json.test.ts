@@ -198,11 +198,30 @@ describe("flatToJson", () => {
 			);
 		});
 
-		it("should allow empty values", () => {
+		it("should throw error for empty values", () => {
 			const input = "fixme=";
-			const result = flatToJson(input);
 
-			assert.deepStrictEqual(result, { fixme: "" });
+			assert.throws(
+				() => flatToJson(input),
+				(error: Error) => {
+					assert.match(error.message, /value cannot be empty/i);
+					assert.match(error.message, /fixme/i);
+					return true;
+				},
+			);
+		});
+
+		it("should throw error for whitespace-only values", () => {
+			const input = "note=   ";
+
+			assert.throws(
+				() => flatToJson(input),
+				(error: Error) => {
+					assert.match(error.message, /value cannot be empty/i);
+					assert.match(error.message, /note/i);
+					return true;
+				},
+			);
 		});
 	});
 

@@ -14,11 +14,20 @@ import { parseTagInput } from "../utils/tag-parser.js";
  *
  * @param input - Flat text format with key=value per line
  * @returns JSON object with tags
- * @throws Error if input format is invalid
+ * @throws Error if input format is invalid or if any value is empty
  */
 export function flatToJson(input: string): Record<string, string> {
 	// Use existing parseTagInput which handles text format
-	return parseTagInput(input);
+	const tags = parseTagInput(input);
+
+	// Validate that no values are empty
+	for (const [key, value] of Object.entries(tags)) {
+		if (value === "") {
+			throw new Error(`Tag value cannot be empty for key "${key}"`);
+		}
+	}
+
+	return tags;
 }
 
 const FlatToJson: OsmToolDefinition<{

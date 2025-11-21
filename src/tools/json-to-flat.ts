@@ -45,11 +45,11 @@ export function jsonToFlat(input: string | Record<string, unknown>): string {
 }
 
 /**
- * Validate that all values in the tags object are strings
+ * Validate that all values in the tags object are strings and not empty
  *
  * @param obj - Object to validate
  * @returns Validated tags object
- * @throws Error if any value is not a string
+ * @throws Error if any value is not a string or is empty
  */
 function validateTags(obj: Record<string, unknown>): Record<string, string> {
 	const result: Record<string, string> = {};
@@ -58,7 +58,11 @@ function validateTags(obj: Record<string, unknown>): Record<string, string> {
 		if (typeof value !== "string") {
 			throw new Error(`All values must be strings. Found ${typeof value} for key "${key}"`);
 		}
-		result[key.trim()] = value.trim();
+		const trimmedValue = value.trim();
+		if (trimmedValue === "") {
+			throw new Error(`Tag value cannot be empty for key "${key}"`);
+		}
+		result[key.trim()] = trimmedValue;
 	}
 
 	return result;

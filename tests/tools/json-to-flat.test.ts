@@ -141,6 +141,45 @@ describe("jsonToFlat", () => {
 				},
 			);
 		});
+
+		it("should throw error for empty values", () => {
+			const input = { amenity: "restaurant", fixme: "" };
+
+			assert.throws(
+				() => jsonToFlat(input),
+				(error: Error) => {
+					assert.match(error.message, /value cannot be empty/i);
+					assert.match(error.message, /fixme/i);
+					return true;
+				},
+			);
+		});
+
+		it("should throw error for whitespace-only values", () => {
+			const input = { note: "   " };
+
+			assert.throws(
+				() => jsonToFlat(input),
+				(error: Error) => {
+					assert.match(error.message, /value cannot be empty/i);
+					assert.match(error.message, /note/i);
+					return true;
+				},
+			);
+		});
+
+		it("should throw error for empty values in JSON string", () => {
+			const input = '{"amenity":"restaurant","fixme":""}';
+
+			assert.throws(
+				() => jsonToFlat(input),
+				(error: Error) => {
+					assert.match(error.message, /value cannot be empty/i);
+					assert.match(error.message, /fixme/i);
+					return true;
+				},
+			);
+		});
 	});
 
 	describe("Real World OSM Tags", () => {
