@@ -78,6 +78,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.5",
+		"@changesets/cli": "^2.29.7",
 		"@favware/cliff-jumper": "^6.0.0",
 		"@types/node": "^24.10.1",
 		"c8": "^10.1.3",
