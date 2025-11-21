@@ -1,13 +1,13 @@
 # Project: OpenStreetMap Tagging Schema MCP Server
 
 > **⚠️ IMPORTANT**: This document reflects the ACTUAL current state of the codebase.
-> **Current Status**: 7 tools (optimized set) | All systems operational ✅ | Production-ready
+> **Current Status**: 9 tools (optimized set) | All systems operational ✅ | Production-ready
 
 ## Project Overview
 
 This is a Model Context Protocol (MCP) server built with TypeScript that provides tools for querying and validating OpenStreetMap (OSM) tags using the `@openstreetmap/id-tagging-schema` library.
 
-**Development Status**: Production-ready with optimized tool set. Originally planned 14 tools, reduced to 7 after removing redundant functionality.
+**Development Status**: Production-ready with optimized tool set. Originally planned 14 tools, reduced to 7 after removing redundant functionality, expanded to 9 with addition of format conversion tools.
 
 ## Purpose
 
@@ -21,9 +21,9 @@ The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tool
 
 ## Core Functionality
 
-**Current Status**: 7 tools (optimized, complete set)
+**Current Status**: 9 tools (optimized, complete set)
 
-### Complete Tool Set (7 tools)
+### Complete Tool Set (9 tools)
 
 **Validation Tools** (3 tools):
 - ✅ **validate_tag**: Validate a single tag key-value pair (includes deprecation checking)
@@ -37,6 +37,10 @@ The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tool
 **Preset Tools** (2 tools):
 - ✅ **search_presets**: Search for presets by name or tag filters
 - ✅ **get_preset_details**: Get complete preset configuration including tags and fields
+
+**Format Conversion Tools** (2 tools):
+- ✅ **flat_to_json**: Convert flat text format (key=value per line) to JSON object - INPUT CONVERTER for AI workflows
+- ✅ **json_to_flat**: Convert JSON object to flat text format (key=value per line) - OUTPUT CONVERTER for AI workflows
 
 ### Redundant Tools Removed
 
@@ -435,8 +439,10 @@ src/
 ├── tools/                           # Tool implementations (one file per tool)
 │   ├── index.ts                     # Tool registry exports
 │   ├── types.ts                     # Shared type definitions for tools
+│   ├── flat-to-json.ts              # ✅ Format conversion tool
 │   ├── get-preset-details.ts        # ✅ Preset tool
 │   ├── get-tag-values.ts            # ✅ Tag query tool
+│   ├── json-to-flat.ts              # ✅ Format conversion tool
 │   ├── search-presets.ts            # ✅ Preset tool
 │   ├── search-tags.ts               # ✅ Tag query tool
 │   ├── suggest-improvements.ts      # ✅ Validation tool
@@ -452,8 +458,10 @@ src/
 tests/                               # Test files (TDD - one test file per tool)
 ├── index.test.ts                    # Server tests
 ├── tools/                           # Unit tests (one file per tool)
+│   ├── flat-to-json.test.ts         # ✅ Present
 │   ├── get-preset-details.test.ts   # ✅ Present
 │   ├── get-tag-values.test.ts       # ✅ Present
+│   ├── json-to-flat.test.ts         # ✅ Present
 │   ├── search-presets.test.ts       # ✅ Present
 │   ├── search-tags.test.ts          # ✅ Present
 │   ├── suggest-improvements.test.ts # ✅ Present
@@ -467,8 +475,10 @@ tests/                               # Test files (TDD - one test file per tool)
     ├── helpers.ts                   # ✅ Shared test utilities
     ├── server-init.test.ts          # ✅ Server initialization tests
     ├── http-transport.test.ts       # ✅ HTTP transport tests
+    ├── flat-to-json.test.ts         # ✅ Present
     ├── get-preset-details.test.ts   # ✅ Present
     ├── get-tag-values.test.ts       # ✅ Present
+    ├── json-to-flat.test.ts         # ✅ Present
     ├── search-presets.test.ts       # ✅ Present
     ├── search-tags.test.ts          # ✅ Present
     ├── suggest-improvements.test.ts # ✅ Present
@@ -817,9 +827,10 @@ export function createServer(): McpServer {
 
 ```typescript
 import type { OsmToolDefinition } from "../types/index.js";
-import CheckDeprecated from "./check-deprecated.js";
+import FlatToJson from "./flat-to-json.js";
 import GetPresetDetails from "./get-preset-details.js";
 import GetTagValues from "./get-tag-values.js";
+import JsonToFlat from "./json-to-flat.js";
 import SearchPresets from "./search-presets.js";
 import SearchTags from "./search-tags.js";
 import SuggestImprovements from "./suggest-improvements.js";
@@ -828,9 +839,10 @@ import ValidateTagCollection from "./validate-tag-collection.js";
 
 // All available tools (sorted alphabetically)
 export const tools: OsmToolDefinition<any>[] = [
-    CheckDeprecated,
+    FlatToJson,
     GetPresetDetails,
     GetTagValues,
+    JsonToFlat,
     SearchPresets,
     SearchTags,
     SuggestImprovements,
@@ -1103,7 +1115,7 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 
 **Current Phase: Phase 8 - COMPLETE ✅**
 
-**Status**: Production-ready MCP server with 7 optimized tools providing complete OSM tagging schema functionality with full localization support and template expansion.
+**Status**: Production-ready MCP server with 9 optimized tools providing complete OSM tagging schema functionality with full localization support, template expansion, and format conversion.
 
 ### Actual Implementation Status
 
@@ -1125,11 +1137,13 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 - ✅ Integration tests implemented
 - ✅ CI/CD pipeline configured
 
-**Phase 3: Core Tool Implementation ✅ COMPLETE (7 tools - optimized set)**
+**Phase 3: Core Tool Implementation ✅ COMPLETE (9 tools - optimized set)**
 
-**All Tools Implemented** (7/7):
+**All Tools Implemented** (9/9):
+- ✅ `flat_to_json` - Convert flat text format to JSON (INPUT CONVERTER for AI workflows)
 - ✅ `get_preset_details` - Get complete preset information (tags, geometry, fields, metadata)
 - ✅ `get_tag_values` - Get all possible values for a tag key
+- ✅ `json_to_flat` - Convert JSON to flat text format (OUTPUT CONVERTER for AI workflows)
 - ✅ `search_presets` - Search for presets by keyword or tag (with geometry filtering and limits)
 - ✅ `search_tags` - Search for tags by keyword
 - ✅ `suggest_improvements` - Suggest improvements for tag collections (missing fields, deprecation warnings)
@@ -1140,12 +1154,12 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 - 7 additional tools considered during planning phase
 - All deemed redundant after analyzing functionality overlap
 - `check_deprecated` merged into `validate_tag` to eliminate redundancy
-- Current 7 tools provide complete coverage without duplication
+- Current 9 tools (7 core + 2 format converters) provide complete coverage without duplication
 - Design favors composition over convenience wrappers
 
 **Phase 4: Testing ✅ COMPLETE**
 - ✅ Node.js test runner configured
-- ✅ Comprehensive test suite for all 7 tools
+- ✅ Comprehensive test suite for all 9 tools
 - ✅ All unit tests passing
 - ✅ All integration tests passing
 - ✅ Modular structure: One integration test file per tool
@@ -1215,7 +1229,7 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 - ✅ **search_presets Refactor (8.8)**: Preset search with localization
   - Returns `name`, `tagsDetailed` with localized names
 - ✅ **Localization Enhancements (8.9)**: Complete localization across all tools
-  - All 7 tools return human-readable names for keys, values, and presets
+  - All 9 tools return human-readable names for keys, values, and presets
   - Comprehensive fallback logic for missing translations
   - Full documentation in `docs/api/README.md` Localization section
 - ✅ **Template System Implementation (8.10)**: Field template expansion COMPLETE
@@ -1225,7 +1239,7 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
   - Integration tests via MCP protocol
   - Full documentation in CLAUDE.md Template System section
 - ✅ **Documentation & Testing (8.11)**: Complete documentation for Phase 8 changes
-  - Created API documentation for all 7 tools (validate_tag.md, get_tag_values.md, search_tags.md, search_presets.md, validate_tag_collection.md, suggest_improvements.md; get_preset_details.md already existed)
+  - Created API documentation for all 9 tools (validate_tag.md, get_tag_values.md, search_tags.md, search_presets.md, validate_tag_collection.md, suggest_improvements.md, flat_to_json.md, json_to_flat.md; get_preset_details.md already existed)
   - Updated docs/usage.md with Phase 8 localized examples
   - Updated CHANGELOG.md with Phase 8 changes
   - Updated ROADMAP.md to mark Phase 8 complete
@@ -1244,7 +1258,7 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 - ✅ **Modular Architecture**: One file per tool for clarity and maintainability
 - ✅ **Alphabetical Tool Ordering**: Tools returned in alphabetical order for predictable API
 - ✅ **Tool Definition Interface**: `OsmToolDefinition` interface established
-- ✅ **Optimized Tool Set**: 7 non-redundant tools providing complete functionality
+- ✅ **Optimized Tool Set**: 9 non-redundant tools (7 core + 2 format converters) providing complete functionality
 
 **Historical Bug Fixes** (from previous development):
 - ✅ search_tags fields.json coverage (searches both fields.json and presets)
