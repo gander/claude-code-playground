@@ -165,8 +165,8 @@ if echo "$READY_RESPONSE" | jq -e '.status == "ready"' > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Ready endpoint working${NC}"
 
     # Display schema stats
-    PRESETS_COUNT=$(echo "$READY_RESPONSE" | jq -r '.schema.presetsCount')
-    FIELDS_COUNT=$(echo "$READY_RESPONSE" | jq -r '.schema.fieldsCount')
+    PRESETS_COUNT=$(echo "$READY_RESPONSE" | jq -r '.schema.presets')
+    FIELDS_COUNT=$(echo "$READY_RESPONSE" | jq -r '.schema.fields')
     echo "  Schema loaded: $PRESETS_COUNT presets, $FIELDS_COUNT fields"
 else
     echo -e "${RED}✗ Ready endpoint failed${NC}"
@@ -174,26 +174,9 @@ else
     exit 1
 fi
 
-# Test basic MCP functionality via HTTP
-echo "  Testing MCP protocol via HTTP (basic smoke test)..."
-
-# Just verify server accepts HTTP requests (SSE format is complex to test in bash)
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:3000/sse \
-    -H "Content-Type: application/json" \
-    -d '{
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "ping"
-    }')
-
-# We expect 200 for valid SSE connection
-if [ "$HTTP_CODE" = "200" ]; then
-    echo -e "${GREEN}✓ HTTP transport accepting MCP requests${NC}"
-else
-    echo -e "${YELLOW}⚠ Unexpected HTTP code: $HTTP_CODE (expected 200)${NC}"
-    # Don't fail - SSE format might return different code
-fi
-
+# Note: Full MCP protocol testing via HTTP requires complex SSE flow
+# and is better covered by integration tests. Health and ready endpoints
+# are sufficient to verify HTTP transport is working.
 echo ""
 
 # Stop HTTP server
@@ -209,8 +192,9 @@ echo "=== Test Summary ==="
 echo -e "${GREEN}✓ Package builds successfully${NC}"
 echo -e "${GREEN}✓ Package installs successfully${NC}"
 echo -e "${GREEN}✓ STDIO mode works${NC}"
-echo -e "${GREEN}✓ HTTP mode works${NC}"
-echo -e "${GREEN}✓ Health endpoints work${NC}"
-echo -e "${GREEN}✓ MCP protocol works${NC}"
+echo -e "${GREEN}✓ HTTP transport works${NC}"
+echo -e "${GREEN}✓ Health and readiness endpoints work${NC}"
 echo ""
 echo -e "${GREEN}All tests passed!${NC}"
+echo ""
+echo "Note: Full MCP protocol testing is covered by integration tests"
