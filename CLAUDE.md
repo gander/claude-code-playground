@@ -250,6 +250,52 @@ Every feature implementation MUST follow this workflow:
 - **Release**: Automated npm releases with semantic versioning
 - **Distribution**: Package available via `npx` command
 
+#### GitHub Actions Workflow Requirements
+
+**CRITICAL**: All GitHub Actions workflows MUST follow these strict requirements:
+
+1. **Version Pinning for ALL Dependencies**:
+   - ✅ **Required**: Pin ALL action versions with commit SHA (e.g., `actions/checkout@v4.1.1` → `actions/checkout@a81bbbf8298c0fa03ea29cdc473d45769f953675`)
+   - ❌ **Forbidden**: Using floating versions (e.g., `@v4`, `@latest`, `@main`)
+   - **Rationale**: Prevents supply chain attacks and ensures reproducible builds
+   - **Apply to**: ALL workflow dependencies (actions/checkout, actions/setup-node, docker/*, cosign-installer/*, etc.)
+
+2. **Package Manager Requirements**:
+   - ✅ **Required**: Always use `npm` and `npx` (this project uses npm, not yarn/pnpm)
+   - ✅ **Required**: Check `package.json` engines field: `{ "node": ">=22.0.0", "npm": ">=11.5.1" }`
+   - ✅ **Required**: Install npm 11.5.1 explicitly in workflows (even though Node.js 22 is default)
+   - ❌ **Forbidden**: Using `cache: npm` in setup-node (causes problems in PRs)
+   - **Installation pattern**:
+     ```yaml
+     - uses: actions/setup-node@v4
+       with:
+         node-version: '22'
+         # NO cache: npm here!
+     - run: npm install -g npm@11.5.1
+     - run: npm ci
+     ```
+
+3. **Node.js Version**:
+   - ✅ **Required**: Always use Node.js 22 (major version from engines field)
+   - ✅ **Assumption**: npm 11.5.1 needs explicit installation (not bundled with Node.js 22)
+
+4. **Cache Policy**:
+   - ❌ **Forbidden**: Using `cache: npm` in actions/setup-node
+   - **Rationale**: Creates dependency resolution issues in Pull Request workflows
+   - **Alternative**: If caching needed, use manual cache with explicit keys
+
+5. **Workflow File Locations**:
+   - `.github/workflows/test.yml` - CI testing
+   - `.github/workflows/docker.yml` - Docker builds
+   - `.github/workflows/publish.yml` - npm publishing
+   - `.github/workflows/security.yml` - Security scanning
+   - `.github/workflows/codeql.yml` - Code scanning
+   - `.github/workflows/cleanup.yml` - Package cleanup
+   - `.github/workflows/dependency-review.yml` - Dependency review
+   - `.github/workflows/auto-pr.yml` - Auto PR creation
+
+**Enforcement**: ALL workflow files must be audited and updated to comply with these requirements before any workflow modifications.
+
 ### Fuzzing and Security Testing
 
 **Status**: ✅ IMPLEMENTED - Property-based testing with fast-check
