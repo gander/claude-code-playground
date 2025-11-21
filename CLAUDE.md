@@ -1658,6 +1658,184 @@ Based on analysis of [schema-builder](https://github.com/ideditor/schema-builder
 
 **Reference**: Schema-builder documentation at https://github.com/ideditor/schema-builder/blob/main/README.md
 
+## Release Workflows
+
+The project includes multiple GitHub Actions workflows for releasing and publishing packages. Each workflow serves a different use case.
+
+### Safe Release Workflow (Recommended)
+
+**File**: `.github/workflows/safe-release.yml`
+
+**Purpose**: Production releases with comprehensive testing and manual approval before publication.
+
+**Features**:
+- ✅ Two-stage workflow with manual approval gate
+- ✅ Comprehensive pre-release validation (tests, npm package testing, Docker testing)
+- ✅ Creates draft GitHub release and PR automatically
+- ✅ Manual approval required before publication
+- ✅ Publishes npm with SLSA Level 3 provenance
+- ✅ Publishes Docker (multi-arch, signed with Cosign)
+- ✅ Complete security attestations (SBOM, build provenance)
+
+**Workflow Stages**:
+
+```
+Stage 1: PRE-RELEASE (automatic)
+├─ Tests (unit, integration, lint, typecheck)
+├─ npm package testing (stdio + HTTP)
+├─ Docker testing (stdio + HTTP + health checks)
+├─ Version bump (cliff-jumper)
+├─ CHANGELOG.md generation
+├─ Create draft GitHub release
+├─ Create Pull Request
+└─ ⏸️  STOP - Wait for manual approval
+
+Stage 2: PUBLISH (manual approval required)
+├─ Publish npm with provenance
+├─ Publish Docker (multi-arch, signed)
+└─ Publish GitHub release
+```
+
+**Trigger**: Manual (workflow_dispatch) with version bump selection (patch/minor/major)
+
+**Documentation**: See [`docs/safe-release-workflow.md`](../docs/safe-release-workflow.md) for detailed usage instructions.
+
+**Prerequisites**:
+- GitHub Environment `production` must be configured with required reviewers
+- Repository Settings → Environments → New environment → `production` → Required reviewers
+
+**Usage**:
+```bash
+# Via GitHub UI: Actions → Safe Release → Run workflow → Select version bump
+
+# Via GitHub CLI:
+gh workflow run safe-release.yml -f version_bump=patch
+```
+
+**Advantages**:
+- ✅ Highest confidence in release quality (everything tested before publish)
+- ✅ Manual approval prevents accidental releases
+- ✅ Complete validation of npm and Docker packages
+- ✅ Draft release allows review before publication
+- ✅ Single workflow handles everything (npm + Docker + GitHub release)
+
+**When to use**: Production releases, major/minor versions, releases requiring review
+
+### Manual Release Workflow
+
+**File**: `.github/workflows/manual-release.yml`
+
+**Purpose**: Quick manual releases with optional tag pushing.
+
+**Features**:
+- ✅ Version bump and CHANGELOG.md generation
+- ✅ Creates release branch and PR
+- ✅ Optional tag push (triggers automatic npm publish)
+- ✅ Runs validation tests before release
+
+**Trigger**: Manual (workflow_dispatch) with version bump and push_tag options
+
+**Usage**:
+```bash
+# Via GitHub UI: Actions → Manual Release → Run workflow
+
+# Via GitHub CLI:
+gh workflow run manual-release.yml -f version_bump=patch -f push_tag=false
+```
+
+**When to use**: Quick hotfixes, when manual approval not needed
+
+### Automatic Publish Workflows
+
+#### npm Publish Workflow
+
+**File**: `.github/workflows/publish.yml`
+
+**Trigger**: Automatically when version tag (v*.*.*) is pushed
+
+**Features**:
+- ✅ npm publication with SLSA Level 3 provenance
+- ✅ SBOM generation and attestation
+- ✅ Creates GitHub release automatically
+
+**Usage**: Triggered by pushing a version tag
+```bash
+git tag v1.0.2
+git push origin v1.0.2
+```
+
+#### Docker Publish Workflow
+
+**File**: `.github/workflows/docker.yml`
+
+**Trigger**: Push to master, version tags, or PRs
+
+**Features**:
+- ✅ Multi-architecture builds (amd64, arm64)
+- ✅ Image signing with Cosign
+- ✅ Vulnerability scanning with Trivy
+- ✅ Multiple tags: latest, edge, semver
+
+**Usage**: Automatically triggered by git events
+
+### Workflow Comparison
+
+| Workflow | Testing | npm Test | Docker Test | Manual Approval | npm Publish | Docker Publish | GitHub Release |
+|----------|---------|----------|-------------|-----------------|-------------|----------------|----------------|
+| **safe-release.yml** | ✅ Full | ✅ Yes | ✅ Yes | ✅ Required | ✅ | ✅ | ✅ Draft → Published |
+| **manual-release.yml** | ✅ Full | ❌ No | ❌ No | ⚠️  Optional | Via tag | ❌ | ❌ |
+| **publish.yml** | ✅ Full | ❌ No | ❌ No | ❌ No | ✅ | ❌ | ✅ Auto |
+| **docker.yml** | ❌ No | ❌ No | ❌ No | ❌ No | ❌ | ✅ | ❌ |
+
+**Legend**:
+- ✅ = Yes, fully supported
+- ⚠️  = Optional or conditional
+- ❌ = No, not supported
+
+### Recommended Workflow Selection
+
+**For production releases** (recommended):
+```bash
+# Use safe-release.yml
+gh workflow run safe-release.yml -f version_bump=patch
+```
+
+**For quick hotfixes**:
+```bash
+# Use manual-release.yml
+gh workflow run manual-release.yml -f version_bump=patch -f push_tag=true
+```
+
+**For automated releases** (after testing locally):
+```bash
+# Push tag directly (triggers publish.yml)
+git tag v1.0.2
+git push origin v1.0.2
+```
+
+### Release Checklist
+
+When using **safe-release.yml** (recommended):
+
+1. ✅ Trigger workflow with version bump type
+2. ✅ Wait for pre-release stage to complete (~5-10 min)
+3. ✅ Review draft GitHub release
+4. ✅ Review Pull Request changes
+5. ✅ Review workflow logs for any warnings
+6. ✅ Approve "production" environment deployment
+7. ✅ Wait for publish stage to complete (~10-15 min)
+8. ✅ Verify npm package: `npm view @gander-tools/osm-tagging-schema-mcp@latest`
+9. ✅ Verify Docker image: `docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:latest`
+10. ✅ Verify signatures and attestations
+11. ✅ Merge PR to keep main branch in sync
+
+### Related Documentation
+
+- **Safe Release Workflow Guide**: [`docs/safe-release-workflow.md`](../docs/safe-release-workflow.md)
+- **Security & Provenance**: [`docs/security.md`](../docs/security.md)
+- **Contributing Guide**: [`CONTRIBUTING.md`](../CONTRIBUTING.md)
+- **Deployment Guide**: [`docs/deployment.md`](../docs/deployment.md)
+
 ## Development Workflow
 
 This project follows an **intent-based workflow** where development is organized around features, not individual commands.
