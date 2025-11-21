@@ -45,6 +45,9 @@ jobs:
         with:
           ref: master
           fetch-depth: 0
+          # Use PAT instead of GITHUB_TOKEN to trigger publish-npm.yml workflow
+          # See: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#using-the-github_token-in-a-workflow
+          token: ${{ secrets.RELEASE_PAT }}
 
       - name: Verify package.json version
         run: |
@@ -76,6 +79,10 @@ jobs:
           echo "✅ Tag does not exist: $TAG"
 
       - name: Create and push tag
+        env:
+          # Use PAT to authenticate git push, triggering publish-npm.yml workflow
+          # GITHUB_TOKEN would NOT trigger downstream workflows (security feature)
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           TAG="${{ steps.version.outputs.version_tag }}"
           VERSION="${{ steps.version.outputs.version }}"
