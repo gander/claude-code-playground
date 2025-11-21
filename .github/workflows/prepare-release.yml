@@ -73,20 +73,33 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Run cliff-jumper to prepare release
+      - name: Prepare release branch and changelog
         run: |
-          echo "📦 Running cliff-jumper for version $VERSION"
+          echo "📦 Preparing release v$VERSION"
 
-          # cliff-jumper will:
-          # 1. Create branch release/v$VERSION
-          # 2. Bump package.json version
-          # 3. Generate CHANGELOG.md entry
+          # 1. Create and checkout release branch
+          BRANCH="release/v${VERSION}"
+          git checkout -b "$BRANCH"
+          echo "✅ Created branch: $BRANCH"
+
+          # 2. Bump version in package.json (no git tag yet)
+          npm version "$VERSION" --no-git-tag-version
+          echo "✅ Bumped version to $VERSION in package.json"
+
+          # 3. Generate CHANGELOG.md entry using cliff-jumper
+          # cliff-jumper will read the new version from package.json
+          # and generate the changelog entry
+          npx cliff-jumper --skip-tag --verbose
+          echo "✅ Generated CHANGELOG.md entry"
+
           # 4. Commit changes
-          # 5. Push branch to origin
-          # We skip tag creation (tag will be created after PR merge)
-          npx cliff-jumper "$VERSION" --skip-tag --verbose
+          git add package.json CHANGELOG.md package-lock.json
+          git commit -m "chore: release v${VERSION}"
+          echo "✅ Committed changes"
 
-          echo "✅ Release branch prepared: release/v${VERSION}"
+          # 5. Push to origin
+          git push origin "$BRANCH"
+          echo "✅ Pushed branch: $BRANCH"
 
       - name: Create Pull Request
         env:
@@ -132,3 +145,4 @@ jobs:
           PR_URL=$(gh pr view "$BRANCH" --json url --jq '.url')
           echo "🔗 PR URL: ${PR_URL}"
           echo "::notice title=Release PR Created::Release PR created at ${PR_URL}"
+# Trigger CI
