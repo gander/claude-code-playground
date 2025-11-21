@@ -136,5 +136,4 @@ jobs:
             echo "✓ Webhook sent successfully (HTTP $HTTP_CODE)"
           else
             echo "✗ Webhook failed with HTTP $HTTP_CODE"
-            exit 1
           fi
