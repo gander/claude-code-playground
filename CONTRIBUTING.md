@@ -204,6 +204,54 @@ npm run build
 
 ### Creating a Pull Request
 
+#### Automatic PR Creation (Claude Branches)
+
+For branches with the `claude/*` prefix, Pull Requests are **automatically created** when you push:
+
+```bash
+# Push your claude branch
+git push origin claude/add-new-feature-abc123
+
+# ✅ A PR is automatically created!
+# No need to manually create it on GitHub
+```
+
+The auto-PR workflow will:
+- ✅ Detect the `claude/*` branch push
+- ✅ Create a PR with title: `[CLAUDE] <first commit title>`
+- ✅ Target the default branch (main/master)
+- ✅ Include recent commits in the PR description
+- ✅ Add labels: `auto-created`, `claude-branch`
+- ✅ Skip creation if a PR already exists
+
+**Branch naming format:** `claude/<feature-description>-<session-id>`
+
+Example: `claude/add-tag-validation-01Y1fZwRf7bd`
+- Session ID: `01Y1fZwRf7bd`
+- First commit: "Add tag validation for OSM keys"
+- **PR Title**: `[CLAUDE] Add tag validation for OSM keys`
+
+**⚠️ Setup Required:**
+
+The auto-PR workflow requires additional repository configuration. **Repository maintainers** must enable one of the following:
+
+**Option 1: Enable GitHub Actions PR creation (Recommended)**
+1. Go to **Settings** → **Actions** → **General** → **Workflow permissions**
+2. Enable: ✅ **"Allow GitHub Actions to create and approve pull requests"**
+3. Click **Save**
+
+**Option 2: Use Personal Access Token (PAT)**
+1. Create a PAT with `repo` scope at https://github.com/settings/tokens/new
+2. Add it as repository secret named `PAT_TOKEN`
+
+See `.github/workflows/README.md` for detailed setup instructions.
+
+If auto-PR creation fails, you can still create PRs manually (see below).
+
+#### Manual PR Creation (Other Branches)
+
+For standard feature branches, create PRs manually:
+
 1. **Push your branch**
    ```bash
    git push origin feature/your-feature-name
