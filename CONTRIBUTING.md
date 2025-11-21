@@ -204,6 +204,36 @@ npm run build
 
 ### Creating a Pull Request
 
+#### Automatic PR Creation (Claude Branches)
+
+For branches with the `claude/*` prefix, Pull Requests are **automatically created** when you push:
+
+```bash
+# Push your claude branch
+git push origin claude/add-new-feature-abc123
+
+# ✅ A PR is automatically created!
+# No need to manually create it on GitHub
+```
+
+The auto-PR workflow will:
+- ✅ Detect the `claude/*` branch push
+- ✅ Extract feature description from branch name
+- ✅ Create a PR targeting the default branch (main/master)
+- ✅ Include recent commits in the PR description
+- ✅ Add labels: `auto-created`, `claude-branch`
+- ✅ Skip creation if a PR already exists
+
+**Branch naming format:** `claude/<feature-description>-<session-id>`
+
+Example: `claude/add-tag-validation-01Y1fZwRf7bd`
+- Feature: "Add Tag Validation"
+- Session ID: `01Y1fZwRf7bd`
+
+#### Manual PR Creation (Other Branches)
+
+For standard feature branches, create PRs manually:
+
 1. **Push your branch**
    ```bash
    git push origin feature/your-feature-name

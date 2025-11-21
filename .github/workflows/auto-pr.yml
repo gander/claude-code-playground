@@ -1,0 +1,119 @@
+name: Auto Create PR for Claude Branches
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  auto-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Extract branch info
+        id: branch
+        run: |
+          # Get current branch name
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          echo "name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+
+          # Extract feature description from branch name
+          # Format: claude/<feature-description>-<session-id>
+          FEATURE_DESC=$(echo "${BRANCH_NAME}" | sed 's/^claude\///' | sed 's/-[^-]*$//' | tr '-' ' ' | sed 's/\b\(.\)/\u\1/g')
+          echo "feature=${FEATURE_DESC}" >> $GITHUB_OUTPUT
+
+          # Get the default branch (main or master)
+          DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+          echo "base=${DEFAULT_BRANCH}" >> $GITHUB_OUTPUT
+
+      - name: Check if PR exists
+        id: pr-check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if PR already exists for this branch
+          PR_EXISTS=$(gh pr list --head "${{ steps.branch.outputs.name }}" --json number --jq 'length')
+          echo "exists=${PR_EXISTS}" >> $GITHUB_OUTPUT
+
+      - name: Get commit messages
+        id: commits
+        if: steps.pr-check.outputs.exists == '0'
+        run: |
+          # Get all commit messages since branching from base
+          BASE_BRANCH="${{ steps.branch.outputs.base }}"
+          COMMITS=$(git log origin/${BASE_BRANCH}..HEAD --pretty=format:"- %s" | head -n 10)
+
+          # Escape newlines for GitHub output
+          COMMITS="${COMMITS//'%'/'%25'}"
+          COMMITS="${COMMITS//$'\n'/'%0A'}"
+          COMMITS="${COMMITS//$'\r'/'%0D'}"
+
+          echo "messages<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMITS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.pr-check.outputs.exists == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create PR with informative title and body
+          gh pr create \
+            --base "${{ steps.branch.outputs.base }}" \
+            --head "${{ steps.branch.outputs.name }}" \
+            --title "[${{ steps.branch.outputs.feature }}] Auto-created PR from claude branch" \
+            --body "$(cat <<'EOF'
+          ## 🤖 Auto-created Pull Request
+
+          This PR was automatically created from branch: \`${{ steps.branch.outputs.name }}\`
+
+          ### Feature
+          ${{ steps.branch.outputs.feature }}
+
+          ### Recent Commits
+          ${{ steps.commits.outputs.messages }}
+
+          ### Checklist
+          - [ ] Code changes reviewed
+          - [ ] Tests pass locally
+          - [ ] Documentation updated (if needed)
+          - [ ] No breaking changes (or documented)
+
+          ---
+
+          **Note**: This is an automated PR. Please review the changes and update the description as needed.
+          EOF
+          )"
+
+      - name: Add labels
+        if: steps.pr-check.outputs.exists == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        run: |
+          # Add labels to the PR (continue even if labels don't exist)
+          gh pr edit "${{ steps.branch.outputs.name }}" \
+            --add-label "auto-created,claude-branch" || true
+
+      - name: PR Info
+        if: steps.pr-check.outputs.exists == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_URL=$(gh pr view "${{ steps.branch.outputs.name }}" --json url --jq '.url')
+          echo "✅ Pull Request created: ${PR_URL}"
+          echo "::notice title=PR Created::Pull Request created at ${PR_URL}"
+
+      - name: PR Already Exists
+        if: steps.pr-check.outputs.exists != '0'
+        run: |
+          echo "ℹ️  Pull Request already exists for this branch"
+          echo "::notice title=PR Exists::A Pull Request already exists for branch ${{ steps.branch.outputs.name }}"
