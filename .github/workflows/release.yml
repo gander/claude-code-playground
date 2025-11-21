@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4.3.2
+        with:
+          # Fetch full history for changelog generation
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v6.1.0
+        with:
+          node-version: '22'
+
+      - name: Install latest npm
+        run: npm install -g npm@11.5.1
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@3de3850952bec538fde60aac71731376e57b9b57 # v1.5.3
+        with:
+          # This creates a "Version Packages" PR with changelog and version updates
+          title: "chore(release): version packages"
+          commit: "chore(release): version packages"
+          # Uses default: changeset version (updates package.json and CHANGELOG.md)
+          # Optionally publish when PR is merged (we use separate publish.yml instead)
+          publish: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        if: steps.changesets.outputs.pullRequestNumber
+        run: |
+          echo "## Release PR Created 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "A release PR has been created: #${{ steps.changesets.outputs.pullRequestNumber }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review the version bump and changelog in the PR" >> $GITHUB_STEP_SUMMARY
+          echo "2. Merge the PR to update package.json and CHANGELOG.md" >> $GITHUB_STEP_SUMMARY
+          echo "3. After merge, manually push the version tag to trigger npm publish:" >> $GITHUB_STEP_SUMMARY
+          echo '   ```bash' >> $GITHUB_STEP_SUMMARY
+          echo "   git push origin v<VERSION>" >> $GITHUB_STEP_SUMMARY
+          echo '   ```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Or use GitHub UI to create a release with the tag." >> $GITHUB_STEP_SUMMARY
+
+      - name: No changesets found
+        if: steps.changesets.outputs.pullRequestNumber == ''
+        run: |
+          echo "## No Release Needed ℹ️" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "No changesets found. To create a release:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Add a changeset: \`npx changeset\`" >> $GITHUB_STEP_SUMMARY
+          echo "2. Commit and push the changeset" >> $GITHUB_STEP_SUMMARY
+          echo "3. This workflow will create a version PR automatically" >> $GITHUB_STEP_SUMMARY
