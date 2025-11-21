@@ -1,0 +1,24 @@
+{
+	"git": {
+		"commitMessage": "chore(release): release v${version}",
+		"tagName": "v${version}",
+		"tagAnnotation": "Release v${version}",
+		"requireBranch": "master",
+		"requireCleanWorkingDir": true,
+		"requireUpstream": true,
+		"addUntrackedFiles": false,
+		"push": true,
+		"tag": false
+	},
+	"hooks": {
+		"after:bump": "npx git-cliff --tag v${version} --output CHANGELOG.md",
+		"before:git:release": "git switch -c release/v${version} || git switch release/v${version}"
+	},
+	"github": {
+		"release": false
+	},
+	"npm": {
+		"publish": false
+	},
+	"plugins": {}
+}
