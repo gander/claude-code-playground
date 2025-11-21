@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
     inputs:
       bump_type:
@@ -81,7 +81,7 @@ jobs:
           git commit -m "chore: add changeset for ${{ github.event.inputs.bump_type }} release
 
           ${{ github.event.inputs.description }}"
-          git push origin main
+          git push origin master
 
       - name: Create Release Pull Request or Publish
         id: changesets
