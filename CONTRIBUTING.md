@@ -622,38 +622,38 @@ This section is for maintainers preparing a new release.
 
 ### Quick Release Workflow
 
-Releases are created manually from local environment using git-cliff for changelog generation.
+Releases are created using release-it with git-cliff for changelog generation.
 
 **Release from local environment:**
 
 ```bash
-# 1. Bump version (creates commit + tag)
-npm version patch  # or: minor, major
+# Interactive mode (prompts for version)
+npm run release
 
-# 2. Generate changelog
-npx git-cliff --output CHANGELOG.md
+# Or specify version bump:
+npm run release:patch  # Bug fixes (1.0.0 → 1.0.1)
+npm run release:minor  # New features (1.0.0 → 1.1.0)
+npm run release:major  # Breaking changes (1.0.0 → 2.0.0)
 
-# 3. Amend commit to include CHANGELOG
-git add CHANGELOG.md
-git commit --amend --no-edit
-
-# 4. Push to trigger automated publishing
-git push && git push --tags
+# Dry run (preview without changes)
+npm run release:dry
 ```
+
+**What release-it does:**
+1. ✅ Bumps version in package.json and package-lock.json
+2. ✅ Generates CHANGELOG using git-cliff
+3. ✅ Creates commit and tag
+4. ✅ Pushes to GitHub
+5. ✅ Creates draft GitHub Release
 
 **What happens after push:**
 - Git tag triggers `.github/workflows/publish-npm.yml`
 - Automated pipeline: tests → build → SBOM → SLSA attestations → npm publish
 - Git tag triggers `.github/workflows/publish-docker.yml`
 - Docker images built and published to GHCR with image signing
-- Draft GitHub release created (requires manual publish)
-
-**Version bumps:**
-- **Patch** (0.1.0 → 0.1.1): Bug fixes, documentation, chores
-- **Minor** (0.1.0 → 0.2.0): New features, backwards-compatible changes
-- **Major** (0.1.0 → 1.0.0): Breaking changes
 
 **Configuration:**
+- `.release-it.json` - release-it configuration
 - `cliff.toml` - git-cliff changelog configuration
 
 **For complete instructions**, including troubleshooting and step-by-step guide, see [docs/release-process.md](./docs/release-process.md)

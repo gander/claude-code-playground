@@ -1,12 +1,12 @@
 # Release Process
 
-This document describes the manual release workflow using git-cliff and GitHub Actions.
+This document describes the release workflow using release-it and git-cliff.
 
 ## Overview
 
-The release process is initiated locally and automated through GitHub Actions:
+The release process is initiated locally using release-it and automated through GitHub Actions:
 
-1. **Local environment** - Prepare release manually (version bump + changelog with git-cliff)
+1. **Local environment** - Prepare release using release-it (version bump + changelog with git-cliff)
 2. **publish-npm.yml** - Automatically triggered by tag creation (npm publish)
 3. **publish-docker.yml** - Automatically triggered by tag creation (Docker publish)
 
@@ -17,8 +17,29 @@ The release process is initiated locally and automated through GitHub Actions:
 - Git configured with your credentials
 - Write access to the repository
 - Clean working directory (`git status` shows no changes)
+- All tests passing locally
 
 ## Release Workflow
+
+### Quick Start
+
+For most releases, use these simple commands:
+
+```bash
+# Patch release (bug fixes): 1.0.0 → 1.0.1
+npm run release:patch
+
+# Minor release (new features): 1.0.0 → 1.1.0
+npm run release:minor
+
+# Major release (breaking changes): 1.0.0 → 2.0.0
+npm run release:major
+
+# Or let release-it prompt you interactively:
+npm run release
+```
+
+### Detailed Steps
 
 ### Step 1: Prepare Local Environment
 
@@ -33,114 +54,57 @@ git pull origin master
 
 # Verify clean working directory
 git status
+
+# Ensure all tests pass
+npm run test
+npm run lint
+npm run typecheck
 ```
 
-### Step 2: Determine Version Bump
+### Step 2: Dry Run (Optional but Recommended)
 
-Decide on the version bump based on changes since last release:
-
-- **Patch** (0.1.0 → 0.1.1): Bug fixes, documentation, chores
-- **Minor** (0.1.0 → 0.2.0): New features, backwards-compatible changes
-- **Major** (0.1.0 → 1.0.0): Breaking changes
-
-Review commits since last release:
+Preview what release-it will do without making any changes:
 
 ```bash
-# View commits since last tag
-git log $(git describe --tags --abbrev=0)..HEAD --oneline
+# Preview the release
+npm run release:dry
 ```
 
-### Step 3: Update Version
+**What dry run shows:**
+- ✅ Current version and next version
+- ✅ Commits since last release
+- ✅ CHANGELOG preview
+- ✅ Git commands that will be executed
+- ✅ GitHub release that will be created
 
-Bump version in `package.json` and `package-lock.json`:
+### Step 3: Create Release
+
+Run release-it to create the release:
 
 ```bash
-# Choose one:
-npm version patch   # 0.1.0 → 0.1.1 (bug fixes)
-npm version minor   # 0.1.0 → 0.2.0 (new features)
-npm version major   # 0.1.0 → 1.0.0 (breaking changes)
+# Interactive mode (prompts for version bump)
+npm run release
+
+# Or specify version bump directly:
+npm run release:patch  # Bug fixes (1.0.0 → 1.0.1)
+npm run release:minor  # New features (1.0.0 → 1.1.0)
+npm run release:major  # Breaking changes (1.0.0 → 2.0.0)
 ```
 
-This command:
-- ✅ Updates `package.json` version
-- ✅ Updates `package-lock.json` version
-- ✅ Creates git commit with message: `X.Y.Z`
-- ✅ Creates git tag: `vX.Y.Z`
+**What happens:**
+1. ✅ Bumps version in `package.json` and `package-lock.json`
+2. ✅ Generates CHANGELOG.md using git-cliff
+3. ✅ Creates git commit: `chore(release): release vX.Y.Z`
+4. ✅ Creates git tag: `vX.Y.Z`
+5. ✅ Pushes commit and tag to GitHub
+6. ✅ Creates draft GitHub Release
 
-### Step 4: Generate CHANGELOG
+**Interactive prompts:**
+- Version bump selection (if not specified)
+- Confirmation before pushing
+- Confirmation before creating GitHub release
 
-Generate changelog entry using git-cliff:
-
-```bash
-# Generate changelog for all versions
-npx git-cliff --output CHANGELOG.md
-
-# Or generate for specific version range
-npx git-cliff --tag vX.Y.Z --output CHANGELOG.md
-```
-
-**Manually verify CHANGELOG.md:**
-- [ ] New version entry added at top
-- [ ] All commits categorized correctly
-- [ ] Breaking changes highlighted
-- [ ] Links to PRs/commits working
-
-### Step 5: Amend Release Commit
-
-Add CHANGELOG.md to the release commit:
-
-```bash
-# Stage CHANGELOG.md
-git add CHANGELOG.md
-
-# Amend the version commit
-git commit --amend --no-edit
-```
-
-Now you have a single commit with:
-- ✅ Version bump in package.json
-- ✅ Version bump in package-lock.json
-- ✅ Updated CHANGELOG.md
-- ✅ Git tag vX.Y.Z
-
-### Step 6: Review Changes
-
-Review the release commit and tag:
-
-```bash
-# View the commit
-git show HEAD
-
-# Verify the tag
-git tag -l vX.Y.Z
-
-# View CHANGELOG.md entry
-git diff HEAD~1 CHANGELOG.md
-```
-
-**If you need to make changes:**
-
-```bash
-# Delete the tag
-git tag -d vX.Y.Z
-
-# Reset the commit (keep changes)
-git reset --soft HEAD~1
-
-# Make your changes to CHANGELOG.md or package.json
-# Then repeat steps 3-5
-```
-
-### Step 7: Push Release to Trigger Publishing
-
-When you're satisfied with the release, push to trigger automated publishing:
-
-```bash
-# Push commit and tag together
-git push && git push --tags
-```
-
-### Step 8: Automatic Publishing (Triggered by Tag)
+### Step 4: Automatic Publishing (Triggered by Tag)
 
 When the tag is pushed, GitHub Actions automatically:
 
@@ -150,7 +114,7 @@ When the tag is pushed, GitHub Actions automatically:
 3. ✅ Generates SBOM (Software Bill of Materials)
 4. ✅ Creates SLSA Level 3 attestations
 5. ✅ Publishes to npm with provenance
-6. ✅ Creates **draft** GitHub Release
+6. ✅ Updates draft GitHub Release with security info
 
 **publish-docker.yml:**
 1. ✅ Builds multi-arch Docker images (amd64, arm64)
@@ -164,7 +128,7 @@ When the tag is pushed, GitHub Actions automatically:
 - npm package: https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp
 - Docker images: https://github.com/gander-tools/osm-tagging-schema-mcp/pkgs/container/osm-tagging-schema-mcp
 
-### Step 9: Publish GitHub Release (Manual)
+### Step 5: Publish GitHub Release (Manual)
 
 1. Go to **Releases** on GitHub
 2. Find the draft release for your version
@@ -172,23 +136,29 @@ When the tag is pushed, GitHub Actions automatically:
 4. Edit if needed (add highlights, breaking changes, etc.)
 5. Click **Publish release**
 
+## Release-It Configuration
+
+Configuration is in `.release-it.json`:
+
+- **Git**: Commit message format, tag format, branch requirements
+- **Hooks**: Runs git-cliff after version bump
+- **GitHub**: Creates draft releases automatically
+- **npm**: Publishing disabled (done by GitHub Actions workflow)
+
+**Key settings:**
+- `requireBranch: "master"` - Only allow releases from master
+- `requireCleanWorkingDir: true` - No uncommitted changes
+- `hooks.after:bump` - Runs git-cliff to generate CHANGELOG
+
 ## Troubleshooting
-
-### "Tag already exists"
-This version has already been released. Use a higher version number or delete the existing tag:
-
-```bash
-# Delete local tag
-git tag -d vX.Y.Z
-
-# Delete remote tag (⚠️ use with caution)
-git push origin :refs/tags/vX.Y.Z
-```
 
 ### "Working directory not clean"
 Commit or stash your changes before creating a release:
 
 ```bash
+# Check what's uncommitted
+git status
+
 # Stash changes
 git stash
 
@@ -197,15 +167,51 @@ git add .
 git commit -m "your message"
 ```
 
+### "Not on master branch"
+release-it requires you to be on the master branch:
+
+```bash
+git checkout master
+git pull origin master
+```
+
+### "Tag already exists"
+This version has already been released. Choose a higher version:
+
+```bash
+# Check existing tags
+git tag -l
+
+# If you need to delete a tag (⚠️ use with caution)
+git tag -d vX.Y.Z
+git push origin :refs/tags/vX.Y.Z
+```
+
 ### Release workflow failed
 Check GitHub Actions logs:
 - Go to **Actions** tab
 - Find the failed workflow run
 - Review error logs
-- Fix issues and re-run or create new release
+- Fix issues locally and create new release
 
-### Need to undo a release
-If you pushed the tag but npm publish failed or you want to undo:
+### Need to undo a release (before push)
+
+If release-it failed or you want to undo before pushing:
+
+```bash
+# Cancel release-it when prompted
+# Or if commit was already created:
+
+# Delete the tag
+git tag -d vX.Y.Z
+
+# Reset the commit
+git reset --hard HEAD~1
+```
+
+### Need to undo a release (after push)
+
+If you already pushed the tag:
 
 ```bash
 # Delete remote tag (stops automatic publishing)
@@ -214,10 +220,7 @@ git push origin :refs/tags/vX.Y.Z
 # Delete local tag
 git tag -d vX.Y.Z
 
-# Reset local commit (if not pushed yet)
-git reset --hard HEAD~1
-
-# If commit was pushed, revert it
+# Revert the commit
 git revert HEAD
 git push
 ```
@@ -232,26 +235,43 @@ Check `cliff.toml` configuration:
 # Preview what git-cliff will generate
 npx git-cliff --unreleased
 
-# Test with specific tag range
+# Test with specific tag
 npx git-cliff --tag vX.Y.Z --unreleased
 ```
 
 ## Tools
 
+- **release-it**: Release automation tool
+  - Configuration: `.release-it.json`
+  - Documentation: https://github.com/release-it/release-it
 - **git-cliff**: Changelog generator
   - Configuration: `cliff.toml`
   - Documentation: https://git-cliff.org/
-- **npm version**: Version bumping
-  - Built into npm
 - **GitHub Actions**: CI/CD automation
   - `publish-npm.yml`: npm publishing with SLSA attestations
   - `publish-docker.yml`: Docker image publishing
 - **npm Trusted Publishers**: Secure publishing with OIDC authentication
 - **SLSA Attestations**: Supply chain security
 
+## Release Scripts
+
+```bash
+# Interactive release (prompts for version)
+npm run release
+
+# Dry run (preview without changes)
+npm run release:dry
+
+# Specific version bumps
+npm run release:patch  # Bug fixes
+npm run release:minor  # New features
+npm run release:major  # Breaking changes
+```
+
 ## Related Documentation
 
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines
 - [CHANGELOG.md](../CHANGELOG.md) - Version history
 - [docs/security.md](./security.md) - Security and provenance documentation
+- [release-it docs](https://github.com/release-it/release-it) - Release automation tool
 - [git-cliff docs](https://git-cliff.org/) - Changelog generator
