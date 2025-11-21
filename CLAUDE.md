@@ -243,6 +243,9 @@ Every feature implementation MUST follow this workflow:
 
 ### CI/CD Pipeline
 - **Automated Testing**: GitHub Actions runs Node.js tests on every push/PR
+  - Unit tests: Tool and utility logic validation
+  - Integration tests: End-to-end MCP protocol testing
+  - E2E package tests: npm package build and runtime validation
 - **Fuzzing**: Property-based testing with fast-check runs on every push/PR and weekly
 - **Code Quality**: BiomeJS checks for linting and formatting issues
 - **Auto-PR Creation**: Automatic Pull Request creation for `claude/*` branches
@@ -348,6 +351,67 @@ npm run test:coverage:fuzz
 - See `.ossfuzz/README.md` for submission process
 
 **Scorecard Impact**: Property-based testing with fast-check is recognized by OpenSSF Scorecard as fuzzing infrastructure, improving the project's security score.
+
+### NPM Package E2E Testing
+
+**Status**: ✅ IMPLEMENTED - End-to-end package build and runtime tests
+
+The project includes comprehensive end-to-end tests that verify the built npm package works correctly in both STDIO and HTTP transport modes. These tests simulate real-world usage by installing and running the package exactly as end users would.
+
+**Test Coverage** (`tests/e2e/test-npm-package.sh`):
+
+1. **Package Build Verification**
+   - Creates package tarball with `npm pack`
+   - Verifies tarball was generated successfully
+   - Checks package contents and structure
+
+2. **Package Installation Testing**
+   - Installs package in isolated test directory
+   - Verifies all dependencies are correctly installed
+   - Checks that binary is accessible
+
+3. **STDIO Transport Testing**
+   - Launches MCP server in STDIO mode
+   - Sends JSON-RPC initialize request
+   - Verifies server accepts input and responds
+   - Tests default transport mode (most common usage)
+
+4. **HTTP Transport Testing**
+   - Starts server with HTTP transport in background
+   - Waits for server to be ready (health checks)
+   - Tests `/health` endpoint (liveness probe)
+   - Tests `/ready` endpoint (readiness probe + schema stats)
+   - Verifies MCP protocol accepts HTTP requests
+   - Tests production deployment scenario
+
+**CI/CD Integration** (`.github/workflows/test.yml`):
+- Runs as separate job `npm-package-test` after unit/integration tests pass
+- Executes on every pull request and push to master
+- Requires `jq` for JSON parsing in bash scripts
+- Provides final validation before package release
+
+**Running Tests Locally**:
+```bash
+# Run all e2e tests
+npm run test:e2e
+
+# Or run script directly
+./tests/e2e/test-npm-package.sh
+```
+
+**Benefits**:
+- ✅ Validates package works via `npx` command (real user experience)
+- ✅ Tests both STDIO and HTTP transports
+- ✅ Catches packaging issues before npm publish
+- ✅ Verifies health/readiness endpoints for production deployments
+- ✅ Ensures schema loads correctly in packaged version
+- ✅ Tests realistic installation and runtime scenarios
+
+**Test Output**:
+- Clear pass/fail indicators with colored output
+- Detailed error messages when tests fail
+- Schema statistics (preset/field counts) for validation
+- Automatic cleanup of test artifacts
 
 ### Documentation Guidelines
 
@@ -463,17 +527,23 @@ tests/                               # Test files (TDD - one test file per tool)
 │   ├── schema-loader.test.ts        # ✅ Present
 │   ├── logger.test.ts               # ✅ Present
 │   └── tag-parser.test.ts           # ✅ Present
-└── integration/                     # Integration tests (one file per tool)
-    ├── helpers.ts                   # ✅ Shared test utilities
-    ├── server-init.test.ts          # ✅ Server initialization tests
-    ├── http-transport.test.ts       # ✅ HTTP transport tests
-    ├── get-preset-details.test.ts   # ✅ Present
-    ├── get-tag-values.test.ts       # ✅ Present
-    ├── search-presets.test.ts       # ✅ Present
-    ├── search-tags.test.ts          # ✅ Present
-    ├── suggest-improvements.test.ts # ✅ Present
-    ├── validate-tag.test.ts         # ✅ Present
-    └── validate-tag-collection.test.ts # ✅ Present
+├── integration/                     # Integration tests (one file per tool)
+│   ├── helpers.ts                   # ✅ Shared test utilities
+│   ├── server-init.test.ts          # ✅ Server initialization tests
+│   ├── http-transport.test.ts       # ✅ HTTP transport tests
+│   ├── get-preset-details.test.ts   # ✅ Present
+│   ├── get-tag-values.test.ts       # ✅ Present
+│   ├── search-presets.test.ts       # ✅ Present
+│   ├── search-tags.test.ts          # ✅ Present
+│   ├── suggest-improvements.test.ts # ✅ Present
+│   ├── validate-tag.test.ts         # ✅ Present
+│   └── validate-tag-collection.test.ts # ✅ Present
+├── e2e/                             # End-to-end tests
+│   └── test-npm-package.sh          # ✅ NPM package build & runtime tests
+└── fuzz/                            # Fuzz tests
+    ├── tag-parser.fuzz.test.ts      # ✅ Tag parser fuzzing
+    ├── validate-tag.fuzz.test.ts    # ✅ Tag validation fuzzing
+    └── schema-loader.fuzz.test.ts   # ✅ Schema loader fuzzing
 .github/workflows/                   # CI/CD workflows
     ├── test.yml                     # ✅ CI testing workflow
     ├── docker.yml                   # ✅ Docker build & publish
@@ -1148,9 +1218,11 @@ Currently: Validates `field.options` only, not `field.type` (number/url/email).
 - ✅ Comprehensive test suite for all 7 tools
 - ✅ All unit tests passing
 - ✅ All integration tests passing
+- ✅ All e2e package tests passing
 - ✅ Modular structure: One integration test file per tool
 - ✅ Shared test utilities in `helpers.ts`
 - ✅ Testing with real OpenStreetMap data
+- ✅ NPM package build and runtime validation (STDIO + HTTP)
 - ✅ All dependencies properly configured
 
 **Phase 5: Documentation ✅ COMPLETE (for implemented tools)**
