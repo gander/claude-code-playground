@@ -1,10 +1,19 @@
 # flat_to_json
 
-Convert OSM tags from flat text format (key=value per line) to JSON object.
+**INPUT CONVERTER** - Convert user-provided flat text to JSON for processing by other tools.
 
 ## Description
 
-Converts OSM tags from flat text format to JSON representation. The flat text format uses one tag per line in `key=value` format, which is commonly used for:
+**Use this tool FIRST** when the user provides OSM tags in flat text format (key=value per line). This tool converts the flat format to JSON object that can then be used by other tools like `validate_tag`, `search_tags`, `suggest_improvements`, etc.
+
+**Workflow:**
+1. User provides tags in flat format → Use `flat_to_json`
+2. Process JSON with other tools (validate_tag, etc.)
+3. If user wants flat output → Use `json_to_flat`
+
+All other OSM tools expect JSON input and return JSON output. This tool bridges the gap between human-friendly flat format and JSON format required by other tools.
+
+The flat text format uses one tag per line in `key=value` format, which is commonly used for:
 - Manual tag entry
 - Text-based tag files
 - Command-line interfaces
@@ -14,7 +23,7 @@ The tool supports various line endings, comments, and handles special characters
 
 ## Category
 
-Conversion Tools
+Conversion Tools (Input Converter)
 
 ## Input Parameters
 
@@ -39,7 +48,7 @@ Returns a JSON object with tags:
 - Comments (lines starting with `#`) are ignored
 - Empty lines are skipped
 - Duplicate keys: last value wins
-- Empty values are allowed
+- Empty values are NOT allowed (will throw error)
 - Values may contain equals signs (only first `=` is the separator)
 
 ## Examples

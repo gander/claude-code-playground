@@ -74,7 +74,7 @@ const JsonToFlat: OsmToolDefinition<{
 	name: "json_to_flat" as const,
 	config: () => ({
 		description:
-			"Convert OSM tags from JSON format to flat text format (key=value per line). Accepts either a JSON string or a JSON object with string values.",
+			"**OUTPUT CONVERTER**: Use this tool LAST when user expects OSM tags in flat text format (key=value per line). Converts JSON object (from other tools like validate_tag, search_tags, etc.) to flat format for user-friendly output. All other tools return JSON - use this to convert their output to flat format if user prefers it.",
 		inputSchema: {
 			tags: z
 				.union([z.string(), z.record(z.string(), z.string())])

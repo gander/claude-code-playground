@@ -36,7 +36,7 @@ const FlatToJson: OsmToolDefinition<{
 	name: "flat_to_json" as const,
 	config: () => ({
 		description:
-			"Convert OSM tags from flat text format (key=value per line) to JSON object. Supports comments (#), empty lines, and various line endings.",
+			"**INPUT CONVERTER**: Use this tool FIRST when user provides OSM tags in flat text format (key=value per line). Converts flat format to JSON object that can be used by other tools (validate_tag, search_tags, etc.). All other tools expect JSON input. Supports comments (#), empty lines, and various line endings.",
 		inputSchema: {
 			tags: z
 				.string()
