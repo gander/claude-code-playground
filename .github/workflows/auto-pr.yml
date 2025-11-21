@@ -82,6 +82,8 @@ jobs:
             --head "${{ steps.branch.outputs.name }}" \
             --title "[CLAUDE] ${{ steps.commits.outputs.first_title }}" \
             --body "$(cat <<'EOF'
+          ## 📝 Commits
+
           ${{ steps.commits.outputs.messages }}
           EOF
           )"; then
