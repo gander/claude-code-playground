@@ -29,7 +29,8 @@ describe("Integration: json_to_flat", () => {
 			assert.ok(tool, "json_to_flat tool should be registered");
 			assert.strictEqual(tool.name, "json_to_flat");
 			assert.ok(tool.description);
-			assert.match(tool.description, /JSON.*flat text/i);
+			assert.match(tool.description, /JSON.*flat/i);
+			assert.match(tool.description, /OUTPUT CONVERTER/i);
 			assert.ok(tool.inputSchema);
 		});
 	});
