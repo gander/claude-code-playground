@@ -74,14 +74,35 @@ jobs:
           echo "Created changeset: $CHANGESET_FILE"
           cat "$CHANGESET_FILE"
 
-      - name: Commit and push changeset (manual trigger)
+      - name: Create PR with changeset (manual trigger)
         if: github.event_name == 'workflow_dispatch'
         run: |
+          # Create a new branch for the changeset
+          BRANCH="changeset/manual-$(date +%s)"
+          git checkout -b "$BRANCH"
+
+          # Commit changeset
           git add .changeset/*.md
           git commit -m "chore: add changeset for ${{ github.event.inputs.bump_type }} release
 
           ${{ github.event.inputs.description }}"
-          git push origin master
+
+          # Push branch
+          git push origin "$BRANCH"
+
+          # Create PR using GitHub API
+          gh pr create \
+            --title "chore: add changeset for ${{ github.event.inputs.bump_type }} release" \
+            --body "**Type**: ${{ github.event.inputs.bump_type }}
+
+          **Description**: ${{ github.event.inputs.description }}
+
+          ---
+          This PR adds a changeset. After merging, the 'Version Packages' PR will be created automatically." \
+            --base master \
+            --head "$BRANCH"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release Pull Request or Publish
         id: changesets
@@ -138,20 +159,20 @@ jobs:
           echo "**No manual steps required!** 🎉" >> $GITHUB_STEP_SUMMARY
 
       - name: Summary - Manual Trigger
-        if: github.event_name == 'workflow_dispatch' && steps.changesets.outputs.pullRequestNumber
+        if: github.event_name == 'workflow_dispatch'
         run: |
-          echo "## Release PR Created 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "## Changeset PR Created 🎉" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Changeset created**: ${{ github.event.inputs.bump_type }} bump" >> $GITHUB_STEP_SUMMARY
           echo "**Description**: ${{ github.event.inputs.description }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Release PR**: #${{ steps.changesets.outputs.pullRequestNumber }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "1. ✅ Changeset created and pushed automatically" >> $GITHUB_STEP_SUMMARY
-          echo "2. ✅ Version PR created automatically" >> $GITHUB_STEP_SUMMARY
-          echo "3. 👉 **Review and merge PR** #${{ steps.changesets.outputs.pullRequestNumber }}" >> $GITHUB_STEP_SUMMARY
-          echo "4. ✅ After merge: Tag, npm publish, and GitHub Release will happen **automatically**" >> $GITHUB_STEP_SUMMARY
+          echo "1. ✅ Changeset branch created and pushed" >> $GITHUB_STEP_SUMMARY
+          echo "2. ✅ PR with changeset created" >> $GITHUB_STEP_SUMMARY
+          echo "3. 👉 **Review and merge the changeset PR** (check your PRs)" >> $GITHUB_STEP_SUMMARY
+          echo "4. ✅ After merge: 'Version Packages' PR will be created automatically" >> $GITHUB_STEP_SUMMARY
+          echo "5. 👉 **Merge Version Packages PR**" >> $GITHUB_STEP_SUMMARY
+          echo "6. ✅ After merge: Tag, npm publish, and GitHub Release will happen **automatically**" >> $GITHUB_STEP_SUMMARY
 
       - name: Summary - Auto Trigger
         if: github.event_name == 'push' && steps.changesets.outputs.pullRequestNumber
