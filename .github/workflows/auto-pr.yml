@@ -82,22 +82,7 @@ jobs:
             --head "${{ steps.branch.outputs.name }}" \
             --title "[CLAUDE] ${{ steps.commits.outputs.first_title }}" \
             --body "$(cat <<'EOF'
-          ## 🤖 Auto-created Pull Request
-
-          This PR was automatically created from branch: \`${{ steps.branch.outputs.name }}\`
-
-          ### Recent Commits
           ${{ steps.commits.outputs.messages }}
-
-          ### Checklist
-          - [ ] Code changes reviewed
-          - [ ] Tests pass locally
-          - [ ] Documentation updated (if needed)
-          - [ ] No breaking changes (or documented)
-
-          ---
-
-          **Note**: This is an automated PR. Please review the changes and update the description as needed.
           EOF
           )"; then
             echo "success=true" >> $GITHUB_OUTPUT
