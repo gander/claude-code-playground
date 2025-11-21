@@ -73,6 +73,10 @@ jobs:
         id: create-pr
         run: |
           # Create PR with informative title and body
+          echo "Creating PR with title: [CLAUDE] ${{ steps.commits.outputs.first_title }}"
+          echo "Base branch: ${{ steps.branch.outputs.base }}"
+          echo "Head branch: ${{ steps.branch.outputs.name }}"
+
           if gh pr create \
             --base "${{ steps.branch.outputs.base }}" \
             --head "${{ steps.branch.outputs.name }}" \
@@ -81,9 +85,6 @@ jobs:
           ## 🤖 Auto-created Pull Request
 
           This PR was automatically created from branch: \`${{ steps.branch.outputs.name }}\`
-
-          ### Feature
-          ${{ steps.branch.outputs.feature }}
 
           ### Recent Commits
           ${{ steps.commits.outputs.messages }}
@@ -100,8 +101,11 @@ jobs:
           EOF
           )"; then
             echo "success=true" >> $GITHUB_OUTPUT
+            echo "✅ PR created successfully"
           else
+            EXIT_CODE=$?
             echo "success=false" >> $GITHUB_OUTPUT
+            echo "❌ PR creation failed with exit code: $EXIT_CODE"
             exit 1
           fi
 
