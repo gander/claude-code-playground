@@ -147,7 +147,7 @@ jobs:
       contents: write  # Required for GitHub Releases API
 
     steps:
-      - name: Create GitHub Release
+      - name: Create GitHub Release (Draft)
         uses: softprops/action-gh-release@b555064d6a617fa0b0e4ede6e3b9e06a01fbb011
         with:
           tag_name: ${{ needs.build-and-publish.outputs.version_tag }}
@@ -191,7 +191,11 @@ jobs:
             ```
 
             ## 📋 See CHANGELOG.md for details
-          draft: false
+
+            ---
+
+            **Note:** This is a draft release. Review and publish when ready.
+          draft: true
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

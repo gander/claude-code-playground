@@ -1,0 +1,104 @@
+name: Publish Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  publish-release:
+    name: Create Tag and Trigger Publish
+    # Only run if:
+    # 1. PR was merged (not just closed)
+    # 2. Source branch starts with 'release/'
+    if: |
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release/')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Extract version from branch name
+        id: version
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          echo "Branch name: $BRANCH_NAME"
+
+          # Extract version from release/vX.Y.Z
+          if [[ "$BRANCH_NAME" =~ ^release/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "version_tag=v${VERSION}" >> $GITHUB_OUTPUT
+            echo "✅ Extracted version: $VERSION"
+          else
+            echo "❌ Error: Invalid release branch name format"
+            echo "Expected format: release/vX.Y.Z"
+            exit 1
+          fi
+
+      - name: Checkout merged code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Verify package.json version
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          EXPECTED_VERSION="${{ steps.version.outputs.version }}"
+
+          if [ "$PACKAGE_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "❌ Error: package.json version mismatch"
+            echo "Package version: $PACKAGE_VERSION"
+            echo "Expected version: $EXPECTED_VERSION"
+            exit 1
+          fi
+          echo "✅ Version verified: $PACKAGE_VERSION"
+
+      - name: Setup git config
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check if tag already exists
+        run: |
+          TAG="${{ steps.version.outputs.version_tag }}"
+
+          if git ls-remote --tags origin | grep -q "refs/tags/$TAG"; then
+            echo "⚠️  Warning: Tag '$TAG' already exists"
+            echo "This might be a re-run or tag was created manually"
+            exit 1
+          fi
+          echo "✅ Tag does not exist: $TAG"
+
+      - name: Create and push tag
+        run: |
+          TAG="${{ steps.version.outputs.version_tag }}"
+          VERSION="${{ steps.version.outputs.version }}"
+
+          echo "📌 Creating tag: $TAG"
+          git tag -a "$TAG" -m "Release version $VERSION"
+
+          echo "⬆️  Pushing tag to origin"
+          git push origin "$TAG"
+
+          echo "✅ Tag created and pushed: $TAG"
+          echo "::notice title=Tag Created::Tag $TAG created and pushed to origin"
+
+      - name: Publish workflow info
+        run: |
+          echo "🚀 Release process initiated for v${{ steps.version.outputs.version }}"
+          echo ""
+          echo "Next steps (automatic):"
+          echo "1. ⏳ publish-npm.yml workflow will be triggered by tag push"
+          echo "2. 🧪 Tests will run"
+          echo "3. 📦 Package will be published to npm with SLSA attestations"
+          echo "4. 📝 Draft GitHub Release will be created"
+          echo ""
+          echo "Monitor progress:"
+          echo "https://github.com/${{ github.repository }}/actions"
+          echo ""
+          echo "::notice title=Release Triggered::publish-npm.yml workflow triggered for v${{ steps.version.outputs.version }}"
