@@ -30,13 +30,22 @@ export class SchemaLoader {
 	constructor(config: SchemaLoaderConfig = {}) {
 		this.cacheTTL = config.cacheTTL ?? Number.POSITIVE_INFINITY;
 
-		// Resolve path to node_modules/@openstreetmap/id-tagging-schema/dist
-		const __filename = fileURLToPath(import.meta.url);
-		const __dirname = dirname(__filename);
-		this.schemaBasePath = join(
-			__dirname,
-			"../../node_modules/@openstreetmap/id-tagging-schema/dist",
-		);
+		// Resolve path to @openstreetmap/id-tagging-schema/dist using Node.js module resolution
+		// This works with both nested and flat node_modules structures
+		try {
+			// Use import.meta.resolve to find the package (Node.js 20.6+)
+			const packageJsonUrl = import.meta.resolve("@openstreetmap/id-tagging-schema/package.json");
+			const packageJsonPath = fileURLToPath(packageJsonUrl);
+			this.schemaBasePath = join(dirname(packageJsonPath), "dist");
+		} catch (_error) {
+			// Fallback to relative path for development/testing
+			const __filename = fileURLToPath(import.meta.url);
+			const __dirname = dirname(__filename);
+			this.schemaBasePath = join(
+				__dirname,
+				"../../node_modules/@openstreetmap/id-tagging-schema/dist",
+			);
+		}
 	}
 
 	/**
