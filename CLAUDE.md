@@ -245,6 +245,7 @@ Every feature implementation MUST follow this workflow:
 - **Automated Testing**: GitHub Actions runs Node.js tests on every push/PR
 - **Fuzzing**: Property-based testing with fast-check runs on every push/PR and weekly
 - **Code Quality**: BiomeJS checks for linting and formatting issues
+- **Auto-PR Creation**: Automatic Pull Request creation for `claude/*` branches
 - **Dependabot**: Automated dependency updates and security patches
 - **Release**: Automated npm releases with semantic versioning
 - **Distribution**: Package available via `npx` command
@@ -434,7 +435,8 @@ tests/                               # Test files (TDD - one test file per tool)
     ├── security.yml                 # ✅ Security scanning
     ├── codeql.yml                   # ✅ Code scanning
     ├── cleanup.yml                  # ✅ Auto cleanup (dev/tagged packages)
-    └── dependency-review.yml        # ✅ Dependency review
+    ├── dependency-review.yml        # ✅ Dependency review
+    └── auto-pr.yml                  # ✅ Auto-create PRs for claude/* branches
 docs/                                # User documentation
     ├── installation.md              # ✅ Installation guide
     ├── configuration.md             # ✅ Configuration guide
@@ -1676,6 +1678,7 @@ This project follows an **intent-based workflow** where development is organized
    - Branch naming: `claude/<feature-description>-<session-id>`
    - One branch per feature (not per command)
    - Master branch is protected - all changes must go through feature branches
+   - **Auto-PR**: Pushing to `claude/*` branches automatically creates a Pull Request with title `[CLAUDE] <first commit title>` (see `.github/workflows/auto-pr.yml`)
 
 3. **Feature Branch Lifecycle**
    - Once a feature branch is created and pushed, continue using it for all related changes
@@ -1712,6 +1715,7 @@ This project follows an **intent-based workflow** where development is organized
 2. If feature branch exists: commit and push to existing branch
 3. Branch naming: `claude/<feature-description>-<session-id>`
 4. All changes for the same feature go to the same branch
+5. **Auto-PR Creation**: GitHub Actions automatically creates a Pull Request for `claude/*` branches
 
 ### Intent: Start New Feature
 
