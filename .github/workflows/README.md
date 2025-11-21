@@ -49,12 +49,14 @@ Reviews dependency changes in pull requests:
 - License compliance
 - Compatibility issues
 
-### 8. Auto-PR Workflow (`auto-pr.yml`) ⚠️ Setup Required
+### 8. Auto-PR Workflow (`auto-pr.yml`) ✅ Active
 **Automatically creates Pull Requests from `claude/*` branches.**
+
+> **Status**: ✅ Enabled - GitHub Actions can create PRs
 
 #### Setup Instructions
 
-This workflow requires additional configuration to work:
+This workflow requires additional configuration to work (already configured for this repository):
 
 ##### Option 1: Enable GitHub Actions PR Creation (Recommended)
 
