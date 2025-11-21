@@ -174,9 +174,42 @@ else
     exit 1
 fi
 
-# Note: Full MCP protocol testing via HTTP requires complex SSE flow
-# and is better covered by integration tests. Health and ready endpoints
-# are sufficient to verify HTTP transport is working.
+# Test MCP protocol - send initialize request and verify SSE response
+echo "  Testing MCP protocol (initialize request via SSE)..."
+
+# Send initialize request with both Accept headers (required by StreamableHTTPServerTransport)
+MCP_RESPONSE=$(timeout 3s curl -s -N -X POST http://localhost:3000/ \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json, text/event-stream" \
+    -d '{
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "clientInfo": {"name": "e2e-test", "version": "1.0"}
+        }
+    }' 2>&1 || echo "TIMEOUT_OK")
+
+# Check if we got SSE response with message event containing server info
+if echo "$MCP_RESPONSE" | grep -q "event: message"; then
+    # Extract server info from response
+    SERVER_INFO=$(echo "$MCP_RESPONSE" | grep "data:" | sed 's/data: //' | jq -r '.result.serverInfo.name' 2>/dev/null || echo "")
+
+    if [ "$SERVER_INFO" = "osm-tagging-schema" ]; then
+        echo -e "${GREEN}✓ MCP protocol working - received initialize response${NC}"
+        echo "  Server: $SERVER_INFO"
+    else
+        echo -e "${YELLOW}⚠ MCP protocol response received but server info unclear${NC}"
+        echo "Response: ${MCP_RESPONSE:0:200}"
+    fi
+else
+    echo -e "${RED}✗ MCP protocol test failed - no message event in response${NC}"
+    echo "Response: ${MCP_RESPONSE:0:500}"
+    exit 1
+fi
+
 echo ""
 
 # Stop HTTP server
@@ -194,7 +227,6 @@ echo -e "${GREEN}✓ Package installs successfully${NC}"
 echo -e "${GREEN}✓ STDIO mode works${NC}"
 echo -e "${GREEN}✓ HTTP transport works${NC}"
 echo -e "${GREEN}✓ Health and readiness endpoints work${NC}"
+echo -e "${GREEN}✓ MCP protocol works (SSE stream)${NC}"
 echo ""
 echo -e "${GREEN}All tests passed!${NC}"
-echo ""
-echo "Note: Full MCP protocol testing is covered by integration tests"
