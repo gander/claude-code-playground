@@ -103,10 +103,49 @@ jobs:
           npx cliff-jumper --name "$PACKAGE_NAME" --skip-automatic-bump --verbose
           echo "✅ Generated CHANGELOG.md entry"
 
-          # 4. Commit changes
-          git add package.json CHANGELOG.md package-lock.json
+          # 4. Ensure all changes are in a single commit
+          # Check if cliff-jumper or npm created any commits
+          COMMIT_COUNT=$(git rev-list --count HEAD ^master)
+          if [ "$COMMIT_COUNT" -gt 0 ]; then
+            echo "⚠️  Found $COMMIT_COUNT commit(s) - resetting to ensure single commit"
+            # Reset commits but keep changes in working directory
+            git reset --soft master
+            # Unstage everything
+            git reset HEAD
+          fi
+
+          # Clear any staged changes
+          git reset HEAD --quiet || true
+
+          # Stage all changes and create single commit
+          echo "📝 Creating single commit with all changes..."
+          git add package.json package-lock.json CHANGELOG.md
+
+          # Verify all files are staged
+          if ! git diff --cached --name-only | grep -q "package.json"; then
+            echo "❌ Error: package.json not staged"
+            exit 1
+          fi
+          if ! git diff --cached --name-only | grep -q "package-lock.json"; then
+            echo "❌ Error: package-lock.json not staged"
+            exit 1
+          fi
+          if ! git diff --cached --name-only | grep -q "CHANGELOG.md"; then
+            echo "❌ Error: CHANGELOG.md not staged"
+            exit 1
+          fi
+
           git commit -m "chore: release v${VERSION}"
-          echo "✅ Committed changes"
+          echo "✅ Committed all changes in single commit"
+
+          # Verify exactly one commit exists
+          FINAL_COMMIT_COUNT=$(git rev-list --count HEAD ^master)
+          if [ "$FINAL_COMMIT_COUNT" -ne 1 ]; then
+            echo "❌ Error: Expected 1 commit, found $FINAL_COMMIT_COUNT"
+            git log --oneline HEAD ^master
+            exit 1
+          fi
+          echo "✅ Verified single commit created"
 
           # 5. Push to origin
           git push origin "$BRANCH"
