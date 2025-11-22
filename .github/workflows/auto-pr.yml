@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           fetch-depth: 0
 
@@ -73,14 +73,14 @@ jobs:
         id: create-pr
         run: |
           # Create PR with informative title and body
-          echo "Creating PR with title: [CLAUDE] ${{ steps.commits.outputs.first_title }}"
+          echo "Creating PR with title: ${{ steps.commits.outputs.first_title }}"
           echo "Base branch: ${{ steps.branch.outputs.base }}"
           echo "Head branch: ${{ steps.branch.outputs.name }}"
 
           if gh pr create \
             --base "${{ steps.branch.outputs.base }}" \
             --head "${{ steps.branch.outputs.name }}" \
-            --title "[CLAUDE] ${{ steps.commits.outputs.first_title }}" \
+            --title "${{ steps.commits.outputs.first_title }}" \
             --body "$(cat <<'EOF'
           ## 📝 Commits
 
@@ -125,7 +125,7 @@ jobs:
         run: |
           # Add labels to the PR (continue even if labels don't exist)
           gh pr edit "${{ steps.branch.outputs.name }}" \
-            --add-label "auto-created,claude-branch" || true
+            --add-label "claude code" || true
 
       - name: PR Info
         if: steps.pr-check.outputs.exists == '0' && steps.create-pr.outcome == 'success'
