@@ -6,6 +6,11 @@ on:
     branches:
       - master
 
+# Minimal permissions following principle of least privilege
+permissions:
+  contents: write  # Required for creating and pushing git tags
+  issues: write    # Required for adding comments to PRs (issues API)
+
 jobs:
   auto-tag-release:
     name: Create Release Tag from Merged Release PR
@@ -23,8 +28,9 @@ jobs:
 
       - name: Extract version from release branch name
         id: version
+        env:
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
         run: |
-          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           # Extract version from "release/vX.Y.Z" format
           VERSION=$(echo "$BRANCH_NAME" | sed 's|release/||')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
