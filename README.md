@@ -8,7 +8,7 @@
 [![npm version](https://img.shields.io/npm/v/@gander-tools/osm-tagging-schema-mcp)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/@gander-tools/osm-tagging-schema-mcp)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
 [![NPM Provenance](https://img.shields.io/badge/provenance-npm-CB3837?logo=npm)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
-[![SLSA 3](https://img.shields.io/badge/SLSA-Level%203-green?logo=github)](docs/security.md#slsa-build-provenance)
+[![SLSA 3](https://img.shields.io/badge/SLSA-Level%203-green?logo=github)](docs/deployment/security.md#slsa-build-provenance)
 [![Docker Image](https://img.shields.io/badge/docker-ghcr.io-blue?logo=docker)](https://github.com/gander-tools/osm-tagging-schema-mcp/pkgs/container/osm-tagging-schema-mcp)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen?logo=node.js)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org/)
@@ -42,7 +42,7 @@ If you're looking for a user-facing OSM tagging tool, consider [iD editor](https
 - **Preset Discovery** (2 tools): Search and explore OSM presets with detailed configurations
 - **Validation** (3 tools): Validate tags, check for deprecated tags, suggest improvements
 
-📖 **Full tool reference**: [docs/api/](./docs/api/)
+📖 **Full tool reference**: [docs/api/](./docs/api/README.md)
 
 ## Installation
 
@@ -60,7 +60,7 @@ npx @gander-tools/osm-tagging-schema-mcp
 docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 ```
 
-📖 **More options**: [docs/installation.md](./docs/installation.md) (source installation, verification, troubleshooting)
+📖 **More options**: [docs/user/installation.md](./docs/user/installation.md) (source installation, verification, troubleshooting)
 
 ## Quick Start
 
@@ -91,9 +91,9 @@ Add to your Claude Desktop configuration:
 ```
 
 📖 **Configuration guides**:
-- [docs/configuration.md](./docs/configuration.md) - Setup for Claude Code/Desktop and custom clients
-- [docs/usage.md](./docs/usage.md) - Usage examples, workflows, and advanced deployment
-- [docs/api/](./docs/api/) - Complete API reference for all 7 tools
+- [docs/user/configuration.md](./docs/user/configuration.md) - Setup for Claude Code/Desktop and custom clients
+- [docs/user/usage.md](./docs/user/usage.md) - Usage examples, workflows, and advanced deployment
+- [docs/api/](./docs/api/README.md) - Complete API reference for all tools
 
 ### Testing with MCP Inspector
 
@@ -109,13 +109,13 @@ npx @modelcontextprotocol/inspector --transport http --server-url http://localho
 
 The Inspector UI will open in your browser at `http://localhost:6274` with a visual interface to test all 7 tools.
 
-📖 **More details**: [docs/configuration.md#cors-configuration](./docs/configuration.md#cors-configuration)
+📖 **More details**: [docs/user/configuration.md#cors-configuration](./docs/user/configuration.md#cors-configuration)
 
 ## Development
 
 Built with **Test-Driven Development (TDD)** and **Property-Based Fuzzing**:
 - Comprehensive test suite (unit + integration) with 100% pass rate
-- Property-based fuzz tests (~15,000 test cases per run with fast-check)
+- Property-based fuzz tests with fast-check for edge case discovery
 - Continuous fuzzing in CI/CD (weekly schedule + on every push/PR)
 
 ```bash
@@ -125,7 +125,7 @@ npm run test:fuzz # Run fuzz tests
 npm run build    # Build for production
 ```
 
-📖 **Development guides**: [DEVELOPMENT.md](./DEVELOPMENT.md) | [FUZZING.md](./FUZZING.md)
+📖 **Development guides**: [docs/development/development.md](./docs/development/development.md) | [docs/development/fuzzing.md](./docs/development/fuzzing.md)
 
 ## Contributing
 
@@ -138,22 +138,29 @@ Contributions welcome! This project follows **Test-Driven Development (TDD)**.
 5. Ensure all tests pass: `npm test`
 6. Submit a pull request
 
-📖 **Guidelines**: [CONTRIBUTING.md](./CONTRIBUTING.md)
+📖 **Guidelines**: [docs/development/contributing.md](./docs/development/contributing.md)
 
 ## Documentation
 
 **User Guides:**
-- [Installation](./docs/installation.md) - Setup guide (npx, Docker, source)
-- [Configuration](./docs/configuration.md) - Claude Code/Desktop setup
-- [Usage](./docs/usage.md) - Examples, workflows, advanced deployment
-- [API Reference](./docs/api/) - Complete tool documentation
-- [Troubleshooting](./docs/troubleshooting.md) - Common issues
+- [Installation](./docs/user/installation.md) - Setup guide (npx, Docker, source)
+- [Configuration](./docs/user/configuration.md) - Claude Code/Desktop setup
+- [Usage](./docs/user/usage.md) - Examples, workflows, advanced deployment
+- [API Reference](./docs/api/README.md) - Complete tool documentation
+- [Troubleshooting](./docs/user/troubleshooting.md) - Common issues
 
 **Developer Docs:**
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
-- [DEVELOPMENT.md](./DEVELOPMENT.md) - Development setup
-- [FUZZING.md](./FUZZING.md) - Fuzzing infrastructure and security testing
-- [ROADMAP.md](./ROADMAP.md) - Project roadmap
+- [Contributing](./docs/development/contributing.md) - Contribution guidelines
+- [Development](./docs/development/development.md) - Development setup
+- [Fuzzing](./docs/development/fuzzing.md) - Fuzzing infrastructure and security testing
+- [Roadmap](./docs/development/roadmap.md) - Project roadmap
+- [Release Process](./docs/development/release-process.md) - Release workflow
+
+**Deployment Docs:**
+- [Deployment](./docs/deployment/deployment.md) - Production deployment guide
+- [Security](./docs/deployment/security.md) - Security features and verification
+
+**Project Info:**
 - [CHANGELOG.md](./CHANGELOG.md) - Version history
 
 ## License

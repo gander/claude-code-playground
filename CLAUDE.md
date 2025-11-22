@@ -407,6 +407,82 @@ Based on analysis of [schema-builder](https://github.com/ideditor/schema-builder
 
 **Compatibility**: All enhancements are additive - existing tools remain unchanged, no breaking changes.
 
+## Documentation Structure
+
+The project maintains comprehensive documentation organized by user type for clear navigation and maintenance.
+
+### Documentation Organization
+
+**User Documentation (docs/user/):**
+- `docs/user/README.md` - User documentation overview and navigation
+- `docs/user/installation.md` - Installation instructions for all methods (npx, Docker, source)
+- `docs/user/configuration.md` - Configuration for Claude Code/Desktop and custom clients
+- `docs/user/usage.md` - Usage examples, workflows, and best practices
+- `docs/user/examples.md` - Comprehensive examples for all tools
+- `docs/user/troubleshooting.md` - Common issues and solutions
+
+**API Documentation (docs/api/):**
+- `docs/api/README.md` - API overview and quick reference
+- `docs/api/{tool_name}.md` - Detailed documentation per tool (7 tools)
+- `docs/api/NOTE.md` - Documentation pattern guide
+
+**Development Documentation (docs/development/):**
+- `docs/development/README.md` - Developer overview and navigation
+- `docs/development/contributing.md` - Contribution guidelines (TDD workflow)
+- `docs/development/development.md` - Development setup, commands, debugging
+- `docs/development/release-process.md` - Release and publishing process
+- `docs/development/fuzzing.md` - Fuzzing infrastructure and security testing
+- `docs/development/roadmap.md` - Development plan and future features
+
+**Deployment Documentation (docs/deployment/):**
+- `docs/deployment/README.md` - Deployment overview and navigation
+- `docs/deployment/deployment.md` - Docker Compose deployment guide
+- `docs/deployment/security.md` - Security features, provenance, SLSA, and SBOM
+
+**Root Documentation:**
+- `README.md` - Compact overview with links to detailed docs
+- `CHANGELOG.md` - Project history (Keep a Changelog format)
+- `CLAUDE.md` - Technical implementation notes (this file)
+
+### Documentation Update Workflow
+
+When completing a phase or major feature:
+
+1. **Update docs/user/** (if user-facing changes):
+   - Installation changes → `docs/user/installation.md`
+   - Configuration changes → `docs/user/configuration.md`
+   - New usage patterns → `docs/user/usage.md` and `docs/user/examples.md`
+   - New issues/solutions → `docs/user/troubleshooting.md`
+
+2. **Update docs/api/** (if API changes):
+   - New tools/features → `docs/api/{tool_name}.md`
+   - API overview updates → `docs/api/README.md`
+
+3. **Update docs/development/** (if development process changes):
+   - Contribution process → `docs/development/contributing.md`
+   - Development setup → `docs/development/development.md`
+   - Release process → `docs/development/release-process.md`
+   - Roadmap progress → `docs/development/roadmap.md`
+
+4. **Update docs/deployment/** (if deployment changes):
+   - Deployment options → `docs/deployment/deployment.md`
+   - Security features → `docs/deployment/security.md`
+
+5. **Update root documentation**:
+   - README.md → Update "Project Status" section
+   - CHANGELOG.md → Add entry in [Unreleased] section
+   - CLAUDE.md → Update "Development Status" section
+
+### Documentation Maintenance
+
+- Keep README.md compact - link to detailed docs in appropriate categories
+- Update all documentation together to maintain consistency
+- Follow established patterns for new documentation
+- Use markdown features: tables, code blocks, links, details/summary
+- Include practical examples with real OSM data
+- Cross-link related documentation within appropriate categories
+- **CRITICAL**: When syntax or tool behavior changes, update ALL documentation where that syntax is explained
+
 ## Development Workflow
 
 This project follows an **intent-based workflow** organized around features, not individual commands.

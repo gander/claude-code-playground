@@ -8,7 +8,7 @@
 - ✅ 7 fully functional MCP tools for OSM tagging (query, presets, validation)
 - ✅ **Phase 8 Complete**: Full localization support with human-readable names for all tools
 - ✅ Template system for field expansion in presets
-- ✅ Comprehensive testing: 301 tests with 100% pass rate, full JSON data integrity validation
+- ✅ Comprehensive testing: full test suite with 100% pass rate, JSON data integrity validation
 - ✅ Multiple deployment options: npx, Docker, source installation
 - ✅ Security: npm provenance (SLSA Level 3), Docker image signing, SBOM generation
 - ✅ Transport protocols: stdio (default), HTTP/SSE for web clients
@@ -21,9 +21,9 @@
 - No new tools planned - focus on enhancing existing 7 tools
 
 **Quick Links:**
-- [Installation](./docs/installation.md) - Get started in 2 minutes with npx
-- [API Reference](./docs/api/) - Explore all 7 tools
-- [Contributing](./CONTRIBUTING.md) - Join the project
+- [Installation](../user/installation.md) - Get started in 2 minutes with npx
+- [API Reference](../api/README.md) - Explore all tools
+- [Contributing](contributing.md) - Join the project
 
 ---
 
@@ -48,7 +48,7 @@
 - Schema loader with caching and indexing
 - Type definitions for schema structures
 - Fast lookup system (byKey, byTag, byGeometry, byFieldKey)
-- 19 unit tests passing
+- Full unit test suite passing
 - Integration tests for MCP server
 
 ### Phase 3: Core Tool Implementation ✅
@@ -79,10 +79,10 @@
 **Status:** Complete
 
 **Achievements:**
-- 301 total tests (199 unit + 102 integration)
+- Comprehensive test suite (unit + integration)
 - 100% pass rate
 - JSON Data Integrity Tests against source schema data
-- Complete coverage: ALL 799 tag keys + ALL 1707 presets validated
+- Complete coverage: all tag keys and presets validated
 - Bidirectional validation for complete data integrity
 - Modular test structure (one file per tool)
 - Shared test utilities and helpers
@@ -206,7 +206,7 @@
 #### 8.2: validate_tag Refactor ✅
 
 **Current Response:**
-```typescript
+```text
 {
   valid: boolean,
   deprecated: boolean,
@@ -220,7 +220,7 @@
 ```
 
 **New Response:**
-```typescript
+```text
 {
   key: string,                    // ADD - original request
   keyName: string,                // ADD - e.g., "Amenity" for "amenity"
@@ -278,7 +278,7 @@
 #### 8.3: get_tag_values Refactor ✅
 
 **Current Response:**
-```typescript
+```text
 [
   {
     value: string,
@@ -289,7 +289,7 @@
 ```
 
 **New Response:**
-```typescript
+```text
 {
   key: string,                    // ADD - the queried key
   keyName: string,                // ADD - localized key name
@@ -339,7 +339,7 @@
   - Response: `[{ key: "amenity", value: "restaurant" }]`
 
 **Current Response:**
-```typescript
+```text
 [
   {
     key: string,
@@ -349,7 +349,7 @@
 ```
 
 **New Response:**
-```typescript
+```text
 {
   keyMatches: [{
     key: string,
@@ -400,7 +400,7 @@
 3. JSON object: `{"amenity": "restaurant"}`
 
 **Current Response:**
-```typescript
+```text
 {
   id: string,
   name: string,
@@ -413,7 +413,7 @@
 ```
 
 **New Response:**
-```typescript
+```text
 {
   id: string,
   name: string,
@@ -459,7 +459,7 @@
   - Add `tagsDetailed` with translation lookups for tag names
   - Expand all field references before returning
 - [x] Update input schema to accept multiple formats
-  ```typescript
+  ```text
   presetId: z.union([
     z.string(),  // "amenity/restaurant" or "amenity=restaurant"
     z.record(z.string())  // {"amenity": "restaurant"}
@@ -476,7 +476,7 @@
 #### 8.6: validate_tag_collection Refactor ✅
 
 **Current Response:**
-```typescript
+```text
 {
   valid: boolean,
   tagResults: object,
@@ -489,7 +489,7 @@
 ```
 
 **New Response:**
-```typescript
+```text
 {
   valid: boolean,
   tagResults: object,  // Using new validate_tag format
@@ -523,7 +523,7 @@
 #### 8.7: suggest_improvements Refactor ✅
 
 **Current Response:**
-```typescript
+```text
 {
   suggestions: string[],  // Array of strings
   warnings: string[],     // REMOVE
@@ -532,7 +532,7 @@
 ```
 
 **New Response:**
-```typescript
+```text
 {
   suggestions: [{
     operation: "add" | "remove" | "update",
@@ -613,7 +613,7 @@
 #### 8.8: search_presets Refactor ✅
 
 **Current Response:**
-```typescript
+```text
 [{
   id: string,
   name: string,
@@ -623,7 +623,7 @@
 ```
 
 **New Response:**
-```typescript
+```text
 [{
   id: string,
   name: string,
@@ -679,23 +679,17 @@
 **Status:** COMPLETE - Field template expansion fully implemented
 
 **Template Definitions:**
-All 10 templates defined and validated against schema:
-- `contact`: `["email", "phone", "website", "fax"]` (89 presets)
-- `internet_access`: `["internet_access", "internet_access/fee", "internet_access/ssid"]` (73 presets)
-- `poi`: `["name", "address"]` (84 presets)
-- `crossing/markings`: `["crossing/markings"]`
-- `crossing/defaults`: `["crossing", "crossing/markings"]`
-- `crossing/geometry_way_more`: `["crossing/island"]`
-- `crossing/bicycle_more`: `[]` (empty - no fields exist in schema)
-- `crossing/markings_yes`: `["crossing/markings_yes"]`
-- `crossing/traffic_signal`: `["crossing/light", "button_operated"]`
-- `crossing/traffic_signal_more`: `["traffic_signals/sound", "traffic_signals/vibration"]`
+All templates defined and validated against schema:
+- `contact`: Contact information fields
+- `internet_access`: Internet connectivity fields
+- `poi`: Point of interest basic fields
+- Various crossing-related templates for highway crossings
 
 **Tasks:**
 - [x] Verified template definitions against schema data (corrected field IDs)
 - [x] Fixed template expansion utility in `get-preset-details.ts`
-- [x] Added comprehensive unit tests (13 new tests covering all templates)
-- [x] Added integration tests (6 new tests via MCP protocol)
+- [x] Added comprehensive unit tests covering all templates
+- [x] Added integration tests via MCP protocol
 - [x] Documented template system in CLAUDE.md (full specification)
 
 #### 8.11: Documentation & Testing ✅
@@ -708,7 +702,7 @@ All 10 templates defined and validated against schema:
 - [x] Create API documentation files for all 7 tools
 - [x] Update docs/usage.md with new response formats and Phase 8 examples
 - [x] Update CLAUDE.md with Phase 8 completion status
-- [x] All tests passing (199 unit + 102 integration tests)
+- [x] All tests passing (comprehensive test suite)
 
 **Documentation Files Updated:**
 - [x] `docs/api/validate_tag.md` - Created with Phase 8.2 format
@@ -756,7 +750,7 @@ All 10 templates defined and validated against schema:
 
 ## Contributing
 
-Want to help? See [CONTRIBUTING.md](./CONTRIBUTING.md) for:
+Want to help? See [contributing.md](./contributing.md) for:
 - TDD workflow and coding standards
 - Testing requirements (>90% coverage)
 - Pull request process

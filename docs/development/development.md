@@ -226,19 +226,20 @@ curl -s https://hub.docker.com/v2/repositories/library/node/tags/22-alpine | jq 
 
 **Expected Output:**
 ```json
-{
-  "arch": "amd64",
-  "digest": "sha256:ef30b897b4b9..."
-}
-{
-  "arch": "arm64",
-  "digest": "sha256:16bb4fe031ce..."
-}
-{
-  "arch": "arm",
-  "digest": "sha256:be91a227520..."
-}
-...
+[
+  {
+    "arch": "amd64",
+    "digest": "sha256:ef30b897b4b9..."
+  },
+  {
+    "arch": "arm64",
+    "digest": "sha256:16bb4fe031ce..."
+  },
+  {
+    "arch": "arm",
+    "digest": "sha256:be91a227520..."
+  }
+]
 ```
 
 **Update Process:**
@@ -415,11 +416,13 @@ Create `.vscode/launch.json`:
 
 ### Console Debugging
 
-```typescript
+```javascript
 // Add debug logging in code
 console.log("Debug:", JSON.stringify(data, null, 2));
+```
 
-// Run with debug output
+```bash
+# Run with debug output
 DEBUG=* npm start
 ```
 
@@ -656,4 +659,4 @@ const loader = new SchemaLoader({
 
 - **Issues**: Report bugs on [GitHub Issues](https://github.com/gander-tools/osm-tagging-schema-mcp/issues)
 - **Discussions**: Ask questions in [GitHub Discussions](https://github.com/gander-tools/osm-tagging-schema-mcp/discussions)
-- **Documentation**: See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines
+- **Documentation**: See [contributing.md](./contributing.md) for contribution guidelines

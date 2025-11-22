@@ -295,8 +295,8 @@ npm run release:dry
 
 ## Related Documentation
 
-- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines
-- [CHANGELOG.md](../CHANGELOG.md) - Version history
-- [docs/security.md](./security.md) - Security and provenance documentation
+- [contributing.md](./contributing.md) - Contribution guidelines
+- [CHANGELOG.md](../../CHANGELOG.md) - Version history
+- [security.md](../deployment/security.md) - Security and provenance documentation
 - [release-it docs](https://github.com/release-it/release-it) - Release automation tool
 - [git-cliff docs](https://git-cliff.org/) - Changelog generator

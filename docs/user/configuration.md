@@ -160,7 +160,7 @@ The server currently uses default configuration optimized for most use cases.
 
 ### Default Settings
 
-```typescript
+```json
 {
   "server": {
     "name": "osm-tagging-schema",
@@ -168,7 +168,7 @@ The server currently uses default configuration optimized for most use cases.
   },
   "schema": {
     "enableIndexing": true,
-    "cacheTTL": 3600000  // 1 hour in milliseconds
+    "cacheTTL": 3600000
   }
 }
 ```
@@ -246,7 +246,7 @@ docker run -i --rm \
 
 ### Docker Compose
 
-For production deployments with Docker Compose, see the [Deployment Guide](./deployment.md).
+For production deployments with Docker Compose, see the [Deployment Guide](../deployment/deployment.md).
 
 **Quick example:**
 
@@ -291,7 +291,7 @@ curl http://localhost:3000/health
 curl http://localhost:3000/ready
 ```
 
-For complete deployment documentation including production configuration, health checks, monitoring, and troubleshooting, see the [Deployment Guide](./deployment.md).
+For complete deployment documentation including production configuration, health checks, monitoring, and troubleshooting, see the [Deployment Guide](../deployment/deployment.md).
 
 ## Environment Variables
 
@@ -416,7 +416,7 @@ DEBUG="mcp:*" npx @gander-tools/osm-tagging-schema-mcp
 
 ### Memory Usage
 
-Default memory usage is approximately 100-200 MB.
+Default memory usage is moderate and efficient.
 
 **Increase memory limit** (if needed):
 ```bash
@@ -474,7 +474,7 @@ After configuration, verify the server is working:
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx @gander-tools/osm-tagging-schema-mcp
 ```
 
-**Expected:** JSON response with 7 tools listed
+**Expected:** JSON response with tools listed
 
 ## Troubleshooting Configuration
 
@@ -519,13 +519,13 @@ echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx @gander-tools/o
 
 ## Next Steps
 
-- [Deployment Guide](./deployment.md) - Production deployment with Docker Compose
+- [Deployment Guide](../deployment/deployment.md) - Production deployment with Docker Compose
 - [Usage Guide](./usage.md) - Learn how to use the tools
-- [API Documentation](./api/) - Detailed tool reference
+- [API Documentation](../api/README.md) - Detailed tool reference
 - [Troubleshooting](./troubleshooting.md) - Common issues and solutions
 
 ## Getting Help
 
 - **Issues**: Report configuration problems on [GitHub Issues](https://github.com/gander-tools/osm-tagging-schema-mcp/issues)
-- **Documentation**: See [README.md](../README.md)
+- **Documentation**: See [README.md](../../README.md)
 - **Community**: Join discussions on [GitHub Discussions](https://github.com/gander-tools/osm-tagging-schema-mcp/discussions)
