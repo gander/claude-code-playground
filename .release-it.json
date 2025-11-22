@@ -5,7 +5,7 @@
 		"tagAnnotation": "Release v${version}",
 		"requireBranch": "master",
 		"requireCleanWorkingDir": true,
-		"requireUpstream": true,
+		"requireUpstream": false,
 		"addUntrackedFiles": false,
 		"push": true,
 		"tag": false
