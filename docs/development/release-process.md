@@ -4,11 +4,14 @@ This document describes the release workflow using release-it and git-cliff.
 
 ## Overview
 
-The release process is initiated locally using release-it and automated through GitHub Actions:
+The release process is initiated locally using release-it and fully automated through GitHub Actions:
 
 1. **Local environment** - Prepare release using release-it (version bump + changelog with git-cliff)
-2. **publish-npm.yml** - Automatically triggered by tag creation (npm publish)
-3. **publish-docker.yml** - Automatically triggered by tag creation (Docker publish)
+2. **auto-release-tag.yml** - Automatically creates tags when release PR is merged to master
+3. **publish-npm.yml** - Automatically triggered by tag creation (npm publish)
+4. **publish-docker.yml** - Automatically triggered by tag creation (Docker publish)
+
+**Key improvement**: Tags are now created automatically after PR merge, eliminating the manual tag creation step and ensuring releases only happen from the master branch.
 
 ## Prerequisites
 
@@ -85,8 +88,8 @@ npm run release
 4. ✅ Creates release branch: `release/vX.Y.Z`
 5. ✅ Creates git commit: `chore(release): release vX.Y.Z`
 6. ✅ Pushes release branch to GitHub
-7. ⏸️  **No tag created** (tag created after merging to master)
-8. ⏸️  **No GitHub release** (created by workflow after merge)
+7. ⏸️  **No tag created** (tag created automatically after PR merge)
+8. ⏸️  **No GitHub release** (created by workflow after automatic tagging)
 
 **Interactive prompts:**
 - Version bump selection
@@ -106,38 +109,44 @@ After release-it finishes:
 5. Get review/approval (if required)
 6. Merge PR to master
 
-### Step 5: Create and Push Tag
+### Step 5: Automatic Tag Creation (Triggered by PR Merge)
 
-After merging the PR, create the version tag:
+After merging the release PR to master, GitHub Actions automatically:
 
-```bash
-# Switch to master and pull merged changes
-git checkout master
-git pull origin master
+**auto-release-tag.yml:**
+1. ✅ Detects release branch merge (`release/vX.Y.Z` → `master`)
+2. ✅ Extracts version from branch name
+3. ✅ Validates version format (vX.Y.Z)
+4. ✅ Verifies package.json version matches release branch
+5. ✅ Creates annotated git tag: `vX.Y.Z`
+6. ✅ Pushes tag to repository
+7. ✅ Adds comment to merged PR with status
 
-# Create and push tag
-git tag -a vX.Y.Z -m "Release version X.Y.Z"
-git push origin vX.Y.Z
-```
+**Security safeguards:**
+- Only processes release branches merged to master
+- Validates version consistency between package.json and branch name
+- Checks for duplicate tags before creation
 
 ### Step 6: Automatic Publishing (Triggered by Tag)
 
 When the tag is pushed, GitHub Actions automatically:
 
 **publish-npm.yml:**
-1. ✅ Runs all tests (unit, integration, type checking, linting)
-2. ✅ Builds the package
-3. ✅ Generates SBOM (Software Bill of Materials)
-4. ✅ Creates SLSA Level 3 attestations
-5. ✅ Publishes to npm with provenance
-6. ✅ Updates draft GitHub Release with security info
+1. ✅ Validates tag was created from master branch (security)
+2. ✅ Runs all tests (unit, integration, type checking, linting)
+3. ✅ Builds the package
+4. ✅ Generates SBOM (Software Bill of Materials)
+5. ✅ Creates SLSA Level 3 attestations
+6. ✅ Publishes to npm with provenance
+7. ✅ Updates draft GitHub Release with security info
 
 **publish-docker.yml:**
-1. ✅ Builds multi-arch Docker images (amd64, arm64)
-2. ✅ Publishes to GitHub Container Registry (ghcr.io)
-3. ✅ Tags with version and `latest`
-4. ✅ Runs Trivy vulnerability scanning
-5. ✅ Signs images with Cosign
+1. ✅ Validates tag was created from master branch (security)
+2. ✅ Builds multi-arch Docker images (amd64, arm64)
+3. ✅ Publishes to GitHub Container Registry (ghcr.io)
+4. ✅ Tags with version and `latest`
+5. ✅ Runs Trivy vulnerability scanning
+6. ✅ Signs images with Cosign
 
 **Monitor progress:**
 - GitHub Actions: https://github.com/gander-tools/osm-tagging-schema-mcp/actions
@@ -229,6 +238,47 @@ git push origin --delete release/vX.Y.Z
 git branch -D release/vX.Y.Z
 ```
 
+### Automatic Tag Creation Failed
+
+If the auto-release-tag workflow fails:
+
+```bash
+# Check workflow logs
+# Go to Actions → Auto-Create Release Tag → View logs
+
+# Common issues:
+# 1. Version format invalid (not vX.Y.Z)
+# 2. package.json version doesn't match branch
+# 3. Tag already exists
+
+# To fix and retry:
+# 1. Fix the issue locally
+# 2. Create new release PR with corrected version
+# 3. Merge the new PR
+```
+
+### Tag Created from Wrong Branch
+
+If a tag was accidentally created from a feature branch:
+
+```bash
+# The workflows will detect this and block deployment
+# You'll see security warnings in Actions logs
+
+# To fix:
+# 1. Delete the wrong tag
+git push origin :refs/tags/vX.Y.Z
+git tag -d vX.Y.Z
+
+# 2. Ensure the release commit is on master
+git checkout master
+git log --oneline  # verify release commit is here
+
+# 3. Create tag from master
+git tag -a vX.Y.Z -m "Release version X.Y.Z"
+git push origin vX.Y.Z
+```
+
 ### Need to undo a release (after PR merge)
 
 If you already merged the release PR but want to undo:
@@ -268,6 +318,7 @@ npx git-cliff --tag vX.Y.Z --unreleased
   - Configuration: `cliff.toml`
   - Documentation: https://git-cliff.org/
 - **GitHub Actions**: CI/CD automation
+  - `auto-release-tag.yml`: Automatic tag creation from release PRs
   - `publish-npm.yml`: npm publishing with SLSA attestations
   - `publish-docker.yml`: Docker image publishing
 - **npm Trusted Publishers**: Secure publishing with OIDC authentication
@@ -289,9 +340,15 @@ npm run release:dry
 2. **GitHub**: Create PR from release branch
 3. **Review**: Check version, CHANGELOG, get approval
 4. **Merge**: Merge PR to master
-5. **Tag**: Manually create and push `vX.Y.Z` tag
-6. **Automation**: GitHub Actions publish to npm + Docker
-7. **Publish**: Manually publish draft GitHub Release
+5. **Auto-Tag**: GitHub Actions automatically creates `vX.Y.Z` tag
+6. **Auto-Publish**: GitHub Actions automatically publish to npm + Docker
+7. **Manual**: Publish draft GitHub Release (optional)
+
+**Key Benefits:**
+- ✅ No manual tag creation required
+- ✅ Automatic security validation (master branch only)
+- ✅ Version consistency validation
+- ✅ Eliminates human error in tagging process
 
 ## Related Documentation
 
