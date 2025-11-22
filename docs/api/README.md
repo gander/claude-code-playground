@@ -1,6 +1,21 @@
 # API Documentation
 
-Complete reference for all 7 MCP tools provided by the OSM Tagging Schema MCP Server.
+Complete reference for all MCP tools provided by the OSM Tagging Schema MCP Server.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Quick Reference](#quick-reference)
+  - [Tag Query Tools](#tag-query-tools)
+  - [Preset Discovery Tools](#preset-discovery-tools)
+  - [Validation Tools](#validation-tools)
+- [Common Patterns](#common-patterns)
+  - [Input Format](#input-format)
+  - [Output Format](#output-format)
+  - [Error Handling](#error-handling)
+- [Localization](#localization)
+- [Examples](#examples)
+- [See Also](#see-also)
 
 ## Overview
 
@@ -234,10 +249,10 @@ Click on any tool name above for detailed documentation including:
 
 ## See Also
 
-- [Usage Guide](../usage.md) - Practical usage examples
-- [Installation Guide](../installation.md) - Setup instructions
-- [Configuration Guide](../configuration.md) - Configuration options
-- [Troubleshooting](../troubleshooting.md) - Common issues
+- [Usage Guide](../user/usage.md) - Practical usage examples
+- [Installation Guide](../user/installation.md) - Setup instructions
+- [Configuration Guide](../user/configuration.md) - Configuration options
+- [Troubleshooting](../user/troubleshooting.md) - Common issues
 
 ## Getting Help
 

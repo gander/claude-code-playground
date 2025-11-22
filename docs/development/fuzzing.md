@@ -33,7 +33,7 @@ We maintain fuzz tests for three critical components that handle untrusted input
 
 **Why it matters:** The parser is the entry point for user data and must handle any input without crashing.
 
-**Test iterations:** ~7,000 test cases per run (1,000 per test × 7 test scenarios)
+**Test iterations:** Extensive property-based test coverage
 
 #### 2. Tag Validation (`tests/fuzz/validate-tag.fuzz.test.ts`)
 
@@ -50,7 +50,7 @@ We maintain fuzz tests for three critical components that handle untrusted input
 
 **Why it matters:** Validation logic must never crash, even with malicious or malformed input.
 
-**Test iterations:** ~4,500 test cases per run (500-100 per test × 7 test scenarios)
+**Test iterations:** Comprehensive validation test coverage
 
 #### 3. Schema Loader (`tests/fuzz/schema-loader.fuzz.test.ts`)
 
@@ -68,12 +68,12 @@ We maintain fuzz tests for three critical components that handle untrusted input
 
 **Why it matters:** Translation lookups must handle any input without throwing exceptions.
 
-**Test iterations:** ~3,500 test cases per run (500-100 per test × 8 test scenarios)
+**Test iterations:** Thorough schema lookup test coverage
 
 ### Total Coverage
 
-**Total test cases per full run:** ~15,000 property-based test cases
-**Extended run (CI):** ~75,000 test cases (5x multiplier with FUZZ_RUNS=5000)
+**Total test cases per full run:** Extensive property-based test cases
+**Extended run (CI):** Enhanced test coverage with multiplier
 
 ## Running Fuzz Tests
 
@@ -95,13 +95,11 @@ node --import tsx --test tests/fuzz/tag-parser.fuzz.test.ts
 Fuzzing runs automatically in GitHub Actions:
 
 **On Pull Requests:**
-- Fast fuzzing run (5 minutes)
-- ~15,000 test cases
+- Fast fuzzing run
 - Validates changes don't introduce crashes
 
 **On Push to Master:**
-- Extended fuzzing run (30 minutes)
-- ~75,000 test cases
+- Extended fuzzing run
 - More thorough exploration of input space
 
 **Weekly Schedule:**
@@ -123,7 +121,7 @@ Instead of writing specific test cases with fixed inputs, property-based testing
 
 ### Example
 
-```typescript
+```text
 // Traditional test
 test("parser handles empty string", () => {
   expect(parse("")).toEqual({});
@@ -243,7 +241,7 @@ Don't fuzz:
    - ❌ "Function returns exactly {...}"
 
 2. **Allow expected errors:**
-   ```typescript
+   ```text
    try {
      const result = validate(input);
      return result.valid !== undefined;
@@ -254,7 +252,7 @@ Don't fuzz:
    ```
 
 3. **Use appropriate generators:**
-   ```typescript
+   ```text
    fc.string()           // Any string
    fc.unicodeString()    // Unicode characters
    fc.oneof(...)         // One of several options
@@ -263,7 +261,7 @@ Don't fuzz:
    ```
 
 4. **Test invariants:**
-   ```typescript
+   ```text
    // Parse → stringify → parse should be idempotent
    const parsed1 = parse(input);
    const serialized = JSON.stringify(parsed1);

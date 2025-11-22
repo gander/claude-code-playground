@@ -219,7 +219,7 @@ Server connected, but no tools available
 # 1. Test server directly
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx @gander-tools/osm-tagging-schema-mcp
 
-# Should return JSON with 7 tools
+# Should return JSON with tools
 
 # 2. Check server version
 npx @gander-tools/osm-tagging-schema-mcp --version
@@ -630,8 +630,8 @@ When reporting issues, include:
 
 - **Bug Reports**: [GitHub Issues](https://github.com/gander-tools/osm-tagging-schema-mcp/issues)
 - **Questions**: [GitHub Discussions](https://github.com/gander-tools/osm-tagging-schema-mcp/discussions)
-- **Documentation**: [README.md](../README.md)
-- **API Reference**: [API Documentation](./api/)
+- **Documentation**: [README.md](../../README.md)
+- **API Reference**: [API Documentation](../api/README.md)
 
 ### Before Reporting
 
@@ -683,4 +683,4 @@ node --inspect node_modules/.bin/tsx src/index.ts
 - [Installation Guide](./installation.md)
 - [Configuration Guide](./configuration.md)
 - [Usage Guide](./usage.md)
-- [API Documentation](./api/)
+- [API Documentation](../api/README.md)

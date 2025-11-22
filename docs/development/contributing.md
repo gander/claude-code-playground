@@ -312,7 +312,7 @@ tests/integration/
 
 ### TypeScript Style
 
-```typescript
+```text
 // Use explicit types
 export interface MyToolResult {
   data: string[];
@@ -357,9 +357,11 @@ This project uses a **hybrid versioning strategy** to balance security, stabilit
 
 **Production Dependencies** (tilde `~` range):
 ```json
-"dependencies": {
-  "@modelcontextprotocol/sdk": "~1.21.1",        // Patch updates only
-  "@openstreetmap/id-tagging-schema": "~6.7.3"   // Patch updates only
+{
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "~1.21.1",
+    "@openstreetmap/id-tagging-schema": "~6.7.3"
+  }
 }
 ```
 - **Tilde (~)**: Allows patch updates only (e.g., `~1.21.1` → `1.21.x`)
@@ -368,11 +370,13 @@ This project uses a **hybrid versioning strategy** to balance security, stabilit
 
 **Development Dependencies** (caret `^` range):
 ```json
-"devDependencies": {
-  "@biomejs/biome": "^2.3.4",      // Minor + patch updates
-  "@types/node": "^24.10.0",       // Minor + patch updates
-  "tsx": "^4.19.2",                // Minor + patch updates
-  "typescript": "^5.7.2"           // Minor + patch updates
+{
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.4",
+    "@types/node": "^24.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
 }
 ```
 - **Caret (^)**: Allows minor and patch updates (e.g., `^2.3.4` → `2.x.x`)
@@ -618,7 +622,7 @@ For significant features, update `CLAUDE.md`:
 
 This section is for maintainers preparing a new release.
 
-> **📖 For detailed release instructions, see [docs/release-process.md](./docs/release-process.md)**
+> **📖 For detailed release instructions, see [release-process.md](./release-process.md)**
 
 ### Quick Release Workflow
 
@@ -653,7 +657,7 @@ npm run release:dry
 - `.release-it.json` - release-it configuration
 - `cliff.toml` - git-cliff changelog configuration
 
-**For complete instructions**, including troubleshooting and step-by-step guide, see [docs/release-process.md](./docs/release-process.md)
+**For complete instructions**, including troubleshooting and step-by-step guide, see [release-process.md](./release-process.md)
 
 ### Pre-Publication Checklist
 
@@ -821,7 +825,7 @@ cat sbom.json | jq .
 - Ensure package version doesn't already exist
 - Verify package.json version matches git tag
 
-**For more details**, see [docs/security.md](./docs/security.md)
+**For more details**, see [../deployment/security.md](../deployment/security.md)
 
 ### Docker Image Publishing
 

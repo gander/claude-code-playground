@@ -1,6 +1,6 @@
 # OSM Tagging Schema MCP - Tool Examples
 
-This document provides comprehensive examples for all 7 tools in the OSM Tagging Schema MCP server. Each example shows real requests and responses, covering both valid and invalid inputs.
+This document provides comprehensive examples for all tools in the OSM Tagging Schema MCP server. Each example shows real requests and responses, covering both valid and invalid inputs.
 
 ## Table of Contents
 
@@ -1426,6 +1426,6 @@ npm test                 # All tests
 
 ## Additional Resources
 
-- [API Documentation](docs/api/README.md) - Detailed API reference
-- [Usage Guide](docs/usage.md) - Common workflows and best practices
+- [API Documentation](../api/README.md) - Detailed API reference
+- [Usage Guide](./usage.md) - Common workflows and best practices
 - [OSM Wiki](https://wiki.openstreetmap.org/wiki/Tags) - Official OSM tagging documentation
