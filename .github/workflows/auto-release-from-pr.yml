@@ -260,10 +260,18 @@ jobs:
       - name: Add success comment to merged PR
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         continue-on-error: true
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          VERSION_NUMBER: ${{ steps.version.outputs.version_number }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
         with:
           script: |
-            const version = '${{ steps.version.outputs.version }}';
-            const versionNumber = '${{ steps.version.outputs.version_number }}';
+            const version = process.env.VERSION;
+            const versionNumber = process.env.VERSION_NUMBER;
+            const prNumber = process.env.PR_NUMBER;
+            const repository = process.env.REPOSITORY;
+
             const comment = `🚀 **Release ${version} published successfully!**
 
             ### ✅ Completed Successfully:
@@ -280,20 +288,20 @@ jobs:
 
             ### 🔗 Links:
             - [NPM Package](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp/v/${versionNumber})
-            - [GitHub Release](https://github.com/${{ github.repository }}/releases/tag/${version})
-            - [Docker Workflow](https://github.com/${{ github.repository }}/actions/workflows/publish-docker.yml)
+            - [GitHub Release](https://github.com/${repository}/releases/tag/${version})
+            - [Docker Workflow](https://github.com/${repository}/actions/workflows/publish-docker.yml)
 
             **All done automatically!** 🎉`;
 
             try {
               await github.rest.issues.createComment({
-                issue_number: ${{ github.event.pull_request.number }},
+                issue_number: parseInt(prNumber),
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body: comment
               });
-              console.log('✅ Successfully added success comment to PR #${{ github.event.pull_request.number }}');
+              console.log(`✅ Successfully added success comment to PR #${prNumber}`);
             } catch (error) {
-              console.log('⚠️ Failed to add comment to PR #${{ github.event.pull_request.number }}:', error.message);
+              console.log(`⚠️ Failed to add comment to PR #${prNumber}:`, error.message);
               console.log('This is not critical - the release was created successfully');
             }
