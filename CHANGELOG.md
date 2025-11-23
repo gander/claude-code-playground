@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2025-11-23
+
+### Added
+
+- Introduce automated tag creation and branch validation for secure CI/CD ([#220](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/220))
+- Share build artifact between NPM and Docker workflows ([#183](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/183))
+
+### Fixed
+
+- Add Cloudflare Access secrets to Docker publish workflow
+
+### Miscellaneous
+
+- Update auto-pr workflow to latest checkout action and refine PR creation process
+
 ## [1.0.3] - 2025-11-22
 
 ### Documentation
@@ -15,11 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Ensure single commit in prepare-release workflow ([#212](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/212))
+- Optimize release-it configuration per official docs
 
 ### Miscellaneous
 
 - Add `.nvmrc` with Node.js version 22 and update `package-lock.json` dependencies
-- Update release-it config to use dynamic release branch pattern and remove redundant hooks
 - Update release-it config to use dynamic release branch pattern and remove redundant hooks
 
 ## [1.0.2] - 2025-11-21
