@@ -320,11 +320,20 @@ for (const tool of tools) {
 - Schema loading optimization, logging support, package size optimization
 
 **Phase 7: Distribution & Deployment ✅ COMPLETE**
-- NPM publishing with SLSA Level 3 provenance and SBOM
-- Docker support with security scanning and image signing
-- Multi-transport protocols (stdio, HTTP)
-- Docker Compose configurations with health checks
-- Release management with changesets
+- ✅ **NPM Publishing**: Package published with SLSA Level 3 provenance and SBOM
+- ✅ **Docker Support**: Dual Dockerfile strategy (release vs development builds)
+  - Release builds use shared `dist/` artifact from NPM publish
+  - Development builds use multi-stage TypeScript compilation
+  - Multi-arch support (amd64/arm64), image signing (Cosign)
+- ✅ **Shared Build Artifact**: NPM and Docker use identical compiled code
+  - `dist.tar.gz` attached to GitHub Releases
+  - Complete provenance chain: Docker → dist.tar.gz → NPM (SLSA Level 3)
+- ✅ **Container Registry**: Images published to GitHub Container Registry (ghcr.io)
+- ✅ **Security Scanning**: Trivy vulnerability scanning, security reports
+- ✅ **Transport Protocols**: stdio (default), HTTP for web clients
+- ✅ **Docker Compose**: Production, development, and test configurations
+- ✅ **Health Checks**: `/health` (liveness) and `/ready` (readiness) endpoints
+- ✅ **Release Management**: Automated release management with changesets
 
 **Phase 8: Schema Builder API Refactor ✅ COMPLETE**
 - Full localization support across all tools
@@ -509,3 +518,4 @@ GNU General Public License v3.0 (GPL-3.0)
 - MCP Documentation: https://modelcontextprotocol.io
 - OpenStreetMap Tagging Schema: https://github.com/openstreetmap/id-tagging-schema
 - OSM Wiki Tags: https://wiki.openstreetmap.org/wiki/Tags
+

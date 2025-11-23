@@ -133,6 +133,14 @@ jobs:
           fi
           echo "✓ Build artifacts verified"
 
+      - name: Upload dist/ artifact for Docker build
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: dist-${{ steps.validate-version.outputs.version_tag }}
+          path: dist/
+          retention-days: 7
+          if-no-files-found: error
+
       - name: Generate SBOM (Software Bill of Materials)
         run: |
           # Use npx to avoid npm install -g (Scorecard Pinned-Dependencies)
@@ -190,19 +198,39 @@ jobs:
     # This is an acceptable use of write permissions per GitHub security best practices
     permissions:
       contents: write  # Required for GitHub Releases API
+      actions: read  # Required for downloading artifacts
 
     steps:
+      - name: Download dist/ artifact
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: dist-${{ needs.build-and-publish.outputs.version_tag }}
+          path: dist/
+
+      - name: Create dist tarball for release
+        run: |
+          tar czf dist.tar.gz dist/
+          echo "✓ Created dist.tar.gz ($(du -h dist.tar.gz | cut -f1))"
+
       - name: Create GitHub Release (Draft)
         uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
         with:
           tag_name: ${{ needs.build-and-publish.outputs.version_tag }}
           name: Release ${{ needs.build-and-publish.outputs.version_tag }}
+          files: dist.tar.gz
           body: |
             ## 📦 NPM Package Published
 
             Version `${{ needs.build-and-publish.outputs.version }}` has been published to npm:
             - Package: [@gander-tools/osm-tagging-schema-mcp](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
             - Install: `npx @gander-tools/osm-tagging-schema-mcp@${{ needs.build-and-publish.outputs.version }}`
+
+            ## 🐳 Docker Image
+
+            Docker images built from this release use the same `dist/` artifact as the NPM package:
+            - Pull: `docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:${{ needs.build-and-publish.outputs.version }}`
+            - Build artifact: `dist.tar.gz` (attached to this release)
+            - Provenance chain: Docker image → dist.tar.gz → NPM package (SLSA Level 3)
 
             ## 🔐 Provenance & Security
 

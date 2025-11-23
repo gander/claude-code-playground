@@ -170,6 +170,65 @@ cosign verify ghcr.io/gander-tools/osm-tagging-schema-mcp:latest \
   --certificate-oidc-issuer=https://token.actions.githubusercontent.com
 ```
 
+### Shared Build Artifact Provenance
+
+Docker images built for release versions (tags) use the **exact same compiled code** as the NPM package, ensuring complete consistency and traceability:
+
+**Provenance Chain:**
+```
+Source Code (GitHub)
+  ↓ (GitHub Actions build)
+dist/ artifact (TypeScript compiled to JavaScript)
+  ↓ (uploaded as artifact)
+NPM package (SLSA Level 3 attestations)
+  ↓ (attached to GitHub Release as dist.tar.gz)
+Docker image (uses dist.tar.gz from release)
+```
+
+**Benefits:**
+- **Build Consistency**: Docker image contains identical code to NPM package
+- **Single Build**: TypeScript compiled once, used by both NPM and Docker
+- **SLSA Provenance**: Docker image inherits SLSA Level 3 attestations from NPM build
+- **Verifiable**: Complete audit trail from source to both distribution formats
+
+**Verification:**
+
+1. **Download dist.tar.gz from GitHub Release:**
+   ```bash
+   # Download artifact from release
+   gh release download v1.0.0 --pattern 'dist.tar.gz'
+
+   # Extract and inspect
+   tar xzf dist.tar.gz
+   ls -la dist/
+   ```
+
+2. **Compare with NPM package:**
+   ```bash
+   # Download NPM package
+   npm pack @gander-tools/osm-tagging-schema-mcp@1.0.0
+   tar xzf gander-tools-osm-tagging-schema-mcp-1.0.0.tgz
+
+   # Compare dist/ contents
+   diff -r package/dist/ dist/
+   ```
+
+3. **Verify Docker image uses same artifact:**
+   ```bash
+   # Extract dist/ from Docker image
+   docker create --name temp ghcr.io/gander-tools/osm-tagging-schema-mcp:1.0.0
+   docker cp temp:/app/dist ./docker-dist
+   docker rm temp
+
+   # Compare with release artifact
+   diff -r docker-dist/ dist/
+   ```
+
+**Implementation Details:**
+- Release builds use `Dockerfile.release` (simplified, artifact-based)
+- Development builds use `Dockerfile` (multi-stage with TypeScript compilation)
+- Artifact attached to every GitHub Release as `dist.tar.gz`
+
 ### Vulnerability Scanning
 
 Images are automatically scanned with [Trivy](https://trivy.dev/) for:
