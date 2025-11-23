@@ -655,13 +655,13 @@ Choose the appropriate Docker image tag based on your use case:
 
 ## Next Steps
 
-- [Configuration Guide](./configuration.md) - Detailed configuration options
-- [API Documentation](./api/) - Tool reference
+- [Configuration Guide](../user/configuration.md) - Detailed configuration options
+- [API Documentation](../api/README.md) - Tool reference
 - [Security Guide](./security.md) - Security best practices
-- [Troubleshooting](./troubleshooting.md) - Common issues
+- [Troubleshooting](../user/troubleshooting.md) - Common issues
 
 ## Getting Help
 
 - **Issues**: [GitHub Issues](https://github.com/gander-tools/osm-tagging-schema-mcp/issues)
-- **Documentation**: [README.md](../README.md)
+- **Documentation**: [README.md](../../README.md)
 - **Discussions**: [GitHub Discussions](https://github.com/gander-tools/osm-tagging-schema-mcp/discussions)

@@ -385,10 +385,10 @@ sudo systemctl start docker  # Linux
 After installation, see:
 - [Configuration Guide](./configuration.md) - Configure the MCP server
 - [Usage Guide](./usage.md) - Learn how to use the server
-- [API Documentation](./api/) - Explore available tools
+- [API Documentation](../api/README.md) - Explore available tools
 
 ## Getting Help
 
 - **Issues**: Report installation problems on [GitHub Issues](https://github.com/gander-tools/osm-tagging-schema-mcp/issues)
-- **Documentation**: See [README.md](../README.md) for overview
-- **Contributing**: See [CONTRIBUTING.md](../CONTRIBUTING.md) for development setup
+- **Documentation**: See [README.md](../../README.md) for overview
+- **Contributing**: See [contributing.md](../development/contributing.md) for development setup

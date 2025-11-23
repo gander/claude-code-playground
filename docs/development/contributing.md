@@ -312,7 +312,7 @@ tests/integration/
 
 ### TypeScript Style
 
-```typescript
+```text
 // Use explicit types
 export interface MyToolResult {
   data: string[];
@@ -357,9 +357,11 @@ This project uses a **hybrid versioning strategy** to balance security, stabilit
 
 **Production Dependencies** (tilde `~` range):
 ```json
-"dependencies": {
-  "@modelcontextprotocol/sdk": "~1.21.1",        // Patch updates only
-  "@openstreetmap/id-tagging-schema": "~6.7.3"   // Patch updates only
+{
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "~1.21.1",
+    "@openstreetmap/id-tagging-schema": "~6.7.3"
+  }
 }
 ```
 - **Tilde (~)**: Allows patch updates only (e.g., `~1.21.1` → `1.21.x`)
@@ -368,11 +370,13 @@ This project uses a **hybrid versioning strategy** to balance security, stabilit
 
 **Development Dependencies** (caret `^` range):
 ```json
-"devDependencies": {
-  "@biomejs/biome": "^2.3.4",      // Minor + patch updates
-  "@types/node": "^24.10.0",       // Minor + patch updates
-  "tsx": "^4.19.2",                // Minor + patch updates
-  "typescript": "^5.7.2"           // Minor + patch updates
+{
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.4",
+    "@types/node": "^24.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
 }
 ```
 - **Caret (^)**: Allows minor and patch updates (e.g., `^2.3.4` → `2.x.x`)
@@ -618,101 +622,42 @@ For significant features, update `CLAUDE.md`:
 
 This section is for maintainers preparing a new release.
 
-### Manual Release Workflow (Recommended)
+> **📖 For detailed release instructions, see [release-process.md](./release-process.md)**
 
-The easiest way to create a release is using the **Manual Release** GitHub Actions workflow:
+### Quick Release Workflow
 
-**Steps:**
+Releases are created using release-it with git-cliff for changelog generation.
 
-1. **Go to GitHub Actions**
-   - Navigate to: `Actions` → `Manual Release`
-   - Click "Run workflow"
-
-2. **Configure Release**
-   - **Branch**: Select `main` (or your default branch)
-   - **Version bump type**: Choose `patch`, `minor`, or `major`
-   - **Push tag**:
-     - ✅ `true` - Tag will be pushed immediately, triggering npm publish
-     - ❌ `false` - Creates PR for review, push tag manually later
-
-3. **What Happens**
-   - ✅ Runs all tests (unit, integration, linting, type checking)
-   - ✅ Updates `package.json` version
-   - ✅ Generates/updates `CHANGELOG.md` with release notes
-   - ✅ Creates git commit with changes
-   - ✅ Creates git tag (`v1.2.3`)
-   - ✅ Pushes release branch (`release/v1.2.3`)
-   - If **push_tag = true**: Pushes tag → triggers npm publish workflow
-   - If **push_tag = false**: Creates PR for review
-
-4. **After Workflow Completes**
-
-   **Option A: Automatic publish** (push_tag = true)
-   - Tag is pushed automatically
-   - `publish.yml` workflow is triggered
-   - Package is published to npm with provenance
-   - GitHub release is created
-
-   **Option B: Manual review** (push_tag = false)
-   - Review the PR created by the workflow
-   - Merge the PR
-   - Push the tag manually:
-     ```bash
-     git fetch origin
-     git push origin v1.2.3
-     ```
-
-**Benefits:**
-- 🚀 Fully automated (tests, version bump, changelog, tag, push)
-- 🔍 Optional review step before publishing
-- 🛡️ All checks pass before creating release
-- 📝 Consistent changelog generation
-
-### Quick Release with Cliff Jumper
-
-This project uses [@favware/cliff-jumper](https://github.com/favware/cliff-jumper) and [git-cliff](https://git-cliff.org/) for automated releases.
-
-**Cliff-jumper** automatically:
-1. Analyzes commits since last release (using Conventional Commits)
-2. Determines version bump (major/minor/patch)
-3. Updates `package.json` version
-4. Generates/updates `CHANGELOG.md` using git-cliff
-5. Creates git commit and tag
-6. Optionally pushes to remote
-
-**Quick release workflow:**
+**Release from local environment:**
 
 ```bash
-# 1. Dry-run to preview changes (no modifications)
-npm run release:dry
-
-# 2. Create release locally (commit + tag)
+# Interactive mode (prompts for version)
 npm run release
 
-# 3. Push release to trigger automated publishing
-npm run release:push
-# OR manually push:
-git push && git push --tags
+# Dry run (preview without changes)
+npm run release:dry
 ```
 
-**What happens next:**
-- Git tag triggers GitHub Actions workflow (`.github/workflows/publish.yml`)
-- Automated pipeline: tests → build → SBOM → attestations → npm publish
-- GitHub release created automatically with security information
+**What release-it does:**
+1. ✅ Prompts for version bump (patch/minor/major/custom)
+2. ✅ Bumps version in package.json and package-lock.json
+3. ✅ Generates CHANGELOG using git-cliff
+4. ✅ Creates release branch: `release/vX.Y.Z`
+5. ✅ Commits changes and pushes branch to GitHub
 
-**How versioning works:**
+**After release-it:**
+1. 📝 Create Pull Request from release branch
+2. 👀 Review PR (version, CHANGELOG, tests passing)
+3. ✅ Merge PR to master
+4. 🏷️ Manually create and push tag: `git tag vX.Y.Z && git push --tags`
+5. 🤖 GitHub Actions automatically publish to npm + Docker
+6. 📦 Manually publish draft GitHub Release
 
-Cliff-jumper determines version bump based on your commit messages:
-
-- **Patch** (0.1.0 → 0.1.1): `fix:`, `chore:`, `docs:`, `style:`, `refactor:`
-- **Minor** (0.1.0 → 0.2.0): `feat:`, `add:`
-- **Major** (0.1.0 → 1.0.0): Any commit with `BREAKING CHANGE:` in body/footer
-
-**Configuration files:**
-- `.cliff-jumperrc.json` - Cliff-jumper settings
+**Configuration:**
+- `.release-it.json` - release-it configuration
 - `cliff.toml` - git-cliff changelog configuration
 
-**Tip**: Always run `npm run release:dry` first to verify the version bump is correct!
+**For complete instructions**, including troubleshooting and step-by-step guide, see [release-process.md](./release-process.md)
 
 ### Pre-Publication Checklist
 
@@ -880,11 +825,11 @@ cat sbom.json | jq .
 - Ensure package version doesn't already exist
 - Verify package.json version matches git tag
 
-**For more details**, see [docs/security.md](./docs/security.md)
+**For more details**, see [../deployment/security.md](../deployment/security.md)
 
 ### Docker Image Publishing
 
-Docker images are automatically built and published to GitHub Container Registry (GHCR) by the `.github/workflows/docker.yml` workflow.
+Docker images are automatically built and published to GitHub Container Registry (GHCR) by the `.github/workflows/publish-docker.yml` workflow.
 
 #### Automated Build Triggers
 
