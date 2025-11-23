@@ -1,63 +1,71 @@
-name: Publish to NPM
+name: Publish to NPM (Manual Dispatch)
 
 on:
-  # Automatically trigger on version tags
-  push:
-    tags:
-      - 'v*.*.*'
+  # Manual trigger only - automatic releases handled by auto-release-from-pr.yml
+  workflow_dispatch:
 
 # Minimal permissions at workflow level (principle of least privilege)
 permissions:
   contents: read
 
 jobs:
-  validate-branch:
-    name: Validate Tag is on Master Branch
+  validate-environment:
+    name: Validate Manual Deployment Environment
     runs-on: ubuntu-latest
     outputs:
-      is-master: ${{ steps.check.outputs.is-master }}
+      version: ${{ steps.version.outputs.version }}
+      version_tag: ${{ steps.version.outputs.version_tag }}
       should-deploy: ${{ steps.check.outputs.should-deploy }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
-          fetch-depth: 0  # Fetch full history to check branch ancestry
+          fetch-depth: 0
 
-      - name: Check if tag was created from master branch
+      - name: Setup Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: '22'
+
+      - name: Extract version from package.json
+        id: version
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          VERSION_TAG="v${PACKAGE_VERSION}"
+
+          echo "version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
+          echo "version_tag=${VERSION_TAG}" >> $GITHUB_OUTPUT
+          echo "✅ Extracted version from package.json: ${PACKAGE_VERSION} (tag: ${VERSION_TAG})"
+
+      - name: Validate current branch is master
         id: check
         run: |
-          # Get the commit SHA that the tag points to
-          TAG_COMMIT=$(git rev-list -n 1 ${{ github.ref_name }})
-          echo "Tag ${{ github.ref_name }} points to commit: $TAG_COMMIT"
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-          # Check if this commit is reachable from master
-          if git merge-base --is-ancestor $TAG_COMMIT origin/master; then
-            echo "✅ Tag ${{ github.ref_name }} was created from master branch"
-            echo "is-master=true" >> $GITHUB_OUTPUT
-            echo "should-deploy=true" >> $GITHUB_OUTPUT
-          else
-            echo "❌ Tag ${{ github.ref_name }} was NOT created from master branch"
+          if [ "$CURRENT_BRANCH" != "master" ]; then
+            echo "❌ Manual deployment must be run from master branch"
+            echo "Current branch: $CURRENT_BRANCH"
             echo ""
             echo "🚫 Deployment blocked for security reasons:"
-            echo "   Tags must be created from the master branch to trigger releases"
-            echo "   This prevents accidental releases from feature branches"
+            echo "   Manual deployments must be triggered from master branch"
             echo ""
             echo "🔧 To fix this:"
-            echo "   1. Ensure the tag is created from master branch"
-            echo "   2. Delete this tag: git tag -d ${{ github.ref_name }} && git push origin :refs/tags/${{ github.ref_name }}"
-            echo "   3. Checkout master: git checkout master"
-            echo "   4. Create tag from master: git tag ${{ github.ref_name }} && git push origin ${{ github.ref_name }}"
+            echo "   1. Ensure you're on master branch before triggering"
+            echo "   2. The deployment should be from latest master commit"
             echo ""
-            echo "is-master=false" >> $GITHUB_OUTPUT
             echo "should-deploy=false" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "✅ Manual deployment triggered from master branch"
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
           fi
 
   build-and-publish:
     name: Build, Validate and Publish to NPM
     runs-on: ubuntu-latest
-    needs: validate-branch
-    if: needs.validate-branch.outputs.should-deploy == 'true'
+    needs: validate-environment
+    if: needs.validate-environment.outputs.should-deploy == 'true'
 
     # Minimal permissions for npm publishing and attestations
     permissions:
@@ -66,8 +74,8 @@ jobs:
       contents: read  # Only read access needed for checkout
 
     outputs:
-      version: ${{ steps.validate-version.outputs.version }}
-      version_tag: ${{ steps.validate-version.outputs.version_tag }}
+      version: ${{ needs.validate-environment.outputs.version }}
+      version_tag: ${{ needs.validate-environment.outputs.version_tag }}
 
     steps:
       - name: Checkout repository
@@ -84,28 +92,20 @@ jobs:
       - name: Install latest npm
         run: npm install -g npm@11.5.1
 
-      - name: Validate version tag format
-        id: validate-version
+      - name: Validate version from package.json
         run: |
-          TAG="${{ github.ref_name }}"
+          PACKAGE_VERSION="${{ needs.validate-environment.outputs.version }}"
+          VERSION_TAG="${{ needs.validate-environment.outputs.version_tag }}"
 
-          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Error: Invalid version tag format '$TAG'. Expected format: v1.2.3"
+          echo "✓ Using version from package.json: $PACKAGE_VERSION"
+          echo "✓ Version tag format: $VERSION_TAG"
+
+          if ! [[ "$VERSION_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Invalid version format in package.json. Expected semantic version (1.2.3)"
             exit 1
           fi
 
-          echo "Validated version tag: $TAG"
-          echo "version_tag=$TAG" >> $GITHUB_OUTPUT
-          echo "version=${TAG#v}" >> $GITHUB_OUTPUT
-
-      - name: Verify package.json version matches tag
-        run: |
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          if [ "$PACKAGE_VERSION" != "${{ steps.validate-version.outputs.version }}" ]; then
-            echo "Error: package.json version ($PACKAGE_VERSION) does not match tag version (${{ steps.validate-version.outputs.version }})"
-            exit 1
-          fi
-          echo "✓ Version match confirmed: $PACKAGE_VERSION"
+          echo "✓ Version validation passed: $PACKAGE_VERSION"
 
       - name: Install dependencies
         run: npm ci
@@ -134,9 +134,10 @@ jobs:
           echo "✓ Build artifacts verified"
 
       - name: Upload dist/ artifact for Docker build
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        # NOTE: SHA pinning required for security. IDE warnings are false positives.
         with:
-          name: dist-${{ steps.validate-version.outputs.version_tag }}
+          name: dist-${{ needs.validate-environment.outputs.version_tag }}
           path: dist/
           retention-days: 7
           if-no-files-found: error
@@ -186,8 +187,8 @@ jobs:
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [validate-branch, build-and-publish]
-    if: needs.validate-branch.outputs.should-deploy == 'true'
+    needs: [validate-environment, build-and-publish]
+    if: needs.validate-environment.outputs.should-deploy == 'true'
 
     # Scorecard note: contents: write is REQUIRED for GitHub releases
     # This is isolated to a separate job with minimal scope:
@@ -202,9 +203,10 @@ jobs:
 
     steps:
       - name: Download dist/ artifact
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        # NOTE: SHA pinning required for security. IDE warnings are false positives.
         with:
-          name: dist-${{ needs.build-and-publish.outputs.version_tag }}
+          name: dist-${{ needs.validate-environment.outputs.version_tag }}
           path: dist/
 
       - name: Create dist tarball for release
@@ -215,20 +217,20 @@ jobs:
       - name: Create GitHub Release (Draft)
         uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
         with:
-          tag_name: ${{ needs.build-and-publish.outputs.version_tag }}
-          name: Release ${{ needs.build-and-publish.outputs.version_tag }}
+          tag_name: ${{ needs.validate-environment.outputs.version_tag }}
+          name: Release ${{ needs.validate-environment.outputs.version_tag }}
           files: dist.tar.gz
           body: |
-            ## 📦 NPM Package Published
+            ## 📦 NPM Package Published (Manual Release)
 
-            Version `${{ needs.build-and-publish.outputs.version }}` has been published to npm:
+            Version `${{ needs.validate-environment.outputs.version }}` has been published to npm:
             - Package: [@gander-tools/osm-tagging-schema-mcp](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
-            - Install: `npx @gander-tools/osm-tagging-schema-mcp@${{ needs.build-and-publish.outputs.version }}`
+            - Install: `npx @gander-tools/osm-tagging-schema-mcp@${{ needs.validate-environment.outputs.version }}`
 
             ## 🐳 Docker Image
 
             Docker images built from this release use the same `dist/` artifact as the NPM package:
-            - Pull: `docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:${{ needs.build-and-publish.outputs.version }}`
+            - Pull: `docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:${{ needs.validate-environment.outputs.version }}`
             - Build artifact: `dist.tar.gz` (attached to this release)
             - Provenance chain: Docker image → dist.tar.gz → NPM package (SLSA Level 3)
 
@@ -260,10 +262,19 @@ jobs:
 
             **Verify SLSA attestations:**
             ```bash
-            gh attestation verify oci://ghcr.io/gander-tools/osm-tagging-schema-mcp:${{ needs.build-and-publish.outputs.version }} --owner gander-tools
+            gh attestation verify oci://ghcr.io/gander-tools/osm-tagging-schema-mcp:${{ needs.validate-environment.outputs.version }} --owner gander-tools
             ```
 
-            ## 📋 See CHANGELOG.md for details
+            ## 📋 Release Process
+
+            This release was created manually using the "Publish to NPM (Manual Dispatch)" workflow.
+
+            **Manual releases are used for:**
+            - Emergency hotfixes
+            - Testing deployment pipeline
+            - Releases outside the normal release branch flow
+
+            See [CHANGELOG.md](./CHANGELOG.md) for detailed changes.
 
             ---
 
