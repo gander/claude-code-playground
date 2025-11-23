@@ -261,14 +261,14 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         continue-on-error: true
         env:
-          VERSION: ${{ steps.version.outputs.version }}
-          VERSION_NUMBER: ${{ steps.version.outputs.version_number }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_VERSION_NUMBER: ${{ steps.version.outputs.version_number }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPOSITORY: ${{ github.repository }}
         with:
           script: |
-            const version = process.env.VERSION;
-            const versionNumber = process.env.VERSION_NUMBER;
+            const version = process.env.RELEASE_VERSION;
+            const versionNumber = process.env.RELEASE_VERSION_NUMBER;
             const prNumber = process.env.PR_NUMBER;
             const repository = process.env.REPOSITORY;
 
