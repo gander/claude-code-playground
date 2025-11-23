@@ -15,8 +15,62 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  validate-branch:
+    name: Validate Tag is on Master Branch
+    runs-on: ubuntu-latest
+    # Only run branch validation for tag triggers
+    if: startsWith(github.ref, 'refs/tags/')
+    outputs:
+      is-master: ${{ steps.check.outputs.is-master }}
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          fetch-depth: 0  # Fetch full history to check branch ancestry
+
+      - name: Check if tag was created from master branch
+        id: check
+        run: |
+          # Get the commit SHA that the tag points to
+          TAG_COMMIT=$(git rev-list -n 1 ${{ github.ref_name }})
+          echo "Tag ${{ github.ref_name }} points to commit: $TAG_COMMIT"
+
+          # Check if this commit is reachable from master
+          if git merge-base --is-ancestor $TAG_COMMIT origin/master; then
+            echo "✅ Tag ${{ github.ref_name }} was created from master branch"
+            echo "is-master=true" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Tag ${{ github.ref_name }} was NOT created from master branch"
+            echo ""
+            echo "🚫 Docker deployment blocked for security reasons:"
+            echo "   Tags must be created from the master branch to trigger releases"
+            echo "   This prevents accidental releases from feature branches"
+            echo ""
+            echo "🔧 To fix this:"
+            echo "   1. Ensure the tag is created from master branch"
+            echo "   2. Delete this tag: git tag -d ${{ github.ref_name }} && git push origin :refs/tags/${{ github.ref_name }}"
+            echo "   3. Checkout master: git checkout master"
+            echo "   4. Create tag from master: git tag ${{ github.ref_name }} && git push origin ${{ github.ref_name }}"
+            echo ""
+            echo "is-master=false" >> $GITHUB_OUTPUT
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+          fi
+
   build-and-push:
     runs-on: ubuntu-latest
+    needs: [validate-branch]
+    # Run if:
+    # 1. Not a tag trigger (branch push or PR) - validate-branch will be skipped
+    # 2. Tag trigger and validation passed
+    if: |
+      always() && (
+        !startsWith(github.ref, 'refs/tags/') ||
+        (needs.validate-branch.result == 'success' && needs.validate-branch.outputs.should-deploy == 'true')
+      )
+
     permissions:
       contents: read
       packages: write
@@ -26,7 +80,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
