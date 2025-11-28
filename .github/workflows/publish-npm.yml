@@ -19,14 +19,14 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: '22'
+          node-version: '24'
 
       - name: Extract version from package.json
         id: version
@@ -34,8 +34,8 @@ jobs:
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           VERSION_TAG="v${PACKAGE_VERSION}"
 
-          echo "version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
-          echo "version_tag=${VERSION_TAG}" >> $GITHUB_OUTPUT
+          echo "version=${PACKAGE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "version_tag=${VERSION_TAG}" >> "$GITHUB_OUTPUT"
           echo "✅ Extracted version from package.json: ${PACKAGE_VERSION} (tag: ${VERSION_TAG})"
 
       - name: Validate current branch is master
@@ -43,9 +43,9 @@ jobs:
         run: |
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-          if [ "$CURRENT_BRANCH" != "master" ]; then
+          if [ "${CURRENT_BRANCH}" != "master" ]; then
             echo "❌ Manual deployment must be run from master branch"
-            echo "Current branch: $CURRENT_BRANCH"
+            echo "Current branch: ${CURRENT_BRANCH}"
             echo ""
             echo "🚫 Deployment blocked for security reasons:"
             echo "   Manual deployments must be triggered from master branch"
@@ -54,11 +54,11 @@ jobs:
             echo "   1. Ensure you're on master branch before triggering"
             echo "   2. The deployment should be from latest master commit"
             echo ""
-            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "should-deploy=false" >> "$GITHUB_OUTPUT"
             exit 1
           else
             echo "✅ Manual deployment triggered from master branch"
-            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> "$GITHUB_OUTPUT"
           fi
 
   build-and-publish:
@@ -79,18 +79,19 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: '22'
+          node-version: '24'
           # registry-url removed - not needed for Trusted Publishers with OIDC
           # Removing this prevents actions/setup-node from adding deprecated
           # 'always-auth=true' to .npmrc (causes warnings in npm 11+)
 
-      - name: Install latest npm
-        run: npm install -g npm@11.5.1
+      # npm must be newer than 11.5.1 for Node 24 compatibility
+      - name: Install npm 11.6.4
+        run: npm install -g npm@11.6.4
 
       - name: Validate version from package.json
         run: |
@@ -152,8 +153,8 @@ jobs:
         run: |
           # Note: npm is pinned via setup-node@v6.1.0 (Node.js 22)
           npm pack
-          echo "TARBALL=$(ls *.tgz)" >> $GITHUB_ENV
-          echo "✓ Package tarball created: $(ls *.tgz)"
+          echo "TARBALL=$(ls -- *.tgz)" >> "$GITHUB_ENV"
+          echo "✓ Package tarball created: $(ls -- *.tgz)"
 
       - name: Generate SLSA build provenance attestation
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
@@ -166,15 +167,15 @@ jobs:
           subject-path: ${{ env.TARBALL }}
           sbom-path: sbom.json
 
-      - name: Verify npm >= 11.5.1 for Trusted Publishers
+      - name: Verify npm >= 11.6.4 for Trusted Publishers
         run: |
           CURRENT_NPM=$(npm --version)
           echo "Current npm version: $CURRENT_NPM"
-          if [ "$(printf '%s\n' "11.5.1" "$CURRENT_NPM" | sort -V | head -n1)" = "11.5.1" ]; then
-            echo "✓ npm version $CURRENT_NPM is sufficient (>= 11.5.1)"
+          if [ "$(printf '%s\n' "11.6.4" "$CURRENT_NPM" | sort -V | head -n1)" = "11.6.4" ]; then
+            echo "✓ npm version $CURRENT_NPM is sufficient (>= 11.6.4)"
           else
             echo "❌ Error: npm version $CURRENT_NPM is too old"
-            echo "npm >= 11.5.1 is required for Trusted Publishers"
+            echo "npm >= 11.6.4 is required for Trusted Publishers"
             echo "Update Node.js version in workflow or manually install newer npm"
             exit 1
           fi
@@ -182,7 +183,7 @@ jobs:
       - name: Publish to NPM with provenance (Trusted Publishers)
         run: npm publish --provenance --access public
         # Note: No NODE_AUTH_TOKEN needed - npm uses OIDC authentication automatically
-        # Requires: id-token: write permission and npm >= 11.5.1
+        # Requires: id-token: write permission and npm >= 11.6.4
 
   create-release:
     name: Create GitHub Release

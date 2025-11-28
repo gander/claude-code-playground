@@ -3,7 +3,7 @@
 # Pinned to manifest list digest for security and multi-platform compatibility
 # This digest references a manifest list supporting: linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6, linux/s390x
 # To update: curl -s https://hub.docker.com/v2/repositories/library/node/tags/22-alpine | jq -r '.digest'
-FROM --platform=$BUILDPLATFORM node:22-alpine@sha256:b2358485e3e33bc3a33114d2b1bdb18cdbe4df01bd2b257198eb51beb1f026c5 AS builder
+FROM --platform=$BUILDPLATFORM node:24-alpine@sha256:2867d550cf9d8bb50059a0fff528741f11a84d985c732e60e19e8e75c7239c43 AS builder
 
 # Build arguments for multi-platform support
 ARG BUILDPLATFORM
@@ -33,7 +33,7 @@ RUN test -f dist/index.js || (echo "Build failed: dist/index.js not found" && ex
 # This digest references a manifest list supporting: linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6, linux/s390x
 # Docker BuildKit automatically uses the target platform (no need for --platform=$TARGETPLATFORM)
 # To update: curl -s https://hub.docker.com/v2/repositories/library/node/tags/22-alpine | jq -r '.digest'
-FROM node:22-alpine@sha256:b2358485e3e33bc3a33114d2b1bdb18cdbe4df01bd2b257198eb51beb1f026c5
+FROM node:24-alpine@sha256:2867d550cf9d8bb50059a0fff528741f11a84d985c732e60e19e8e75c7239c43
 
 # Set working directory
 WORKDIR /app

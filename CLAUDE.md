@@ -128,9 +128,17 @@ Every feature implementation MUST follow this workflow:
 - **Fuzzing**: Property-based testing with fast-check runs on every push/PR and weekly
 - **Code Quality**: BiomeJS checks for linting and formatting issues
 - **Auto-PR Creation**: Automatic Pull Request creation for `claude/*` branches
+- **Automatic Labeling**: srvaroa/labeler automatically manages PR/issue labels based on:
+  - File changes (documentation, tests, core, docker, workflows, etc.)
+  - PR size (small/medium/large/xlarge)
+  - PR state (draft = work-in-progress)
+  - Branch patterns (claude/* = "claude code" label)
 - **Dependabot**: Automated dependency updates and security patches
 - **Release**: Automated npm releases with semantic versioning
 - **Distribution**: Package available via `npx` command
+- **Docker Builds**:
+  - Automatic builds on master push and version tags
+  - On-demand PR builds via label (`docker:build`), comment (`/docker-build`), or manual trigger
 
 #### GitHub Actions Workflow Requirements
 
@@ -446,6 +454,7 @@ The project maintains comprehensive documentation organized by user type for cle
 **Deployment Documentation (docs/deployment/):**
 - `docs/deployment/README.md` - Deployment overview and navigation
 - `docs/deployment/deployment.md` - Docker Compose deployment guide
+- `docs/deployment/docker-on-demand.md` - On-demand Docker builds for Pull Requests
 - `docs/deployment/security.md` - Security features, provenance, SLSA, and SBOM
 
 **Root Documentation:**
@@ -475,6 +484,7 @@ When completing a phase or major feature:
 
 4. **Update docs/deployment/** (if deployment changes):
    - Deployment options → `docs/deployment/deployment.md`
+   - On-demand Docker builds → `docs/deployment/docker-on-demand.md`
    - Security features → `docs/deployment/security.md`
 
 5. **Update root documentation**:

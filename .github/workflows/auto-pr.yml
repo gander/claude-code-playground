@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
 
@@ -23,16 +23,16 @@ jobs:
         run: |
           # Get current branch name
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-          echo "name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+          echo "name=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
 
           # Extract feature description from branch name
           # Format: claude/<feature-description>-<session-id>
           FEATURE_DESC=$(echo "${BRANCH_NAME}" | sed 's/^claude\///' | sed 's/-[^-]*$//' | tr '-' ' ' | sed 's/\b\(.\)/\u\1/g')
-          echo "feature=${FEATURE_DESC}" >> $GITHUB_OUTPUT
+          echo "feature=${FEATURE_DESC}" >> "$GITHUB_OUTPUT"
 
           # Get the default branch (main or master)
           DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-          echo "base=${DEFAULT_BRANCH}" >> $GITHUB_OUTPUT
+          echo "base=${DEFAULT_BRANCH}" >> "$GITHUB_OUTPUT"
 
       - name: Check if PR exists
         id: pr-check
@@ -41,7 +41,7 @@ jobs:
         run: |
           # Check if PR already exists for this branch
           PR_EXISTS=$(gh pr list --head "${{ steps.branch.outputs.name }}" --json number --jq 'length')
-          echo "exists=${PR_EXISTS}" >> $GITHUB_OUTPUT
+          echo "exists=${PR_EXISTS}" >> "$GITHUB_OUTPUT"
 
       - name: Get commit messages
         id: commits
@@ -49,20 +49,22 @@ jobs:
         run: |
           # Get all commit messages since branching from base
           BASE_BRANCH="${{ steps.branch.outputs.base }}"
-          COMMITS=$(git log origin/${BASE_BRANCH}..HEAD --pretty=format:"- %s" | head -n 10)
+          COMMITS=$(git log "origin/${BASE_BRANCH}..HEAD" --pretty=format:"- %s" | head -n 10)
 
           # Get first commit title for PR title
-          FIRST_COMMIT_TITLE=$(git log origin/${BASE_BRANCH}..HEAD --pretty=format:"%s" | tail -n 1)
-          echo "first_title=${FIRST_COMMIT_TITLE}" >> $GITHUB_OUTPUT
+          FIRST_COMMIT_TITLE=$(git log "origin/${BASE_BRANCH}..HEAD" --pretty=format:"%s" | tail -n 1)
+          echo "first_title=${FIRST_COMMIT_TITLE}" >> "$GITHUB_OUTPUT"
 
           # Escape newlines for GitHub output
           COMMITS="${COMMITS//'%'/'%25'}"
           COMMITS="${COMMITS//$'\n'/'%0A'}"
           COMMITS="${COMMITS//$'\r'/'%0D'}"
 
-          echo "messages<<EOF" >> $GITHUB_OUTPUT
-          echo "$COMMITS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          {
+            echo "messages<<EOF"
+            echo "$COMMITS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create Pull Request
         if: steps.pr-check.outputs.exists == '0'
@@ -87,12 +89,12 @@ jobs:
           ${{ steps.commits.outputs.messages }}
           EOF
           )"; then
-            echo "success=true" >> $GITHUB_OUTPUT
+            echo "success=true" >> "$GITHUB_OUTPUT"
             echo "✅ PR created successfully"
           else
             EXIT_CODE=$?
-            echo "success=false" >> $GITHUB_OUTPUT
-            echo "❌ PR creation failed with exit code: $EXIT_CODE"
+            echo "success=false" >> "$GITHUB_OUTPUT"
+            echo "❌ PR creation failed with exit code: ${EXIT_CODE}"
             exit 1
           fi
 
@@ -116,16 +118,6 @@ jobs:
           echo "📖 Manual PR creation:"
           echo "   Visit: https://github.com/${{ github.repository }}/pull/new/${{ steps.branch.outputs.name }}"
           echo ""
-
-      - name: Add labels
-        if: steps.pr-check.outputs.exists == '0' && steps.create-pr.outcome == 'success'
-        env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-        run: |
-          # Add labels to the PR (continue even if labels don't exist)
-          gh pr edit "${{ steps.branch.outputs.name }}" \
-            --add-label "claude code" || true
 
       - name: PR Info
         if: steps.pr-check.outputs.exists == '0' && steps.create-pr.outcome == 'success'
