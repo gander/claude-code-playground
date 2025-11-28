@@ -92,7 +92,7 @@ jobs:
           BUILD_TYPE="unknown"
           SHOULD_BUILD="false"
 
-          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+          if [[ "${{ github.ref }}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
             BUILD_TYPE="release"
             SHOULD_BUILD="true"
             echo "🏷️  Version tag build: ${{ github.ref_name }}"
@@ -491,14 +491,16 @@ jobs:
         run: |
           echo "::notice::Image pushed with digest ${{ steps.digest.outputs.digest }}"
           if [ "${{ needs.check-build-type.outputs.build-type }}" = "on-demand" ]; then
-            echo "### 🐳 Docker Build Complete" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            echo "${{ steps.digest.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            echo "**Digest:** \`${{ steps.digest.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
+            {
+              echo "### 🐳 Docker Build Complete"
+              echo ""
+              echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`"
+              echo "**Tags:**"
+              echo "\`\`\`"
+              echo "${{ steps.digest.outputs.tags }}"
+              echo "\`\`\`"
+              echo "**Digest:** \`${{ steps.digest.outputs.digest }}\`"
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
 
       # Vulnerability Scanning with Trivy
