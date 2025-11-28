@@ -61,8 +61,9 @@ jobs:
           node-version: '24'
           # registry-url removed - not needed for Trusted Publishers with OIDC
 
-      - name: Install latest npm
-        run: npm install -g npm@11.5.1
+      # npm must be newer than 11.5.1 for Node 24 compatibility
+      - name: Install npm 11.6.4
+        run: npm install -g npm@11.6.4
 
       - name: Verify package.json version matches release version
         env:
@@ -131,15 +132,15 @@ jobs:
           subject-path: ${{ env.TARBALL }}
           sbom-path: sbom.json
 
-      - name: Verify npm >= 11.5.1 for Trusted Publishers
+      - name: Verify npm >= 11.6.4 for Trusted Publishers
         run: |
           CURRENT_NPM=$(npm --version)
           echo "Current npm version: $CURRENT_NPM"
-          if [ "$(printf '%s\n' "11.5.1" "$CURRENT_NPM" | sort -V | head -n1)" = "11.5.1" ]; then
-            echo "✓ npm version $CURRENT_NPM is sufficient (>= 11.5.1)"
+          if [ "$(printf '%s\n' "11.6.4" "$CURRENT_NPM" | sort -V | head -n1)" = "11.6.4" ]; then
+            echo "✓ npm version $CURRENT_NPM is sufficient (>= 11.6.4)"
           else
             echo "❌ Error: npm version $CURRENT_NPM is too old"
-            echo "npm >= 11.5.1 is required for Trusted Publishers"
+            echo "npm >= 11.6.4 is required for Trusted Publishers"
             echo "Update Node.js version in workflow or manually install newer npm"
             exit 1
           fi
@@ -147,7 +148,7 @@ jobs:
       - name: Publish to NPM with provenance (Trusted Publishers)
         run: npm publish --provenance --access public
         # Note: No NODE_AUTH_TOKEN needed - npm uses OIDC authentication automatically
-        # Requires: id-token: write permission and npm >= 11.5.1
+        # Requires: id-token: write permission and npm >= 11.6.4
 
       # Only create tag AFTER successful NPM publication
       - name: Create release tag
