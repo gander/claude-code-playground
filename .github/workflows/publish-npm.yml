@@ -34,8 +34,8 @@ jobs:
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           VERSION_TAG="v${PACKAGE_VERSION}"
 
-          echo "version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
-          echo "version_tag=${VERSION_TAG}" >> $GITHUB_OUTPUT
+          echo "version=${PACKAGE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "version_tag=${VERSION_TAG}" >> "$GITHUB_OUTPUT"
           echo "✅ Extracted version from package.json: ${PACKAGE_VERSION} (tag: ${VERSION_TAG})"
 
       - name: Validate current branch is master
@@ -43,9 +43,9 @@ jobs:
         run: |
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-          if [ "$CURRENT_BRANCH" != "master" ]; then
+          if [ "${CURRENT_BRANCH}" != "master" ]; then
             echo "❌ Manual deployment must be run from master branch"
-            echo "Current branch: $CURRENT_BRANCH"
+            echo "Current branch: ${CURRENT_BRANCH}"
             echo ""
             echo "🚫 Deployment blocked for security reasons:"
             echo "   Manual deployments must be triggered from master branch"
@@ -54,11 +54,11 @@ jobs:
             echo "   1. Ensure you're on master branch before triggering"
             echo "   2. The deployment should be from latest master commit"
             echo ""
-            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "should-deploy=false" >> "$GITHUB_OUTPUT"
             exit 1
           else
             echo "✅ Manual deployment triggered from master branch"
-            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "should-deploy=true" >> "$GITHUB_OUTPUT"
           fi
 
   build-and-publish:
@@ -152,8 +152,8 @@ jobs:
         run: |
           # Note: npm is pinned via setup-node@v6.1.0 (Node.js 22)
           npm pack
-          echo "TARBALL=$(ls *.tgz)" >> $GITHUB_ENV
-          echo "✓ Package tarball created: $(ls *.tgz)"
+          echo "TARBALL=$(ls -- *.tgz)" >> "$GITHUB_ENV"
+          echo "✓ Package tarball created: $(ls -- *.tgz)"
 
       - name: Generate SLSA build provenance attestation
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
