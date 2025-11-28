@@ -626,38 +626,39 @@ This section is for maintainers preparing a new release.
 
 ### Quick Release Workflow
 
-Releases are created using release-it with git-cliff for changelog generation.
+Releases are **fully automated** using [Release Please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
-**Release from local environment:**
+**How it works:**
 
-```bash
-# Interactive mode (prompts for version)
-npm run release
+1. **Write commits** using Conventional Commits format:
+   ```bash
+   git commit -m "feat: add new feature"
+   git commit -m "fix: resolve bug"
+   git commit -m "docs: update documentation"
+   ```
 
-# Dry run (preview without changes)
-npm run release:dry
-```
+2. **Merge to master** - Release Please automatically:
+   - Analyzes commits since last release
+   - Determines version bump (major/minor/patch)
+   - Creates/updates release PR with CHANGELOG
 
-**What release-it does:**
-1. ✅ Prompts for version bump (patch/minor/major/custom)
-2. ✅ Bumps version in package.json and package-lock.json
-3. ✅ Generates CHANGELOG using git-cliff
-4. ✅ Creates release branch: `release/vX.Y.Z`
-5. ✅ Commits changes and pushes branch to GitHub
+3. **Review and merge** the release PR - Automatically triggers:
+   - npm package publishing with provenance
+   - Git tag creation
+   - GitHub release creation
+   - Docker image builds
 
-**After release-it:**
-1. 📝 Create Pull Request from release branch
-2. 👀 Review PR (version, CHANGELOG, tests passing)
-3. ✅ Merge PR to master
-4. 🏷️ Manually create and push tag: `git tag vX.Y.Z && git push --tags`
-5. 🤖 GitHub Actions automatically publish to npm + Docker
-6. 📦 Manually publish draft GitHub Release
+**Commit types:**
+- `feat:` - New feature (minor version bump)
+- `fix:` - Bug fix (patch version bump)
+- `docs:` - Documentation (patch version bump)
+- `feat!:` or `BREAKING CHANGE:` - Breaking change (major version bump)
 
 **Configuration:**
-- `.release-it.json` - release-it configuration
-- `cliff.toml` - git-cliff changelog configuration
+- `release-please-config.json` - Release Please configuration
+- `.release-please-manifest.json` - Current version tracking
 
-**For complete instructions**, including troubleshooting and step-by-step guide, see [release-process.md](./release-process.md)
+**For complete instructions**, including commit conventions and troubleshooting, see [release-process.md](./release-process.md)
 
 ### Pre-Publication Checklist
 
