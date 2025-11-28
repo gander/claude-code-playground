@@ -16,8 +16,8 @@
 # Dependencies (will be installed in container)
 node_modules/
 
-# Build output (will be generated in container)
-dist/
+# Build output (Note: dist/ is NOT excluded - it's provided by workflow)
+# dist/ must be available for Dockerfile.release (pre-built by workflow)
 build/
 *.tsbuildinfo
 
