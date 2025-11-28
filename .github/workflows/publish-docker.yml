@@ -93,12 +93,6 @@ jobs:
       pull-requests: read
 
     steps:
-      - name: Debug - Show initial directory state
-        run: |
-          echo "📍 Current directory: $(pwd)"
-          echo "📂 Directory contents:"
-          ls -lah
-
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
@@ -346,13 +340,6 @@ jobs:
             echo "should-build=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Debug - Show final directory state
-        if: always()
-        run: |
-          echo "📍 Current directory: $(pwd)"
-          echo "📂 Directory contents:"
-          ls -lah
-
   permission-denied:
     name: Permission Denied Notification
     runs-on: ubuntu-latest
@@ -367,12 +354,6 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Debug - Show initial directory state
-        run: |
-          echo "📍 Current directory: $(pwd)"
-          echo "📂 Directory contents:"
-          ls -lah
-
       - name: Comment on PR about permission denial
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
@@ -402,13 +383,6 @@ jobs:
               body: body
             });
 
-      - name: Debug - Show final directory state
-        if: always()
-        run: |
-          echo "📍 Current directory: $(pwd)"
-          echo "📂 Directory contents:"
-          ls -lah
-
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
@@ -429,12 +403,6 @@ jobs:
       pull-requests: write  # For commenting on PR (on-demand builds)
 
     steps:
-      - name: Debug - Show initial directory state
-        run: |
-          echo "📍 Current directory: $(pwd)"
-          echo "📂 Directory contents:"
-          ls -lah
-
       - name: Add reaction to comment (if comment trigger)
         if: github.event_name == 'issue_comment'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
@@ -732,10 +700,3 @@ jobs:
           else
             echo "::error::✗ Webhook failed with HTTP $HTTP_CODE"
           fi
-
-      - name: Debug - Show final directory state
-        if: always()
-        run: |
-          echo "📍 Current directory: $(pwd)"
-          echo "📂 Directory contents:"
-          ls -lah
