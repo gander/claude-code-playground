@@ -58,7 +58,7 @@ export async function validateTagCollection(
 }
 
 const ValidateTagCollection: OsmToolDefinition<{
-	tags: z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>;
+	tags: z.ZodUnion<readonly [z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>;
 }> = {
 	name: "validate_tag_collection" as const,
 	config: () => ({
@@ -66,7 +66,7 @@ const ValidateTagCollection: OsmToolDefinition<{
 			"Validate a collection of OSM tags. Returns validation results for each tag and aggregated statistics. Accepts tags in JSON format, text format (key=value lines), or as an object.",
 		inputSchema: {
 			tags: z
-				.union([z.string(), z.record(z.string())])
+				.union([z.string(), z.record(z.string(), z.string())])
 				.describe(
 					'Tags as object (e.g., {"amenity": "parking"}), JSON string, or text format (one per line: key=value)',
 				),

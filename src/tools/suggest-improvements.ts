@@ -206,7 +206,7 @@ function getFieldKey(fieldId: string): string | null {
 }
 
 const SuggestImprovements: OsmToolDefinition<{
-	tags: z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>;
+	tags: z.ZodUnion<readonly [z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>;
 }> = {
 	name: "suggest_improvements" as const,
 	config: () => ({
@@ -214,7 +214,7 @@ const SuggestImprovements: OsmToolDefinition<{
 			"Suggest improvements for an OSM tag collection. Analyzes tags and provides suggestions for missing fields, warnings about deprecated tags, and recommendations based on matched presets. Accepts tags in JSON format, text format (key=value lines), or as an object.",
 		inputSchema: {
 			tags: z
-				.union([z.string(), z.record(z.string())])
+				.union([z.string(), z.record(z.string(), z.string())])
 				.describe(
 					'Tags as object (e.g., {"amenity": "restaurant"}), JSON string, or text format (one per line: key=value)',
 				),

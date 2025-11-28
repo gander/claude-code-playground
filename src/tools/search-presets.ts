@@ -127,10 +127,20 @@ export async function searchPresets(
 /**
  * Tool definition for search_presets following new OsmToolDefinition interface
  */
+const geometryEnum = {
+	point: "point",
+	vertex: "vertex",
+	line: "line",
+	area: "area",
+	relation: "relation",
+} as const;
+
+type GeometryEnum = typeof geometryEnum;
+
 const SearchPresets: OsmToolDefinition<{
 	keyword: z.ZodString;
 	limit: z.ZodOptional<z.ZodNumber>;
-	geometry: z.ZodOptional<z.ZodEnum<["point", "vertex", "line", "area", "relation"]>>;
+	geometry: z.ZodOptional<z.ZodEnum<GeometryEnum>>;
 }> = {
 	name: "search_presets" as const,
 
@@ -145,7 +155,7 @@ const SearchPresets: OsmToolDefinition<{
 				),
 			limit: z.number().optional().describe("Maximum number of results to return (optional)"),
 			geometry: z
-				.enum(["point", "vertex", "line", "area", "relation"])
+				.enum(geometryEnum)
 				.optional()
 				.describe("Filter by geometry type (point, vertex, line, area, relation) - optional"),
 		},
