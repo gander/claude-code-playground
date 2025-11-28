@@ -2,20 +2,37 @@ name: Docker Build and Publish
 
 # ARCHITECTURE: Unified Docker Build Workflow
 #
-# This workflow handles both version tag releases and on-demand PR builds:
+# This workflow handles version tag releases, on-demand PR builds, edge builds, and manual version builds:
 #
 # Build Types:
 # 1. Release builds (v*.*.*):
-#    - Triggered by version tags
+#    - Triggered by version tags on master
 #    - Downloads prebuilt dist/ from GitHub Release
 #    - Uses Dockerfile.release
 #    - Produces: latest, semver tags
 #
 # 2. On-demand PR builds:
-#    - Triggered by: label (docker:build), comment (/docker-build), or manual trigger
+#    - Triggered by: label (docker:build), comment (/docker-build), or manual trigger with PR number
 #    - Builds dist/ from source
 #    - Uses Dockerfile.release (same as release builds)
 #    - Produces: pr-<number>, pr-<number>-<sha> tags
+#
+# 3. Edge builds:
+#    - Triggered by: manual trigger with empty version input
+#    - Builds dist/ from source
+#    - Uses Dockerfile.release
+#    - Produces: edge tag
+#
+# 4. Manual version builds:
+#    - Triggered by: manual trigger with semantic version (e.g., v1.2.3)
+#    - Builds dist/ from source
+#    - Uses Dockerfile.release
+#    - Produces: specified version tag
+#
+# Manual Trigger Version Input:
+# - Empty "" → edge tag
+# - Number (e.g., "123") → pr-123 tag
+# - Semantic version (e.g., "v1.2.3") → v1.2.3 tag
 #
 # This workflow does NOT build on:
 # - Regular PR events (only labeled/comment triggers)
@@ -33,13 +50,13 @@ on:
     tags:
       - 'v*.*.*'
 
-  # Manual trigger with PR number input (on-demand builds)
+  # Manual trigger with version input (on-demand builds)
   workflow_dispatch:
     inputs:
-      pr_number:
-        description: 'PR number to build Docker image for (leave empty for tag build)'
+      version:
+        description: 'Version to build: PR number (e.g. "123" → pr-123), semantic version (e.g. "v1.2.3"), or empty for "edge" tag'
         required: false
-        type: number
+        type: string
       push_image:
         description: 'Push image to registry (default: true)'
         required: false
@@ -68,6 +85,8 @@ jobs:
       has-permission: ${{ steps.permission.outputs.has-permission }}
       actor: ${{ steps.permission.outputs.actor }}
       tag-is-master: ${{ steps.tag-check.outputs.is-master }}
+      version-type: ${{ steps.version-check.outputs.version-type }}
+      version-tag: ${{ steps.version-check.outputs.version-tag }}
 
     permissions:
       contents: read
@@ -90,13 +109,25 @@ jobs:
             SHOULD_BUILD="true"
             echo "🏷️  Version tag build: ${{ github.ref_name }}"
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            if [ -n "${{ inputs.pr_number }}" ]; then
-              BUILD_TYPE="on-demand"
-              echo "🔧 Manual on-demand build for PR #${{ inputs.pr_number }}"
-            else
+            VERSION_INPUT="${{ inputs.version }}"
+
+            if [ -z "$VERSION_INPUT" ]; then
+              # Empty input → edge build
+              BUILD_TYPE="edge"
+              SHOULD_BUILD="true"
+              echo "🔧 Manual edge build"
+            elif [[ "$VERSION_INPUT" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              # Semantic version → release build
               BUILD_TYPE="release"
               SHOULD_BUILD="true"
-              echo "🔧 Manual release build"
+              echo "🔧 Manual release build for version: $VERSION_INPUT"
+            elif [[ "$VERSION_INPUT" =~ ^[0-9]+$ ]]; then
+              # Number → PR build
+              BUILD_TYPE="on-demand"
+              echo "🔧 Manual on-demand build for PR #$VERSION_INPUT"
+            else
+              echo "::error::Invalid version input: '$VERSION_INPUT'. Expected: PR number (e.g. '123'), semantic version (e.g. 'v1.2.3'), or empty for edge"
+              exit 1
             fi
           elif [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "issue_comment" ]; then
             BUILD_TYPE="on-demand"
@@ -105,6 +136,29 @@ jobs:
 
           echo "build-type=${BUILD_TYPE}" >> "$GITHUB_OUTPUT"
           echo "should-build=${SHOULD_BUILD}" >> "$GITHUB_OUTPUT"
+
+      - name: Parse version input for manual triggers
+        id: version-check
+        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
+        run: |
+          VERSION_INPUT="${{ inputs.version }}"
+          VERSION_TYPE=""
+          VERSION_TAG=""
+
+          if [[ "$VERSION_INPUT" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            # Semantic version
+            VERSION_TYPE="semver"
+            VERSION_TAG="$VERSION_INPUT"
+            echo "📦 Semantic version detected: $VERSION_TAG"
+          elif [[ "$VERSION_INPUT" =~ ^[0-9]+$ ]]; then
+            # PR number
+            VERSION_TYPE="pr"
+            VERSION_TAG="$VERSION_INPUT"
+            echo "🔢 PR number detected: #$VERSION_TAG"
+          fi
+
+          echo "version-type=${VERSION_TYPE}" >> "$GITHUB_OUTPUT"
+          echo "version-tag=${VERSION_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Check tag is on master branch
         id: tag-check
@@ -202,8 +256,13 @@ jobs:
           # workflow_dispatch trigger
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "✓ Triggered via workflow_dispatch"
-            SHOULD_BUILD="true"
-            PR_NUMBER="${{ inputs.pr_number }}"
+            VERSION_INPUT="${{ inputs.version }}"
+
+            # Check if version input is a PR number
+            if [[ "$VERSION_INPUT" =~ ^[0-9]+$ ]]; then
+              SHOULD_BUILD="true"
+              PR_NUMBER="$VERSION_INPUT"
+            fi
 
           # PR label trigger
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -268,7 +327,7 @@ jobs:
         run: |
           BUILD_TYPE="${{ steps.determine.outputs.build-type }}"
 
-          if [ "${BUILD_TYPE}" = "release" ]; then
+          if [ "${BUILD_TYPE}" = "release" ] || [ "${BUILD_TYPE}" = "edge" ]; then
             echo "should-build=true" >> "$GITHUB_OUTPUT"
           elif [ "${BUILD_TYPE}" = "on-demand" ]; then
             # Check if pr-check step ran and set SHOULD_BUILD
@@ -331,6 +390,7 @@ jobs:
     if: |
       always() && (
         (needs.check-build-type.outputs.build-type == 'release' && needs.check-build-type.outputs.should-build == 'true') ||
+        (needs.check-build-type.outputs.build-type == 'edge' && needs.check-build-type.outputs.should-build == 'true') ||
         (needs.check-build-type.outputs.build-type == 'on-demand' && needs.check-build-type.outputs.should-build == 'true')
       )
 
@@ -358,8 +418,8 @@ jobs:
       # SECURITY NOTE for on-demand builds: Checking out untrusted PR code in privileged context
       # Mitigation: Permission check in check-build-type job ensures only users
       # with write/admin access can trigger builds.
-      - name: Checkout repository (release builds)
-        if: needs.check-build-type.outputs.build-type == 'release'
+      - name: Checkout repository (release and edge builds)
+        if: needs.check-build-type.outputs.build-type == 'release' || needs.check-build-type.outputs.build-type == 'edge'
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Checkout PR branch (on-demand builds)
@@ -380,17 +440,35 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Docker metadata (release builds)
-        if: needs.check-build-type.outputs.build-type == 'release'
+      - name: Docker metadata (release builds - tag trigger)
+        if: needs.check-build-type.outputs.build-type == 'release' && startsWith(github.ref, 'refs/tags/v')
         id: meta-release
         uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }},priority=1000
+            type=raw,value=latest,priority=1000
             type=semver,pattern={{major}},priority=600
             type=semver,pattern={{major}}.{{minor}},priority=500
             type=semver,pattern={{major}}.{{minor}}.{{patch}},priority=400
+
+      - name: Docker metadata (release builds - manual version)
+        if: needs.check-build-type.outputs.build-type == 'release' && github.event_name == 'workflow_dispatch' && needs.check-build-type.outputs.version-type == 'semver'
+        id: meta-version
+        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.check-build-type.outputs.version-tag }},priority=1000
+
+      - name: Docker metadata (edge builds)
+        if: needs.check-build-type.outputs.build-type == 'edge'
+        id: meta-edge
+        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=edge,priority=1000
 
       - name: Docker metadata (on-demand builds)
         if: needs.check-build-type.outputs.build-type == 'on-demand'
@@ -418,23 +496,23 @@ jobs:
           echo "✓ dist/ artifact ready ($(du -sh dist | cut -f1))"
           ls -lh dist/
 
-      - name: Set up Node.js (on-demand builds only)
-        if: needs.check-build-type.outputs.build-type == 'on-demand'
+      - name: Set up Node.js (source builds)
+        if: needs.check-build-type.outputs.build-type == 'on-demand' || needs.check-build-type.outputs.build-type == 'edge' || (needs.check-build-type.outputs.build-type == 'release' && github.event_name == 'workflow_dispatch')
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version: '24'
 
       # npm must be newer than 11.5.1 for Node 24 compatibility
-      - name: Install npm 11.6.4 (on-demand builds only)
-        if: needs.check-build-type.outputs.build-type == 'on-demand'
+      - name: Install npm 11.6.4 (source builds)
+        if: needs.check-build-type.outputs.build-type == 'on-demand' || needs.check-build-type.outputs.build-type == 'edge' || (needs.check-build-type.outputs.build-type == 'release' && github.event_name == 'workflow_dispatch')
         run: npm install -g npm@11.6.4
 
-      - name: Install dependencies (on-demand builds only)
-        if: needs.check-build-type.outputs.build-type == 'on-demand'
+      - name: Install dependencies (source builds)
+        if: needs.check-build-type.outputs.build-type == 'on-demand' || needs.check-build-type.outputs.build-type == 'edge' || (needs.check-build-type.outputs.build-type == 'release' && github.event_name == 'workflow_dispatch')
         run: npm ci
 
-      - name: Build dist/ artifact (on-demand builds only)
-        if: needs.check-build-type.outputs.build-type == 'on-demand'
+      - name: Build dist/ artifact (source builds)
+        if: needs.check-build-type.outputs.build-type == 'on-demand' || needs.check-build-type.outputs.build-type == 'edge' || (needs.check-build-type.outputs.build-type == 'release' && github.event_name == 'workflow_dispatch')
         run: |
           echo "🔨 Building dist/ artifact from source"
           npm run build
@@ -456,16 +534,22 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
 
-      - name: Build and push Docker image (on-demand builds)
-        if: needs.check-build-type.outputs.build-type == 'on-demand'
-        id: build-and-push-ondemand
+      - name: Build and push Docker image (source builds)
+        if: needs.check-build-type.outputs.build-type == 'on-demand' || needs.check-build-type.outputs.build-type == 'edge' || (needs.check-build-type.outputs.build-type == 'release' && github.event_name == 'workflow_dispatch')
+        id: build-and-push-source
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
         with:
           context: .
           file: Dockerfile.release
           push: ${{ inputs.push_image != false }}
-          tags: ${{ steps.meta-ondemand.outputs.tags }}
-          labels: ${{ steps.meta-ondemand.outputs.labels }}
+          tags: |
+            ${{ steps.meta-ondemand.outputs.tags }}
+            ${{ steps.meta-edge.outputs.tags }}
+            ${{ steps.meta-version.outputs.tags }}
+          labels: |
+            ${{ steps.meta-ondemand.outputs.labels }}
+            ${{ steps.meta-edge.outputs.labels }}
+            ${{ steps.meta-version.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
@@ -473,21 +557,36 @@ jobs:
       - name: Set digest output
         id: digest
         run: |
-          if [ "${{ needs.check-build-type.outputs.build-type }}" = "release" ]; then
+          BUILD_TYPE="${{ needs.check-build-type.outputs.build-type }}"
+
+          if [ "$BUILD_TYPE" = "release" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            # Tag-triggered release build
             echo "digest=${{ steps.build-and-push-release.outputs.digest }}" >> "$GITHUB_OUTPUT"
             echo "tags=${{ steps.meta-release.outputs.tags }}" >> "$GITHUB_OUTPUT"
+          elif [ "$BUILD_TYPE" = "release" ] && [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual version build
+            echo "digest=${{ steps.build-and-push-source.outputs.digest }}" >> "$GITHUB_OUTPUT"
+            echo "tags=${{ steps.meta-version.outputs.tags }}" >> "$GITHUB_OUTPUT"
+          elif [ "$BUILD_TYPE" = "edge" ]; then
+            # Edge build
+            echo "digest=${{ steps.build-and-push-source.outputs.digest }}" >> "$GITHUB_OUTPUT"
+            echo "tags=${{ steps.meta-edge.outputs.tags }}" >> "$GITHUB_OUTPUT"
           else
-            echo "digest=${{ steps.build-and-push-ondemand.outputs.digest }}" >> "$GITHUB_OUTPUT"
+            # On-demand PR build
+            echo "digest=${{ steps.build-and-push-source.outputs.digest }}" >> "$GITHUB_OUTPUT"
             echo "tags=${{ steps.meta-ondemand.outputs.tags }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Image digest
         run: |
           echo "::notice::Image pushed with digest ${{ steps.digest.outputs.digest }}"
-          if [ "${{ needs.check-build-type.outputs.build-type }}" = "on-demand" ]; then
+          BUILD_TYPE="${{ needs.check-build-type.outputs.build-type }}"
+
+          if [ "$BUILD_TYPE" = "on-demand" ] || [ "$BUILD_TYPE" = "edge" ] || ([ "$BUILD_TYPE" = "release" ] && [ "${{ github.event_name }}" = "workflow_dispatch" ]); then
             {
               echo "### 🐳 Docker Build Complete"
               echo ""
+              echo "**Build Type:** \`$BUILD_TYPE\`"
               echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`"
               echo "**Tags:**"
               echo "\`\`\`"
