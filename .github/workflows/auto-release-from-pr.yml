@@ -177,7 +177,7 @@ jobs:
           echo "✅ Successfully created and pushed tag: $RELEASE_VERSION"
 
       - name: Upload dist/ artifact for Docker build
-        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         # NOTE: SHA pinning required for security. IDE warnings are false positives.
         with:
           name: dist-${{ steps.version.outputs.version }}
