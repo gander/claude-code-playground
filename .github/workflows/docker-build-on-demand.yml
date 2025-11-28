@@ -26,6 +26,10 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
+# Default permissions - minimal by default, each job defines its own
+permissions:
+  contents: read
+
 jobs:
   # Check if this workflow should run
   check-trigger:
@@ -38,6 +42,10 @@ jobs:
       pr-sha: ${{ steps.check.outputs.pr-sha }}
       has-permission: ${{ steps.permission.outputs.has-permission }}
       actor: ${{ steps.permission.outputs.actor }}
+
+    permissions:
+      contents: read
+      pull-requests: read
 
     steps:
       - name: Check permissions
