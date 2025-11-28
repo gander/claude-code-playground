@@ -205,7 +205,7 @@ jobs:
 
     steps:
       - name: Comment on PR about permission denial
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
           script: |
             const prNumber = ${{ needs.check-trigger.outputs.pr-number || github.event.issue.number || github.event.pull_request.number }};
@@ -249,7 +249,7 @@ jobs:
     steps:
       - name: Add reaction to comment (if comment trigger)
         if: github.event_name == 'issue_comment'
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
           script: |
             await github.rest.reactions.createForIssueComment({
@@ -344,7 +344,7 @@ jobs:
 
       - name: Comment on PR with build results
         if: always()
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
           script: |
             const prNumber = ${{ needs.check-trigger.outputs.pr-number }};
