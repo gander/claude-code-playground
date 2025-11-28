@@ -29,23 +29,27 @@ jobs:
       - name: Actionlint Summary
         if: always() && steps.actionlint.outputs.exit-code != '0'
         run: |
-          echo "### ❌ Actionlint Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** ${{ steps.actionlint.outputs.version-semver }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Release:** ${{ steps.actionlint.outputs.version-tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Exit Code:** ${{ steps.actionlint.outputs.exit-code }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Exit Message:** ${{ steps.actionlint.outputs.exit-message }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Total Errors:** ${{ steps.actionlint.outputs.total-errors }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Files Checked:** ${{ steps.actionlint.outputs.total-files }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Cache Hit:** ${{ steps.actionlint.outputs.cache-hit }}" >> $GITHUB_STEP_SUMMARY
-          exit ${{ steps.actionlint.outputs.exit-code }}
+          {
+            echo "### ❌ Actionlint Results"
+            echo ""
+            echo "**Version:** ${{ steps.actionlint.outputs.version-semver }}"
+            echo "**Release:** ${{ steps.actionlint.outputs.version-tag }}"
+            echo "**Exit Code:** ${{ steps.actionlint.outputs.exit-code }}"
+            echo "**Exit Message:** ${{ steps.actionlint.outputs.exit-message }}"
+            echo "**Total Errors:** ${{ steps.actionlint.outputs.total-errors }}"
+            echo "**Files Checked:** ${{ steps.actionlint.outputs.total-files }}"
+            echo "**Cache Hit:** ${{ steps.actionlint.outputs.cache-hit }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "${{ steps.actionlint.outputs.exit-code }}"
 
       - name: Success Summary
         if: steps.actionlint.outputs.exit-code == '0'
         run: |
-          echo "### ✅ Actionlint Passed" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "All workflow files are valid!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Files Checked:** ${{ steps.actionlint.outputs.total-files }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** ${{ steps.actionlint.outputs.version-semver }}" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "### ✅ Actionlint Passed"
+            echo ""
+            echo "All workflow files are valid!"
+            echo ""
+            echo "**Files Checked:** ${{ steps.actionlint.outputs.total-files }}"
+            echo "**Version:** ${{ steps.actionlint.outputs.version-semver }}"
+          } >> "$GITHUB_STEP_SUMMARY"
