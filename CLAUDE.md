@@ -346,7 +346,7 @@ for (const tool of tools) {
 - ✅ **Transport Protocols**: stdio (default), HTTP for web clients
 - ✅ **Docker Compose**: Production, development, and test configurations
 - ✅ **Health Checks**: `/health` (liveness) and `/ready` (readiness) endpoints
-- ✅ **Release Management**: Automated release management with changesets
+- ✅ **Release Management**: Automated release management with Release Please (Conventional Commits)
 
 **Phase 8: Schema Builder API Refactor ✅ COMPLETE**
 - Full localization support across all tools

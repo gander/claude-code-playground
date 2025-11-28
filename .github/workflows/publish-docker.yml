@@ -1,20 +1,13 @@
 name: Docker Build and Publish
 
 on:
-  # Automatic trigger after successful NPM publish
+  # Automatic trigger after successful Release Please workflow
   workflow_run:
-    workflows: ["Publish to NPM (Manual Dispatch)"]
+    workflows: ["Release Please"]
     types:
       - completed
     branches:
       - master
-
-  # Version tag triggers
-  push:
-    branches:
-      - master
-    tags:
-      - 'v*.*.*'
 
   # Manual trigger with version input
   workflow_dispatch:
@@ -23,10 +16,6 @@ on:
         description: 'NPM package version to build (e.g., v1.2.3)'
         required: true
         type: string
-
-  pull_request:
-    branches:
-      - 'master'
 
 env:
   REGISTRY: ghcr.io
@@ -59,27 +48,27 @@ jobs:
           SHOULD_BUILD="false"
           IS_RELEASE="false"
 
-          # workflow_run - triggered after NPM publish
+          # workflow_run - triggered after Release Please workflow
           if [ "${{ github.event_name }}" = "workflow_run" ]; then
             # Check if workflow_run was successful
             if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
-              echo "::warning::NPM publish workflow failed, skipping Docker build"
+              echo "::warning::Release Please workflow failed, skipping Docker build"
               echo "should-build=false" >> "$GITHUB_OUTPUT"
               exit 0
             fi
 
-            # Get the latest draft release (created by publish-npm.yml)
-            VERSION_TAG=$(gh release list --limit 1 --json tagName,isDraft --jq '.[] | select(.isDraft == true) | .tagName')
+            # Get the latest release (created by release-please.yml)
+            VERSION_TAG=$(gh release list --limit 1 --json tagName,isDraft --jq '.[] | select(.isDraft == false) | .tagName')
 
             if [ -z "$VERSION_TAG" ]; then
-              echo "::error::Failed to find draft release from npm publish workflow"
+              echo "::error::Failed to find release from Release Please workflow"
               echo "should-build=false" >> "$GITHUB_OUTPUT"
               exit 1
             fi
 
             IS_RELEASE="true"
             SHOULD_BUILD="true"
-            echo "✅ Building Docker image for version: $VERSION_TAG (from npm publish workflow)"
+            echo "✅ Building Docker image for version: $VERSION_TAG (from Release Please workflow)"
 
           # workflow_dispatch - manual trigger with version
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -223,7 +212,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest,enable=${{ needs.extract-version.outputs.is-release == 'true' && startsWith(github.ref, 'refs/tags/v') }},priority=1000
+            type=raw,value=latest,enable=${{ needs.extract-version.outputs.is-release == 'true' }},priority=1000
             type=raw,value=${{ needs.extract-version.outputs.version-tag }},enable=${{ needs.extract-version.outputs.is-release == 'true' }},priority=900
             type=edge,enable=${{ needs.extract-version.outputs.version-tag == 'edge' }},priority=800
             type=ref,event=pr,priority=700
@@ -253,7 +242,7 @@ jobs:
         if: needs.extract-version.outputs.is-release == 'false'
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: '22'
+          node-version: '24'
 
       - name: Install npm 11.5.1 (non-release builds)
         if: needs.extract-version.outputs.is-release == 'false'

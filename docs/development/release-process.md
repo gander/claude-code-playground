@@ -1,359 +1,368 @@
 # Release Process
 
-This document describes the release workflow using release-it and git-cliff.
+This document describes the automated release workflow using Release Please and Conventional Commits.
 
 ## Overview
 
-The release process is initiated locally using release-it and fully automated through GitHub Actions:
+The release process is **fully automated** using [Release Please](https://github.com/googleapis/release-please):
 
-1. **Local environment** - Prepare release using release-it (version bump + changelog with git-cliff)
-2. **auto-release-tag.yml** - Automatically creates tags when release PR is merged to master
-3. **publish-npm.yml** - Automatically triggered by tag creation (npm publish)
-4. **publish-docker.yml** - Automatically triggered by tag creation (Docker publish)
+1. **Developers** - Write commits following [Conventional Commits](https://www.conventionalcommits.org/) format
+2. **Release Please** - Automatically creates/updates release PR based on commits
+3. **Merge Release PR** - Triggers automatic npm publish, Docker builds, and GitHub release
+4. **Done!** - Package is live, tags created, CHANGELOG updated
 
-**Key improvement**: Tags are now created automatically after PR merge, eliminating the manual tag creation step and ensuring releases only happen from the master branch.
+**Key benefits:**
+- ✅ Zero manual release steps
+- ✅ Automatic version bumping based on commit types
+- ✅ Automatic CHANGELOG generation
+- ✅ Automatic tagging and publishing
+- ✅ Consistent release quality
 
 ## Prerequisites
 
-- Node.js 22+ installed
-- npm 11.5.1+ installed
 - Git configured with your credentials
-- Write access to the repository
-- Clean working directory (`git status` shows no changes)
-- All tests passing locally
+- Write access to the repository (for merging release PRs)
+- Understanding of [Conventional Commits](https://www.conventionalcommits.org/)
+
+## Conventional Commits
+
+All commits to the master branch should follow the Conventional Commits format:
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Commit Types
+
+Release Please recognizes these commit types:
+
+| Type | Description | Version Bump | Appears in CHANGELOG |
+|------|-------------|--------------|---------------------|
+| `feat:` | New feature | **Minor** (0.X.0) | ✅ Features |
+| `fix:` | Bug fix | **Patch** (0.0.X) | ✅ Bug Fixes |
+| `perf:` | Performance improvement | **Patch** (0.0.X) | ✅ Performance Improvements |
+| `revert:` | Revert previous commit | **Patch** (0.0.X) | ✅ Reverts |
+| `docs:` | Documentation only | **Patch** (0.0.X) | ✅ Documentation |
+| `refactor:` | Code refactoring | **Patch** (0.0.X) | ✅ Code Refactoring |
+| `style:` | Code style changes | **Patch** (0.0.X) | ❌ Hidden |
+| `test:` | Test changes | **Patch** (0.0.X) | ❌ Hidden |
+| `build:` | Build system changes | **Patch** (0.0.X) | ❌ Hidden |
+| `ci:` | CI/CD changes | **Patch** (0.0.X) | ❌ Hidden |
+| `chore:` | Miscellaneous changes | **Patch** (0.0.X) | ❌ Hidden |
+
+### Breaking Changes
+
+To trigger a **Major** version bump (X.0.0), include `BREAKING CHANGE:` in the commit footer:
+
+```
+feat: new API for tag validation
+
+BREAKING CHANGE: validate_tag now returns a structured object instead of boolean
+```
+
+Or use the `!` marker:
+
+```
+feat!: redesign validate_tag API
+```
+
+### Examples
+
+**Feature (minor version bump):**
+```bash
+git commit -m "feat: add search_tags tool for keyword-based tag search"
+```
+
+**Bug fix (patch version bump):**
+```bash
+git commit -m "fix: handle undefined values in tag validation"
+```
+
+**Documentation (patch version bump):**
+```bash
+git commit -m "docs: update installation guide with Docker instructions"
+```
+
+**Breaking change (major version bump):**
+```bash
+git commit -m "feat!: change validate_tag return format
+
+BREAKING CHANGE: validate_tag now returns { valid: boolean, issues: string[] } instead of boolean"
+```
+
+**Multiple commits in one PR:**
+```bash
+git commit -m "feat: add get_preset_details tool"
+git commit -m "test: add tests for get_preset_details"
+git commit -m "docs: document get_preset_details API"
+# Release Please will detect the feat: and bump minor version
+```
 
 ## Release Workflow
 
-### Quick Start
+### Step 1: Write Conventional Commits
+
+All you need to do is write commits following the Conventional Commits format and merge them to master:
 
 ```bash
-# Interactive release (prompts for version)
-npm run release
+# Create feature branch
+git checkout -b feat/add-new-tool
 
-# Dry run (preview without changes)
-npm run release:dry
+# Make changes
+# ...
+
+# Commit with conventional format
+git commit -m "feat: add new tool for category exploration"
+
+# Push and create PR
+git push origin feat/add-new-tool
 ```
 
-### Detailed Steps
+### Step 2: Merge to Master
 
-### Step 1: Prepare Local Environment
+Once your PR is approved and merged to master, **Release Please automatically**:
 
-Ensure your local repository is up to date:
+1. ✅ Analyzes all commits since last release
+2. ✅ Determines version bump based on commit types
+3. ✅ Generates/updates CHANGELOG.md
+4. ✅ Creates or updates release PR
 
-```bash
-# Switch to master branch
-git checkout master
+**You don't need to do anything!** Release Please handles it all.
 
-# Pull latest changes
-git pull origin master
+### Step 3: Review Release PR
 
-# Verify clean working directory
-git status
+Release Please will create a PR like: **"chore(main): release 1.2.0"**
 
-# Ensure all tests pass
-npm run test
-npm run lint
-npm run typecheck
+This PR contains:
+- 📝 Updated `package.json` version
+- 📝 Updated `CHANGELOG.md` with all changes
+- 📝 Updated `.release-please-manifest.json`
+
+**Review the release PR:**
+1. Check version bump is correct (major/minor/patch)
+2. Review CHANGELOG entries
+3. Verify all important changes are documented
+
+**Note:** The release PR is automatically updated when new commits are merged to master. You can keep merging features, and Release Please will update the version and CHANGELOG accordingly.
+
+### Step 4: Merge Release PR
+
+When you're ready to release, simply **merge the release PR**. This triggers automatic:
+
+**GitHub Actions Workflow (`release-please.yml`):**
+1. ✅ Runs all tests (unit, integration, type checking, linting)
+2. ✅ Builds the package
+3. ✅ Generates SBOM (Software Bill of Materials)
+4. ✅ Creates SLSA Level 3 attestations
+5. ✅ Publishes to npm with provenance
+6. ✅ Creates Git tag (e.g., `v1.2.0`)
+7. ✅ Updates GitHub release with artifacts
+8. ✅ Uploads `dist.tar.gz` for Docker builds
+
+**publish-docker.yml** (triggered by tag):
+1. ✅ Builds multi-arch Docker images (amd64, arm64)
+2. ✅ Publishes to GitHub Container Registry (ghcr.io)
+3. ✅ Tags with version and `latest`
+4. ✅ Runs Trivy vulnerability scanning
+5. ✅ Signs images with Cosign
+
+### Step 5: Done!
+
+That's it! Your release is live:
+- 📦 npm package published: https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp
+- 🐳 Docker images published: https://github.com/gander-tools/osm-tagging-schema-mcp/pkgs/container/osm-tagging-schema-mcp
+- 🏷️ Git tag created: `vX.Y.Z`
+- 📋 GitHub release created: https://github.com/gander-tools/osm-tagging-schema-mcp/releases
+
+## Release Please Configuration
+
+Configuration is in `release-please-config.json`:
+
+```json
+{
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "@gander-tools/osm-tagging-schema-mcp",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-sections": [
+        // ... commit types mapping
+      ]
+    }
+  }
+}
 ```
-
-### Step 2: Dry Run (Optional but Recommended)
-
-Preview what release-it will do without making any changes:
-
-```bash
-# Preview the release
-npm run release:dry
-```
-
-**What dry run shows:**
-- ✅ Current version and next version
-- ✅ Commits since last release
-- ✅ CHANGELOG preview
-- ✅ Git commands that will be executed
-- ✅ GitHub release that will be created
-
-### Step 3: Create Release
-
-Run release-it to create the release:
-
-```bash
-# Interactive mode (prompts for version bump)
-npm run release
-```
-
-**What happens:**
-1. ✅ Prompts for version bump (patch/minor/major/custom)
-2. ✅ Bumps version in `package.json` and `package-lock.json`
-3. ✅ Generates CHANGELOG.md using git-cliff
-4. ✅ Creates release branch: `release/vX.Y.Z`
-5. ✅ Creates git commit: `chore(release): release vX.Y.Z`
-6. ✅ Pushes release branch to GitHub
-7. ⏸️  **No tag created** (tag created automatically after PR merge)
-8. ⏸️  **No GitHub release** (created by workflow after automatic tagging)
-
-**Interactive prompts:**
-- Version bump selection
-- Confirmation before each step
-
-### Step 4: Create Pull Request
-
-After release-it finishes:
-
-1. Go to GitHub repository
-2. You'll see a notification about new branch `release/vX.Y.Z`
-3. Click "Create Pull Request" (or auto-PR workflow creates it)
-4. Review the PR:
-   - ✅ Check version in package.json
-   - ✅ Review CHANGELOG.md entry
-   - ✅ Verify commit message
-5. Get review/approval (if required)
-6. Merge PR to master
-
-### Step 5: Automatic Tag Creation (Triggered by PR Merge)
-
-After merging the release PR to master, GitHub Actions automatically:
-
-**auto-release-tag.yml:**
-1. ✅ Detects release branch merge (`release/vX.Y.Z` → `master`)
-2. ✅ Extracts version from branch name
-3. ✅ Validates version format (vX.Y.Z)
-4. ✅ Verifies package.json version matches release branch
-5. ✅ Creates annotated git tag: `vX.Y.Z`
-6. ✅ Pushes tag to repository
-7. ✅ Adds comment to merged PR with status
-
-**Security safeguards:**
-- Only processes release branches merged to master
-- Validates version consistency between package.json and branch name
-- Checks for duplicate tags before creation
-
-### Step 6: Automatic Publishing (Triggered by Tag)
-
-When the tag is pushed, GitHub Actions automatically:
-
-**publish-npm.yml:**
-1. ✅ Validates tag was created from master branch (security)
-2. ✅ Runs all tests (unit, integration, type checking, linting)
-3. ✅ Builds the package
-4. ✅ Generates SBOM (Software Bill of Materials)
-5. ✅ Creates SLSA Level 3 attestations
-6. ✅ Publishes to npm with provenance
-7. ✅ Updates draft GitHub Release with security info
-
-**publish-docker.yml:**
-1. ✅ Validates tag was created from master branch (security)
-2. ✅ Builds multi-arch Docker images (amd64, arm64)
-3. ✅ Publishes to GitHub Container Registry (ghcr.io)
-4. ✅ Tags with version and `latest`
-5. ✅ Runs Trivy vulnerability scanning
-6. ✅ Signs images with Cosign
-
-**Monitor progress:**
-- GitHub Actions: https://github.com/gander-tools/osm-tagging-schema-mcp/actions
-- npm package: https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp
-- Docker images: https://github.com/gander-tools/osm-tagging-schema-mcp/pkgs/container/osm-tagging-schema-mcp
-
-### Step 7: Publish GitHub Release (Manual)
-
-1. Go to **Releases** on GitHub
-2. Find the draft release for your version
-3. Review the release notes
-4. Edit if needed (add highlights, breaking changes, etc.)
-5. Click **Publish release**
-
-## Release-It Configuration
-
-Configuration is in `.release-it.json`:
-
-- **Git**: Commit message format, branch requirements, no tagging
-- **Hooks**:
-  - `after:bump` - Runs git-cliff to generate CHANGELOG
-  - `before:git:release` - Creates release branch
-- **GitHub**: Disabled (releases created by workflow)
-- **npm**: Publishing disabled (done by GitHub Actions workflow)
 
 **Key settings:**
-- `requireBranch: "master"` - Start releases from master branch
-- `requireCleanWorkingDir: true` - No uncommitted changes
-- `git.tag: false` - Don't create tag (done manually after merge)
-- `git.push: true` - Push release branch to GitHub
-- `github.release: false` - Don't create GitHub release (done by workflow)
+- `release-type: "node"` - Node.js package (updates package.json)
+- `bump-minor-pre-major: true` - Features bump minor version before 1.0.0
+- `bump-patch-for-minor-pre-major: true` - Fixes bump patch before 1.0.0
+- `changelog-sections` - Maps commit types to CHANGELOG sections
+
+Current version is tracked in `.release-please-manifest.json`.
+
+## Manual Releases (Emergency Only)
+
+For emergency hotfixes or exceptional circumstances, use the manual workflow:
+
+```bash
+# Go to GitHub Actions
+# → Workflows → "Publish to NPM (Manual Dispatch)"
+# → Run workflow → Select master branch
+```
+
+**⚠️ Important:**
+- Only use for emergencies (e.g., security hotfix)
+- Ensure you're on master branch
+- Manually update version in package.json first
+- Creates draft GitHub release (you must publish manually)
+
+## Version Strategy
+
+Release Please automatically determines version bumps:
+
+| Commits | Version Bump | Example |
+|---------|--------------|---------|
+| Only `fix:`, `docs:`, `refactor:` | **Patch** | 1.0.0 → 1.0.1 |
+| At least one `feat:` | **Minor** | 1.0.0 → 1.1.0 |
+| Any commit with `BREAKING CHANGE:` or `!` | **Major** | 1.0.0 → 2.0.0 |
+
+**Pre-1.0.0 behavior:**
+- `feat:` → bumps minor (0.1.0 → 0.2.0)
+- `fix:` → bumps patch (0.1.0 → 0.1.1)
+- Breaking changes → bumps minor (0.1.0 → 0.2.0)
+
+**Post-1.0.0 behavior:**
+- `feat:` → bumps minor (1.0.0 → 1.1.0)
+- `fix:` → bumps patch (1.0.0 → 1.0.1)
+- Breaking changes → bumps major (1.0.0 → 2.0.0)
 
 ## Troubleshooting
 
-### "Working directory not clean"
-Commit or stash your changes before creating a release:
+### Release PR not created
 
-```bash
-# Check what's uncommitted
-git status
+**Cause:** No releasable commits since last release (only `chore:`, `ci:`, `test:`, etc.)
 
-# Stash changes
-git stash
+**Solution:** Merge at least one `feat:`, `fix:`, or `docs:` commit to trigger release.
 
-# Or commit changes
-git add .
-git commit -m "your message"
-```
+### Wrong version bump
 
-### "Not on master branch"
-release-it requires you to be on the master branch:
+**Cause:** Commits don't follow Conventional Commits format
 
-```bash
-git checkout master
-git pull origin master
-```
+**Solution:**
+1. Ensure commits use correct prefixes (`feat:`, `fix:`, etc.)
+2. For breaking changes, include `BREAKING CHANGE:` in footer or use `!`
+3. Release Please only sees commits merged to master
 
-### "Tag already exists"
-This version has already been released. Choose a higher version:
+### CHANGELOG missing entries
 
-```bash
-# Check existing tags
-git tag -l
+**Cause:** Commits are hidden types (`test:`, `chore:`, `ci:`, etc.)
 
-# If you need to delete a tag (⚠️ use with caution)
-git tag -d vX.Y.Z
-git push origin :refs/tags/vX.Y.Z
-```
+**Solution:** Use visible types for user-facing changes:
+- Use `fix:` instead of `chore:` for bug fixes
+- Use `feat:` instead of `chore:` for new features
+- Use `docs:` for documentation changes
 
-### Release workflow failed
-Check GitHub Actions logs:
-- Go to **Actions** tab
-- Find the failed workflow run
-- Review error logs
-- Fix issues locally and create new release
+### Need to skip release
 
-### Need to undo a release (before push)
+**Cause:** Release PR created but you want to include more changes
 
-If release-it failed or you want to undo before pushing:
+**Solution:** Just keep merging PRs to master. Release Please automatically updates the release PR with new commits and adjusts version/CHANGELOG.
 
-```bash
-# Cancel release-it when prompted (press Ctrl+C)
-# Or if branch was already pushed:
+### Publishing failed
 
-# Delete remote release branch
-git push origin --delete release/vX.Y.Z
+**Check GitHub Actions logs:**
+1. Go to **Actions** tab
+2. Find the failed "Release Please" workflow
+3. Review error logs in the `publish-npm` job
+4. Common issues:
+   - Tests failing
+   - Build errors
+   - npm authentication issues
 
-# Delete local release branch
-git branch -D release/vX.Y.Z
-```
+**Fix:**
+1. Fix the issue in a new PR
+2. Merge to master
+3. Re-run the failed workflow or merge will trigger new run
 
-### Automatic Tag Creation Failed
+### Need to undo a release
 
-If the auto-release-tag workflow fails:
+**If release PR not yet merged:**
+- Just close the release PR
+- Release Please will recreate it on next commit
 
-```bash
-# Check workflow logs
-# Go to Actions → Auto-Create Release Tag → View logs
+**If release already published:**
+- ⚠️ **Cannot unpublish npm packages** (npm policy)
+- Must publish a new patch version with fixes
+- Create PR with fixes, merge, and let Release Please create new release
 
-# Common issues:
-# 1. Version format invalid (not vX.Y.Z)
-# 2. package.json version doesn't match branch
-# 3. Tag already exists
+### Want to release specific version
 
-# To fix and retry:
-# 1. Fix the issue locally
-# 2. Create new release PR with corrected version
-# 3. Merge the new PR
-```
+Release Please determines versions automatically. For manual control:
 
-### Tag Created from Wrong Branch
+1. Use commit types strategically:
+   - `fix:` for patch bumps
+   - `feat:` for minor bumps
+   - `feat!:` or `BREAKING CHANGE:` for major bumps
 
-If a tag was accidentally created from a feature branch:
+2. Or manually edit release PR before merging:
+   - Edit `package.json` version
+   - Edit `CHANGELOG.md` entries
+   - Commit changes to release PR branch
+   - Merge the updated release PR
 
-```bash
-# The workflows will detect this and block deployment
-# You'll see security warnings in Actions logs
+## Comparison: Old vs New Process
 
-# To fix:
-# 1. Delete the wrong tag
-git push origin :refs/tags/vX.Y.Z
-git tag -d vX.Y.Z
+### Old Process (release-it)
+1. Run `npm run release` locally
+2. Answer interactive prompts
+3. Create release/vX.Y.Z branch manually
+4. Push branch
+5. Create PR manually
+6. Merge PR
+7. auto-release-from-pr.yml publishes
 
-# 2. Ensure the release commit is on master
-git checkout master
-git log --oneline  # verify release commit is here
+### New Process (Release Please)
+1. Write conventional commits
+2. Merge to master
+3. **Done!** (Release Please handles everything)
 
-# 3. Create tag from master
-git tag -a vX.Y.Z -m "Release version X.Y.Z"
-git push origin vX.Y.Z
-```
-
-### Need to undo a release (after PR merge)
-
-If you already merged the release PR but want to undo:
-
-```bash
-# Delete remote tag (stops automatic publishing)
-git push origin :refs/tags/vX.Y.Z
-
-# Delete local tag
-git tag -d vX.Y.Z
-
-# Revert the commit
-git revert HEAD
-git push
-```
-
-**⚠️ Warning:** If the package was already published to npm, you cannot unpublish it (npm policy). You'll need to publish a new patch version.
-
-### git-cliff not generating changelog correctly
-
-Check `cliff.toml` configuration:
-
-```bash
-# Preview what git-cliff will generate
-npx git-cliff --unreleased
-
-# Test with specific tag
-npx git-cliff --tag vX.Y.Z --unreleased
-```
+**Time savings:** ~5 minutes per release → ~30 seconds
 
 ## Tools
 
-- **release-it**: Release automation tool
-  - Configuration: `.release-it.json`
-  - Documentation: https://github.com/release-it/release-it
-- **git-cliff**: Changelog generator
-  - Configuration: `cliff.toml`
-  - Documentation: https://git-cliff.org/
+- **Release Please**: Automated release management
+  - Configuration: `release-please-config.json`
+  - Manifest: `.release-please-manifest.json`
+  - Documentation: https://github.com/googleapis/release-please
+- **Conventional Commits**: Commit message standard
+  - Documentation: https://www.conventionalcommits.org/
 - **GitHub Actions**: CI/CD automation
-  - `auto-release-tag.yml`: Automatic tag creation from release PRs
-  - `publish-npm.yml`: npm publishing with SLSA attestations
+  - `release-please.yml`: Automatic release PR and publishing
   - `publish-docker.yml`: Docker image publishing
+  - `publish-npm.yml`: Manual emergency publishing
 - **npm Trusted Publishers**: Secure publishing with OIDC authentication
 - **SLSA Attestations**: Supply chain security
 
-## Release Scripts
+## Best Practices
 
-```bash
-# Interactive release (prompts for version)
-npm run release
-
-# Dry run (preview without changes)
-npm run release:dry
-```
-
-## Release Workflow Summary
-
-1. **Local**: `npm run release` → creates `release/vX.Y.Z` branch
-2. **GitHub**: Create PR from release branch
-3. **Review**: Check version, CHANGELOG, get approval
-4. **Merge**: Merge PR to master
-5. **Auto-Tag**: GitHub Actions automatically creates `vX.Y.Z` tag
-6. **Auto-Publish**: GitHub Actions automatically publish to npm + Docker
-7. **Manual**: Publish draft GitHub Release (optional)
-
-**Key Benefits:**
-- ✅ No manual tag creation required
-- ✅ Automatic security validation (master branch only)
-- ✅ Version consistency validation
-- ✅ Eliminates human error in tagging process
+1. **Write meaningful commit messages**: CHANGELOG is generated from commits
+2. **Use correct commit types**: Determines version bump and CHANGELOG section
+3. **Include descriptions**: Helps users understand changes
+4. **One logical change per commit**: Makes CHANGELOG clearer
+5. **Document breaking changes**: Always include `BREAKING CHANGE:` explanation
+6. **Review release PRs**: Check version and CHANGELOG before merging
+7. **Don't rush releases**: Let Release Please accumulate changes
 
 ## Related Documentation
 
-- [contributing.md](./contributing.md) - Contribution guidelines
+- [contributing.md](./contributing.md) - Contribution guidelines (includes commit conventions)
 - [CHANGELOG.md](../../CHANGELOG.md) - Version history
 - [security.md](../deployment/security.md) - Security and provenance documentation
-- [release-it docs](https://github.com/release-it/release-it) - Release automation tool
-- [git-cliff docs](https://git-cliff.org/) - Changelog generator
+- [Release Please](https://github.com/googleapis/release-please) - Release automation tool
+- [Conventional Commits](https://www.conventionalcommits.org/) - Commit message standard
