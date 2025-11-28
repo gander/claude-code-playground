@@ -44,6 +44,47 @@ If a user without write access attempts to trigger a build, they will receive a 
 - Request write access if you are a regular contributor
 ```
 
+### Security Model & Trade-offs
+
+**Known Risk:** The workflow checks out and builds code from PRs in a privileged context with access to secrets and registry credentials.
+
+**Mitigation Strategies:**
+
+1. **Permission Gating** (Primary Defense)
+   - Only users with write/admin access can trigger builds
+   - Verified via GitHub API before checkout
+   - External contributors cannot trigger builds
+
+2. **Shallow Clone**
+   - `fetch-depth: 1` - only current commit
+   - Reduces exposure to git history manipulation
+
+3. **Credential Isolation**
+   - `persist-credentials: false` - no git credentials in working directory
+   - GITHUB_TOKEN not accessible in repository after checkout
+
+4. **Minimal Permissions**
+   - Each job has only required permissions
+   - Default permissions: read-only
+
+**Residual Risk:**
+
+Even with permission checks, **trusted users with write access can execute arbitrary code** during Docker build. This is an accepted trade-off for on-demand PR builds.
+
+**Risk Acceptance:**
+- ✅ Acceptable: Trusted team members need to test PR changes
+- ✅ Mitigated: Permission checks prevent external contributors
+- ⚠️  Residual: Malicious insider with write access could abuse this
+- 🛡️ Defense-in-depth: Vulnerability scanning, image signing, SARIF reporting
+
+**Recommendations for Maximum Security:**
+
+If your threat model requires zero risk from PR code execution:
+- Use manual approval gates before builds
+- Build in isolated environment without secrets
+- Use separate service account with limited access
+- Review Dockerfile changes before triggering builds
+
 ## Trigger Methods
 
 There are **three ways** to trigger an on-demand Docker build:

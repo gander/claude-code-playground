@@ -240,11 +240,16 @@ jobs:
               content: 'rocket'
             });
 
+      # SECURITY NOTE: Checking out untrusted PR code in privileged context
+      # Mitigation: Permission check in check-trigger job ensures only users
+      # with write/admin access can trigger builds. This prevents external
+      # contributors from executing malicious code.
       - name: Checkout PR branch
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ needs.check-trigger.outputs.pr-sha }}
-          fetch-depth: 0
+          fetch-depth: 1  # Shallow clone - only need current commit
+          persist-credentials: false  # Don't persist GitHub token in git config
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
