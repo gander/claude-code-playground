@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v1.1.0...v1.1.1) (2025-11-28)
+
+
+### Bug Fixes
+
+* Enable 'latest' tag for Docker images in workflow_run triggers ([298a7ca](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/298a7cadb6fa175eb08f8548123beca39b1e9bca))
+* Enable 'latest' tag for Docker images in workflow_run triggers ([#309](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/309)) ([bb50fca](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/bb50fca69cdebf67fd9c7f6809a4f4ee8ee0614b))
+
 ## [1.1.0](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v1.0.6...v1.1.0) (2025-11-28)
 
 
