@@ -15,7 +15,7 @@
 [![Node.js Version](https://img.shields.io/badge/node-24-brightgreen?logo=node.js)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![MCP](https://img.shields.io/badge/MCP-1.21-orange)](https://modelcontextprotocol.io)
+[![MCP](https://img.shields.io/badge/MCP-1.23-orange)](https://modelcontextprotocol.io)
 [![Built with Claude Code](https://img.shields.io/badge/Built%20with-Claude%20Code-blueviolet?logo=anthropic)](https://claude.ai/code)
 
 ## What is this?
