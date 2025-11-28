@@ -116,8 +116,8 @@ jobs:
             fi
           fi
 
-          echo "has-permission=$HAS_PERMISSION" >> $GITHUB_OUTPUT
-          echo "actor=$ACTOR" >> $GITHUB_OUTPUT
+          echo "has-permission=${HAS_PERMISSION}" >> "$GITHUB_OUTPUT"
+          echo "actor=${ACTOR}" >> "$GITHUB_OUTPUT"
 
       - name: Check trigger conditions
         id: check
@@ -169,24 +169,26 @@ jobs:
           fi
 
           # Get PR details if we have a PR number
-          if [ "$SHOULD_BUILD" = "true" ] && [ -n "$PR_NUMBER" ]; then
-            echo "📋 Fetching PR #$PR_NUMBER details..."
+          if [ "${SHOULD_BUILD}" = "true" ] && [ -n "${PR_NUMBER}" ]; then
+            echo "📋 Fetching PR #${PR_NUMBER} details..."
 
-            PR_DATA=$(gh pr view $PR_NUMBER --repo ${{ github.repository }} --json headRefName,headRefOid)
-            PR_REF=$(echo "$PR_DATA" | jq -r '.headRefName')
-            PR_SHA=$(echo "$PR_DATA" | jq -r '.headRefOid')
+            PR_DATA=$(gh pr view "${PR_NUMBER}" --repo "${{ github.repository }}" --json headRefName,headRefOid)
+            PR_REF=$(echo "${PR_DATA}" | jq -r '.headRefName')
+            PR_SHA=$(echo "${PR_DATA}" | jq -r '.headRefOid')
 
-            echo "  Branch: $PR_REF"
-            echo "  SHA: $PR_SHA"
+            echo "  Branch: ${PR_REF}"
+            echo "  SHA: ${PR_SHA}"
           fi
 
-          echo "should-build=$SHOULD_BUILD" >> $GITHUB_OUTPUT
-          echo "pr-number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          echo "pr-ref=$PR_REF" >> $GITHUB_OUTPUT
-          echo "pr-sha=$PR_SHA" >> $GITHUB_OUTPUT
+          {
+            echo "should-build=${SHOULD_BUILD}"
+            echo "pr-number=${PR_NUMBER}"
+            echo "pr-ref=${PR_REF}"
+            echo "pr-sha=${PR_SHA}"
+          } >> "$GITHUB_OUTPUT"
 
-          if [ "$SHOULD_BUILD" = "true" ]; then
-            echo "::notice::Docker build will proceed for PR #$PR_NUMBER ($PR_REF @ $PR_SHA)"
+          if [ "${SHOULD_BUILD}" = "true" ]; then
+            echo "::notice::Docker build will proceed for PR #${PR_NUMBER} (${PR_REF} @ ${PR_SHA})"
           else
             echo "::notice::Workflow triggered but conditions not met, skipping Docker build"
           fi
@@ -306,14 +308,16 @@ jobs:
       - name: Image digest
         run: |
           echo "::notice::Image pushed with digest ${{ steps.build-and-push.outputs.digest }}"
-          echo "### 🐳 Docker Build Complete" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Digest:** \`${{ steps.build-and-push.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "### 🐳 Docker Build Complete"
+            echo ""
+            echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`"
+            echo "**Tags:**"
+            echo "\`\`\`"
+            echo "${{ steps.meta.outputs.tags }}"
+            echo "\`\`\`"
+            echo "**Digest:** \`${{ steps.build-and-push.outputs.digest }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       # Vulnerability Scanning with Trivy
       - name: Run Trivy vulnerability scanner
