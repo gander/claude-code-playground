@@ -134,7 +134,7 @@ jobs:
           echo "✓ Build artifacts verified"
 
       - name: Upload dist/ artifact for Docker build
-        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         # NOTE: SHA pinning required for security. IDE warnings are false positives.
         with:
           name: dist-${{ needs.validate-environment.outputs.version_tag }}
