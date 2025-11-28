@@ -212,7 +212,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest,enable=${{ needs.extract-version.outputs.is-release == 'true' && startsWith(github.ref, 'refs/tags/v') }},priority=1000
+            type=raw,value=latest,enable=${{ needs.extract-version.outputs.is-release == 'true' }},priority=1000
             type=raw,value=${{ needs.extract-version.outputs.version-tag }},enable=${{ needs.extract-version.outputs.is-release == 'true' }},priority=900
             type=edge,enable=${{ needs.extract-version.outputs.version-tag == 'edge' }},priority=800
             type=ref,event=pr,priority=700
