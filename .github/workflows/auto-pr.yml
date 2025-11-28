@@ -117,16 +117,6 @@ jobs:
           echo "   Visit: https://github.com/${{ github.repository }}/pull/new/${{ steps.branch.outputs.name }}"
           echo ""
 
-      - name: Add labels
-        if: steps.pr-check.outputs.exists == '0' && steps.create-pr.outcome == 'success'
-        env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-        run: |
-          # Add labels to the PR (continue even if labels don't exist)
-          gh pr edit "${{ steps.branch.outputs.name }}" \
-            --add-label "claude code" || true
-
       - name: PR Info
         if: steps.pr-check.outputs.exists == '0' && steps.create-pr.outcome == 'success'
         env:
