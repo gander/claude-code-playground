@@ -1,8 +1,7 @@
-name: Auto Release from Merged Release PR
+name: Release Please
 
 on:
-  pull_request:
-    types: [closed]
+  push:
     branches:
       - master
 
@@ -11,12 +10,38 @@ permissions:
   contents: read
 
 jobs:
-  auto-release:
-    name: Build, Publish, Tag and Release
+  create-release:
+    name: Create or Update Release PR
     runs-on: ubuntu-latest
-    if: |
-      github.event.pull_request.merged == true &&
-      startsWith(github.event.pull_request.head.ref, 'release/')
+
+    # Required permissions for release-please to create/update PRs and releases
+    permissions:
+      contents: write       # Required for creating releases and updating files
+      pull-requests: write  # Required for creating/updating release PRs
+      id-token: write      # Required for npm provenance
+
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Run Release Please
+        uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4.4.0
+        id: release
+
+  # This job executes ONLY after merging a Release PR
+  publish-npm:
+    name: Build, Publish, Tag and Release
+    needs: create-release
+    if: ${{ needs.create-release.outputs.release_created }}
+    runs-on: ubuntu-latest
 
     # Required permissions for complete release process
     permissions:
@@ -26,31 +51,15 @@ jobs:
       pull-requests: write # Required for PR comments
 
     outputs:
-      version: ${{ steps.version.outputs.version_number }}
-      version_tag: ${{ steps.version.outputs.version }}
+      version: ${{ needs.create-release.outputs.version }}
+      version_tag: ${{ needs.create-release.outputs.tag_name }}
 
     steps:
-      - name: Extract version from release branch name
-        id: version
-        env:
-          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-        run: |
-          # Extract version from "release/vX.Y.Z" format
-          VERSION="${BRANCH_NAME#release/}"
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "version_number=${VERSION#v}" >> "$GITHUB_OUTPUT"
-          echo "✅ Extracted version from branch '${BRANCH_NAME}': ${VERSION}"
-
-      - name: Validate version format
-        env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          if [[ ! "$RELEASE_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "❌ Invalid version format: $RELEASE_VERSION"
-            echo "Expected format: vX.Y.Z (e.g., v1.2.3)"
-            exit 1
-          fi
-          echo "✅ Version format validation passed: $RELEASE_VERSION"
+      - name: Harden Runner
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        with:
+          disable-sudo: true
+          egress-policy: audit
 
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
@@ -67,17 +76,17 @@ jobs:
 
       - name: Verify package.json version matches release version
         env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version_number }}
+          RELEASE_VERSION: ${{ needs.create-release.outputs.version }}
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
 
           if [ "$PACKAGE_VERSION" != "$RELEASE_VERSION" ]; then
             echo "❌ Version mismatch detected:"
             echo "  package.json version: $PACKAGE_VERSION"
-            echo "  Release branch version: $RELEASE_VERSION"
+            echo "  Release Please version: $RELEASE_VERSION"
             echo ""
-            echo "This indicates the release process did not complete properly."
-            echo "Please ensure package.json version was updated before merging the release PR."
+            echo "This should not happen with Release Please."
+            echo "Please check the release-please configuration."
             exit 1
           fi
 
@@ -150,38 +159,11 @@ jobs:
         # Note: No NODE_AUTH_TOKEN needed - npm uses OIDC authentication automatically
         # Requires: id-token: write permission and npm >= 11.6.4
 
-      # Only create tag AFTER successful NPM publication
-      - name: Create release tag
-        env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          WORKFLOW_NAME: ${{ github.workflow }}
-          COMMIT_SHA: ${{ github.sha }}
-        run: |
-          # Configure git user for tagging
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Create annotated tag
-          git tag -a "$RELEASE_VERSION" -m "Release $RELEASE_VERSION
-
-          Release created automatically from merged release PR #$PR_NUMBER.
-          NPM package published successfully before tag creation.
-
-          Generated by GitHub Actions workflow: $WORKFLOW_NAME
-          Commit: $COMMIT_SHA
-          "
-
-          # Push tag to origin
-          git push origin "$RELEASE_VERSION"
-
-          echo "✅ Successfully created and pushed tag: $RELEASE_VERSION"
-
       - name: Upload dist/ artifact for Docker build
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         # NOTE: SHA pinning required for security. IDE warnings are false positives.
         with:
-          name: dist-${{ steps.version.outputs.version }}
+          name: dist-${{ needs.create-release.outputs.tag_name }}
           path: dist/
           retention-days: 7
           if-no-files-found: error
@@ -191,25 +173,23 @@ jobs:
           tar czf dist.tar.gz dist/
           echo "✓ Created dist.tar.gz ($(du -h dist.tar.gz | cut -f1))"
 
-      # Only create GitHub release AFTER successful tag creation
-      - name: Create GitHub Release
+      - name: Update GitHub Release with dist artifact
         uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
         with:
-          tag_name: ${{ steps.version.outputs.version }}
-          name: Release ${{ steps.version.outputs.version }}
+          tag_name: ${{ needs.create-release.outputs.tag_name }}
           files: dist.tar.gz
           body: |
             ## 🚀 Automatically Published Release
 
-            Version `${{ steps.version.outputs.version_number }}` has been successfully published:
+            Version `${{ needs.create-release.outputs.version }}` has been successfully published:
 
             ### 📦 NPM Package
             - Package: [@gander-tools/osm-tagging-schema-mcp](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
-            - Install: `npx @gander-tools/osm-tagging-schema-mcp@${{ steps.version.outputs.version_number }}`
+            - Install: `npx @gander-tools/osm-tagging-schema-mcp@${{ needs.create-release.outputs.version }}`
 
             ### 🐳 Docker Image
             Docker images built from this release use the same `dist/` artifact as the NPM package:
-            - Pull: `docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:${{ steps.version.outputs.version_number }}`
+            - Pull: `docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:${{ needs.create-release.outputs.version }}`
             - Build artifact: `dist.tar.gz` (attached to this release)
 
             ### 🔐 Provenance & Security
@@ -239,70 +219,27 @@ jobs:
 
             **Verify SLSA attestations:**
             ```bash
-            gh attestation verify oci://ghcr.io/gander-tools/osm-tagging-schema-mcp:${{ steps.version.outputs.version_number }} --owner gander-tools
+            gh attestation verify oci://ghcr.io/gander-tools/osm-tagging-schema-mcp:${{ needs.create-release.outputs.version }} --owner gander-tools
             ```
 
             ### 📋 Release Process
 
-            This release was created automatically from merged release PR [#${{ github.event.pull_request.number }}](${{ github.event.pull_request.html_url }}).
+            This release was created automatically by [Release Please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
             **Atomic release process:**
             1. ✅ Build and test validation
             2. ✅ NPM package published with provenance
-            3. ✅ Git tag created (only after NPM success)
-            4. ✅ GitHub release created (only after tag success)
+            3. ✅ Git tag created by Release Please
+            4. ✅ GitHub release updated with artifacts
 
-            See [CHANGELOG.md](./CHANGELOG.md) for detailed changes.
+            See the changes below for detailed information.
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Add success comment to merged PR
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        continue-on-error: true
-        env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-          RELEASE_VERSION_NUMBER: ${{ steps.version.outputs.version_number }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPOSITORY: ${{ github.repository }}
-        with:
-          script: |
-            const version = process.env.RELEASE_VERSION;
-            const versionNumber = process.env.RELEASE_VERSION_NUMBER;
-            const prNumber = process.env.PR_NUMBER;
-            const repository = process.env.REPOSITORY;
-
-            const comment = `🚀 **Release ${version} published successfully!**
-
-            ### ✅ Completed Successfully:
-            - NPM package published with provenance
-            - Git tag \`${version}\` created
-            - GitHub release created
-            - SLSA attestations generated
-            - Docker artifact prepared
-
-            ### 📦 Installation:
-            \`\`\`bash
-            npx @gander-tools/osm-tagging-schema-mcp@${versionNumber}
-            \`\`\`
-
-            ### 🔗 Links:
-            - [NPM Package](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp/v/${versionNumber})
-            - [GitHub Release](https://github.com/${repository}/releases/tag/${version})
-            - [Docker Workflow](https://github.com/${repository}/actions/workflows/publish-docker.yml)
-
-            **All done automatically!** 🎉`;
-
-            try {
-              await github.rest.issues.createComment({
-                issue_number: parseInt(prNumber),
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: comment
-              });
-              console.log(`✅ Successfully added success comment to PR #${prNumber}`);
-            } catch (error) {
-              console.log(`⚠️ Failed to add comment to PR #${prNumber}:`, error.message);
-              console.log('This is not critical - the release was created successfully');
-            }
+      - name: Log release info
+        run: |
+          echo "✅ Successfully published version ${{ needs.create-release.outputs.version }}"
+          echo "📦 Package: @gander-tools/osm-tagging-schema-mcp@${{ needs.create-release.outputs.version }}"
+          echo "🏷️  Tag: ${{ needs.create-release.outputs.tag_name }}"
