@@ -420,7 +420,7 @@ jobs:
 
       - name: Set up Node.js (on-demand builds only)
         if: needs.check-build-type.outputs.build-type == 'on-demand'
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version: '22'
 
