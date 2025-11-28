@@ -1,168 +1,161 @@
 name: Docker Build and Publish
 
-# ARCHITECTURE: Unified Docker Build Workflow
-#
-# This workflow handles version tag releases, on-demand PR builds, edge builds, and manual version builds:
-#
-# Build Types:
-# 1. Release builds (v*.*.*):
-#    - Triggered by version tags on master
-#    - Downloads prebuilt dist/ from GitHub Release
-#    - Uses Dockerfile.release
-#    - Produces: latest, semver tags
-#
-# 2. On-demand PR builds:
-#    - Triggered by: label (docker:build), comment (/docker-build), or manual trigger with PR number
-#    - Builds dist/ from source
-#    - Uses Dockerfile.release (same as release builds)
-#    - Produces: pr-<number>, pr-<number>-<sha> tags
-#
-# 3. Edge builds:
-#    - Triggered by: manual trigger with empty version input
-#    - Builds dist/ from source
-#    - Uses Dockerfile.release
-#    - Produces: edge tag
-#
-# 4. Manual version builds:
-#    - Triggered by: manual trigger with semantic version (e.g., v1.2.3)
-#    - Builds dist/ from source
-#    - Uses Dockerfile.release
-#    - Produces: specified version tag
-#
-# Manual Trigger Version Input:
-# - Empty "" → edge tag
-# - Number (e.g., "123") → pr-123 tag
-# - Semantic version (e.g., "v1.2.3") → v1.2.3 tag
-#
-# This workflow does NOT build on:
-# - Regular PR events (only labeled/comment triggers)
-# - Merge to master branch
-#
-# Security layers for on-demand builds:
-# 1. Permission gating (write/admin access required)
-# 2. Shallow clone (fetch-depth: 1)
-# 3. Credential isolation (persist-credentials: false)
-# 4. Minimal permissions (explicit per-job)
-
 on:
-  # Version tag triggers (automatic release builds)
+  # Automatic trigger after successful NPM publish
+  workflow_run:
+    workflows: ["Publish to NPM (Manual Dispatch)"]
+    types:
+      - completed
+    branches:
+      - master
+
+  # Version tag triggers
   push:
+    branches:
+      - master
     tags:
       - 'v*.*.*'
 
-  # Manual trigger with version input (on-demand builds)
+  # Manual trigger with version input
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to build: PR number (e.g. "123" → pr-123), semantic version (e.g. "v1.2.3"), or empty for "edge" tag'
-        required: false
+        description: 'NPM package version to build (e.g., v1.2.3)'
+        required: true
         type: string
-      push_image:
-        description: 'Push image to registry (default: true)'
-        required: false
-        type: boolean
-        default: true
+
+  pull_request:
+    branches:
+      - 'master'
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
-# Default permissions - minimal by default, each job defines its own
-permissions:
-  contents: read
-
 jobs:
-  # Determine build type and validate triggers
-  check-build-type:
-    name: Check Build Type and Trigger Conditions
+  extract-version:
+    name: Extract Version and Validate
     runs-on: ubuntu-latest
     outputs:
-      build-type: ${{ steps.determine.outputs.build-type }}
-      should-build: ${{ steps.final-check.outputs.should-build }}
-      pr-number: ${{ steps.pr-check.outputs.pr-number }}
-      pr-ref: ${{ steps.pr-check.outputs.pr-ref }}
-      pr-sha: ${{ steps.pr-check.outputs.pr-sha }}
-      has-permission: ${{ steps.permission.outputs.has-permission }}
-      actor: ${{ steps.permission.outputs.actor }}
-      tag-is-master: ${{ steps.tag-check.outputs.is-master }}
-      version-type: ${{ steps.version-check.outputs.version-type }}
-      version-tag: ${{ steps.version-check.outputs.version-tag }}
+      version-tag: ${{ steps.version.outputs.version-tag }}
+      should-build: ${{ steps.version.outputs.should-build }}
+      is-release: ${{ steps.version.outputs.is-release }}
 
     permissions:
       contents: read
-      pull-requests: read
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
-          fetch-depth: 0  # Need full history for tag validation
+          fetch-depth: 0
 
-      - name: Determine build type
-        id: determine
+      - name: Extract version from trigger
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          BUILD_TYPE="unknown"
+          VERSION_TAG=""
           SHOULD_BUILD="false"
+          IS_RELEASE="false"
 
-          if [[ "${{ github.ref }}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            BUILD_TYPE="release"
-            SHOULD_BUILD="true"
-            echo "🏷️  Version tag build: ${{ github.ref_name }}"
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION_INPUT="${{ inputs.version }}"
+          # workflow_run - triggered after NPM publish
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            # Check if workflow_run was successful
+            if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+              echo "::warning::NPM publish workflow failed, skipping Docker build"
+              echo "should-build=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
 
-            if [ -z "$VERSION_INPUT" ]; then
-              # Empty input → edge build
-              BUILD_TYPE="edge"
-              SHOULD_BUILD="true"
-              echo "🔧 Manual edge build"
-            elif [[ "$VERSION_INPUT" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              # Semantic version → release build
-              BUILD_TYPE="release"
-              SHOULD_BUILD="true"
-              echo "🔧 Manual release build for version: $VERSION_INPUT"
-            elif [[ "$VERSION_INPUT" =~ ^[0-9]+$ ]]; then
-              # Number → PR build
-              BUILD_TYPE="on-demand"
-              echo "🔧 Manual on-demand build for PR #$VERSION_INPUT"
-            else
-              echo "::error::Invalid version input: '$VERSION_INPUT'. Expected: PR number (e.g. '123'), semantic version (e.g. 'v1.2.3'), or empty for edge"
+            # Get the latest draft release (created by publish-npm.yml)
+            VERSION_TAG=$(gh release list --limit 1 --json tagName,isDraft --jq '.[] | select(.isDraft == true) | .tagName')
+
+            if [ -z "$VERSION_TAG" ]; then
+              echo "::error::Failed to find draft release from npm publish workflow"
+              echo "should-build=false" >> "$GITHUB_OUTPUT"
               exit 1
             fi
-          elif [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "issue_comment" ]; then
-            BUILD_TYPE="on-demand"
-            echo "🎯 On-demand PR build"
+
+            IS_RELEASE="true"
+            SHOULD_BUILD="true"
+            echo "✅ Building Docker image for version: $VERSION_TAG (from npm publish workflow)"
+
+          # workflow_dispatch - manual trigger with version
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION_TAG="${{ inputs.version }}"
+
+            # Validate version format
+            if ! [[ "$VERSION_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::Invalid version format: '$VERSION_TAG'. Expected semantic version (e.g., v1.2.3)"
+              echo "should-build=false" >> "$GITHUB_OUTPUT"
+              exit 1
+            fi
+
+            # Check if release exists
+            if ! gh release view "$VERSION_TAG" --repo "${{ github.repository }}" > /dev/null 2>&1; then
+              echo "::error::Release $VERSION_TAG does not exist. Create release first via publish-npm.yml workflow."
+              echo "should-build=false" >> "$GITHUB_OUTPUT"
+              exit 1
+            fi
+
+            IS_RELEASE="true"
+            SHOULD_BUILD="true"
+            echo "✅ Manual Docker build for version: $VERSION_TAG"
+
+          # push tag - version tag trigger
+          elif [[ "${{ github.ref }}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            VERSION_TAG="${{ github.ref_name }}"
+            IS_RELEASE="true"
+            SHOULD_BUILD="true"
+            echo "✅ Version tag build: $VERSION_TAG"
+
+          # push master - edge build
+          elif [ "${{ github.ref }}" = "refs/heads/master" ]; then
+            VERSION_TAG="edge"
+            IS_RELEASE="false"
+            SHOULD_BUILD="true"
+            echo "✅ Edge build from master branch"
+
+          # pull_request - PR build
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            VERSION_TAG="pr-${{ github.event.pull_request.number }}"
+            IS_RELEASE="false"
+            SHOULD_BUILD="true"
+            echo "✅ PR build: $VERSION_TAG"
+
+          else
+            echo "::warning::Unknown trigger, skipping build"
+            SHOULD_BUILD="false"
           fi
 
-          echo "build-type=${BUILD_TYPE}" >> "$GITHUB_OUTPUT"
-          echo "should-build=${SHOULD_BUILD}" >> "$GITHUB_OUTPUT"
+          {
+            echo "version-tag=$VERSION_TAG"
+            echo "is-release=$IS_RELEASE"
+            echo "should-build=$SHOULD_BUILD"
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Parse version input for manual triggers
-        id: version-check
-        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
-        run: |
-          VERSION_INPUT="${{ inputs.version }}"
-          VERSION_TYPE=""
-          VERSION_TAG=""
+  validate-branch:
+    name: Validate Tag is on Master Branch
+    runs-on: ubuntu-latest
+    needs: extract-version
+    # Only run for release builds triggered by tags (not workflow_run or workflow_dispatch)
+    if: needs.extract-version.outputs.is-release == 'true' && startsWith(github.ref, 'refs/tags/')
+    outputs:
+      is-master: ${{ steps.check.outputs.is-master }}
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
 
-          if [[ "$VERSION_INPUT" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            # Semantic version
-            VERSION_TYPE="semver"
-            VERSION_TAG="$VERSION_INPUT"
-            echo "📦 Semantic version detected: $VERSION_TAG"
-          elif [[ "$VERSION_INPUT" =~ ^[0-9]+$ ]]; then
-            # PR number
-            VERSION_TYPE="pr"
-            VERSION_TAG="$VERSION_INPUT"
-            echo "🔢 PR number detected: #$VERSION_TAG"
-          fi
+    permissions:
+      contents: read
 
-          echo "version-type=${VERSION_TYPE}" >> "$GITHUB_OUTPUT"
-          echo "version-tag=${VERSION_TAG}" >> "$GITHUB_OUTPUT"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          fetch-depth: 0  # Fetch full history to check branch ancestry
 
-      - name: Check tag is on master branch
-        id: tag-check
-        if: steps.determine.outputs.build-type == 'release' && startsWith(github.ref, 'refs/tags/')
+      - name: Check if tag was created from master branch
+        id: check
         run: |
           # Get the commit SHA that the tag points to
           TAG_COMMIT=$(git rev-list -n 1 "${{ github.ref_name }}")
@@ -172,6 +165,7 @@ jobs:
           if git merge-base --is-ancestor "${TAG_COMMIT}" origin/master; then
             echo "✅ Tag ${{ github.ref_name }} was created from master branch"
             echo "is-master=true" >> "$GITHUB_OUTPUT"
+            echo "should-deploy=true" >> "$GITHUB_OUTPUT"
           else
             echo "❌ Tag ${{ github.ref_name }} was NOT created from master branch"
             echo ""
@@ -185,213 +179,21 @@ jobs:
             echo "   3. Create tag from master: git tag ${{ github.ref_name }} && git push origin ${{ github.ref_name }}"
             echo ""
             echo "is-master=false" >> "$GITHUB_OUTPUT"
+            echo "should-deploy=false" >> "$GITHUB_OUTPUT"
             exit 1
           fi
 
-      - name: Check permissions for on-demand builds
-        id: permission
-        if: steps.determine.outputs.build-type == 'on-demand'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          HAS_PERMISSION="false"
-          ACTOR=""
-
-          # workflow_dispatch - always allowed (requires repo access to trigger)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            HAS_PERMISSION="true"
-            ACTOR="${{ github.actor }}"
-            echo "✓ workflow_dispatch trigger - permission granted to $ACTOR"
-
-          # PR label trigger - check who added the label
-          elif [ "${{ github.event_name }}" = "pull_request" ]; then
-            ACTOR="${{ github.event.sender.login }}"
-            echo "🔍 Checking permissions for $ACTOR (added label)"
-
-            PERMISSION=$(gh api repos/${{ github.repository }}/collaborators/$ACTOR/permission --jq '.permission')
-            echo "  Permission level: $PERMISSION"
-
-            if [[ "$PERMISSION" == "admin" || "$PERMISSION" == "write" ]]; then
-              HAS_PERMISSION="true"
-              echo "  ✓ $ACTOR has write access"
-            else
-              HAS_PERMISSION="false"
-              echo "  ✗ $ACTOR does not have write access"
-              echo "::warning::Docker build blocked: User $ACTOR attempted to trigger build without write access"
-            fi
-
-          # PR comment trigger - check who commented
-          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
-            ACTOR="${{ github.event.comment.user.login }}"
-            echo "🔍 Checking permissions for $ACTOR (commented)"
-
-            PERMISSION=$(gh api repos/${{ github.repository }}/collaborators/$ACTOR/permission --jq '.permission')
-            echo "  Permission level: $PERMISSION"
-
-            if [[ "$PERMISSION" == "admin" || "$PERMISSION" == "write" ]]; then
-              HAS_PERMISSION="true"
-              echo "  ✓ $ACTOR has write access"
-            else
-              HAS_PERMISSION="false"
-              echo "  ✗ $ACTOR does not have write access"
-              echo "::warning::Docker build blocked: User $ACTOR attempted to trigger build without write access"
-            fi
-          fi
-
-          echo "has-permission=${HAS_PERMISSION}" >> "$GITHUB_OUTPUT"
-          echo "actor=${ACTOR}" >> "$GITHUB_OUTPUT"
-
-      - name: Check on-demand trigger conditions
-        id: pr-check
-        if: steps.determine.outputs.build-type == 'on-demand' && steps.permission.outputs.has-permission == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          COMMENT_BODY: ${{ github.event.comment.body }}
-        run: |
-          SHOULD_BUILD="false"
-          PR_NUMBER=""
-          PR_REF=""
-          PR_SHA=""
-
-          # workflow_dispatch trigger
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "✓ Triggered via workflow_dispatch"
-            VERSION_INPUT="${{ inputs.version }}"
-
-            # Check if version input is a PR number
-            if [[ "$VERSION_INPUT" =~ ^[0-9]+$ ]]; then
-              SHOULD_BUILD="true"
-              PR_NUMBER="$VERSION_INPUT"
-            fi
-
-          # PR label trigger
-          elif [ "${{ github.event_name }}" = "pull_request" ]; then
-            if [ "${{ github.event.action }}" = "labeled" ]; then
-              LABEL="${{ github.event.label.name }}"
-              if [ "$LABEL" = "docker:build" ]; then
-                echo "✓ Triggered by 'docker:build' label"
-                SHOULD_BUILD="true"
-                PR_NUMBER="${{ github.event.pull_request.number }}"
-              else
-                echo "✗ Label '$LABEL' is not 'docker:build', skipping"
-              fi
-            fi
-
-          # PR comment trigger
-          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
-            COMMENT="$COMMENT_BODY"
-            if [[ "$COMMENT" =~ ^/docker-build ]]; then
-              # Check if comment is on a PR
-              PR_URL="${{ github.event.issue.pull_request.url }}"
-              if [ -n "$PR_URL" ]; then
-                echo "✓ Triggered by '/docker-build' comment on PR"
-                SHOULD_BUILD="true"
-                PR_NUMBER="${{ github.event.issue.number }}"
-              else
-                echo "✗ Comment is not on a PR, skipping"
-              fi
-            else
-              echo "✗ Comment does not contain '/docker-build', skipping"
-            fi
-          fi
-
-          # Get PR details if we have a PR number
-          if [ "${SHOULD_BUILD}" = "true" ] && [ -n "${PR_NUMBER}" ]; then
-            echo "📋 Fetching PR #${PR_NUMBER} details..."
-
-            PR_DATA=$(gh pr view "${PR_NUMBER}" --repo "${{ github.repository }}" --json headRefName,headRefOid)
-            PR_REF=$(echo "${PR_DATA}" | jq -r '.headRefName')
-            PR_SHA=$(echo "${PR_DATA}" | jq -r '.headRefOid')
-
-            echo "  Branch: ${PR_REF}"
-            echo "  SHA: ${PR_SHA}"
-          fi
-
-          {
-            echo "pr-number=${PR_NUMBER}"
-            echo "pr-ref=${PR_REF}"
-            echo "pr-sha=${PR_SHA}"
-          } >> "$GITHUB_OUTPUT"
-
-          if [ "${SHOULD_BUILD}" = "true" ]; then
-            echo "::notice::Docker build will proceed for PR #${PR_NUMBER} (${PR_REF} @ ${PR_SHA})"
-          else
-            echo "::notice::Workflow triggered but conditions not met, skipping Docker build"
-          fi
-
-          # Update parent job output
-          echo "SHOULD_BUILD=${SHOULD_BUILD}" >> "$GITHUB_ENV"
-
-      - name: Set final should-build status
-        id: final-check
-        run: |
-          BUILD_TYPE="${{ steps.determine.outputs.build-type }}"
-
-          if [ "${BUILD_TYPE}" = "release" ] || [ "${BUILD_TYPE}" = "edge" ]; then
-            echo "should-build=true" >> "$GITHUB_OUTPUT"
-          elif [ "${BUILD_TYPE}" = "on-demand" ]; then
-            # Check if pr-check step ran and set SHOULD_BUILD
-            if [ -n "${SHOULD_BUILD}" ]; then
-              echo "should-build=${SHOULD_BUILD}" >> "$GITHUB_OUTPUT"
-            else
-              echo "should-build=false" >> "$GITHUB_OUTPUT"
-            fi
-          else
-            echo "should-build=false" >> "$GITHUB_OUTPUT"
-          fi
-
-  permission-denied:
-    name: Permission Denied Notification
+  build-and-push:
     runs-on: ubuntu-latest
-    needs: [check-build-type]
+    needs: [extract-version, validate-branch]
+    # Run if:
+    # 1. Should build (from extract-version)
+    # 2. Not a tag trigger (validate-branch will be skipped) OR validation passed
     if: |
       always() &&
-      needs.check-build-type.outputs.build-type == 'on-demand' &&
-      needs.check-build-type.outputs.has-permission == 'false' &&
-      (github.event_name == 'issue_comment' || github.event_name == 'pull_request')
-
-    permissions:
-      pull-requests: write
-
-    steps:
-      - name: Comment on PR about permission denial
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
-        with:
-          script: |
-            const prNumber = ${{ needs.check-build-type.outputs.pr-number || github.event.issue.number || github.event.pull_request.number }};
-            const actor = '${{ needs.check-build-type.outputs.actor }}';
-            const eventName = '${{ github.event_name }}';
-
-            let body = '### ⚠️ Docker Build Permission Denied\n\n';
-            body += `@${actor}, you do not have permission to trigger Docker builds.\n\n`;
-            body += '**Required permission:** Write access to the repository\n\n';
-            body += '**What you can do:**\n';
-            body += '- Ask a maintainer to trigger the build for you\n';
-            body += '- Request write access to the repository if you are a regular contributor\n\n';
-            body += '**For maintainers:** To trigger a build for this PR:\n';
-            if (eventName === 'issue_comment') {
-              body += '- Add the `docker:build` label\n';
-              body += '- Or comment `/docker-build`\n';
-            } else {
-              body += '- Comment `/docker-build` on this PR\n';
-            }
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              body: body
-            });
-
-  build-and-push:
-    name: Build and Push Docker Image
-    runs-on: ubuntu-latest
-    needs: [check-build-type]
-    if: |
-      always() && (
-        (needs.check-build-type.outputs.build-type == 'release' && needs.check-build-type.outputs.should-build == 'true') ||
-        (needs.check-build-type.outputs.build-type == 'edge' && needs.check-build-type.outputs.should-build == 'true') ||
-        (needs.check-build-type.outputs.build-type == 'on-demand' && needs.check-build-type.outputs.should-build == 'true')
+      needs.extract-version.outputs.should-build == 'true' && (
+        !startsWith(github.ref, 'refs/tags/') ||
+        (needs.validate-branch.result == 'success' && needs.validate-branch.outputs.should-deploy == 'true')
       )
 
     permissions:
@@ -400,35 +202,10 @@ jobs:
       id-token: write  # For Cosign keyless signing
       attestations: write  # For build attestations
       security-events: write  # For uploading Trivy SARIF results
-      pull-requests: write  # For commenting on PR (on-demand builds)
 
     steps:
-      - name: Add reaction to comment (if comment trigger)
-        if: github.event_name == 'issue_comment'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
-        with:
-          script: |
-            await github.rest.reactions.createForIssueComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: context.payload.comment.id,
-              content: 'rocket'
-            });
-
-      # SECURITY NOTE for on-demand builds: Checking out untrusted PR code in privileged context
-      # Mitigation: Permission check in check-build-type job ensures only users
-      # with write/admin access can trigger builds.
-      - name: Checkout repository (release and edge builds)
-        if: needs.check-build-type.outputs.build-type == 'release' || needs.check-build-type.outputs.build-type == 'edge'
+      - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-
-      - name: Checkout PR branch (on-demand builds)
-        if: needs.check-build-type.outputs.build-type == 'on-demand'
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        with:
-          ref: ${{ needs.check-build-type.outputs.pr-sha }}
-          fetch-depth: 1  # Shallow clone - only need current commit
-          persist-credentials: false  # Don't persist GitHub token in git config
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
@@ -440,53 +217,29 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Docker metadata (release builds - tag trigger)
-        if: needs.check-build-type.outputs.build-type == 'release' && startsWith(github.ref, 'refs/tags/v')
-        id: meta-release
+      - name: Docker metadata
+        id: meta
         uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest,priority=1000
-            type=semver,pattern={{major}},priority=600
-            type=semver,pattern={{major}}.{{minor}},priority=500
-            type=semver,pattern={{major}}.{{minor}}.{{patch}},priority=400
-
-      - name: Docker metadata (release builds - manual version)
-        if: needs.check-build-type.outputs.build-type == 'release' && github.event_name == 'workflow_dispatch' && needs.check-build-type.outputs.version-type == 'semver'
-        id: meta-version
-        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ needs.check-build-type.outputs.version-tag }},priority=1000
-
-      - name: Docker metadata (edge builds)
-        if: needs.check-build-type.outputs.build-type == 'edge'
-        id: meta-edge
-        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=edge,priority=1000
-
-      - name: Docker metadata (on-demand builds)
-        if: needs.check-build-type.outputs.build-type == 'on-demand'
-        id: meta-ondemand
-        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=pr-${{ needs.check-build-type.outputs.pr-number }},priority=1000
-            type=sha,prefix=pr-${{ needs.check-build-type.outputs.pr-number }}-,priority=900
+            type=raw,value=latest,enable=${{ needs.extract-version.outputs.is-release == 'true' && startsWith(github.ref, 'refs/tags/v') }},priority=1000
+            type=raw,value=${{ needs.extract-version.outputs.version-tag }},enable=${{ needs.extract-version.outputs.is-release == 'true' }},priority=900
+            type=edge,enable=${{ needs.extract-version.outputs.version-tag == 'edge' }},priority=800
+            type=ref,event=pr,priority=700
+            type=semver,pattern={{major}},enable=${{ needs.extract-version.outputs.is-release == 'true' && startsWith(github.ref, 'refs/tags/v') }},priority=600
+            type=semver,pattern={{major}}.{{minor}},enable=${{ needs.extract-version.outputs.is-release == 'true' && startsWith(github.ref, 'refs/tags/v') }},priority=500
+            type=semver,pattern={{major}}.{{minor}}.{{patch}},enable=${{ needs.extract-version.outputs.is-release == 'true' && startsWith(github.ref, 'refs/tags/v') }},priority=400
 
       - name: Download dist/ artifact from GitHub Release (release builds only)
-        if: needs.check-build-type.outputs.build-type == 'release' && startsWith(github.ref, 'refs/tags/v')
+        if: needs.extract-version.outputs.is-release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo "📦 Downloading dist.tar.gz from release ${{ github.ref_name }}"
-          gh release download ${{ github.ref_name }} \
+          VERSION_TAG="${{ needs.extract-version.outputs.version-tag }}"
+          echo "📦 Downloading dist.tar.gz from release $VERSION_TAG"
+
+          gh release download "$VERSION_TAG" \
             --repo ${{ github.repository }} \
             --pattern 'dist.tar.gz'
 
@@ -496,60 +249,48 @@ jobs:
           echo "✓ dist/ artifact ready ($(du -sh dist | cut -f1))"
           ls -lh dist/
 
-      - name: Set up Node.js (source builds)
-        if: needs.check-build-type.outputs.build-type == 'on-demand' || needs.check-build-type.outputs.build-type == 'edge' || (needs.check-build-type.outputs.build-type == 'release' && github.event_name == 'workflow_dispatch')
+      - name: Set up Node.js (non-release builds)
+        if: needs.extract-version.outputs.is-release == 'false'
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: '24'
+          node-version: '22'
 
-      # npm must be newer than 11.5.1 for Node 24 compatibility
-      - name: Install npm 11.6.4 (source builds)
-        if: needs.check-build-type.outputs.build-type == 'on-demand' || needs.check-build-type.outputs.build-type == 'edge' || (needs.check-build-type.outputs.build-type == 'release' && github.event_name == 'workflow_dispatch')
-        run: npm install -g npm@11.6.4
+      - name: Install npm 11.5.1 (non-release builds)
+        if: needs.extract-version.outputs.is-release == 'false'
+        run: npm install -g npm@11.5.1
 
-      - name: Install dependencies (source builds)
-        if: needs.check-build-type.outputs.build-type == 'on-demand' || needs.check-build-type.outputs.build-type == 'edge' || (needs.check-build-type.outputs.build-type == 'release' && github.event_name == 'workflow_dispatch')
+      - name: Install dependencies (non-release builds)
+        if: needs.extract-version.outputs.is-release == 'false'
         run: npm ci
 
-      - name: Build dist/ artifact (source builds)
-        if: needs.check-build-type.outputs.build-type == 'on-demand' || needs.check-build-type.outputs.build-type == 'edge' || (needs.check-build-type.outputs.build-type == 'release' && github.event_name == 'workflow_dispatch')
-        run: |
-          echo "🔨 Building dist/ artifact from source"
-          npm run build
-
-          echo "✓ dist/ artifact ready ($(du -sh dist | cut -f1))"
-          ls -lh dist/
+      - name: Build (non-release builds)
+        if: needs.extract-version.outputs.is-release == 'false'
+        run: npm run build
 
       - name: Build and push Docker image (release builds with artifact)
-        if: needs.check-build-type.outputs.build-type == 'release' && startsWith(github.ref, 'refs/tags/v')
+        if: needs.extract-version.outputs.is-release == 'true'
         id: build-and-push-release
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
         with:
           context: .
           file: Dockerfile.release
           push: true
-          tags: ${{ steps.meta-release.outputs.tags }}
-          labels: ${{ steps.meta-release.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
 
-      - name: Build and push Docker image (source builds)
-        if: needs.check-build-type.outputs.build-type == 'on-demand' || needs.check-build-type.outputs.build-type == 'edge' || (needs.check-build-type.outputs.build-type == 'release' && github.event_name == 'workflow_dispatch')
-        id: build-and-push-source
+      - name: Build and push Docker image (development builds from source)
+        if: needs.extract-version.outputs.is-release == 'false'
+        id: build-and-push-dev
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
         with:
           context: .
-          file: Dockerfile.release
-          push: ${{ inputs.push_image != false }}
-          tags: |
-            ${{ steps.meta-ondemand.outputs.tags }}
-            ${{ steps.meta-edge.outputs.tags }}
-            ${{ steps.meta-version.outputs.tags }}
-          labels: |
-            ${{ steps.meta-ondemand.outputs.labels }}
-            ${{ steps.meta-edge.outputs.labels }}
-            ${{ steps.meta-version.outputs.labels }}
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
@@ -557,44 +298,14 @@ jobs:
       - name: Set digest output
         id: digest
         run: |
-          BUILD_TYPE="${{ needs.check-build-type.outputs.build-type }}"
-
-          if [ "$BUILD_TYPE" = "release" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
-            # Tag-triggered release build
+          if [ "${{ needs.extract-version.outputs.is-release }}" = "true" ]; then
             echo "digest=${{ steps.build-and-push-release.outputs.digest }}" >> "$GITHUB_OUTPUT"
-            echo "tags=${{ steps.meta-release.outputs.tags }}" >> "$GITHUB_OUTPUT"
-          elif [ "$BUILD_TYPE" = "release" ] && [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            # Manual version build
-            echo "digest=${{ steps.build-and-push-source.outputs.digest }}" >> "$GITHUB_OUTPUT"
-            echo "tags=${{ steps.meta-version.outputs.tags }}" >> "$GITHUB_OUTPUT"
-          elif [ "$BUILD_TYPE" = "edge" ]; then
-            # Edge build
-            echo "digest=${{ steps.build-and-push-source.outputs.digest }}" >> "$GITHUB_OUTPUT"
-            echo "tags=${{ steps.meta-edge.outputs.tags }}" >> "$GITHUB_OUTPUT"
           else
-            # On-demand PR build
-            echo "digest=${{ steps.build-and-push-source.outputs.digest }}" >> "$GITHUB_OUTPUT"
-            echo "tags=${{ steps.meta-ondemand.outputs.tags }}" >> "$GITHUB_OUTPUT"
+            echo "digest=${{ steps.build-and-push-dev.outputs.digest }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Image digest
-        run: |
-          echo "::notice::Image pushed with digest ${{ steps.digest.outputs.digest }}"
-          BUILD_TYPE="${{ needs.check-build-type.outputs.build-type }}"
-
-          if [ "$BUILD_TYPE" = "on-demand" ] || [ "$BUILD_TYPE" = "edge" ] || { [ "$BUILD_TYPE" = "release" ] && [ "${{ github.event_name }}" = "workflow_dispatch" ]; }; then
-            {
-              echo "### 🐳 Docker Build Complete"
-              echo ""
-              echo "**Build Type:** \`$BUILD_TYPE\`"
-              echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`"
-              echo "**Tags:**"
-              echo "\`\`\`"
-              echo "${{ steps.digest.outputs.tags }}"
-              echo "\`\`\`"
-              echo "**Digest:** \`${{ steps.digest.outputs.digest }}\`"
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
+        run: echo "Image pushed with digest ${{ steps.digest.outputs.digest }}"
 
       # Vulnerability Scanning with Trivy
       - name: Run Trivy vulnerability scanner
@@ -606,7 +317,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@ecec1f88769052ebc45aa0affc53ea30d474cffa
+        uses: github/codeql-action/upload-sarif@0499de31b99561a6d14a36a5f662c2a54f91beee
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -623,46 +334,9 @@ jobs:
           cosign sign --yes --recursive \
             "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
-      # Comment on PR with build results (on-demand builds only)
-      - name: Comment on PR with build results
-        if: always() && needs.check-build-type.outputs.build-type == 'on-demand'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
-        with:
-          script: |
-            const prNumber = ${{ needs.check-build-type.outputs.pr-number }};
-            const digest = '${{ steps.digest.outputs.digest }}';
-            const tags = `${{ steps.digest.outputs.tags }}`.split('\n').filter(t => t.length > 0);
-            const success = '${{ job.status }}' === 'success';
-
-            let body = success
-              ? '### ✅ Docker Build Successful\n\n'
-              : '### ❌ Docker Build Failed\n\n';
-
-            if (success) {
-              body += `**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`\n\n`;
-              body += `**Tags:**\n`;
-              tags.forEach(tag => {
-                body += `- \`${tag}\`\n`;
-              });
-              body += `\n**Digest:** \`${digest}\`\n\n`;
-              body += `**Pull command:**\n\`\`\`bash\n`;
-              body += `docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pr-${prNumber}\n`;
-              body += `\`\`\`\n\n`;
-              body += `**Security:** Image signed with Cosign and scanned with Trivy\n`;
-            } else {
-              body += `Build failed. Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.\n`;
-            }
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              body: body
-            });
-
-      # Send webhook notification when 'latest' tag is published (release builds only)
+      # Send webhook notification when 'latest' tag is published
       - name: Send webhook for latest tag publication
-        if: needs.check-build-type.outputs.build-type == 'release' && startsWith(github.ref, 'refs/tags/v')
+        if: needs.extract-version.outputs.is-release == 'true'
         env:
           WEBHOOK_URL: ${{ secrets.DOCKER_PUBLISH_LATEST_WEBHOOK }}
           IMAGE_DIGEST: ${{ steps.digest.outputs.digest }}
