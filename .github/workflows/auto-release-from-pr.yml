@@ -36,10 +36,10 @@ jobs:
           BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
         run: |
           # Extract version from "release/vX.Y.Z" format
-          VERSION=$(echo "$BRANCH_NAME" | sed 's|release/||')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "version_number=${VERSION#v}" >> $GITHUB_OUTPUT
-          echo "✅ Extracted version from branch '$BRANCH_NAME': $VERSION"
+          VERSION="${BRANCH_NAME#release/}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "version_number=${VERSION#v}" >> "$GITHUB_OUTPUT"
+          echo "✅ Extracted version from branch '${BRANCH_NAME}': ${VERSION}"
 
       - name: Validate version format
         env:
@@ -117,8 +117,8 @@ jobs:
       - name: Create tarball for attestation
         run: |
           npm pack
-          echo "TARBALL=$(ls *.tgz)" >> $GITHUB_ENV
-          echo "✓ Package tarball created: $(ls *.tgz)"
+          echo "TARBALL=$(ls -- *.tgz)" >> "$GITHUB_ENV"
+          echo "✓ Package tarball created: $(ls -- *.tgz)"
 
       - name: Generate SLSA build provenance attestation
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0

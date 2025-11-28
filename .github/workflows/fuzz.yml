@@ -122,16 +122,18 @@ jobs:
 
       - name: Create fuzzing summary
         run: |
-          echo "# Fuzzing Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Fuzzing completed for commit ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Fuzz Test Components" >> $GITHUB_STEP_SUMMARY
-          echo "- Tag Parser (parseTagInput)" >> $GITHUB_STEP_SUMMARY
-          echo "- Tag Validation (validateTag)" >> $GITHUB_STEP_SUMMARY
-          echo "- Schema Loader (translation methods)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Coverage" >> $GITHUB_STEP_SUMMARY
-          echo "Property-based testing with fast-check library" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "See artifacts for detailed results." >> $GITHUB_STEP_SUMMARY
+          {
+            echo "# Fuzzing Summary"
+            echo ""
+            echo "Fuzzing completed for commit ${{ github.sha }}"
+            echo ""
+            echo "## Fuzz Test Components"
+            echo "- Tag Parser (parseTagInput)"
+            echo "- Tag Validation (validateTag)"
+            echo "- Schema Loader (translation methods)"
+            echo ""
+            echo "## Coverage"
+            echo "Property-based testing with fast-check library"
+            echo ""
+            echo "See artifacts for detailed results."
+          } >> "$GITHUB_STEP_SUMMARY"
