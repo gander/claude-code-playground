@@ -5,6 +5,10 @@ labels:
   - label: "claude code"
     branch: "^claude/.*"
 
+  # Label PRs from renovate/ branches
+  - label: "renovate"
+    branch: "^renovate/.*"
+
   # Documentation changes
   - label: "documentation"
     files:
