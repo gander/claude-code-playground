@@ -424,9 +424,10 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install npm 11.5.1 (on-demand builds only)
+      # npm must be newer than 11.5.1 for Node 24 compatibility
+      - name: Install npm 11.6.4 (on-demand builds only)
         if: needs.check-build-type.outputs.build-type == 'on-demand'
-        run: npm install -g npm@11.5.1
+        run: npm install -g npm@11.6.4
 
       - name: Install dependencies (on-demand builds only)
         if: needs.check-build-type.outputs.build-type == 'on-demand'
