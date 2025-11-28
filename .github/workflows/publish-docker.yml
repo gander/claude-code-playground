@@ -422,7 +422,7 @@ jobs:
         if: needs.check-build-type.outputs.build-type == 'on-demand'
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: '22'
+          node-version: '24'
 
       # npm must be newer than 11.5.1 for Node 24 compatibility
       - name: Install npm 11.6.4 (on-demand builds only)
