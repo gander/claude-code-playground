@@ -4,7 +4,19 @@ This document describes how to trigger Docker image builds on-demand for Pull Re
 
 ## Overview
 
-The `docker-build-on-demand.yml` workflow allows you to build and publish Docker images for Pull Requests without automatically building on every PR push. This saves CI resources and provides flexibility to build only when needed.
+The `publish-docker.yml` workflow handles both version tag releases and on-demand PR builds. For Pull Requests, it allows you to build and publish Docker images on-demand without automatically building on every PR push. This saves CI resources and provides flexibility to build only when needed.
+
+**Key Features:**
+- Both release and on-demand builds use the **same Dockerfile** (`Dockerfile.release`)
+- Release builds use prebuilt `dist/` from GitHub Release
+- On-demand builds compile `dist/` from source before building Docker image
+- This ensures PR builds match production release builds exactly
+
+**Build Triggers:**
+- ✅ **Version tags** (v*.*.*): Automatic release builds
+- ✅ **On-demand PR builds**: Manual trigger, label (`docker:build`), or comment (`/docker-build`)
+- ❌ **NOT on push to master**: No automatic builds on master branch
+- ❌ **NOT on regular PR events**: Only on-demand triggers work for PRs
 
 ## Security & Permissions
 
@@ -175,14 +187,14 @@ There are **three ways** to trigger an on-demand Docker build:
 **Best for:** Testing specific PRs, ad-hoc builds
 
 1. Go to **Actions** tab in GitHub
-2. Select **"Docker Build On-Demand"** workflow
+2. Select **"Docker Build and Publish"** workflow
 3. Click **"Run workflow"**
-4. Enter the PR number
+4. Enter the PR number (or leave empty for tag build)
 5. Choose whether to push the image (default: true)
 6. Click **"Run workflow"**
 
 ```
-PR number: 123
+PR number: 123 (or leave empty for tag build)
 Push image: ✓ (checked)
 ```
 
@@ -286,14 +298,13 @@ cosign verify \
 
 ## Automatic Builds
 
-The main `publish-docker.yml` workflow still handles automatic builds for:
+The `publish-docker.yml` workflow handles automatic builds for:
 
-- ✅ **Push to master** → `edge` tag
 - ✅ **Version tags** (v*.*.*) → `latest`, semantic version tags
-- ✅ **Manual trigger** → workflow_dispatch
 
 **Removed:**
-- ❌ **Pull Request** → Use on-demand workflow instead
+- ❌ **Push to master** → No longer builds automatically on master
+- ❌ **Pull Request** → Use on-demand triggers instead (label, comment, manual)
 
 ## Workflow Permissions
 
@@ -375,14 +386,14 @@ docker run -i ghcr.io/gander-tools/osm-tagging-schema-mcp:pr-42
 gh pr comment 42 --body "/docker-build"
 
 # Check workflow status
-gh run list --workflow="Docker Build On-Demand"
+gh run list --workflow="Docker Build and Publish"
 ```
 
 ### Example 3: Manual trigger for specific SHA
 
 ```bash
 # Trigger workflow for PR #42
-gh workflow run docker-build-on-demand.yml -f pr_number=42 -f push_image=true
+gh workflow run publish-docker.yml -f pr_number=42 -f push_image=true
 
 # Watch the run
 gh run watch
@@ -390,47 +401,71 @@ gh run watch
 
 ## Architecture
 
-### Workflow Comparison
+### Build Types
 
-| Feature | `publish-docker.yml` | `docker-build-on-demand.yml` |
-|---------|---------------------|------------------------------|
-| **Trigger** | Automatic (push, tag) | On-demand (label, comment, manual) |
-| **When** | Master, tags | Pull Requests |
-| **Tags** | `latest`, `edge`, semver | `pr-<number>`, `pr-<number>-<sha>` |
-| **Dockerfile** | `Dockerfile.release` (tags), `Dockerfile` (dev) | `Dockerfile` |
+The `publish-docker.yml` workflow handles two types of builds:
+
+| Feature | **Release Builds** | **On-Demand PR Builds** |
+|---------|-------------------|-------------------------|
+| **Trigger** | Version tags (v*.*.*) | Label, comment, manual |
+| **When** | Tag push | Pull Requests |
+| **Tags** | `latest`, semver (e.g., `1`, `1.2`, `1.2.3`) | `pr-<number>`, `pr-<number>-<sha>` |
+| **dist/ Source** | Downloaded from GitHub Release | Built from source |
+| **Dockerfile** | `Dockerfile.release` | `Dockerfile.release` (same as release) |
 | **Platforms** | linux/amd64, linux/arm64 | linux/amd64, linux/arm64 |
 | **Security** | Trivy, Cosign | Trivy, Cosign |
+| **Post-Build** | Webhook notification | PR comment |
 
 ### Workflow Design
 
 ```
-┌─────────────────┐
-│ Trigger Source  │
-│                 │
-│ • Label         │
-│ • Comment       │
-│ • Manual        │
-└────────┬────────┘
-         │
-         v
-┌─────────────────┐
-│ check-trigger   │
-│                 │
-│ • Validate      │
-│ • Get PR info   │
-│ • Extract SHA   │
-└────────┬────────┘
-         │
-         v
-┌─────────────────┐
-│ build-and-push  │
-│                 │
-│ • Checkout PR   │
-│ • Build image   │
-│ • Scan (Trivy)  │
-│ • Sign (Cosign) │
-│ • Comment on PR │
-└─────────────────┘
+┌──────────────────────┐
+│   Trigger Source     │
+│                      │
+│ • Version tag (v*.*.*)│
+│ • Label (docker:build)│
+│ • Comment (/docker-build)│
+│ • Manual (workflow_dispatch)│
+└──────────┬───────────┘
+           │
+           v
+┌──────────────────────┐
+│  check-build-type    │
+│                      │
+│ • Determine type     │
+│   (release/on-demand)│
+│ • Permission check   │
+│ • Tag validation     │
+│ • Get PR info        │
+└──────────┬───────────┘
+           │
+           v
+┌──────────────────────┐
+│   build-and-push     │
+│                      │
+│ Release builds:      │
+│ • Checkout tag       │
+│ • Download dist/ from│
+│   GitHub Release     │
+│                      │
+│ On-demand builds:    │
+│ • Checkout PR SHA    │
+│ • Setup Node.js      │
+│ • npm ci             │
+│ • npm run build      │
+│   (creates dist/)    │
+│                      │
+│ Both use same steps: │
+│ • Build image        │
+│   (Dockerfile.release)│
+│ • Push tags          │
+│ • Scan (Trivy)       │
+│ • Sign (Cosign)      │
+│                      │
+│ Post-build:          │
+│ • Release: webhook   │
+│ • On-demand: PR comment│
+└──────────────────────┘
 ```
 
 ## Best Practices
