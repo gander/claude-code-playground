@@ -46,13 +46,6 @@ on:
         type: boolean
         default: true
 
-  # Trigger when specific label is added to PR (on-demand builds)
-  pull_request:
-    types: [labeled]
-
-  # Trigger via PR comment (on-demand builds)
-  issue_comment:
-    types: [created]
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
