@@ -6,8 +6,7 @@
 		".": {
 			"release-type": "node",
 			"package-name": "@gander-tools/osm-tagging-schema-mcp",
-			"bump-minor-pre-major": true,
-			"bump-patch-for-minor-pre-major": true,
+			"versioning": "always-bump-minor",
 			"changelog-sections": [
 				{
 					"type": "feat",
