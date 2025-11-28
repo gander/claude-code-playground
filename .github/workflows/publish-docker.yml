@@ -129,9 +129,11 @@ jobs:
             SHOULD_BUILD="false"
           fi
 
-          echo "version-tag=$VERSION_TAG" >> "$GITHUB_OUTPUT"
-          echo "is-release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
-          echo "should-build=$SHOULD_BUILD" >> "$GITHUB_OUTPUT"
+          {
+            echo "version-tag=$VERSION_TAG"
+            echo "is-release=$IS_RELEASE"
+            echo "should-build=$SHOULD_BUILD"
+          } >> "$GITHUB_OUTPUT"
 
   validate-branch:
     name: Validate Tag is on Master Branch
@@ -156,14 +158,14 @@ jobs:
         id: check
         run: |
           # Get the commit SHA that the tag points to
-          TAG_COMMIT=$(git rev-list -n 1 ${{ github.ref_name }})
-          echo "Tag ${{ github.ref_name }} points to commit: $TAG_COMMIT"
+          TAG_COMMIT=$(git rev-list -n 1 "${{ github.ref_name }}")
+          echo "Tag ${{ github.ref_name }} points to commit: ${TAG_COMMIT}"
 
           # Check if this commit is reachable from master
-          if git merge-base --is-ancestor $TAG_COMMIT origin/master; then
+          if git merge-base --is-ancestor "${TAG_COMMIT}" origin/master; then
             echo "✅ Tag ${{ github.ref_name }} was created from master branch"
-            echo "is-master=true" >> $GITHUB_OUTPUT
-            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "is-master=true" >> "$GITHUB_OUTPUT"
+            echo "should-deploy=true" >> "$GITHUB_OUTPUT"
           else
             echo "❌ Tag ${{ github.ref_name }} was NOT created from master branch"
             echo ""
@@ -176,8 +178,8 @@ jobs:
             echo "   2. Checkout master: git checkout master"
             echo "   3. Create tag from master: git tag ${{ github.ref_name }} && git push origin ${{ github.ref_name }}"
             echo ""
-            echo "is-master=false" >> $GITHUB_OUTPUT
-            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "is-master=false" >> "$GITHUB_OUTPUT"
+            echo "should-deploy=false" >> "$GITHUB_OUTPUT"
             exit 1
           fi
 
@@ -297,9 +299,9 @@ jobs:
         id: digest
         run: |
           if [ "${{ needs.extract-version.outputs.is-release }}" = "true" ]; then
-            echo "digest=${{ steps.build-and-push-release.outputs.digest }}" >> $GITHUB_OUTPUT
+            echo "digest=${{ steps.build-and-push-release.outputs.digest }}" >> "$GITHUB_OUTPUT"
           else
-            echo "digest=${{ steps.build-and-push-dev.outputs.digest }}" >> $GITHUB_OUTPUT
+            echo "digest=${{ steps.build-and-push-dev.outputs.digest }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Image digest
