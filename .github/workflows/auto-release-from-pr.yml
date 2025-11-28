@@ -53,7 +53,7 @@ jobs:
           echo "✅ Version format validation passed: $RELEASE_VERSION"
 
       - name: Checkout repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
@@ -177,7 +177,7 @@ jobs:
           echo "✅ Successfully created and pushed tag: $RELEASE_VERSION"
 
       - name: Upload dist/ artifact for Docker build
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
         # NOTE: SHA pinning required for security. IDE warnings are false positives.
         with:
           name: dist-${{ steps.version.outputs.version }}
