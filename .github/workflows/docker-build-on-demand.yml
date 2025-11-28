@@ -36,10 +36,65 @@ jobs:
       pr-number: ${{ steps.check.outputs.pr-number }}
       pr-ref: ${{ steps.check.outputs.pr-ref }}
       pr-sha: ${{ steps.check.outputs.pr-sha }}
+      has-permission: ${{ steps.permission.outputs.has-permission }}
+      actor: ${{ steps.permission.outputs.actor }}
 
     steps:
+      - name: Check permissions
+        id: permission
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          HAS_PERMISSION="false"
+          ACTOR=""
+
+          # workflow_dispatch - always allowed (requires repo access to trigger)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            HAS_PERMISSION="true"
+            ACTOR="${{ github.actor }}"
+            echo "✓ workflow_dispatch trigger - permission granted to $ACTOR"
+
+          # PR label trigger - check who added the label
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            ACTOR="${{ github.event.sender.login }}"
+            echo "🔍 Checking permissions for $ACTOR (added label)"
+
+            PERMISSION=$(gh api repos/${{ github.repository }}/collaborators/$ACTOR/permission --jq '.permission')
+            echo "  Permission level: $PERMISSION"
+
+            if [[ "$PERMISSION" == "admin" || "$PERMISSION" == "write" ]]; then
+              HAS_PERMISSION="true"
+              echo "  ✓ $ACTOR has write access"
+            else
+              HAS_PERMISSION="false"
+              echo "  ✗ $ACTOR does not have write access"
+              echo "::warning::Docker build blocked: User $ACTOR attempted to trigger build without write access"
+            fi
+
+          # PR comment trigger - check who commented
+          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+            ACTOR="${{ github.event.comment.user.login }}"
+            echo "🔍 Checking permissions for $ACTOR (commented)"
+
+            PERMISSION=$(gh api repos/${{ github.repository }}/collaborators/$ACTOR/permission --jq '.permission')
+            echo "  Permission level: $PERMISSION"
+
+            if [[ "$PERMISSION" == "admin" || "$PERMISSION" == "write" ]]; then
+              HAS_PERMISSION="true"
+              echo "  ✓ $ACTOR has write access"
+            else
+              HAS_PERMISSION="false"
+              echo "  ✗ $ACTOR does not have write access"
+              echo "::warning::Docker build blocked: User $ACTOR attempted to trigger build without write access"
+            fi
+          fi
+
+          echo "has-permission=$HAS_PERMISSION" >> $GITHUB_OUTPUT
+          echo "actor=$ACTOR" >> $GITHUB_OUTPUT
+
       - name: Check trigger conditions
         id: check
+        if: steps.permission.outputs.has-permission == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           COMMENT_BODY: ${{ github.event.comment.body }}
@@ -108,6 +163,48 @@ jobs:
           else
             echo "::notice::Workflow triggered but conditions not met, skipping Docker build"
           fi
+
+  permission-denied:
+    name: Permission Denied Notification
+    runs-on: ubuntu-latest
+    needs: [check-trigger]
+    if: |
+      always() &&
+      needs.check-trigger.outputs.has-permission == 'false' &&
+      (github.event_name == 'issue_comment' || github.event_name == 'pull_request')
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Comment on PR about permission denial
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            const prNumber = ${{ needs.check-trigger.outputs.pr-number || github.event.issue.number || github.event.pull_request.number }};
+            const actor = '${{ needs.check-trigger.outputs.actor }}';
+            const eventName = '${{ github.event_name }}';
+
+            let body = '### ⚠️ Docker Build Permission Denied\n\n';
+            body += `@${actor}, you do not have permission to trigger Docker builds.\n\n`;
+            body += '**Required permission:** Write access to the repository\n\n';
+            body += '**What you can do:**\n';
+            body += '- Ask a maintainer to trigger the build for you\n';
+            body += '- Request write access to the repository if you are a regular contributor\n\n';
+            body += '**For maintainers:** To trigger a build for this PR:\n';
+            if (eventName === 'issue_comment') {
+              body += '- Add the `docker:build` label\n';
+              body += '- Or comment `/docker-build`\n';
+            } else {
+              body += '- Comment `/docker-build` on this PR\n';
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
 
   build-and-push:
     name: Build and Push Docker Image

@@ -6,6 +6,44 @@ This document describes how to trigger Docker image builds on-demand for Pull Re
 
 The `docker-build-on-demand.yml` workflow allows you to build and publish Docker images for Pull Requests without automatically building on every PR push. This saves CI resources and provides flexibility to build only when needed.
 
+## Security & Permissions
+
+**IMPORTANT:** This workflow includes security protections to prevent untrusted code execution.
+
+### Permission Requirements
+
+Only users with **write access** to the repository can trigger Docker builds:
+
+- ✅ **Repository maintainers** (admin/write access)
+- ✅ **Collaborators with write permission**
+- ❌ **External contributors** (read-only access)
+- ❌ **First-time contributors**
+
+### Why Permission Checks?
+
+The workflow checks out and builds code from Pull Requests, which could potentially contain malicious code. Permission checks ensure that only trusted team members can trigger builds, preventing:
+
+- **Code injection attacks** through PR comments
+- **Execution of untrusted code** in privileged workflow context
+- **Secret exfiltration** during build process
+- **Supply chain attacks** through malicious dependencies
+
+### Permission Denied
+
+If a user without write access attempts to trigger a build, they will receive a notification:
+
+```markdown
+### ⚠️ Docker Build Permission Denied
+
+@username, you do not have permission to trigger Docker builds.
+
+**Required permission:** Write access to the repository
+
+**What you can do:**
+- Ask a maintainer to trigger the build for you
+- Request write access if you are a regular contributor
+```
+
 ## Trigger Methods
 
 There are **three ways** to trigger an on-demand Docker build:
@@ -105,11 +143,13 @@ Build failed. Check the [workflow run](link) for details.
 
 ## Security Features
 
-All on-demand builds include:
+All on-demand builds include multiple layers of security:
 
-1. **Vulnerability Scanning**: Trivy scans for CRITICAL and HIGH severity issues
-2. **Image Signing**: Cosign keyless signing for image verification
-3. **SARIF Upload**: Security findings uploaded to GitHub Security tab
+1. **Permission Checks**: Only users with write access can trigger builds
+2. **Vulnerability Scanning**: Trivy scans for CRITICAL and HIGH severity issues
+3. **Image Signing**: Cosign keyless signing for image verification
+4. **SARIF Upload**: Security findings uploaded to GitHub Security tab
+5. **Input Sanitization**: All user inputs (comments, labels) are sanitized to prevent code injection
 
 ## Image Verification
 
@@ -133,9 +173,9 @@ The main `publish-docker.yml` workflow still handles automatic builds for:
 **Removed:**
 - ❌ **Pull Request** → Use on-demand workflow instead
 
-## Permissions
+## Workflow Permissions
 
-The workflow requires these permissions:
+The workflow requires these GitHub Actions permissions:
 
 - `contents: read` - Checkout repository
 - `packages: write` - Push to GitHub Container Registry
@@ -143,21 +183,40 @@ The workflow requires these permissions:
 - `security-events: write` - Upload Trivy results
 - `pull-requests: write` - Comment on PRs
 
+**User Permissions:** Only users with **write** or **admin** access to the repository can trigger builds.
+
 ## Troubleshooting
+
+### Permission denied
+
+**Problem:** User gets "Docker Build Permission Denied" notification
+
+**Cause:** User does not have write access to the repository
+
+**Solutions:**
+- **For external contributors:** Ask a maintainer to trigger the build
+- **For team members:** Request write access from repository admin
+- **For maintainers:** You can trigger builds for any PR
 
 ### Label not working
 
 **Problem:** Adding `docker:build` label doesn't trigger the workflow
 
-**Solution:** Ensure the label exists in the repository:
-1. Go to **Issues** → **Labels**
-2. Create label named exactly: `docker:build`
+**Solutions:**
+1. **Check label exists:**
+   - Go to **Issues** → **Labels**
+   - Create label named exactly: `docker:build`
+
+2. **Check permissions:**
+   - Only users with write access can trigger builds
+   - Verify you have write access to the repository
 
 ### Comment not working
 
 **Problem:** `/docker-build` comment doesn't trigger the workflow
 
 **Solutions:**
+- **Check permissions:** Only users with write access can trigger builds
 - Ensure comment is on a Pull Request (not an Issue)
 - Comment must start with `/docker-build` (no leading spaces)
 - Check workflow run history in Actions tab
