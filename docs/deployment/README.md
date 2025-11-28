@@ -5,6 +5,7 @@ Documentation for deploying and operating the OSM Tagging Schema MCP Server in p
 ## Deployment Guides
 
 - **[Deployment](deployment.md)** - Docker Compose deployment with health checks
+- **[Docker On-Demand](docker-on-demand.md)** - On-demand Docker builds for Pull Requests
 - **[Security](security.md)** - Security features, provenance, SLSA, and SBOM
 
 ## Deployment Options
