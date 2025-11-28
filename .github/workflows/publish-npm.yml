@@ -26,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: '22'
+          node-version: '24'
 
       - name: Extract version from package.json
         id: version
@@ -84,7 +84,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: '22'
+          node-version: '24'
           # registry-url removed - not needed for Trusted Publishers with OIDC
           # Removing this prevents actions/setup-node from adding deprecated
           # 'always-auth=true' to .npmrc (causes warnings in npm 11+)
