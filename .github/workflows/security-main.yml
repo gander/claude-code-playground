@@ -12,7 +12,39 @@ permissions:
   contents: read
 
 jobs:
+  # Detect which files changed to conditionally run security checks (push events only)
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+    outputs:
+      security: ${{ steps.filter.outputs.security }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Check for file changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            security:
+              - 'src/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'Dockerfile*'
+              - '.dockerignore'
+              - '.github/workflows/**'
+
   npm-audit:
+    needs: changes
+    # Run if: scheduled/manual OR (push AND security files changed)
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && (needs.changes.result == 'skipped' || needs.changes.outputs.security == 'true'))
     name: NPM Audit
     runs-on: ubuntu-latest
     permissions:
@@ -41,6 +73,12 @@ jobs:
         run: npm audit --production --audit-level=high
 
   sbom-generation:
+    needs: changes
+    # Run if: scheduled/manual OR (push AND security files changed)
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && (needs.changes.result == 'skipped' || needs.changes.outputs.security == 'true'))
     name: Generate SBOM
     runs-on: ubuntu-latest
     permissions:
@@ -72,6 +110,12 @@ jobs:
           retention-days: 90
 
   openssf-scorecard:
+    needs: changes
+    # Run if: scheduled/manual OR (push AND security files changed)
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && (needs.changes.result == 'skipped' || needs.changes.outputs.security == 'true'))
     name: OpenSSF Scorecard
     runs-on: ubuntu-latest
     permissions:
@@ -105,6 +149,12 @@ jobs:
           retention-days: 90
 
   license-check:
+    needs: changes
+    # Run if: scheduled/manual OR (push AND security files changed)
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && (needs.changes.result == 'skipped' || needs.changes.outputs.security == 'true'))
     name: License Compliance
     runs-on: ubuntu-latest
     permissions:
