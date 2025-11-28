@@ -75,7 +75,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           fetch-depth: 0  # Need full history for tag validation
 
@@ -360,11 +360,11 @@ jobs:
       # with write/admin access can trigger builds.
       - name: Checkout repository (release builds)
         if: needs.check-build-type.outputs.build-type == 'release'
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Checkout PR branch (on-demand builds)
         if: needs.check-build-type.outputs.build-type == 'on-demand'
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           ref: ${{ needs.check-build-type.outputs.pr-sha }}
           fetch-depth: 1  # Shallow clone - only need current commit
