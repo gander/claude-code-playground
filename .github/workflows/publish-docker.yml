@@ -530,8 +530,6 @@ jobs:
           push: true
           tags: ${{ steps.meta-release.outputs.tags }}
           labels: ${{ steps.meta-release.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
 
       - name: Build and push Docker image (source builds)
@@ -550,8 +548,6 @@ jobs:
             ${{ steps.meta-ondemand.outputs.labels }}
             ${{ steps.meta-edge.outputs.labels }}
             ${{ steps.meta-version.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
 
       - name: Set digest output
