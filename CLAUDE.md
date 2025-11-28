@@ -128,6 +128,11 @@ Every feature implementation MUST follow this workflow:
 - **Fuzzing**: Property-based testing with fast-check runs on every push/PR and weekly
 - **Code Quality**: BiomeJS checks for linting and formatting issues
 - **Auto-PR Creation**: Automatic Pull Request creation for `claude/*` branches
+- **Automatic Labeling**: srvaroa/labeler automatically manages PR/issue labels based on:
+  - File changes (documentation, tests, core, docker, workflows, etc.)
+  - PR size (small/medium/large/xlarge)
+  - PR state (draft = work-in-progress)
+  - Branch patterns (claude/* = "claude code" label)
 - **Dependabot**: Automated dependency updates and security patches
 - **Release**: Automated npm releases with semantic versioning
 - **Distribution**: Package available via `npx` command
