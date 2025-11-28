@@ -69,7 +69,7 @@ function validateTags(obj: Record<string, unknown>): Record<string, string> {
 }
 
 const JsonToFlat: OsmToolDefinition<{
-	tags: z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>;
+	tags: z.ZodUnion<readonly [z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>;
 }> = {
 	name: "json_to_flat" as const,
 	config: () => ({

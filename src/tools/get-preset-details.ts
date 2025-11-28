@@ -307,7 +307,7 @@ export async function getPresetDetails(
  * Handler for get_preset_details tool
  */
 const GetPresetDetails: OsmToolDefinition<{
-	presetId: z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>;
+	presetId: z.ZodUnion<readonly [z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>]>;
 }> = {
 	name: "get_preset_details" as const,
 	config: () => ({
@@ -315,7 +315,7 @@ const GetPresetDetails: OsmToolDefinition<{
 			"Get complete details for a specific preset. Accepts preset ID (e.g., 'amenity/restaurant'), tag notation (e.g., 'amenity=restaurant'), or tags object (e.g., {\"amenity\": \"restaurant\"})",
 		inputSchema: {
 			presetId: z
-				.union([z.string(), z.record(z.string())])
+				.union([z.string(), z.record(z.string(), z.string())])
 				.describe(
 					"Preset identifier: preset ID ('amenity/restaurant'), tag notation ('amenity=restaurant'), or tags object ({\"amenity\": \"restaurant\"})",
 				),
