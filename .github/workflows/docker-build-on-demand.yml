@@ -42,6 +42,7 @@ jobs:
         id: check
         env:
           GH_TOKEN: ${{ github.token }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
           SHOULD_BUILD="false"
           PR_NUMBER=""
@@ -69,7 +70,7 @@ jobs:
 
           # PR comment trigger
           elif [ "${{ github.event_name }}" = "issue_comment" ]; then
-            COMMENT="${{ github.event.comment.body }}"
+            COMMENT="$COMMENT_BODY"
             if [[ "$COMMENT" =~ ^/docker-build ]]; then
               # Check if comment is on a PR
               PR_URL="${{ github.event.issue.pull_request.url }}"
