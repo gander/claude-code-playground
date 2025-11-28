@@ -3,14 +3,16 @@
 [![Build Status](https://img.shields.io/github/check-runs/gander-tools/osm-tagging-schema-mcp/master?label=repo%20status)](https://github.com/gander-tools/osm-tagging-schema-mcp/commits/master)
 [![Test](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/test.yml?branch=master&label=tests)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/test.yml)
 [![Fuzzing](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/fuzz.yml?branch=master&label=fuzzing)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/fuzz.yml)
+[![Code Quality](https://img.shields.io/badge/code%20quality-BiomeJS-60a5fa?logo=eslint)](https://biomejs.dev/)
+[![Test Coverage](https://img.shields.io/badge/coverage-%3E90%25-brightgreen?logo=codecov)](https://github.com/gander-tools/osm-tagging-schema-mcp/tree/master/tests)
 [![Publish](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/publish-npm.yml?label=npm)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/publish-npm.yml)
 [![Docker](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/publish-docker.yml?branch=master&label=docker)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/publish-docker.yml)
-[![npm version](https://img.shields.io/npm/v/@gander-tools/osm-tagging-schema-mcp)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/@gander-tools/osm-tagging-schema-mcp)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
+[![GitHub Release](https://img.shields.io/github/v/release/gander-tools/osm-tagging-schema-mcp?logo=github)](https://github.com/gander-tools/osm-tagging-schema-mcp/releases)
 [![NPM Provenance](https://img.shields.io/badge/provenance-npm-CB3837?logo=npm)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
 [![SLSA 3](https://img.shields.io/badge/SLSA-Level%203-green?logo=github)](docs/deployment/security.md#slsa-build-provenance)
 [![Docker Image](https://img.shields.io/badge/docker-ghcr.io-blue?logo=docker)](https://github.com/gander-tools/osm-tagging-schema-mcp/pkgs/container/osm-tagging-schema-mcp)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen?logo=node.js)](https://nodejs.org)
+[![Node.js Version](https://img.shields.io/badge/node-24-brightgreen?logo=node.js)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![MCP](https://img.shields.io/badge/MCP-1.21-orange)](https://modelcontextprotocol.io)
@@ -20,7 +22,7 @@
 
 This is a **Model Context Protocol (MCP) server** designed specifically for AI agents and LLM applications. It acts as a bridge between artificial intelligence systems and the comprehensive OpenStreetMap tagging knowledge base provided by the official `@openstreetmap/id-tagging-schema` library.
 
-**Current Status**: Version 1.0.0 is now publicly available as a production-ready MVP, actively maintained and continuously improved. The service is deployed and accessible at [https://mcp.gander.tools/osm-tagging/](https://mcp.gander.tools/osm-tagging/).
+**Current Status**: Version 1.x is now publicly available as a production-ready MVP, actively maintained and continuously improved. The service is deployed and accessible at [https://mcp.gander.tools/osm-tagging/](https://mcp.gander.tools/osm-tagging/).
 
 **We welcome your feedback!** Have ideas for improvements? Found a bug? Want to discuss features? Please open an [issue](https://github.com/gander-tools/osm-tagging-schema-mcp/issues) or start a [discussion](https://github.com/gander-tools/osm-tagging-schema-mcp/discussions).
 
