@@ -31,14 +31,14 @@ jobs:
         id: check
         run: |
           # Get the commit SHA that the tag points to
-          TAG_COMMIT=$(git rev-list -n 1 ${{ github.ref_name }})
-          echo "Tag ${{ github.ref_name }} points to commit: $TAG_COMMIT"
+          TAG_COMMIT=$(git rev-list -n 1 "${{ github.ref_name }}")
+          echo "Tag ${{ github.ref_name }} points to commit: ${TAG_COMMIT}"
 
           # Check if this commit is reachable from master
-          if git merge-base --is-ancestor $TAG_COMMIT origin/master; then
+          if git merge-base --is-ancestor "${TAG_COMMIT}" origin/master; then
             echo "✅ Tag ${{ github.ref_name }} was created from master branch"
-            echo "is-master=true" >> $GITHUB_OUTPUT
-            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "is-master=true" >> "$GITHUB_OUTPUT"
+            echo "should-deploy=true" >> "$GITHUB_OUTPUT"
           else
             echo "❌ Tag ${{ github.ref_name }} was NOT created from master branch"
             echo ""
@@ -52,8 +52,8 @@ jobs:
             echo "   3. Checkout master: git checkout master"
             echo "   4. Create tag from master: git tag ${{ github.ref_name }} && git push origin ${{ github.ref_name }}"
             echo ""
-            echo "is-master=false" >> $GITHUB_OUTPUT
-            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "is-master=false" >> "$GITHUB_OUTPUT"
+            echo "should-deploy=false" >> "$GITHUB_OUTPUT"
           fi
 
   build-and-push:
@@ -151,9 +151,9 @@ jobs:
         id: digest
         run: |
           if [ "${{ startsWith(github.ref, 'refs/tags/v') }}" = "true" ]; then
-            echo "digest=${{ steps.build-and-push-release.outputs.digest }}" >> $GITHUB_OUTPUT
+            echo "digest=${{ steps.build-and-push-release.outputs.digest }}" >> "$GITHUB_OUTPUT"
           else
-            echo "digest=${{ steps.build-and-push-dev.outputs.digest }}" >> $GITHUB_OUTPUT
+            echo "digest=${{ steps.build-and-push-dev.outputs.digest }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Image digest
