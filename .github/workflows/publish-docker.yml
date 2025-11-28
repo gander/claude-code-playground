@@ -9,13 +9,6 @@ on:
     branches:
       - master
 
-  # Version tag triggers
-  push:
-    branches:
-      - master
-    tags:
-      - 'v*.*.*'
-
   # Manual trigger with version input
   workflow_dispatch:
     inputs:
@@ -23,10 +16,6 @@ on:
         description: 'NPM package version to build (e.g., v1.2.3)'
         required: true
         type: string
-
-  pull_request:
-    branches:
-      - 'master'
 
 env:
   REGISTRY: ghcr.io
