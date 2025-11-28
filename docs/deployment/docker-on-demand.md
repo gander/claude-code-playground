@@ -6,6 +6,12 @@ This document describes how to trigger Docker image builds on-demand for Pull Re
 
 The `publish-docker.yml` workflow handles both version tag releases and on-demand PR builds. For Pull Requests, it allows you to build and publish Docker images on-demand without automatically building on every PR push. This saves CI resources and provides flexibility to build only when needed.
 
+**Key Features:**
+- Both release and on-demand builds use the **same Dockerfile** (`Dockerfile.release`)
+- Release builds use prebuilt `dist/` from GitHub Release
+- On-demand builds compile `dist/` from source before building Docker image
+- This ensures PR builds match production release builds exactly
+
 **Build Triggers:**
 - ✅ **Version tags** (v*.*.*): Automatic release builds
 - ✅ **On-demand PR builds**: Manual trigger, label (`docker:build`), or comment (`/docker-build`)
@@ -404,7 +410,8 @@ The `publish-docker.yml` workflow handles two types of builds:
 | **Trigger** | Version tags (v*.*.*) | Label, comment, manual |
 | **When** | Tag push | Pull Requests |
 | **Tags** | `latest`, semver (e.g., `1`, `1.2`, `1.2.3`) | `pr-<number>`, `pr-<number>-<sha>` |
-| **Dockerfile** | `Dockerfile.release` (uses prebuilt `dist/` artifact) | `Dockerfile` (builds from source) |
+| **dist/ Source** | Downloaded from GitHub Release | Built from source |
+| **Dockerfile** | `Dockerfile.release` | `Dockerfile.release` (same as release) |
 | **Platforms** | linux/amd64, linux/arm64 | linux/amd64, linux/arm64 |
 | **Security** | Trivy, Cosign | Trivy, Cosign |
 | **Post-Build** | Webhook notification | PR comment |
@@ -438,20 +445,26 @@ The `publish-docker.yml` workflow handles two types of builds:
 │                      │
 │ Release builds:      │
 │ • Checkout tag       │
-│ • Download dist/     │
-│ • Build (Dockerfile.release)│
-│ • Push tags          │
-│ • Send webhook       │
+│ • Download dist/ from│
+│   GitHub Release     │
 │                      │
 │ On-demand builds:    │
 │ • Checkout PR SHA    │
-│ • Build (Dockerfile) │
-│ • Push PR tags       │
-│ • Comment on PR      │
+│ • Setup Node.js      │
+│ • npm ci             │
+│ • npm run build      │
+│   (creates dist/)    │
 │                      │
-│ Both:                │
+│ Both use same steps: │
+│ • Build image        │
+│   (Dockerfile.release)│
+│ • Push tags          │
 │ • Scan (Trivy)       │
 │ • Sign (Cosign)      │
+│                      │
+│ Post-build:          │
+│ • Release: webhook   │
+│ • On-demand: PR comment│
 └──────────────────────┘
 ```
 
