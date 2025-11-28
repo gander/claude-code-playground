@@ -40,7 +40,7 @@ jobs:
             echo "**Files Checked:** ${{ steps.actionlint.outputs.total-files }}"
             echo "**Cache Hit:** ${{ steps.actionlint.outputs.cache-hit }}"
           } >> "$GITHUB_STEP_SUMMARY"
-          exit "${{ steps.actionlint.outputs.exit-code }}"
+          exit 1
 
       - name: Success Summary
         if: steps.actionlint.outputs.exit-code == '0'
