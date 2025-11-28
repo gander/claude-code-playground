@@ -1,5 +1,24 @@
 name: Docker Build On-Demand
 
+# ARCHITECTURE: Permission Gating Pattern
+#
+# This workflow uses permission gating (single workflow with permission checks)
+# instead of GitHub's recommended workflow_run pattern (two-workflow separation).
+#
+# This is a deliberate architectural decision prioritizing simplicity and speed
+# for a trusted team environment. See docs/deployment/docker-on-demand.md for:
+# - Security model and trade-offs
+# - Comparison with workflow_run pattern
+# - When to migrate to workflow_run
+#
+# Security layers:
+# 1. Permission gating (write/admin access required)
+# 2. Shallow clone (fetch-depth: 1)
+# 3. Credential isolation (persist-credentials: false)
+# 4. Minimal permissions (explicit per-job)
+#
+# Residual risk: Trusted users can execute code during build (accepted trade-off)
+
 on:
   # Manual trigger with PR number input
   workflow_dispatch:

@@ -85,6 +85,87 @@ If your threat model requires zero risk from PR code execution:
 - Use separate service account with limited access
 - Review Dockerfile changes before triggering builds
 
+### Architecture Decision: Permission Gating vs workflow_run Pattern
+
+**Current Implementation:** Permission Gating (single workflow with permission checks)
+
+**GitHub Recommended Pattern:** `workflow_run` (two-workflow pattern with build/publish separation)
+
+#### Why We Chose Permission Gating
+
+This workflow uses **permission gating** instead of GitHub's recommended `workflow_run` pattern. This is a deliberate architectural decision based on the following considerations:
+
+**Permission Gating Approach (Current):**
+```
+issue_comment/pull_request (labeled)
+  → Permission check (write/admin required)
+  → Checkout PR code
+  → Build + Push (privileged context)
+```
+
+**Advantages:**
+- ✅ Simpler architecture (1 workflow vs 2)
+- ✅ Faster execution (no artifact upload/download overhead)
+- ✅ Easier to debug and maintain
+- ✅ Sufficient for trusted team environment
+- ✅ Clear user experience (direct trigger → result)
+
+**Accepted Trade-offs:**
+- ⚠️ Build runs in privileged context with secrets
+- ⚠️ Trusted users can execute code during build (insider threat)
+- ⚠️ Not GitHub's strictest security recommendation
+
+#### Alternative: workflow_run Pattern
+
+GitHub's recommended approach for maximum security:
+
+**workflow_run Approach (Alternative):**
+```
+Workflow 1 (unprivileged):
+  pull_request trigger
+  → Build image (no secrets)
+  → Upload artifact (image tar)
+
+Workflow 2 (privileged):
+  workflow_run trigger
+  → Download artifact
+  → Verify artifact
+  → Push to registry (with secrets)
+```
+
+**Advantages of workflow_run:**
+- ✅ Build isolated from secrets (zero insider threat during build)
+- ✅ GitHub security best practice
+- ✅ Complete separation of build/publish
+
+**Why We Didn't Use It:**
+- ❌ Significantly more complex (2 workflows, artifact management)
+- ❌ Slower (artifact upload/download adds minutes)
+- ❌ Harder to debug (split across workflows)
+- ❌ Poor UX for on-demand builds (no direct trigger)
+- ❌ Overkill for trusted team with low insider threat
+
+#### When to Migrate to workflow_run
+
+Consider migrating to `workflow_run` pattern if:
+- 📊 **Team Growth**: Repository has 10+ contributors with write access
+- 🔓 **Open Contribution Model**: Frequently granting write access to new contributors
+- 💰 **High-Value Targets**: Building images for production infrastructure
+- 🏢 **Compliance Requirements**: Security audits mandate build/publish separation
+- 🚨 **Insider Threat Model**: Need protection against malicious insiders
+
+#### Implementation Recommendation
+
+For most projects like this one:
+- **Permission gating is sufficient** - trusted team, on-demand convenience feature
+- **Four security layers** provide adequate defense-in-depth
+- **Simplicity has value** - easier to maintain and understand
+
+For high-security environments:
+- **Use workflow_run pattern** - maximum isolation
+- **Accept complexity trade-off** - security over convenience
+- **See GitHub docs**: [Keeping your GitHub Actions secure](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions)
+
 ## Trigger Methods
 
 There are **three ways** to trigger an on-demand Docker build:
