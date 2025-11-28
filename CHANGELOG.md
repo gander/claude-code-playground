@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Implement srvaroa/labeler for automatic PR/issue label management
+  - Automatic labeling based on file changes (documentation, tests, core, docker, workflows, etc.)
+  - PR size labels (small/medium/large/xlarge) based on line changes
+  - Work-in-progress label for draft PRs
+  - Branch-based labeling (claude/* branches get "claude code" label)
+
+### Changed
+
+- Remove manual label addition from auto-pr workflow (now handled by labeler)
+
 ## [1.0.6] - 2025-11-23
 
 ### Miscellaneous
