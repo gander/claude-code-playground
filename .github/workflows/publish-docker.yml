@@ -582,7 +582,7 @@ jobs:
           echo "::notice::Image pushed with digest ${{ steps.digest.outputs.digest }}"
           BUILD_TYPE="${{ needs.check-build-type.outputs.build-type }}"
 
-          if [ "$BUILD_TYPE" = "on-demand" ] || [ "$BUILD_TYPE" = "edge" ] || ([ "$BUILD_TYPE" = "release" ] && [ "${{ github.event_name }}" = "workflow_dispatch" ]); then
+          if [ "$BUILD_TYPE" = "on-demand" ] || [ "$BUILD_TYPE" = "edge" ] || { [ "$BUILD_TYPE" = "release" ] && [ "${{ github.event_name }}" = "workflow_dispatch" ]; }; then
             {
               echo "### 🐳 Docker Build Complete"
               echo ""
