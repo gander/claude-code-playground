@@ -25,6 +25,29 @@ The OSM Tagging Schema MCP Server can be deployed as:
 
 This guide focuses on Docker Compose deployment, which is recommended for production environments.
 
+## Build Architecture
+
+Docker images are built using a **dual strategy** for optimal security and performance:
+
+**Release Builds (version tags like `v1.0.0`):**
+- Use `Dockerfile.release` (simplified, artifact-based)
+- Download pre-built `dist/` from NPM publish workflow
+- **Same code as NPM package** with SLSA Level 3 attestations
+- Faster builds (no TypeScript compilation)
+- Complete provenance chain: Docker → dist.tar.gz → NPM package
+
+**Development Builds (PRs, master branch, `edge` tag):**
+- Use `Dockerfile` (multi-stage build)
+- Compile TypeScript from source during build
+- Independent of NPM publish workflow
+
+**Security Benefits:**
+- Release images inherit SLSA attestations from NPM build
+- Verifiable consistency between NPM and Docker distributions
+- Single build artifact reduces attack surface
+
+For more details, see [Security & Supply Chain](security.md#shared-build-artifact-provenance).
+
 ## Prerequisites
 
 **Required:**
@@ -632,13 +655,13 @@ Choose the appropriate Docker image tag based on your use case:
 
 ## Next Steps
 
-- [Configuration Guide](./configuration.md) - Detailed configuration options
-- [API Documentation](./api/) - Tool reference
+- [Configuration Guide](../user/configuration.md) - Detailed configuration options
+- [API Documentation](../api/README.md) - Tool reference
 - [Security Guide](./security.md) - Security best practices
-- [Troubleshooting](./troubleshooting.md) - Common issues
+- [Troubleshooting](../user/troubleshooting.md) - Common issues
 
 ## Getting Help
 
 - **Issues**: [GitHub Issues](https://github.com/gander-tools/osm-tagging-schema-mcp/issues)
-- **Documentation**: [README.md](../README.md)
+- **Documentation**: [README.md](../../README.md)
 - **Discussions**: [GitHub Discussions](https://github.com/gander-tools/osm-tagging-schema-mcp/discussions)

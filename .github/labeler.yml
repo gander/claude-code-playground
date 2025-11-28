@@ -1,0 +1,108 @@
+version: 1
+
+labels:
+  # Label PRs from claude/ branches
+  - label: "claude code"
+    branch: "^claude/.*"
+
+  # Label PRs from renovate/ branches
+  - label: "renovate"
+    branch: "^renovate/.*"
+
+  # Documentation changes
+  - label: "documentation"
+    files:
+      - "docs/.*"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "CLAUDE.md"
+
+  # Test changes
+  - label: "tests"
+    files:
+      - "tests/.*"
+
+  # GitHub workflows and CI/CD
+  - label: "github-actions"
+    files:
+      - ".github/workflows/.*"
+      - ".github/labeler.yml"
+
+  # Dependency updates
+  - label: "dependencies"
+    files:
+      - "package.json"
+      - "package-lock.json"
+
+  # Core source code changes
+  - label: "core"
+    files:
+      - "src/.*"
+
+  # Docker-related changes
+  - label: "docker"
+    files:
+      - "Dockerfile"
+      - "Dockerfile.dev"
+      - "docker-compose.*\\.yml"
+      - ".dockerignore"
+
+  # Configuration files
+  - label: "configuration"
+    files:
+      - "tsconfig.*\\.json"
+      - "biome.json"
+      - ".nvmrc"
+      - ".node-version"
+
+  # PR size labels - small (< 50 lines)
+  - label: "size/small"
+    size:
+      below: 50
+      exclude-files:
+        - "package-lock.json"
+        - "CHANGELOG.md"
+
+  # PR size labels - medium (50-200 lines)
+  - label: "size/medium"
+    size:
+      above: 49
+      below: 201
+      exclude-files:
+        - "package-lock.json"
+        - "CHANGELOG.md"
+
+  # PR size labels - large (200-500 lines)
+  - label: "size/large"
+    size:
+      above: 199
+      below: 501
+      exclude-files:
+        - "package-lock.json"
+        - "CHANGELOG.md"
+
+  # PR size labels - xlarge (> 500 lines)
+  - label: "size/xlarge"
+    size:
+      above: 500
+      exclude-files:
+        - "package-lock.json"
+        - "CHANGELOG.md"
+
+  # Draft PRs
+  - label: "work-in-progress"
+    draft: true
+
+  # Security-related changes
+  - label: "security"
+    files:
+      - ".github/workflows/security-.*"
+      - "tests/fuzz/.*"
+      - "docs/deployment/security.md"
+
+  # Release-related changes
+  - label: "release"
+    files:
+      - ".github/workflows/publish-.*"
+      - ".github/workflows/auto-release-.*"
+      - ".changeset/.*"

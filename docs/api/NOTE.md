@@ -2,12 +2,12 @@
 
 ## Completed Documentation
 
-- [README.md](./README.md) - API overview and quick reference for all 14 tools
-- [get_tag_info.md](./get_tag_info.md) - Complete example documentation
+- [README.md](./README.md) - API overview and quick reference for all tools
+- All individual tool documentation files follow the same pattern
 
 ## Documentation Pattern
 
-All tool documentation follows the same structure as `get_tag_info.md`:
+All tool documentation follows a consistent structure:
 
 1. **Description**: What the tool does
 2. **Category**: Tool category (Tag Query, Preset Discovery, Validation, Schema Exploration)
@@ -23,9 +23,9 @@ All tool documentation follows the same structure as `get_tag_info.md`:
 
 ## Creating Additional Tool Documentation
 
-To create documentation for other tools:
+To create documentation for additional tools:
 
-1. Copy `get_tag_info.md` as a template
+1. Copy an existing tool documentation as a template
 2. Update the tool name and description
 3. Modify input parameters table
 4. Update output structure
@@ -35,26 +35,17 @@ To create documentation for other tools:
 ## Tool List
 
 ### Tag Query Tools
-- `get_tag_info` ✅ Documented
-- `get_tag_values` (follows same pattern)
-- `get_related_tags` (follows same pattern)
-- `search_tags` (follows same pattern)
+- `get_tag_values` ✅ Documented
+- `search_tags` ✅ Documented
 
 ### Preset Discovery Tools
-- `search_presets` (follows same pattern)
-- `get_preset_details` (follows same pattern)
-- `get_preset_tags` (follows same pattern)
+- `search_presets` ✅ Documented
+- `get_preset_details` ✅ Documented
 
 ### Validation Tools
-- `validate_tag` (follows same pattern)
-- `validate_tag_collection` (follows same pattern)
-- `check_deprecated` (follows same pattern)
-- `suggest_improvements` (follows same pattern)
-
-### Schema Exploration Tools
-- `get_categories` (follows same pattern)
-- `get_category_tags` (follows same pattern)
-- `get_schema_stats` (follows same pattern)
+- `validate_tag` ✅ Documented
+- `validate_tag_collection` ✅ Documented
+- `suggest_improvements` ✅ Documented
 
 ## Quick Reference
 
@@ -73,4 +64,4 @@ To contribute additional tool documentation:
 4. Add error scenarios
 5. Link to related tools
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for general contribution guidelines.
+See [contributing.md](../development/contributing.md) for general contribution guidelines.

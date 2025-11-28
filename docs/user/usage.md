@@ -10,7 +10,6 @@ This guide provides practical examples of using the OSM Tagging Schema MCP Serve
   - [Tag Query Tools](#tag-query-tools)
   - [Preset Discovery Tools](#preset-discovery-tools)
   - [Validation Tools](#validation-tools)
-  - [Schema Exploration Tools](#schema-exploration-tools)
 - [Workflow Examples](#workflow-examples)
 - [Best Practices](#best-practices)
 
@@ -606,7 +605,7 @@ Get structured suggestions for improving a tag collection with localized names.
 ```json
 {
   "name": "suggest_improvements",
-  "arguments": { "tags": { ... } }
+  "arguments": { "tags": "{...}" }
 }
 ```
 
@@ -614,7 +613,7 @@ Get structured suggestions for improving a tag collection with localized names.
 ```json
 {
   "name": "validate_tag_collection",
-  "arguments": { "tags": { ... } }
+  "arguments": { "tags": "{...}" }
 }
 ```
 
@@ -890,7 +889,7 @@ TRANSPORT=http LOG_LEVEL=WARN npx @gander-tools/osm-tagging-schema-mcp
 TRANSPORT=http LOG_LEVEL=DEBUG npm run dev:http
 ```
 
-📖 **For production deployment guide**, see [deployment.md](./deployment.md)
+📖 **For production deployment guide**, see [deployment.md](../deployment/deployment.md)
 
 ## Best Practices
 
@@ -903,22 +902,33 @@ Choose the most specific tool for your task:
 ### 2. Validate Early and Often
 
 ```json
-// Validate single tag as user types
-{ "name": "validate_tag", "arguments": { "key": "...", "value": "..." } }
+{
+  "name": "validate_tag",
+  "arguments": { "key": "...", "value": "..." }
+}
+```
 
-// Validate collection before saving
-{ "name": "validate_tag_collection", "arguments": { "tags": { ... } } }
+```json
+{
+  "name": "validate_tag_collection",
+  "arguments": { "tags": "{...}" }
+}
 ```
 
 ### 3. Use Suggestions to Improve Quality
 
 ```json
-// After basic tagging
-{ "name": "suggest_improvements", "arguments": { "tags": { ... } } }
+{
+  "name": "suggest_improvements",
+  "arguments": { "tags": "{...}" }
+}
+```
 
-// Apply suggestions
-// Validate again
-{ "name": "validate_tag_collection", "arguments": { "tags": { ... } } }
+```json
+{
+  "name": "validate_tag_collection",
+  "arguments": { "tags": "{...}" }
+}
 ```
 
 ### 4. Check for Deprecation
@@ -975,12 +985,12 @@ for (const preset of presets) {
 
 ## Next Steps
 
-- [API Documentation](./api/) - Detailed tool reference
+- [API Documentation](../api/README.md) - Detailed tool reference
 - [Troubleshooting](./troubleshooting.md) - Common issues
-- [Examples](../README.md#example-queries) - More examples
+- [Main Documentation](../../README.md) - Project overview
 
 ## Getting Help
 
 - **Issues**: Report problems on [GitHub Issues](https://github.com/gander-tools/osm-tagging-schema-mcp/issues)
 - **Questions**: Ask on [GitHub Discussions](https://github.com/gander-tools/osm-tagging-schema-mcp/discussions)
-- **Documentation**: See [README.md](../README.md)
+- **Documentation**: See [README.md](../../README.md)

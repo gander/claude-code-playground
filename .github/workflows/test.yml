@@ -10,20 +10,61 @@ permissions:
   contents: read
 
 jobs:
+  # Detect which files changed to conditionally run jobs
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      docs: ${{ steps.filter.outputs.docs }}
+      any: ${{ steps.filter.outputs.any }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Check for file changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'src/**'
+              - 'tests/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'tsconfig*.json'
+              - 'biome.json'
+              - 'Dockerfile*'
+              - 'docker-compose*.yml'
+              - '.dockerignore'
+            docs:
+              - 'docs/**'
+              - '*.md'
+              - 'LICENSE'
+            any:
+              - '**'
+
   test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    name: Unit and Integration Test
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v6.1.0
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: 22.x
+          node-version: 24.x
 
-      - name: Install npm 11.5.1
-        run: npm install -g npm@11.5.1
+      # npm must be newer than 11.5.1 for Node 24 compatibility
+      - name: Install npm 11.6.4
+        run: npm install -g npm@11.6.4
 
       - name: Install dependencies
         run: npm ci
@@ -46,19 +87,21 @@ jobs:
   npm-package-test:
     name: NPM Package E2E Test
     runs-on: ubuntu-latest
-    needs: test
+    needs: [changes, test]
+    if: needs.changes.outputs.code == 'true'
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v6.1.0
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: 22.x
+          node-version: 24.x
 
-      - name: Install npm 11.5.1
-        run: npm install -g npm@11.5.1
+      # npm must be newer than 11.5.1 for Node 24 compatibility
+      - name: Install npm 11.6.4
+        run: npm install -g npm@11.6.4
 
       - name: Install dependencies
         run: npm ci

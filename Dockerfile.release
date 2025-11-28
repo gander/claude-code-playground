@@ -1,37 +1,14 @@
-# Stage 1: Builder
-# Use build platform to run build tools (npm, tsc) on host architecture
+# Production Dockerfile using pre-built dist/ artifact from NPM publish
+# This Dockerfile is used for release builds (version tags) where dist/ comes from
+# the NPM publish workflow artifact, ensuring the Docker image contains the exact
+# same code that was published to NPM with SLSA attestations.
+#
+# For development builds (PRs, master branch), use the standard Dockerfile which
+# includes multi-stage build with TypeScript compilation.
+
 # Pinned to manifest list digest for security and multi-platform compatibility
 # This digest references a manifest list supporting: linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6, linux/s390x
-# To update: curl -s https://hub.docker.com/v2/repositories/library/node/tags/22-alpine | jq -r '.digest'
-FROM --platform=$BUILDPLATFORM node:24-alpine@sha256:2867d550cf9d8bb50059a0fff528741f11a84d985c732e60e19e8e75c7239c43 AS builder
-
-# Build arguments for multi-platform support
-ARG BUILDPLATFORM
-ARG TARGETPLATFORM
-
-# Set working directory
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install all dependencies (including devDependencies for building)
-RUN npm ci --ignore-scripts
-
-# Copy source code
-COPY tsconfig.json ./
-COPY src/ ./src/
-
-# Build TypeScript code
-RUN npm run build
-
-# Verify build output exists
-RUN test -f dist/index.js || (echo "Build failed: dist/index.js not found" && exit 1)
-
-# Stage 2: Runtime
-# Pinned to manifest list digest for security and multi-platform compatibility
-# This digest references a manifest list supporting: linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6, linux/s390x
-# Docker BuildKit automatically uses the target platform (no need for --platform=$TARGETPLATFORM)
+# Docker BuildKit automatically uses the target platform for multi-arch builds
 # To update: curl -s https://hub.docker.com/v2/repositories/library/node/tags/22-alpine | jq -r '.digest'
 FROM node:24-alpine@sha256:2867d550cf9d8bb50059a0fff528741f11a84d985c732e60e19e8e75c7239c43
 
@@ -41,13 +18,17 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Copy pre-built dist/ directory from NPM publish artifact
+# This dist/ is the same build that was published to NPM with SLSA Level 3 provenance
+COPY dist/ ./dist/
+
+# Verify that dist/index.js exists (artifact was properly copied)
+RUN test -f dist/index.js || (echo "Error: dist/index.js not found - artifact not properly provided" && exit 1)
+
 # Install only production dependencies
 # Skip postinstall scripts (lefthook is a devDependency and not needed in production)
 RUN npm ci --omit=dev --ignore-scripts && \
     npm cache clean --force
-
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
 
 # Create non-root user
 RUN addgroup -g 1001 -S mcp && \
