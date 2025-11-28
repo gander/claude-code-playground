@@ -39,7 +39,23 @@ jobs:
             echo "**Total Errors:** ${{ steps.actionlint.outputs.total-errors }}"
             echo "**Files Checked:** ${{ steps.actionlint.outputs.total-files }}"
             echo "**Cache Hit:** ${{ steps.actionlint.outputs.cache-hit }}"
+            echo ""
+            echo "#### Error Details"
+            echo ""
           } >> "$GITHUB_STEP_SUMMARY"
+
+          # Ensure actionlint is available
+          if ! command -v actionlint >/dev/null 2>&1; then
+            echo "Installing actionlint..."
+            bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+            export PATH="$PATH:$(pwd)"
+          fi
+
+          # Capture and format actionlint errors (using default format)
+          actionlint 2>&1 | grep "^Error:" | while IFS= read -r line; do
+            echo "- $line" >> "$GITHUB_STEP_SUMMARY"
+          done
+
           exit 1
 
       - name: Success Summary
