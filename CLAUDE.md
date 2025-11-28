@@ -1,13 +1,13 @@
 # Project: OpenStreetMap Tagging Schema MCP Server
 
 > **⚠️ IMPORTANT**: This document reflects the ACTUAL current state of the codebase.
-> **Current Status**: 7 tools (optimized set) | All systems operational ✅ | Production-ready
+> **Current Status**: 9 tools (optimized set) | All systems operational ✅ | Production-ready
 
 ## Project Overview
 
 This is a Model Context Protocol (MCP) server built with TypeScript that provides tools for querying and validating OpenStreetMap (OSM) tags using the `@openstreetmap/id-tagging-schema` library.
 
-**Development Status**: Production-ready with optimized tool set. Originally planned 14 tools, reduced to 7 after removing redundant functionality.
+**Development Status**: Production-ready with optimized tool set. Originally planned 14 tools, reduced to 7 after removing redundant functionality, expanded to 9 with addition of format conversion tools.
 
 ## Purpose
 
@@ -21,9 +21,9 @@ The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tool
 
 ## Core Functionality
 
-**Current Status**: 7 tools (optimized, complete set)
+**Current Status**: 9 tools (optimized, complete set)
 
-### Complete Tool Set (7 tools)
+### Complete Tool Set (9 tools)
 
 **Validation Tools** (3 tools):
 - ✅ **validate_tag**: Validate a single tag key-value pair (includes deprecation checking)
@@ -37,6 +37,10 @@ The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tool
 **Preset Tools** (2 tools):
 - ✅ **search_presets**: Search for presets by name or tag filters
 - ✅ **get_preset_details**: Get complete preset configuration including tags and fields
+
+**Format Conversion Tools** (2 tools):
+- ✅ **flat_to_json**: Convert flat text format (key=value per line) to JSON object - INPUT CONVERTER for AI workflows
+- ✅ **json_to_flat**: Convert JSON object to flat text format (key=value per line) - OUTPUT CONVERTER for AI workflows
 
 ### Redundant Tools Removed
 
@@ -187,6 +191,7 @@ src/
 │   ├── types.ts                     # Shared type definitions
 │   ├── get-preset-details.ts        # ✅ Preset tool
 │   ├── get-tag-values.ts            # ✅ Tag query tool
+│   ├── json-to-flat.ts              # ✅ Format conversion tool
 │   ├── search-presets.ts            # ✅ Preset tool
 │   ├── search-tags.ts               # ✅ Tag query tool
 │   ├── suggest-improvements.ts      # ✅ Validation tool
@@ -299,7 +304,7 @@ for (const tool of tools) {
 
 **Current Phase: Phase 8 - COMPLETE ✅**
 
-**Status**: Production-ready MCP server with 7 optimized tools providing complete OSM tagging schema functionality with full localization support and template expansion.
+**Status**: Production-ready MCP server with 9 optimized tools providing complete OSM tagging schema functionality with full localization support, template expansion, and format conversion.
 
 ### Phase Summary
 

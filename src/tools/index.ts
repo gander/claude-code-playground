@@ -3,8 +3,10 @@
  */
 
 import type { OsmToolDefinition } from "../types/index.js";
+import FlatToJson from "./flat-to-json.js";
 import GetPresetDetails from "./get-preset-details.js";
 import GetTagValues from "./get-tag-values.js";
+import JsonToFlat from "./json-to-flat.js";
 import SearchPresets from "./search-presets.js";
 import SearchTags from "./search-tags.js";
 import SuggestImprovements from "./suggest-improvements.js";
@@ -17,8 +19,10 @@ import ValidateTagCollection from "./validate-tag-collection.js";
  */
 // biome-ignore lint/suspicious/noExplicitAny: Heterogeneous array of tools with different input schemas
 export const tools: OsmToolDefinition<any>[] = [
+	FlatToJson,
 	GetPresetDetails,
 	GetTagValues,
+	JsonToFlat,
 	SearchPresets,
 	SearchTags,
 	SuggestImprovements,
