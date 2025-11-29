@@ -7,14 +7,15 @@
 [![Docker](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/publish-docker.yml?branch=master&label=docker&logo=docker)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/publish-docker.yml)
 
 <!-- Package Information -->
-[![npm version](https://img.shields.io/npm/v/@gander-tools/osm-tagging-schema-mcp?logo=npm)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/@gander-tools/osm-tagging-schema-mcp?logo=npm)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
 [![GitHub Release](https://img.shields.io/github/v/release/gander-tools/osm-tagging-schema-mcp?logo=github)](https://github.com/gander-tools/osm-tagging-schema-mcp/releases)
 
-<!-- Dependencies (Dynamic from npm) -->
-[![Node.js](https://img.shields.io/badge/node-24-brightgreen?logo=node.js)](https://nodejs.org)
-[![TypeScript](https://img.shields.io/npm/dependency-version/@gander-tools/osm-tagging-schema-mcp/dev/typescript?logo=typescript)](https://www.typescriptlang.org/)
-[![MCP SDK](https://img.shields.io/npm/dependency-version/@gander-tools/osm-tagging-schema-mcp/@modelcontextprotocol/sdk?label=MCP&color=orange)](https://modelcontextprotocol.io)
+<!-- Dependencies -->
+[![Node.js](https://img.shields.io/badge/node-22-brightgreen?logo=node.js)](https://nodejs.org)
+[![npm](https://img.shields.io/badge/npm-10-CB3837?logo=npm)](https://www.npmjs.com/)
+[![TypeScript](https://img.shields.io/badge/typescript-%5E5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![MCP SDK](https://img.shields.io/badge/MCP-%5E1.23-orange)](https://modelcontextprotocol.io)
+[![Zod](https://img.shields.io/badge/zod-%5E4.1-3E67B1?logo=zod)](https://zod.dev/)
 
 <!-- Code Quality & Security -->
 [![Code Quality](https://img.shields.io/badge/code%20quality-BiomeJS-60a5fa?logo=biome)](https://biomejs.dev/)
@@ -31,7 +32,7 @@
 
 This is a **Model Context Protocol (MCP) server** designed specifically for AI agents and LLM applications. It acts as a bridge between artificial intelligence systems and the comprehensive OpenStreetMap tagging knowledge base provided by the official `@openstreetmap/id-tagging-schema` library.
 
-**Current Status**: Version 1.x is now publicly available as a production-ready MVP, actively maintained and continuously improved. The service is deployed and accessible at [https://mcp.gander.tools/osm-tagging/](https://mcp.gander.tools/osm-tagging/).
+**Current Status**: Production-ready MCP server, actively maintained and continuously improved. The service is deployed and accessible at [https://mcp.gander.tools/osm-tagging/](https://mcp.gander.tools/osm-tagging/).
 
 **We welcome your feedback!** Have ideas for improvements? Found a bug? Want to discuss features? Please open an [issue](https://github.com/gander-tools/osm-tagging-schema-mcp/issues) or start a [discussion](https://github.com/gander-tools/osm-tagging-schema-mcp/discussions).
 

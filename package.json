@@ -1,6 +1,6 @@
 {
 	"name": "@gander-tools/osm-tagging-schema-mcp",
-	"version": "2.2.0",
+	"version": "2.3.0",
 	"description": "MCP server for querying and validating OpenStreetMap tags",
 	"type": "module",
 	"main": "dist/index.js",
@@ -30,9 +30,10 @@
 		"test:coverage:unit": "c8 --reporter=text --reporter=lcov --reporter=html npm run test:unit",
 		"test:coverage:integration": "c8 --reporter=text --reporter=lcov --reporter=html npm run test:integration",
 		"test:coverage:fuzz": "c8 --reporter=text --reporter=lcov --reporter=html npm run test:fuzz",
-		"lint": "biome lint .",
+		"lint": "biome lint --write .",
 		"format": "biome format --write .",
 		"check": "biome check --write .",
+		"check:unsafe": "biome check --write --unsafe .",
 		"typecheck": "tsc --noEmit",
 		"prepare": "lefthook install",
 		"prepublishOnly": "npm run build"
