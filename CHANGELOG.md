@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v2.0.2...v2.1.0) (2025-11-29)
+
+
+### Features
+
+* **prompts:** add comprehensive MCP prompts for OSM tagging workflows ([6969f91](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/6969f91778c545cfbb67974d9f0706871e3f8197))
+* **server:** register MCP prompts and enable prompts capability ([d21f924](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/d21f924c801ea831d6a95b3024d621fd177a6ef1))
+
+
+### Bug Fixes
+
+* **imports:** replace import assertions with createRequire for Node 22/24 compatibility ([a17a7cb](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/a17a7cbb72dade218554a74271f491ebb1a53939))
+* **imports:** use readFileSync instead of createRequire for better Node.js compatibility ([11e38f6](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/11e38f616717b7ba42e2eae97a4a1d891ad2ccbe))
+* **prompts:** resolve TypeScript type errors in prompt definitions ([44addc2](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/44addc23188dd8d3b19cecedd272d0d96898b7ba))
+* **tests:** fix unit test exclusion pattern for proper test isolation ([d22538f](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/d22538fa35d02e9e8cea76cc1aeb282168462bb4))
+* **tests:** remove redundant string replacement in prompt test ([28a6a50](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/28a6a5063f642055985f878b41019bac1ffecb02))
+* **tools:** add use case clarity to search_presets description ([e67b04d](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/e67b04d3c72c896fd418b4a8abd7e45fdc398ea8))
+* **tools:** improve search_tags tool descriptions with detailed examples ([#342](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/342)) ([62d7eb7](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/62d7eb7a6e8a2e73650f653262560b3fe2e52d74))
+
+
+### Documentation
+
+* complete rewrite and verification of all tool documentation ([c3cdeda](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/c3cdedafb2d8f6f8947bf6ca72758d9e06a359dc))
+* complete rewrite and verification of all tool documentation ([#339](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/339)) ([82a8348](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/82a8348541f777fde3be7c16760c151075590f67))
+* **tools:** enhance get_preset_details descriptions with expansion details ([ad860ea](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/ad860eaca857ae1519bea16a2e24925610d4dd8e))
+* **tools:** enhance suggest_improvements descriptions with workflow details ([2e6db09](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/2e6db09432d882955a611228c1d33153d3696fb7))
+* **tools:** enhance validate_tag tool descriptions with comprehensive details ([1689d58](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/1689d58c2e999cb2cb32b32c484574f7211050ac))
+* **tools:** expand flat_to_json descriptions with parser capabilities ([5349438](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/5349438dd3ce632b58444f3f342ece088bcbaa70))
+* **tools:** expand json_to_flat descriptions with validation details ([32e6b9c](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/32e6b9c2a2972c7a27993a688f592659e13be437))
+* **tools:** expand search_presets descriptions with preset concept explanation ([96fb727](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/96fb7270e3a191a8c9305a3e060d428b556e4925))
+* **tools:** expand validate_tag_collection descriptions with use cases ([59ab7ba](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/59ab7ba3508acb269537797a72bc5006f65ac76e))
+* **tools:** improve get_tag_values descriptions with data source details ([4fd868b](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/4fd868b567ed3b994028a1fe9e13e024f817ed47))
+* **tools:** improve search_tags tool descriptions with detailed examples ([55f7308](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/55f7308cb035f594f292f182f4c65d52cc7a339f))
+
 ## [2.0.2](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v2.0.1...v2.0.2) (2025-11-29)
 
 
