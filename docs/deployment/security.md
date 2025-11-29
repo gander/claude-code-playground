@@ -310,7 +310,7 @@ Following [OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/
 
 - ✅ Vulnerability disclosure process
 - ✅ Automated security testing
-- ✅ Dependency management with Dependabot
+- ✅ Dependency management with Renovate
 - ✅ SBOM generation
 - ✅ Signed releases
 

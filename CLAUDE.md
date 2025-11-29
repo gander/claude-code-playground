@@ -137,7 +137,7 @@ Every feature implementation MUST follow this workflow:
   - PR size (small/medium/large/xlarge)
   - PR state (draft = work-in-progress)
   - Branch patterns (claude/* = "claude code" label)
-- **Dependabot**: Automated dependency updates and security patches
+- **Renovate**: Automated dependency updates and security patches
 - **Release**: Automated npm releases with semantic versioning
 - **Distribution**: Package available via `npx` command
 - **Docker Builds**:
