@@ -1,16 +1,17 @@
-import { z } from "zod";
 import type { PromptMessage } from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
 
 /**
  * Prompt definition interface matching OsmToolDefinition pattern
  */
-export interface OsmPromptDefinition<T extends Record<string, z.ZodTypeAny>> {
+export interface OsmPromptDefinition {
 	name: string;
 	config: () => {
-		description: string;
-		argsSchema: T;
+		title?: string;
+		description?: string;
+		argsSchema?: Record<string, z.ZodTypeAny>;
 	};
-	handler: (args: z.infer<z.ZodObject<T>>) => { messages: PromptMessage[] };
+	handler: (args: Record<string, unknown>) => { messages: PromptMessage[] };
 }
 
 /**
@@ -18,10 +19,7 @@ export interface OsmPromptDefinition<T extends Record<string, z.ZodTypeAny>> {
  *
  * Guides users through validating a complete OSM feature with all its tags
  */
-export const validateOsmFeature: OsmPromptDefinition<{
-	featureType: z.ZodString;
-	tags: z.ZodString;
-}> = {
+export const validateOsmFeature: OsmPromptDefinition = {
 	name: "validate-osm-feature",
 	config: () => ({
 		description:
@@ -57,9 +55,7 @@ export const validateOsmFeature: OsmPromptDefinition<{
  *
  * Helps users discover the correct OSM preset for a feature type
  */
-export const findPreset: OsmPromptDefinition<{
-	featureDescription: z.ZodString;
-}> = {
+export const findPreset: OsmPromptDefinition = {
 	name: "find-preset",
 	config: () => ({
 		description:
@@ -90,9 +86,7 @@ export const findPreset: OsmPromptDefinition<{
  *
  * Educational prompt to help users understand a specific OSM tag
  */
-export const learnTag: OsmPromptDefinition<{
-	tagKey: z.ZodString;
-}> = {
+export const learnTag: OsmPromptDefinition = {
 	name: "learn-tag",
 	config: () => ({
 		description:
@@ -123,9 +117,7 @@ export const learnTag: OsmPromptDefinition<{
  *
  * Guides users through improving incomplete or minimal tag collections
  */
-export const improveTags: OsmPromptDefinition<{
-	currentTags: z.ZodString;
-}> = {
+export const improveTags: OsmPromptDefinition = {
 	name: "improve-tags",
 	config: () => ({
 		description:
@@ -156,10 +148,14 @@ export const improveTags: OsmPromptDefinition<{
  *
  * Helps users explore all features within a category
  */
-export const exploreCategory: OsmPromptDefinition<{
-	category: z.ZodString;
-	geometryType: z.ZodOptional<z.ZodEnum<["point", "line", "area", "relation"]>>;
-}> = {
+const geometryEnum = {
+	point: "point",
+	line: "line",
+	area: "area",
+	relation: "relation",
+} as const;
+
+export const exploreCategory: OsmPromptDefinition = {
 	name: "explore-category",
 	config: () => ({
 		description:
@@ -171,7 +167,7 @@ export const exploreCategory: OsmPromptDefinition<{
 					"OSM category/tag key to explore (e.g., 'amenity', 'shop', 'highway', 'natural', 'building', 'landuse')",
 				),
 			geometryType: z
-				.enum(["point", "line", "area", "relation"])
+				.enum(geometryEnum)
 				.optional()
 				.describe("Optional: filter to only features of this geometry type"),
 		},
@@ -192,10 +188,4 @@ export const exploreCategory: OsmPromptDefinition<{
 /**
  * All prompts exported as an array for registration
  */
-export const prompts = [
-	validateOsmFeature,
-	findPreset,
-	learnTag,
-	improveTags,
-	exploreCategory,
-];
+export const prompts = [validateOsmFeature, findPreset, learnTag, improveTags, exploreCategory];
