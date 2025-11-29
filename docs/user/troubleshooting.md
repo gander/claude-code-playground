@@ -17,17 +17,17 @@ This guide helps resolve common issues with the OSM Tagging Schema MCP Server.
 
 **Symptom:**
 ```
-Error: Node.js version 22.0.0 or higher is required
+Error: Node.js version 24.0.0 or higher is required
 Current version: v18.17.0
 ```
 
 **Solution:**
 ```bash
-# Install Node.js 22+ from https://nodejs.org/
+# Install Node.js 24+ from https://nodejs.org/
 # Or using nvm:
-nvm install 22
-nvm use 22
-nvm alias default 22
+nvm install 24
+nvm use 24
+nvm alias default 24
 
 # Verify version
 node --version
@@ -249,7 +249,7 @@ npx @gander-tools/osm-tagging-schema-mcp
 
 # 2. Check Node.js version
 node --version
-# Must be 22.0.0+
+# Must be 24.0.0+
 
 # 3. Check for conflicting packages
 npm list @openstreetmap/id-tagging-schema

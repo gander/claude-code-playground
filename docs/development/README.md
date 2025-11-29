@@ -37,7 +37,7 @@ This project follows **Test-Driven Development (TDD)**:
 
 ## Architecture
 
-- **Language**: TypeScript 5.x with Node.js 22+
+- **Language**: TypeScript 5.x with Node.js 24+
 - **Testing**: Node.js native test runner + property-based fuzzing
 - **MCP SDK**: @modelcontextprotocol/sdk for tool registration
 - **Schema**: @openstreetmap/id-tagging-schema for OSM data

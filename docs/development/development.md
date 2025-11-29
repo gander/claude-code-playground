@@ -16,8 +16,8 @@ This guide provides detailed instructions for setting up and working with the OS
 
 ### System Requirements
 
-- **Node.js**: 22.0.0 or higher
-- **npm**: 10.0.0 or higher
+- **Node.js**: 24.0.0 or higher
+- **npm**: 11.0.0 or higher
 - **Git**: Latest stable version
 - **OS**: Linux, macOS, or Windows with WSL2
 
@@ -211,14 +211,14 @@ The Dockerfile uses **manifest list digests** (not platform-specific digests) to
 **How to Update:**
 
 ```bash
-# Get the current manifest list digest for node:22-alpine
-curl -s https://hub.docker.com/v2/repositories/library/node/tags/22-alpine | jq -r '.digest'
+# Get the current manifest list digest for node:24-alpine
+curl -s https://hub.docker.com/v2/repositories/library/node/tags/24-alpine | jq -r '.digest'
 
 # Alternative: Use Docker buildx (requires Docker installed)
-docker buildx imagetools inspect node:22-alpine --format "{{.Manifest.Digest}}"
+docker buildx imagetools inspect node:24-alpine --format "{{.Manifest.Digest}}"
 
 # Verify it's a manifest list (should show multiple platforms)
-curl -s https://hub.docker.com/v2/repositories/library/node/tags/22-alpine | jq '.images[] | {arch: .architecture, digest: .digest}'
+curl -s https://hub.docker.com/v2/repositories/library/node/tags/24-alpine | jq '.images[] | {arch: .architecture, digest: .digest}'
 ```
 
 **Expected Output:**

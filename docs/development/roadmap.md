@@ -34,7 +34,7 @@
 **Status:** Complete
 
 **Achievements:**
-- TypeScript 5.9 project with Node.js 22+
+- TypeScript 5.9 project with Node.js 24+
 - MCP SDK and OSM tagging schema integration
 - BiomeJS for code quality
 - Node.js native test runner
