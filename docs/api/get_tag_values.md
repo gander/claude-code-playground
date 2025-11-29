@@ -1,15 +1,15 @@
 # get_tag_values
 
-Get all possible values for an OSM tag key with localized names and descriptions.
+Get all possible values for an OSM tag key with localized names.
 
 ## Description
 
-Retrieves all valid values for a given OSM tag key from the schema. Returns both a simple array of values and a detailed array with localized names and descriptions for each value.
+Retrieves all valid values for a given OSM tag key from the schema. Returns both a simple array of values and a detailed array with localized names for each value.
 
 **Phase 8.3 Updates:**
 - Returns structured response with `key`, `keyName`, `values`, and `valuesDetailed`
-- Each value includes localized `valueName` and description
-- Removed standalone `description` field (not in spec)
+- Each value includes localized `valueName`
+- No description field (not included in current implementation)
 
 ## Category
 
@@ -33,17 +33,18 @@ Returns a JSON object with the following structure (Phase 8.3 format):
   valuesDetailed: Array<{         // Detailed value information
     value: string;                // Value identifier (e.g., "motorway")
     valueName: string;            // Localized value name (e.g., "Motorway")
-    description?: string;         // Value description (if available)
   }>;
 }
 ```
 
 ### Output Fields
 
-- **key**: The queried tag key (same as input)
-- **keyName**: Human-readable, localized key name
-- **values**: Simple array of value identifiers for quick lookups
-- **valuesDetailed**: Detailed array with localized names and descriptions
+- **key**: The queried tag key (same as input parameter)
+- **keyName**: Human-readable, localized key name (e.g., "Highway" for "highway")
+- **values**: Simple array of value identifiers, sorted alphabetically (e.g., ["motorway", "primary", "residential"])
+- **valuesDetailed**: Detailed array with localized names for each value
+  - **value**: The value identifier (machine-readable)
+  - **valueName**: Human-readable, localized value name
 
 ## Examples
 
@@ -77,18 +78,19 @@ Returns a JSON object with the following structure (Phase 8.3 format):
   "valuesDetailed": [
     {
       "value": "motorway",
-      "valueName": "Motorway",
-      "description": "A restricted access major divided highway, normally with 2 or more running lanes plus emergency hard shoulder"
+      "valueName": "Motorway"
     },
     {
       "value": "trunk",
-      "valueName": "Trunk",
-      "description": "The most important roads in a country's system that aren't motorways"
+      "valueName": "Trunk"
     },
     {
       "value": "primary",
-      "valueName": "Primary",
-      "description": "The next most important roads in a country's system"
+      "valueName": "Primary"
+    },
+    {
+      "value": "residential",
+      "valueName": "Residential"
     }
   ]
 }
@@ -125,18 +127,19 @@ Returns a JSON object with the following structure (Phase 8.3 format):
   "valuesDetailed": [
     {
       "value": "surface",
-      "valueName": "Surface",
-      "description": "Open surface parking lot"
+      "valueName": "Surface"
     },
     {
       "value": "multi-storey",
-      "valueName": "Multi-storey",
-      "description": "Parking garage with multiple levels"
+      "valueName": "Multi-storey"
     },
     {
       "value": "underground",
-      "valueName": "Underground",
-      "description": "Underground parking garage"
+      "valueName": "Underground"
+    },
+    {
+      "value": "street_side",
+      "valueName": "Street Side"
     }
   ]
 }
@@ -173,14 +176,20 @@ Returns a JSON object with the following structure (Phase 8.3 format):
   ],
   "valuesDetailed": [
     {
-      "value": "restaurant",
-      "valueName": "Restaurant",
-      "description": "A place selling full sit-down meals"
+      "value": "bar",
+      "valueName": "Bar"
+    },
+    {
+      "value": "cafe",
+      "valueName": "Cafe"
     },
     {
       "value": "fast_food",
-      "valueName": "Fast Food",
-      "description": "Restaurant serving fast food"
+      "valueName": "Fast Food"
+    },
+    {
+      "value": "restaurant",
+      "valueName": "Restaurant"
     }
   ]
 }
@@ -255,8 +264,7 @@ Populate dropdown menus with available tag values:
 const result = await get_tag_values("highway");
 const dropdown = result.valuesDetailed.map(v => ({
   value: v.value,
-  label: v.valueName,
-  tooltip: v.description
+  label: v.valueName
 }));
 ```
 
@@ -280,7 +288,7 @@ Show human-readable tag information to users:
 const result = await get_tag_values("highway");
 console.log(`${result.keyName} options:`);
 result.valuesDetailed.forEach(v => {
-  console.log(`  - ${v.valueName}: ${v.description}`);
+  console.log(`  - ${v.valueName}`);
 });
 ```
 
@@ -303,11 +311,11 @@ generateDocs({
 ## Notes
 
 - Returns empty arrays for tag keys not in the schema (custom tags)
-- Values are sourced from field definitions in the schema
+- Values are sourced from both field definitions and presets in the schema
 - Values are sorted alphabetically for consistent ordering
-- Descriptions are optional and may not be available for all values
 - Localized names use English translations with intelligent fallback formatting
-- Field options are extracted from `field.options` array in the schema
+- Field options are extracted from `field.options` array and preset tags
+- Wildcard values (*) and complex patterns (|) are excluded from results
 
 ## Data Source
 
