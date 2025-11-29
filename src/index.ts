@@ -23,6 +23,8 @@ export function createServer(): McpServer {
 		{
 			name: "osm-tagging-schema",
 			version: pkg.version,
+			websiteUrl: "https://github.com/gander-tools/osm-tagging-schema-mcp",
+			title: "OpenStreetMap Tagging Schema",
 		},
 		{
 			capabilities: {
