@@ -12,7 +12,7 @@
 [![GitHub Release](https://img.shields.io/github/v/release/gander-tools/osm-tagging-schema-mcp?logo=github)](https://github.com/gander-tools/osm-tagging-schema-mcp/releases)
 
 <!-- Dependencies (Dynamic from npm) -->
-[![Node.js](https://img.shields.io/badge/node-22%20%7C%2024-brightgreen?logo=node.js)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/node-24-brightgreen?logo=node.js)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/npm/dependency-version/@gander-tools/osm-tagging-schema-mcp/dev/typescript?logo=typescript)](https://www.typescriptlang.org/)
 [![MCP SDK](https://img.shields.io/npm/dependency-version/@gander-tools/osm-tagging-schema-mcp/@modelcontextprotocol/sdk?label=MCP&color=orange)](https://modelcontextprotocol.io)
 

@@ -52,7 +52,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22, 24]
+        node-version: [24]
 
     outputs:
       version: ${{ needs.create-release.outputs.version }}
@@ -123,34 +123,34 @@ jobs:
           echo "✓ Build artifacts verified"
 
       - name: Generate SBOM (Software Bill of Materials)
-        if: matrix.node-version == 22
+        if: matrix.node-version == 24
         run: |
           # Use npx to avoid npm install -g (Scorecard Pinned-Dependencies)
           npx --yes @cyclonedx/cyclonedx-npm@4.1.0 --output-file sbom.json
           echo "✓ SBOM generated: sbom.json"
 
       - name: Create tarball for attestation
-        if: matrix.node-version == 22
+        if: matrix.node-version == 24
         run: |
           npm pack
           echo "TARBALL=$(ls -- *.tgz)" >> "$GITHUB_ENV"
           echo "✓ Package tarball created: $(ls -- *.tgz)"
 
       - name: Generate SLSA build provenance attestation
-        if: matrix.node-version == 22
+        if: matrix.node-version == 24
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
         with:
           subject-path: ${{ env.TARBALL }}
 
       - name: Generate SLSA SBOM attestation
-        if: matrix.node-version == 22
+        if: matrix.node-version == 24
         uses: actions/attest-sbom@4651f806c01d8637787e274ac3bdf724ef169f34 # v3.0.0
         with:
           subject-path: ${{ env.TARBALL }}
           sbom-path: sbom.json
 
       - name: Verify npm >= 11.6.4 for Trusted Publishers
-        if: matrix.node-version == 22
+        if: matrix.node-version == 24
         run: |
           CURRENT_NPM=$(npm --version)
           echo "Current npm version: $CURRENT_NPM"
@@ -164,13 +164,13 @@ jobs:
           fi
 
       - name: Publish to NPM with provenance (Trusted Publishers)
-        if: matrix.node-version == 22
+        if: matrix.node-version == 24
         run: npm publish --provenance --access public
         # Note: No NODE_AUTH_TOKEN needed - npm uses OIDC authentication automatically
         # Requires: id-token: write permission and npm >= 11.6.4
 
       - name: Upload dist/ artifact for Docker build
-        if: matrix.node-version == 22
+        if: matrix.node-version == 24
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         # NOTE: SHA pinning required for security. IDE warnings are false positives.
         with:
@@ -180,13 +180,13 @@ jobs:
           if-no-files-found: error
 
       - name: Create dist tarball for release
-        if: matrix.node-version == 22
+        if: matrix.node-version == 24
         run: |
           tar czf dist.tar.gz dist/
           echo "✓ Created dist.tar.gz ($(du -h dist.tar.gz | cut -f1))"
 
       - name: Update GitHub Release with dist artifact
-        if: matrix.node-version == 22
+        if: matrix.node-version == 24
         uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
         with:
           tag_name: ${{ needs.create-release.outputs.tag_name }}
@@ -252,7 +252,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log release info
-        if: matrix.node-version == 22
+        if: matrix.node-version == 24
         run: |
           echo "✅ Successfully published version ${{ needs.create-release.outputs.version }}"
           echo "📦 Package: @gander-tools/osm-tagging-schema-mcp@${{ needs.create-release.outputs.version }}"

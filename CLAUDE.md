@@ -61,7 +61,7 @@ The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tool
 
 ## Technical Stack
 
-- **Runtime**: Node.js 22+
+- **Runtime**: Node.js 24+
 - **Language**: TypeScript 5.x
 - **Package**: @gander-tools/osm-tagging-schema-mcp
 - **MCP SDK**: @modelcontextprotocol/sdk ^1.x

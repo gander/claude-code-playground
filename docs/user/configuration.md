@@ -240,7 +240,7 @@ docker run -i --rm \
 docker run -i --rm \
   -v $(pwd):/app \
   -w /app \
-  node:22-alpine \
+  node:24-alpine \
   npx tsx src/index.ts
 ```
 
