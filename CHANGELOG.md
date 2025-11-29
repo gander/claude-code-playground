@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v2.0.0...v2.0.1) (2025-11-29)
+
+
+### Bug Fixes
+
+* resolve npm bin symlink for correct module detection ([#332](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/332)) ([b710df8](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/b710df87e788d3743f339d82082dbe9e11aad7dc))
+
+
+### Documentation
+
+* replace static badges with dynamic auto-updating alternatives ([#329](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/329)) ([198dc94](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/198dc943a181cd08157c8a9dc73f880b40b6200e))
+* update badges - replace publish-npm with release-please workflow and remove repo status badge ([35b334f](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/35b334fcdd3c591426fd24cdd6e8faf8060275d7))
+* update badges - replace publish-npm with release-please workflow and remove repo status badge ([#327](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/327)) ([3458d37](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/3458d37ac0d24f9c73e7b752a0f39241c25ab1e1))
+
+
+### Code Refactoring
+
+* remove unused docker-compose files and update documentation ([#333](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/333)) ([d1e3884](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/d1e3884ac9a00c974f16484f20accfdeb1b9d713))
+
 ## [2.0.0](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v1.1.1...v2.0.0) (2025-11-29)
 
 
