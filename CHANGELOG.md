@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v2.1.0...v2.2.0) (2025-11-29)
+
+
+### Features
+
+* add websiteUrl and title fields to McpServer configuration ([ab1703d](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/ab1703d40ffd940b504ae6325fa95b42903cd58f))
+* add websiteUrl and title fields to McpServer configuration ([#344](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/344)) ([112cd31](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/112cd31e945f976f35f70421c5da7f0cb5d5dd8a))
+
 ## [2.1.0](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v2.0.2...v2.1.0) (2025-11-29)
 
 
