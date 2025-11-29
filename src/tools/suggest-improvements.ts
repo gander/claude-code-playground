@@ -211,12 +211,12 @@ const SuggestImprovements: OsmToolDefinition<{
 	name: "suggest_improvements" as const,
 	config: () => ({
 		description:
-			"Suggest improvements for an OSM tag collection. Analyzes tags and provides suggestions for missing fields, warnings about deprecated tags, and recommendations based on matched presets. Accepts tags in JSON format, text format (key=value lines), or as an object.",
+			"Analyze an OpenStreetMap tag collection and suggest improvements to make it more complete and informative. This tool identifies which OSM presets match your tags, then suggests missing fields that would enhance the feature's documentation. Returns structured suggestions categorized by operation type (add, remove, update) with human-readable explanations. Suggestions include both required fields (core attributes for the matched preset) and optional fields (additional details that would be helpful). Each suggestion includes localized field names and explains why the field would improve the data. Use this for improving incomplete OSM data, learning what additional tags are recommended for a feature type, or ensuring comprehensive tagging before data upload. Accepts input in three flexible formats: JSON object, JSON string, or flat text format (key=value per line).",
 		inputSchema: {
 			tags: z
 				.union([z.string(), z.record(z.string(), z.string())])
 				.describe(
-					'Tags as object (e.g., {"amenity": "restaurant"}), JSON string, or text format (one per line: key=value)',
+					'Collection of existing OpenStreetMap tags to analyze in one of three formats: 1) JSON object (e.g., {"amenity": "restaurant", "name": "Test Cafe"}), 2) JSON string (e.g., \'{"amenity":"parking"}\'), or 3) flat text format with one tag per line (e.g., "amenity=restaurant\\nname=Test"). The tool will identify matching presets and suggest additional fields that would make this feature more complete. Minimum one tag required.',
 				),
 		},
 	}),
