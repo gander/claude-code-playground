@@ -4,7 +4,7 @@ Documentation for deploying and operating the OSM Tagging Schema MCP Server in p
 
 ## Deployment Guides
 
-- **[Deployment](deployment.md)** - Docker Compose deployment with health checks
+- **[Deployment](deployment.md)** - Docker deployment with health checks
 - **[Docker On-Demand](docker-on-demand.md)** - On-demand Docker builds for Pull Requests
 - **[Security](security.md)** - Security features, provenance, SLSA, and SBOM
 
@@ -30,9 +30,14 @@ Documentation for deploying and operating the OSM Tagging Schema MCP Server in p
 ## Quick Deployment
 
 ```bash
-# Docker Compose (recommended)
-curl -fsSL https://raw.githubusercontent.com/gander-tools/osm-tagging-schema-mcp/master/docker-compose.yml -o docker-compose.yml
-docker-compose up -d
+# Docker (recommended)
+docker run -d \
+  --name osm-tagging-mcp \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -e TRANSPORT=http \
+  -e LOG_LEVEL=info \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 ```
 
 ## Security

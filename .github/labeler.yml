@@ -44,7 +44,6 @@ labels:
     files:
       - "Dockerfile"
       - "Dockerfile.dev"
-      - "docker-compose.*\\.yml"
       - ".dockerignore"
 
   # Configuration files

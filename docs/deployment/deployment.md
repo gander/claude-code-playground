@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying the OSM Tagging Schema MCP Server in production environments using Docker Compose.
+This guide covers deploying the OSM Tagging Schema MCP Server in production environments using Docker.
 
 ## Table of Contents
 
@@ -19,11 +19,10 @@ This guide covers deploying the OSM Tagging Schema MCP Server in production envi
 
 The OSM Tagging Schema MCP Server can be deployed as:
 
-1. **Standalone Docker Container** - Single container deployment
-2. **Docker Compose** - Orchestrated deployment with networking and resource management
-3. **Kubernetes** - Scalable, production-grade orchestration (future)
+1. **Standalone Docker Container** - Single container deployment (covered in this guide)
+2. **Kubernetes** - Scalable, production-grade orchestration (future)
 
-This guide focuses on Docker Compose deployment, which is recommended for production environments.
+This guide focuses on Docker container deployment, which is recommended for production environments.
 
 ## Build Architecture
 
@@ -52,7 +51,6 @@ For more details, see [Security & Supply Chain](security.md#shared-build-artifac
 
 **Required:**
 - Docker Engine 20.10+
-- Docker Compose V2 (or docker-compose 1.29+)
 - Linux, macOS, or Windows with WSL2
 
 **Recommended:**
@@ -66,31 +64,35 @@ For more details, see [Security & Supply Chain](security.md#shared-build-artifac
 
 ## Quick Start
 
-### 1. Download Docker Compose Configuration
+### 1. Pull the Docker Image
 
 ```bash
-# Production configuration
-curl -O https://raw.githubusercontent.com/gander-tools/osm-tagging-schema-mcp/main/docker-compose.yml
+# Production (latest stable)
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 
-# Or for development
-curl -O https://raw.githubusercontent.com/gander-tools/osm-tagging-schema-mcp/main/docker-compose.dev.yml
+# Or for development (edge)
+docker pull ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
 ```
 
 ### 2. Start the Service
 
 ```bash
 # Production
-docker compose up -d
-
-# Development
-docker compose -f docker-compose.dev.yml up -d
+docker run -d \
+  --name osm-tagging-mcp \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -e TRANSPORT=http \
+  -e LOG_LEVEL=info \
+  -e NODE_ENV=production \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 ```
 
 ### 3. Verify Health
 
 ```bash
 # Check container status
-docker compose ps
+docker ps | grep osm-tagging-mcp
 
 # Check health endpoint
 curl http://localhost:3000/health
@@ -129,17 +131,6 @@ curl http://localhost:3000/ready
 
 ## Production Deployment
 
-### Docker Compose Configuration
-
-The production `docker-compose.yml` includes:
-
-- **HTTP Transport**: Server exposed on port 3000
-- **Health Checks**: Automated health monitoring
-- **Resource Limits**: Memory and CPU constraints
-- **Restart Policy**: Automatic restart on failure
-- **Security**: Read-only filesystem, no new privileges
-- **Networking**: Isolated bridge network
-
 ### Deployment Steps
 
 1. **Create deployment directory:**
@@ -148,35 +139,43 @@ The production `docker-compose.yml` includes:
    cd /opt/osm-tagging-mcp
    ```
 
-2. **Download configuration:**
+2. **Create container with production settings:**
    ```bash
-   curl -O https://raw.githubusercontent.com/gander-tools/osm-tagging-schema-mcp/main/docker-compose.yml
+   docker run -d \
+     --name osm-tagging-mcp \
+     --restart unless-stopped \
+     -p 3000:3000 \
+     -e TRANSPORT=http \
+     -e PORT=3000 \
+     -e HOST=0.0.0.0 \
+     -e LOG_LEVEL=info \
+     -e NODE_ENV=production \
+     --memory=512m \
+     --cpus=1.0 \
+     --read-only \
+     --tmpfs /tmp \
+     --security-opt=no-new-privileges:true \
+     --health-cmd='node -e "require(\"http\").get(\"http://localhost:3000/health\", (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on(\"error\", () => process.exit(1))"' \
+     --health-interval=30s \
+     --health-timeout=10s \
+     --health-start-period=10s \
+     --health-retries=3 \
+     ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
    ```
 
-3. **Customize configuration** (optional):
-   ```bash
-   # Edit environment variables, ports, resource limits
-   nano docker-compose.yml
-   ```
-
-4. **Start service:**
-   ```bash
-   docker compose up -d
-   ```
-
-5. **Verify deployment:**
+3. **Verify deployment:**
    ```bash
    # Check logs
-   docker compose logs -f osm-tagging-mcp
+   docker logs -f osm-tagging-mcp
 
    # Check health
    curl http://localhost:3000/health
    curl http://localhost:3000/ready
    ```
 
-6. **Enable on system startup:**
+4. **Enable on system startup:**
    ```bash
-   # Docker Compose services restart automatically with restart: unless-stopped
+   # Container will restart automatically with --restart unless-stopped
    # Ensure Docker service starts on boot:
    sudo systemctl enable docker
    ```
@@ -195,46 +194,39 @@ The production `docker-compose.yml` includes:
 
 ### Environment Variables
 
-Edit the `environment` section in `docker-compose.yml`:
+Set environment variables using `-e` flag:
 
-```yaml
-environment:
-  # Transport protocol
-  TRANSPORT: http        # Options: stdio, http
-
-  # HTTP server configuration
-  PORT: 3000             # HTTP port (default: 3000)
-  HOST: 0.0.0.0          # Bind address (default: 0.0.0.0)
-
-  # Logging
-  LOG_LEVEL: info        # Options: debug, info, warn, error
-
-  # Node.js
-  NODE_ENV: production   # Options: production, development
+```bash
+docker run -d \
+  -e TRANSPORT=http \        # Options: stdio, http
+  -e PORT=3000 \              # HTTP port (default: 3000)
+  -e HOST=0.0.0.0 \           # Bind address (default: 0.0.0.0)
+  -e LOG_LEVEL=info \         # Options: debug, info, warn, error
+  -e NODE_ENV=production \    # Options: production, development
+  ...
 ```
 
 ### Port Mapping
 
 Change the host port (left side) while keeping container port (right side):
 
-```yaml
-ports:
-  - "8080:3000"  # Expose on host port 8080
+```bash
+docker run -d \
+  -p 8080:3000 \  # Expose on host port 8080
+  ...
 ```
 
 ### Resource Limits
 
 Adjust based on your workload:
 
-```yaml
-deploy:
-  resources:
-    limits:
-      memory: 1G          # Maximum memory
-      cpus: '2.0'         # Maximum CPU cores
-    reservations:
-      memory: 512M        # Reserved memory
-      cpus: '1.0'         # Reserved CPU cores
+```bash
+docker run -d \
+  --memory=1g \       # Maximum memory
+  --memory-reservation=512m \  # Reserved memory
+  --cpus=2.0 \        # Maximum CPU cores
+  --cpu-shares=1024 \ # CPU share weight
+  ...
 ```
 
 **Guidelines:**
@@ -242,28 +234,17 @@ deploy:
 - **Recommended**: 512MB RAM, 1 CPU core
 - **Heavy load**: 1GB RAM, 2 CPU cores
 
-### Network Configuration
+### Security Options
 
-**Bridge Network (default):**
-```yaml
-networks:
-  mcp-network:
-    driver: bridge
-```
+Production security settings:
 
-**Custom Network:**
-```yaml
-networks:
-  mcp-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.28.0.0/16
-```
-
-**Host Network** (not recommended for security):
-```yaml
-network_mode: host
+```bash
+docker run -d \
+  --read-only \                           # Read-only root filesystem
+  --tmpfs /tmp \                          # Writable /tmp in memory
+  --security-opt=no-new-privileges:true \ # Prevent privilege escalation
+  --cap-drop=ALL \                        # Drop all capabilities
+  ...
 ```
 
 ## Health Checks
@@ -333,22 +314,25 @@ curl http://localhost:3000/ready
 
 ### Docker Health Check
 
-Health check is configured in `docker-compose.yml`:
+Configure health check when starting container:
 
-```yaml
-healthcheck:
-  test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-  interval: 30s
-  timeout: 10s
-  start_period: 10s
-  retries: 3
+```bash
+docker run -d \
+  --health-cmd='node -e "require(\"http\").get(\"http://localhost:3000/health\", (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on(\"error\", () => process.exit(1))"' \
+  --health-interval=30s \
+  --health-timeout=10s \
+  --health-start-period=10s \
+  --health-retries=3 \
+  ...
 ```
 
 **Check health status:**
 ```bash
-docker compose ps
+# Check container health
+docker ps
 # Look for "healthy" status
 
+# Inspect health details
 docker inspect osm-tagging-mcp --format='{{.State.Health.Status}}'
 # Output: healthy
 ```
@@ -360,13 +344,13 @@ docker inspect osm-tagging-mcp --format='{{.State.Health.Status}}'
 **View logs:**
 ```bash
 # Follow logs
-docker compose logs -f osm-tagging-mcp
+docker logs -f osm-tagging-mcp
 
 # View last 100 lines
-docker compose logs --tail=100 osm-tagging-mcp
+docker logs --tail=100 osm-tagging-mcp
 
 # View logs with timestamps
-docker compose logs -t osm-tagging-mcp
+docker logs -t osm-tagging-mcp
 ```
 
 **Container stats:**
@@ -397,25 +381,21 @@ watch -n 5 curl -s http://localhost:3000/ready | jq
 
 Use Docker logging drivers:
 
-```yaml
-services:
-  osm-tagging-mcp:
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+```bash
+docker run -d \
+  --log-driver json-file \
+  --log-opt max-size=10m \
+  --log-opt max-file=3 \
+  ...
 ```
 
 Or external logging:
 
-```yaml
-services:
-  osm-tagging-mcp:
-    logging:
-      driver: "syslog"
-      options:
-        syslog-address: "tcp://192.168.0.42:514"
+```bash
+docker run -d \
+  --log-driver syslog \
+  --log-opt syslog-address=tcp://192.168.0.42:514 \
+  ...
 ```
 
 ## Scaling
@@ -424,33 +404,31 @@ services:
 
 Increase resources for a single instance:
 
-```yaml
-deploy:
-  resources:
-    limits:
-      memory: 2G
-      cpus: '4.0'
+```bash
+docker run -d \
+  --memory=2g \
+  --cpus=4.0 \
+  ...
 ```
 
 ### Horizontal Scaling
 
 Run multiple instances behind a load balancer:
 
-```yaml
-services:
-  osm-tagging-mcp-1:
-    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
-    ports:
-      - "3001:3000"
-    # ... rest of config
+```bash
+# Instance 1
+docker run -d \
+  --name osm-tagging-mcp-1 \
+  -p 3001:3000 \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 
-  osm-tagging-mcp-2:
-    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
-    ports:
-      - "3002:3000"
-    # ... rest of config
+# Instance 2
+docker run -d \
+  --name osm-tagging-mcp-2 \
+  -p 3002:3000 \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 
-  # Add load balancer (nginx, HAProxy, Traefik, etc.)
+# Add load balancer (nginx, HAProxy, Traefik, etc.)
 ```
 
 **Notes:**
@@ -462,28 +440,24 @@ services:
 
 ### Container Security
 
-The Docker Compose configuration includes security best practices:
+Production security best practices:
 
 1. **No new privileges:**
-   ```yaml
-   security_opt:
-     - no-new-privileges:true
+   ```bash
+   --security-opt=no-new-privileges:true
    ```
 
 2. **Read-only filesystem:**
-   ```yaml
-   read_only: true
-   tmpfs:
-     - /tmp
+   ```bash
+   --read-only --tmpfs /tmp
    ```
 
-3. **Non-root user** (configured in Dockerfile)
-
-4. **Isolated network:**
-   ```yaml
-   networks:
-     - mcp-network
+3. **Drop capabilities:**
+   ```bash
+   --cap-drop=ALL
    ```
+
+4. **Non-root user** (configured in Dockerfile)
 
 ### Network Security
 
@@ -547,12 +521,12 @@ See [Security Documentation](./security.md) for more details.
 
 **Check logs:**
 ```bash
-docker compose logs osm-tagging-mcp
+docker logs osm-tagging-mcp
 ```
 
 **Common issues:**
-- Port 3000 already in use → Change port mapping
-- Insufficient resources → Increase limits
+- Port 3000 already in use → Change port mapping (`-p 8080:3000`)
+- Insufficient resources → Increase limits (`--memory=1g`)
 - Image pull failure → Check network/registry access
 
 ### Health Check Failing
@@ -578,7 +552,7 @@ docker stats osm-tagging-mcp
 **Solutions:**
 - Normal usage: 100-200MB (schema loaded)
 - High usage: >500MB → Check for memory leaks in logs
-- OOM killed: Increase memory limit
+- OOM killed: Increase memory limit (`--memory=1g`)
 
 ### Slow Performance
 
@@ -588,7 +562,7 @@ docker stats osm-tagging-mcp
 ```
 
 **Solutions:**
-- CPU throttling → Increase CPU limits
+- CPU throttling → Increase CPU limits (`--cpus=2.0`)
 - Memory pressure → Increase memory limits
 - Schema loading delay → Normal on first request (cache warmup)
 
@@ -600,13 +574,13 @@ docker stats osm-tagging-mcp
 curl http://localhost:3000/health
 
 # From another container
-docker run --rm --network osm-tagging-schema-mcp_mcp-network \
-  curlimages/curl:latest curl http://osm-tagging-mcp:3000/health
+docker run --rm \
+  curlimages/curl:latest \
+  curl http://host.docker.internal:3000/health
 ```
 
 **Common issues:**
-- Port not exposed → Check ports section
-- Network isolation → Check network configuration
+- Port not exposed → Add `-p 3000:3000`
 - Firewall blocking → Check firewall rules
 
 ### Logs Not Appearing
@@ -618,13 +592,14 @@ docker inspect osm-tagging-mcp --format='{{.HostConfig.LogConfig.Type}}'
 
 **View logs:**
 ```bash
-docker compose logs osm-tagging-mcp
+docker logs osm-tagging-mcp
 ```
 
 **Increase log verbosity:**
-```yaml
-environment:
-  LOG_LEVEL: debug
+```bash
+docker run -d \
+  -e LOG_LEVEL=debug \
+  ...
 ```
 
 ## Best Practices
@@ -636,8 +611,7 @@ environment:
 5. **Use TLS/SSL** if exposing publicly
 6. **Keep images updated** for security patches
 7. **Test updates** in staging before production
-8. **Back up configuration** (docker-compose.yml)
-9. **Document changes** to configuration
+8. **Document your configuration** (save docker run commands)
 
 ### Container Version Selection
 

@@ -729,93 +729,59 @@ docker run -e TRANSPORT=http -e PORT=3000 -p 3000:3000 \
 - `GET /health` - Liveness probe (server status)
 - `GET /ready` - Readiness probe (schema loaded status)
 
-### Docker Compose Deployment
+### Docker Container Deployment
 
-For production deployments, use Docker Compose for orchestration:
+For production deployments, use Docker containers:
 
-**Production Configuration (`docker-compose.yml`):**
-```yaml
-version: '3.8'
-
-services:
-  osm-tagging-schema-mcp:
-    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
-    container_name: osm-tagging-schema-mcp
-    restart: unless-stopped
-
-    environment:
-      TRANSPORT: http
-      PORT: 3000
-      LOG_LEVEL: INFO
-
-    ports:
-      - "3000:3000"
-
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-
-    security_opt:
-      - no-new-privileges:true
-
-    read_only: true
-
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '1'
-        reservations:
-          memory: 256M
-          cpus: '0.5'
+**Production Deployment:**
+```bash
+docker run -d \
+  --name osm-tagging-schema-mcp \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -e TRANSPORT=http \
+  -e PORT=3000 \
+  -e LOG_LEVEL=INFO \
+  --memory=512m \
+  --cpus=1.0 \
+  --read-only \
+  --tmpfs /tmp \
+  --security-opt=no-new-privileges:true \
+  --health-cmd='node -e "require(\"http\").get(\"http://localhost:3000/health\", (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on(\"error\", () => process.exit(1))"' \
+  --health-interval=30s \
+  --health-timeout=10s \
+  --health-start-period=10s \
+  --health-retries=3 \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 ```
 
-**Start the service:**
+**Manage the service:**
 ```bash
-# Start in background
-docker-compose up -d
-
 # View logs
-docker-compose logs -f
+docker logs -f osm-tagging-schema-mcp
 
 # Check health
 curl http://localhost:3000/health
 curl http://localhost:3000/ready
 
 # Stop the service
-docker-compose down
+docker stop osm-tagging-schema-mcp
+
+# Remove container
+docker rm osm-tagging-schema-mcp
 ```
 
-**Development Configuration (`docker-compose.dev.yml`):**
-```yaml
-version: '3.8'
-
-services:
-  osm-tagging-schema-mcp:
-    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
-    container_name: osm-tagging-schema-mcp-dev
-
-    environment:
-      TRANSPORT: http
-      PORT: 3000
-      LOG_LEVEL: DEBUG
-
-    ports:
-      - "3000:3000"
-
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '2'
-```
-
-**Start development service:**
+**Development Deployment:**
 ```bash
-docker-compose -f docker-compose.dev.yml up
+docker run -d \
+  --name osm-tagging-schema-mcp-dev \
+  -p 3000:3000 \
+  -e TRANSPORT=http \
+  -e PORT=3000 \
+  -e LOG_LEVEL=DEBUG \
+  --memory=1g \
+  --cpus=2.0 \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
 ```
 
 ### Health Checks
@@ -866,8 +832,8 @@ curl http://localhost:3000/ready
 # Docker
 docker logs osm-tagging-schema-mcp
 
-# Docker Compose
-docker-compose logs -f
+# Follow logs in real-time
+docker logs -f osm-tagging-schema-mcp
 
 # Filter by log level
 docker logs osm-tagging-schema-mcp 2>&1 | grep ERROR
