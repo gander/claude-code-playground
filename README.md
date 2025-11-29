@@ -1,11 +1,10 @@
 # OpenStreetMap Tagging Schema MCP Server
 
-[![Build Status](https://img.shields.io/github/check-runs/gander-tools/osm-tagging-schema-mcp/master?label=repo%20status)](https://github.com/gander-tools/osm-tagging-schema-mcp/commits/master)
 [![Test](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/test.yml?branch=master&label=tests)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/test.yml)
 [![Fuzzing](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/fuzz.yml?branch=master&label=fuzzing)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/fuzz.yml)
 [![Code Quality](https://img.shields.io/badge/code%20quality-BiomeJS-60a5fa?logo=eslint)](https://biomejs.dev/)
 [![Test Coverage](https://img.shields.io/badge/coverage-%3E90%25-brightgreen?logo=codecov)](https://github.com/gander-tools/osm-tagging-schema-mcp/tree/master/tests)
-[![Publish](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/publish-npm.yml?label=npm)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/publish-npm.yml)
+[![Publish](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/release-please.yml?label=npm)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/release-please.yml)
 [![Docker](https://img.shields.io/github/actions/workflow/status/gander-tools/osm-tagging-schema-mcp/publish-docker.yml?branch=master&label=docker)](https://github.com/gander-tools/osm-tagging-schema-mcp/actions/workflows/publish-docker.yml)
 [![npm downloads](https://img.shields.io/npm/dm/@gander-tools/osm-tagging-schema-mcp)](https://www.npmjs.com/package/@gander-tools/osm-tagging-schema-mcp)
 [![GitHub Release](https://img.shields.io/github/v/release/gander-tools/osm-tagging-schema-mcp?logo=github)](https://github.com/gander-tools/osm-tagging-schema-mcp/releases)
