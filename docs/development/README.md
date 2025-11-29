@@ -14,6 +14,9 @@ Essential guides for contributing:
 ## Project Planning
 
 - **[Roadmap](roadmap.md)** - Development phases and future features
+- **[Resources & Prompts Design](resources-prompts-design.md)** - Phase 9 complete design specification
+- **[Phase 9 Implementation Plan](phase-9-implementation-plan.md)** - Phase 9 implementation roadmap
+- **[Resources & Prompts Quick Reference](resources-prompts-quick-reference.md)** - Phase 9 quick reference
 
 ## Quality Assurance
 

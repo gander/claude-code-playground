@@ -11,13 +11,22 @@ This is a Model Context Protocol (MCP) server built with TypeScript that provide
 
 ## Purpose
 
-The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tools, enabling AI assistants and applications to:
+The MCP server exposes OpenStreetMap's tagging schema through multiple interfaces, enabling AI assistants and applications to:
+
+**Current Capabilities** (Tools):
 - Query available OSM tags and their possible values
 - Discover tag parameters, constraints, and relationships
 - Find compatible tags that work together
 - Access preset configurations
 - Identify deprecated keys/values and suggest replacements
 - Validate tag collections for correctness
+
+**Planned Capabilities** (Resources & Prompts - Phase 9):
+- URI-based access to schema documentation and reference data
+- Pre-configured workflows for common OSM tagging tasks
+- Educational prompts for tag explanation and comparison
+- Quality assurance prompts for changeset review
+- Migration assistance for deprecated tags
 
 ## Core Functionality
 
@@ -303,9 +312,9 @@ for (const tool of tools) {
 
 ## Development Status
 
-**Current Phase: Phase 8 - COMPLETE ✅**
+**Current Phase: Phase 9 - PLANNED 📋**
 
-**Status**: Production-ready MCP server with 9 optimized tools providing complete OSM tagging schema functionality with full localization support, template expansion, and format conversion.
+**Status**: Production-ready MCP server with 9 optimized tools providing complete OSM tagging schema functionality. Phase 9 will extend the server with MCP resources and prompts for enhanced accessibility and workflow automation.
 
 ### Phase Summary
 
@@ -354,6 +363,20 @@ for (const tool of tools) {
 - Template system implementation
 - Structured responses with human-readable names
 - Complete API documentation for all tools
+
+**Phase 9: Resources and Prompts 📋 PLANNED**
+- **MCP Resources**: URI-based access to schema data (9 resources)
+  - Schema metadata and statistics
+  - Tag key and preset documentation
+  - Category hierarchies and deprecated tags
+  - Field and geometry type references
+- **MCP Prompts**: Pre-configured workflows for common tasks (7 prompts)
+  - Tag explanation and comparison
+  - Feature tag suggestions
+  - Changeset review and validation
+  - Tag modernization and preset generation
+- **Documentation**: Complete user and developer guides
+- **Timeline**: 8 weeks, estimated 160-200 hours effort
 
 ### Current Status
 
@@ -417,7 +440,21 @@ for (const tool of tools) {
 
 ## Future Enhancements
 
-Based on analysis of [schema-builder](https://github.com/ideditor/schema-builder), the following enhancements are planned:
+### Phase 9: Resources and Prompts (Planned)
+
+**See detailed design documentation**:
+- `docs/development/resources-prompts-design.md` - Complete design specification
+- `docs/development/phase-9-implementation-plan.md` - Implementation roadmap
+
+**Summary**:
+- **9 MCP Resources**: URI-based schema data access
+- **7 MCP Prompts**: Pre-configured tagging workflows
+- **Timeline**: 8 weeks (estimated)
+- **Status**: Design complete, awaiting implementation
+
+### Beyond Phase 9
+
+Based on analysis of [schema-builder](https://github.com/ideditor/schema-builder), the following enhancements are under consideration:
 
 1. **Enhanced Tag Validation**: Geometry constraints, prerequisite tag validation, field type constraints
 2. **Field Inheritance Resolution**: Complete field lists including inherited fields from parent presets
@@ -426,8 +463,8 @@ Based on analysis of [schema-builder](https://github.com/ideditor/schema-builder
 5. **Tag Quality Scoring**: Score tag completeness and quality for features
 
 **Implementation Priority**:
-- Phase 3.3: Enhanced validation, basic deprecation improvements
-- Phase 5+: Field inheritance, conditional analysis, quality scoring
+- Phase 9: Resources and prompts (documented and planned)
+- Phase 10+: Enhanced validation, field inheritance, conditional analysis, quality scoring
 
 **Compatibility**: All enhancements are additive - existing tools remain unchanged, no breaking changes.
 
@@ -457,6 +494,8 @@ The project maintains comprehensive documentation organized by user type for cle
 - `docs/development/release-process.md` - Release and publishing process
 - `docs/development/fuzzing.md` - Fuzzing infrastructure and security testing
 - `docs/development/roadmap.md` - Development plan and future features
+- `docs/development/resources-prompts-design.md` - Phase 9 design specification
+- `docs/development/phase-9-implementation-plan.md` - Phase 9 implementation roadmap
 
 **Deployment Documentation (docs/deployment/):**
 - `docs/deployment/README.md` - Deployment overview and navigation
