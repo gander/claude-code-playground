@@ -1,10 +1,15 @@
-import deprecated from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
-	type: "json",
-};
-import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
+import { createRequire } from "node:module";
 import { z } from "zod";
-import type { OsmToolDefinition } from "../types/index.js";
+import type { DeprecatedTag, Field, OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
+
+const require = createRequire(import.meta.url);
+const deprecated =
+	require("@openstreetmap/id-tagging-schema/dist/deprecated.json") as DeprecatedTag[];
+const fields = require("@openstreetmap/id-tagging-schema/dist/fields.json") as Record<
+	string,
+	Field
+>;
 
 /**
  * Detailed tag information with localized names

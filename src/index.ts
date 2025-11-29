@@ -2,14 +2,17 @@
 import { randomUUID } from "node:crypto";
 import { realpathSync } from "node:fs";
 import http from "node:http";
+import { createRequire } from "node:module";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import pkg from "../package.json" with { type: "json" };
 import { prompts } from "./prompts/index.js";
 import { tools } from "./tools/index.js";
 import { logger } from "./utils/logger.js";
 import { schemaLoader } from "./utils/schema-loader.js";
+
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json");
 
 /**
  * Create and configure the MCP server

@@ -1,9 +1,18 @@
-import fields from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
-import presets from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
+import { createRequire } from "node:module";
 import { z } from "zod";
-import type { OsmToolDefinition } from "../types/index.js";
+import type { Field, OsmToolDefinition, Preset } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
 import { parseTagInput } from "../utils/tag-parser.js";
+
+const require = createRequire(import.meta.url);
+const fields = require("@openstreetmap/id-tagging-schema/dist/fields.json") as Record<
+	string,
+	Field
+>;
+const presets = require("@openstreetmap/id-tagging-schema/dist/presets.json") as Record<
+	string,
+	Preset
+>;
 
 /**
  * Structured suggestion with operation type and details
