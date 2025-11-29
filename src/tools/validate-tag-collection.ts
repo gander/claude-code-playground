@@ -63,12 +63,12 @@ const ValidateTagCollection: OsmToolDefinition<{
 	name: "validate_tag_collection" as const,
 	config: () => ({
 		description:
-			"Validate a collection of OSM tags. Returns validation results for each tag and aggregated statistics. Accepts tags in JSON format, text format (key=value lines), or as an object.",
+			"Validate a complete collection of OpenStreetMap tags together, performing comprehensive validation on each tag and providing aggregated statistics. This tool validates each tag individually (using the same validation logic as validate_tag) and then aggregates the results to give you an overall picture of the collection's quality. Returns detailed validation results for each tag (including deprecation warnings, schema validation, and option checking) plus summary statistics (total valid count, deprecated count, error count). Use this for bulk validation of OSM data exports, quality assurance of tag collections before upload, or analyzing the completeness of feature tagging. Accepts input in three flexible formats: JSON object, JSON string, or flat text format (key=value per line).",
 		inputSchema: {
 			tags: z
 				.union([z.string(), z.record(z.string(), z.string())])
 				.describe(
-					'Tags as object (e.g., {"amenity": "parking"}), JSON string, or text format (one per line: key=value)',
+					'Collection of OpenStreetMap tags in one of three formats: 1) JSON object (e.g., {"amenity": "restaurant", "name": "Test Cafe", "cuisine": "italian"}), 2) JSON string (e.g., \'{"amenity":"parking"}\'), or 3) flat text format with one tag per line (e.g., "amenity=restaurant\\nname=Test\\ncuisine=italian"). The flat text format supports comments (lines starting with #) and empty lines. All formats are automatically parsed and validated.',
 				),
 		},
 	}),

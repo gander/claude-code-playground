@@ -195,10 +195,19 @@ const SearchTags: OsmToolDefinition<{
 
 	config: () => ({
 		description:
-			"Search for tags by keyword in tag keys and values. Returns keyMatches (when keyword matches a tag key, shows all values) and valueMatches (when keyword matches a specific value).",
+			"Search for OpenStreetMap tags by keyword in both tag keys and tag values. Returns two categories of results: keyMatches (when the keyword matches a tag key, returns that key with all possible values) and valueMatches (when the keyword matches a specific tag value, returns the key-value pair). Searches are case-insensitive and match partial strings. Use this to explore available tags or find tags related to a concept.",
 		inputSchema: {
-			keyword: z.string().describe("Keyword to search for (case-insensitive)"),
-			limit: z.number().optional().describe("Maximum number of results to return (default: 100)"),
+			keyword: z
+				.string()
+				.describe(
+					"Single keyword to search for in tag keys and values (case-insensitive). Should be a standalone word or partial word, not a tag pair. Examples: 'restaurant' (finds amenity=restaurant), 'wheel' (finds wheelchair, wheelchair:description), 'park' (finds leisure=park, amenity=parking, park_ride, etc.). For searching by complete tag pairs, use search_presets instead.",
+				),
+			limit: z
+				.number()
+				.optional()
+				.describe(
+					"Maximum total number of results to return across both keyMatches and valueMatches combined (default: 100). Use lower values for faster responses when you only need a few results.",
+				),
 		},
 	}),
 
