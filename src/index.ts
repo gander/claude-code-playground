@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 import { randomUUID } from "node:crypto";
-import { realpathSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import http from "node:http";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import pkg from "../package.json" with { type: "json" };
+import { prompts } from "./prompts/index.js";
 import { tools } from "./tools/index.js";
 import { logger } from "./utils/logger.js";
 import { schemaLoader } from "./utils/schema-loader.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));
 
 /**
  * Create and configure the MCP server
@@ -22,6 +27,7 @@ export function createServer(): McpServer {
 		{
 			capabilities: {
 				tools: {},
+				prompts: {},
 			},
 		},
 	);
@@ -29,6 +35,11 @@ export function createServer(): McpServer {
 	// Register all tools using McpServer.registerTool() in a loop
 	for (const tool of tools) {
 		mcpServer.registerTool(tool.name, tool.config(), tool.handler);
+	}
+
+	// Register all prompts using McpServer.registerPrompt() in a loop
+	for (const prompt of prompts) {
+		mcpServer.registerPrompt(prompt.name, prompt.config(), prompt.handler);
 	}
 
 	return mcpServer;
