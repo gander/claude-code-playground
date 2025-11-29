@@ -141,8 +141,9 @@ Every feature implementation MUST follow this workflow:
 - **Release**: Automated npm releases with semantic versioning
 - **Distribution**: Package available via `npx` command
 - **Docker Builds**:
-  - Automatic builds on master push and version tags
-  - On-demand PR builds via label (`docker:build`), comment (`/docker-build`), or manual trigger
+  - Automatic builds after successful Release Please workflow (triggered via `workflow_run`)
+  - Manual rebuilds via workflow_dispatch for specific versions
+  - Edge builds on master push for development testing
 
 #### GitHub Actions Workflow Requirements
 
@@ -374,10 +375,11 @@ for (const tool of tools) {
 
 **Status**: Full implementation with SLSA Level 3 attestations
 
-- **GitHub Actions Workflow**: Automated publishing triggered by version tags
+- **GitHub Actions Workflow**: Automated publishing via Release Please (conventional commits workflow)
 - **NPM Provenance**: Build provenance attestations linking to GitHub Actions builds
 - **SLSA Level 3 Attestations**: Comprehensive build provenance with SBOM
 - **Security Documentation**: Complete user and maintainer guides
+- **Note**: Manual NPM publishing workflow removed (redundant with Release Please)
 
 ### Container Images ✅ IMPLEMENTED
 

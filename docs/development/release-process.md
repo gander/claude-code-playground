@@ -163,7 +163,7 @@ When you're ready to release, simply **merge the release PR**. This triggers aut
 7. ✅ Updates GitHub release with artifacts
 8. ✅ Uploads `dist.tar.gz` for Docker builds
 
-**publish-docker.yml** (triggered by tag):
+**publish-docker.yml** (triggered by workflow_run after successful release):
 1. ✅ Builds multi-arch Docker images (amd64, arm64)
 2. ✅ Publishes to GitHub Container Registry (ghcr.io)
 3. ✅ Tags with version and `latest`
@@ -205,22 +205,6 @@ Configuration is in `release-please-config.json`:
 - `changelog-sections` - Maps commit types to CHANGELOG sections
 
 Current version is tracked in `.release-please-manifest.json`.
-
-## Manual Releases (Emergency Only)
-
-For emergency hotfixes or exceptional circumstances, use the manual workflow:
-
-```bash
-# Go to GitHub Actions
-# → Workflows → "Publish to NPM (Manual Dispatch)"
-# → Run workflow → Select master branch
-```
-
-**⚠️ Important:**
-- Only use for emergencies (e.g., security hotfix)
-- Ensure you're on master branch
-- Manually update version in package.json first
-- Creates draft GitHub release (you must publish manually)
 
 ## Version Strategy
 
@@ -344,8 +328,7 @@ Release Please determines versions automatically. For manual control:
   - Documentation: https://www.conventionalcommits.org/
 - **GitHub Actions**: CI/CD automation
   - `release-please.yml`: Automatic release PR and publishing
-  - `publish-docker.yml`: Docker image publishing
-  - `publish-npm.yml`: Manual emergency publishing
+  - `publish-docker.yml`: Docker image publishing (triggered by workflow_run)
 - **npm Trusted Publishers**: Secure publishing with OIDC authentication
 - **SLSA Attestations**: Supply chain security
 

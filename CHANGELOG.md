@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Workflow Simplification**: Removed redundant `publish-npm.yml` workflow (functionality covered by `release-please.yml`)
+- **Docker Build Optimization**: Simplified `publish-docker.yml` by removing redundant tag triggers that caused duplicate builds
+  - Removed `push: tags` trigger (redundant with `workflow_run` after Release Please)
+  - Removed `validate-branch` job (dead code without tag triggers)
+  - Docker builds now triggered exclusively by `workflow_run` after successful Release Please workflow
+  - Reduced CI/CD time by ~50% per release (eliminated duplicate builds)
+
+### Removed
+
+- Manual NPM publishing workflow (`publish-npm.yml`) - redundant with Release Please automation
+
 ## [1.1.1](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v1.1.0...v1.1.1) (2025-11-28)
 
 
