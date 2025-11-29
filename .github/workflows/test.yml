@@ -53,6 +53,10 @@ jobs:
     name: Unit and Integration Test
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [22, 24]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
@@ -60,9 +64,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: 24
+          node-version: ${{ matrix.node-version }}
 
-      # npm must be newer than 11.5.1 for Node 24 compatibility
+      # npm must be newer than 11.5.1 for compatibility
       - name: Install npm 11.6.4
         run: npm install -g npm@11.6.4
 
@@ -90,6 +94,10 @@ jobs:
     needs: [changes, test]
     if: needs.changes.outputs.code == 'true'
 
+    strategy:
+      matrix:
+        node-version: [22, 24]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
@@ -97,9 +105,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: 24
+          node-version: ${{ matrix.node-version }}
 
-      # npm must be newer than 11.5.1 for Node 24 compatibility
+      # npm must be newer than 11.5.1 for compatibility
       - name: Install npm 11.6.4
         run: npm install -g npm@11.6.4
 
