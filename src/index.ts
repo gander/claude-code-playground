@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { randomUUID } from "node:crypto";
+import { realpathSync } from "node:fs";
 import http from "node:http";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -355,11 +356,25 @@ async function main() {
 
 // Run if this is the main module
 // Check if the file is being run directly (not imported as a module)
-const isMainModule =
-	process.argv[1] &&
-	(import.meta.url === `file://${process.argv[1]}` ||
-		import.meta.url.endsWith(process.argv[1]) ||
-		process.argv[1].endsWith("index.js"));
+// Resolve symlinks to handle npm bin wrappers (e.g., node_modules/.bin/osm-tagging-mcp)
+const isMainModule = (() => {
+	if (!process.argv[1]) return false;
+
+	// Resolve the symlink if argv[1] is a symlink (common for npm bin scripts)
+	let resolvedArgv: string;
+	try {
+		resolvedArgv = realpathSync(process.argv[1]);
+	} catch {
+		// If realpath fails, use original path
+		resolvedArgv = process.argv[1];
+	}
+
+	return (
+		import.meta.url === `file://${resolvedArgv}` ||
+		import.meta.url.endsWith(resolvedArgv) ||
+		resolvedArgv.endsWith("index.js")
+	);
+})();
 
 if (isMainModule) {
 	main().catch((error) => {
