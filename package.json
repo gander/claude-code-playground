@@ -33,6 +33,7 @@
 		"lint": "biome lint --write .",
 		"format": "biome format --write .",
 		"check": "biome check --write .",
+		"check:unsafe": "biome check --write --unsafe .",
 		"typecheck": "tsc --noEmit",
 		"prepare": "lefthook install",
 		"prepublishOnly": "npm run build"
