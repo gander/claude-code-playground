@@ -1,15 +1,23 @@
-import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import type { DeprecatedTag, Field, OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
 
-const require = createRequire(import.meta.url);
-const deprecated =
-	require("@openstreetmap/id-tagging-schema/dist/deprecated.json") as DeprecatedTag[];
-const fields = require("@openstreetmap/id-tagging-schema/dist/fields.json") as Record<
-	string,
-	Field
->;
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const deprecated = JSON.parse(
+	readFileSync(
+		join(__dirname, "../../node_modules/@openstreetmap/id-tagging-schema/dist/deprecated.json"),
+		"utf-8",
+	),
+) as DeprecatedTag[];
+const fields = JSON.parse(
+	readFileSync(
+		join(__dirname, "../../node_modules/@openstreetmap/id-tagging-schema/dist/fields.json"),
+		"utf-8",
+	),
+) as Record<string, Field>;
 
 /**
  * Detailed tag information with localized names

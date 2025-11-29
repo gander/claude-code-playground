@@ -1,18 +1,24 @@
-import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import type { Field, OsmToolDefinition, Preset } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
 import { parseTagInput } from "../utils/tag-parser.js";
 
-const require = createRequire(import.meta.url);
-const fields = require("@openstreetmap/id-tagging-schema/dist/fields.json") as Record<
-	string,
-	Field
->;
-const presets = require("@openstreetmap/id-tagging-schema/dist/presets.json") as Record<
-	string,
-	Preset
->;
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const fields = JSON.parse(
+	readFileSync(
+		join(__dirname, "../../node_modules/@openstreetmap/id-tagging-schema/dist/fields.json"),
+		"utf-8",
+	),
+) as Record<string, Field>;
+const presets = JSON.parse(
+	readFileSync(
+		join(__dirname, "../../node_modules/@openstreetmap/id-tagging-schema/dist/presets.json"),
+		"utf-8",
+	),
+) as Record<string, Preset>;
 
 /**
  * Structured suggestion with operation type and details
