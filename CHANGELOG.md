@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v2.0.1...v2.0.2) (2025-11-29)
+
+
+### Documentation
+
+* add comprehensive MCP Inspector testing guide ([28a2acc](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/28a2accf38ef448443e433fbaf9d2787f446c724))
+* add comprehensive MCP Inspector testing guide ([#335](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/335)) ([1977ce8](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/1977ce8110c5c8054fd6d65b772774cc4de38ea2))
+* add missing CORS_ORIGINS to .env.example ([d734cc3](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/d734cc33a8b331c4167c0fd150ee853914a309ac))
+* add missing CORS_ORIGINS to .env.example ([#337](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/337)) ([ceeaa60](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/ceeaa60092966c2c68fcffcf93ebed48fecbb247))
+* reorganize running/deployment documentation for clarity ([2d6d7f2](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/2d6d7f2ff5d97714e6820ec0a7b667594627e1fa))
+
 ## [2.0.1](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v2.0.0...v2.0.1) (2025-11-29)
 
 
