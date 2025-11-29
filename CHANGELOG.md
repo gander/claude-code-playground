@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v1.1.1...v2.0.0) (2025-11-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** Update zod dependency from ^3.25.0 to ^4.0.0
+
+### Features
+
+* **ci:** optimize actionlint workflow with paths-filter ([85366d1](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/85366d14fe3a04c83e163bdc5f74cdec6fff050c))
+* **ci:** optimize actionlint workflow with paths-filter ([#326](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/326)) ([c52b547](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/c52b547435a27957dbae698788de520f695b82a3))
+
+
+### Bug Fixes
+
+* update ghcr-cleanup-action to valid commit SHA ([91d898b](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/91d898bc3304f07906e5ac277c8cf9f33107fa7b))
+* update ghcr-cleanup-action to valid commit SHA ([#325](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/325)) ([cada818](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/cada818e3f10d26def7024210e22a620bf6468bf))
+
+
+### Documentation
+
+* add comprehensive workflow redundancy analysis ([6067801](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/6067801cb6ce5e125647143020d4b6748d38a169))
+
+
+### Miscellaneous Chores
+
+* **deps:** upgrade zod from v3 to v4 ([5b6c862](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/5b6c8620ee1ff7f6b7b3c7a0d2d2b6df5d7fc51b))
+
 ## [Unreleased]
 
 ### Changed
