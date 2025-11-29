@@ -17,7 +17,7 @@ This guide provides detailed instructions for setting up and working with the OS
 ### System Requirements
 
 - **Node.js**: 24.0.0 or higher
-- **npm**: 10.0.0 or higher
+- **npm**: 11.0.0 or higher
 - **Git**: Latest stable version
 - **OS**: Linux, macOS, or Windows with WSL2
 

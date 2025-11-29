@@ -28,7 +28,7 @@ This project follows standard open-source etiquette:
 ### Prerequisites
 
 - **Node.js**: 24.0.0 or higher
-- **npm**: 10.0.0 or higher
+- **npm**: 11.0.0 or higher
 - **Git**: Latest version
 
 ### Initial Setup

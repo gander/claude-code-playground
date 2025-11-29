@@ -18,7 +18,7 @@ This guide covers all installation methods for the OSM Tagging Schema MCP Server
 ### Minimum Requirements
 
 - **Node.js**: 24.0.0 or higher
-- **npm**: 10.0.0 or higher
+- **npm**: 11.0.0 or higher
 - **Operating System**: Linux, macOS, or Windows with WSL2
 - **Memory**: 512 MB RAM minimum
 - **Disk Space**: 100 MB free space
@@ -39,7 +39,7 @@ node --version
 
 # Check npm version
 npm --version
-# Should output: 10.0.0 or higher
+# Should output: 11.0.0 or higher
 
 # Check Docker version (if using Docker)
 docker --version
