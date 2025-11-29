@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v2.2.0...v2.3.0) (2025-11-29)
+
+
+### Features
+
+* add Claude Code settings with automatic hooks ([#346](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/346)) ([5207d80](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/5207d80933b59c372ba09bb57fb2590b30b27e02))
+* **scripts:** add `check:unsafe` script for biome with `--unsafe` flag ([#348](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/348)) ([1882fd7](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/1882fd742c17f484da87cf00ba63b3440dd4a9e0))
+
+
+### Bug Fixes
+
+* **package.json:** update `lint` script to auto-fix issues with `--write` flag ([afb93b2](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/afb93b2dba98a3e462e79e917d3fef31988a5559))
+* **package.json:** update `lint` script to auto-fix issues with `--write` flag ([#347](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/347)) ([1521ea7](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/1521ea7a3f21b63dd128a8e961aba94aa128cf2b))
+
+
+### Documentation
+
+* update README badges and current status ([000c332](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/000c33292959de314bb1d0c1c5e96902ad30cffb))
+* update README badges and current status ([#351](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/351)) ([a407f12](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/a407f122fa626de04d9b04c7d3f8d59de0141bd2))
+
 ## [2.2.0](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v2.1.0...v2.2.0) (2025-11-29)
 
 
