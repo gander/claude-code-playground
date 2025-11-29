@@ -146,18 +146,25 @@ const SearchPresets: OsmToolDefinition<{
 
 	config: () => ({
 		description:
-			"Search for presets by keyword or tag. Searches preset IDs and tags. Supports filtering by geometry type and limiting results.",
+			"Search for OpenStreetMap presets by keyword or tag combination. OSM presets are predefined feature templates that define common feature types (like 'restaurant', 'park', 'road') with their standard tags, geometry constraints, and recommended fields. This tool searches through preset IDs and their associated tags to find matching features. Supports two search modes: keyword search (searches in preset IDs and all tag keys/values) and tag-based search (exact matching on specific tag key-value pairs using 'key=value' format). Returns comprehensive preset information including localized names, complete tag sets with human-readable names, and allowed geometry types. Optionally filter results by geometry type or limit result count for performance.",
 		inputSchema: {
 			keyword: z
 				.string()
 				.describe(
-					"Keyword to search for in preset IDs and tags (case-insensitive). Can be a simple keyword (e.g., 'restaurant') or a tag (e.g., 'amenity=restaurant')",
+					"Search term for finding presets (case-insensitive). Two formats supported: 1) Simple keyword (e.g., 'restaurant', 'parking', 'school') - searches within preset IDs and all tag keys/values, matching partial strings. 2) Tag pair format (e.g., 'amenity=restaurant', 'highway=residential') - performs exact matching on the specified tag key and value. Examples: 'cafe' finds amenity/cafe and cuisine=cafe, while 'amenity=cafe' finds only presets with exactly amenity=cafe.",
 				),
-			limit: z.number().optional().describe("Maximum number of results to return (optional)"),
+			limit: z
+				.number()
+				.optional()
+				.describe(
+					"Maximum number of preset results to return (optional, no default limit). Use this to get faster responses when you only need a few results, or to avoid overwhelming output when searching broad terms. Example: limit=10 returns only the first 10 matches.",
+				),
 			geometry: z
 				.enum(geometryEnum)
 				.optional()
-				.describe("Filter by geometry type (point, vertex, line, area, relation) - optional"),
+				.describe(
+					"Filter results to only presets that support a specific geometry type (optional). Valid values: 'point' (nodes/POIs), 'vertex' (nodes along ways), 'line' (open ways like roads/rivers), 'area' (closed ways/areas like buildings/parks), 'relation' (complex features). Example: geometry='area' returns only presets that can be applied to area features.",
+				),
 		},
 	}),
 
