@@ -74,12 +74,12 @@ const JsonToFlat: OsmToolDefinition<{
 	name: "json_to_flat" as const,
 	config: () => ({
 		description:
-			"**OUTPUT CONVERTER**: Use this tool LAST when user expects OSM tags in flat text format (key=value per line). Converts JSON object (from other tools like validate_tag, search_tags, etc.) to flat format for user-friendly output. All other tools return JSON - use this to convert their output to flat format if user prefers it.",
+			"**OUTPUT CONVERTER**: Convert OpenStreetMap tags from JSON object format into human-friendly flat text format (one key=value pair per line). This is a postprocessing tool - use it LAST when users want tags displayed as readable text rather than JSON. Since all other tools in this MCP server return JSON format, this converter is essential for creating user-friendly output, generating text files for external tools, or producing easily readable tag lists. The converter validates the input thoroughly: ensures all values are strings (not numbers or other types), rejects empty values, trims whitespace from keys and values, and produces clean one-tag-per-line output with newline separators. Returns plain text with each tag on a separate line, or an error if validation fails.",
 		inputSchema: {
 			tags: z
 				.union([z.string(), z.record(z.string(), z.string())])
 				.describe(
-					'Tags in JSON format. Can be a JSON string (e.g., \'{"amenity":"restaurant"}\') or a JSON object.',
+					'OpenStreetMap tags in JSON format, provided as either: 1) A JSON string that will be parsed (e.g., \'{"amenity":"restaurant","name":"Test Cafe","cuisine":"italian"}\') - must be valid JSON with string values only, or 2) A direct JSON object with string key-value pairs (e.g., {"amenity": "restaurant", "name": "Test"}). All values must be strings; numbers, booleans, or other types will cause an error. Empty string values are not allowed. Keys and values will be trimmed of whitespace. Output format: one tag per line as "key=value".',
 				),
 		},
 	}),
