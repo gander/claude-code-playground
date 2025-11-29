@@ -12,9 +12,7 @@
 			"default": "./dist/index.js"
 		}
 	},
-	"bin": {
-		"osm-tagging-mcp": "dist/index.js"
-	},
+	"bin": "dist/index.js",
 	"scripts": {
 		"dev": "tsx --watch src/index.ts",
 		"dev:http": "TRANSPORT=http tsx --watch src/index.ts",
