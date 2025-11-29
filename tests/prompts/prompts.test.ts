@@ -204,7 +204,7 @@ describe("MCP Prompts", () => {
 				const text = result.messages[0].content.text.toLowerCase();
 
 				// Count how many tools are mentioned
-				const mentionedTools = toolNames.filter((tool) => text.includes(tool.replace(/_/g, "_")));
+				const mentionedTools = toolNames.filter((tool) => text.includes(tool));
 
 				assert.ok(
 					mentionedTools.length >= 2,
