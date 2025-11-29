@@ -244,42 +244,26 @@ docker run -i --rm \
   npx tsx src/index.ts
 ```
 
-### Docker Compose
+### Docker Container
 
-For production deployments with Docker Compose, see the [Deployment Guide](../deployment/deployment.md).
+For production deployments with Docker, see the [Deployment Guide](../deployment/deployment.md).
 
 **Quick example:**
 
-```yaml
-# docker-compose.yml
-services:
-  osm-tagging-mcp:
-    image: ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
-    container_name: osm-tagging-mcp
-    restart: unless-stopped
-    environment:
-      TRANSPORT: http
-      PORT: 3000
-      LOG_LEVEL: info
-    ports:
-      - "3000:3000"
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 30s
-      timeout: 10s
-      start_period: 10s
-      retries: 3
-    networks:
-      - mcp-network
-
-networks:
-  mcp-network:
-    driver: bridge
-```
-
-**Deploy:**
 ```bash
-docker compose up -d
+docker run -d \
+  --name osm-tagging-mcp \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -e TRANSPORT=http \
+  -e PORT=3000 \
+  -e LOG_LEVEL=info \
+  --health-cmd='node -e "require(\"http\").get(\"http://localhost:3000/health\", (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on(\"error\", () => process.exit(1))"' \
+  --health-interval=30s \
+  --health-timeout=10s \
+  --health-start-period=10s \
+  --health-retries=3 \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
 ```
 
 **Verify:**
@@ -519,7 +503,7 @@ echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx @gander-tools/o
 
 ## Next Steps
 
-- [Deployment Guide](../deployment/deployment.md) - Production deployment with Docker Compose
+- [Deployment Guide](../deployment/deployment.md) - Production deployment with Docker
 - [Usage Guide](./usage.md) - Learn how to use the tools
 - [API Documentation](../api/README.md) - Detailed tool reference
 - [Troubleshooting](./troubleshooting.md) - Common issues and solutions

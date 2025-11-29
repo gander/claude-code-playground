@@ -192,9 +192,6 @@ docker build -t osm-tagging-schema-mcp .
 
 # Run container
 docker run -i osm-tagging-schema-mcp
-
-# Build and run with Docker Compose
-docker-compose up --build
 ```
 
 #### Updating Docker Base Image Digest

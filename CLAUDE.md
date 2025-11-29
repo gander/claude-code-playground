@@ -345,7 +345,7 @@ for (const tool of tools) {
 - ✅ **Container Registry**: Images published to GitHub Container Registry (ghcr.io)
 - ✅ **Security Scanning**: Trivy vulnerability scanning, security reports
 - ✅ **Transport Protocols**: stdio (default), HTTP for web clients
-- ✅ **Docker Compose**: Production, development, and test configurations
+- ✅ **Docker Deployment**: Container-based deployment with health checks
 - ✅ **Health Checks**: `/health` (liveness) and `/ready` (readiness) endpoints
 - ✅ **Release Management**: Automated release management with Release Please (Conventional Commits)
 
@@ -410,10 +410,10 @@ for (const tool of tools) {
 - **Liveness probe**: `/health` endpoint returns server status
 - **Readiness probe**: `/ready` endpoint validates schema loaded
 
-**Docker Compose Configurations**:
+**Docker Deployment Options**:
 - **Production**: Latest stable image, resource limits, security hardening
-- **Development**: Debug logging, higher resources, hot reload
-- **Testing**: Local build configuration
+- **Development**: Edge builds with debug logging
+- **Testing**: Local image builds for validation
 
 ## Future Enhancements
 
@@ -460,7 +460,7 @@ The project maintains comprehensive documentation organized by user type for cle
 
 **Deployment Documentation (docs/deployment/):**
 - `docs/deployment/README.md` - Deployment overview and navigation
-- `docs/deployment/deployment.md` - Docker Compose deployment guide
+- `docs/deployment/deployment.md` - Docker container deployment guide
 - `docs/deployment/docker-on-demand.md` - On-demand Docker builds for Pull Requests
 - `docs/deployment/security.md` - Security features, provenance, SLSA, and SBOM
 

@@ -97,7 +97,7 @@
 - ✅ Usage guide (examples, workflows, best practices)
 - ✅ Complete API reference for all 7 tools
 - ✅ Troubleshooting guide
-- ✅ Deployment guide (Docker Compose)
+- ✅ Deployment guide (Docker)
 - ✅ Security documentation (provenance, SLSA, SBOM)
 
 **Developer Documentation:**
@@ -155,7 +155,7 @@
 **Transport & Deployment:**
 - ✅ stdio transport (default for CLI/desktop)
 - ✅ HTTP Streamable transport (web clients)
-- ✅ Docker Compose configurations
+- ✅ Docker container deployment
 - ✅ Health check endpoints (/health, /ready)
 - ✅ Resource limits and security hardening
 - ✅ Comprehensive deployment documentation
