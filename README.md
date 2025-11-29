@@ -111,16 +111,16 @@ Add to your Claude Desktop configuration:
 Test and debug the server using the official [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
 
 ```bash
-# Start server with HTTP transport
-npm run start:http
+# Test published package (quickest)
+npx @modelcontextprotocol/inspector npx @gander-tools/osm-tagging-schema-mcp
 
-# In another terminal, launch Inspector
-npx @modelcontextprotocol/inspector --transport http --server-url http://localhost:3000/
+# Test Docker image
+npx @modelcontextprotocol/inspector docker run --rm -i ghcr.io/gander-tools/osm-tagging-schema-mcp
 ```
 
-The Inspector UI will open in your browser at `http://localhost:6274` with a visual interface to test all 7 tools.
+The Inspector provides an interactive web UI to test all tools, inspect responses, and debug issues.
 
-📖 **More details**: [docs/user/configuration.md#cors-configuration](./docs/user/configuration.md#cors-configuration)
+📖 **Complete inspection guide**: [docs/development/inspection.md](./docs/development/inspection.md) (includes HTTP transport testing)
 
 ## Development
 

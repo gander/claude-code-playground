@@ -381,6 +381,24 @@ describe("Integration: my_tool", () => {
 
 ## Debugging
 
+### MCP Inspector
+
+For interactive testing and debugging, use the **MCP Inspector** - a web-based tool for testing MCP servers.
+
+**Quick Start**:
+```bash
+# Test published package
+npx @modelcontextprotocol/inspector npx @gander-tools/osm-tagging-schema-mcp
+
+# Test Docker image
+npx @modelcontextprotocol/inspector docker run --rm -i ghcr.io/gander-tools/osm-tagging-schema-mcp
+
+# Test local changes
+npx @modelcontextprotocol/inspector npx tsx src/index.ts
+```
+
+**See [Inspection Guide](./inspection.md)** for comprehensive documentation on all inspection methods, HTTP transport testing, and troubleshooting.
+
 ### VS Code Debug Configuration
 
 Create `.vscode/launch.json`:
