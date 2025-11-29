@@ -101,26 +101,27 @@ Add to your Claude Desktop configuration:
 }
 ```
 
-📖 **Configuration guides**:
-- [docs/user/configuration.md](./docs/user/configuration.md) - Setup for Claude Code/Desktop and custom clients
-- [docs/user/usage.md](./docs/user/usage.md) - Usage examples, workflows, and advanced deployment
-- [docs/api/](./docs/api/README.md) - Complete API reference for all tools
+📖 **Next steps**:
+- [Configuration Guide](./docs/user/configuration.md) - Setup for Claude Code/Desktop and custom clients
+- [Usage Guide](./docs/user/usage.md) - Tool examples and workflows
+- [API Reference](./docs/api/README.md) - Complete tool documentation
+- [Deployment Guide](./docs/deployment/deployment.md) - Production HTTP/Docker deployment
 
 ### Testing with MCP Inspector
 
 Test and debug the server using the official [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
 
 ```bash
-# Start server with HTTP transport
-npm run start:http
+# Test published package (quickest)
+npx @modelcontextprotocol/inspector npx @gander-tools/osm-tagging-schema-mcp
 
-# In another terminal, launch Inspector
-npx @modelcontextprotocol/inspector --transport http --server-url http://localhost:3000/
+# Test Docker image
+npx @modelcontextprotocol/inspector docker run --rm -i ghcr.io/gander-tools/osm-tagging-schema-mcp
 ```
 
-The Inspector UI will open in your browser at `http://localhost:6274` with a visual interface to test all 7 tools.
+The Inspector provides an interactive web UI to test all tools, inspect responses, and debug issues.
 
-📖 **More details**: [docs/user/configuration.md#cors-configuration](./docs/user/configuration.md#cors-configuration)
+📖 **Complete inspection guide**: [docs/development/inspection.md](./docs/development/inspection.md) (includes HTTP transport testing)
 
 ## Development
 
@@ -153,23 +154,40 @@ Contributions welcome! This project follows **Test-Driven Development (TDD)**.
 
 ## Documentation
 
+### Quick Navigation
+
+**Choose your path:**
+
+| I want to... | Go to |
+|-------------|-------|
+| **Install and run the server** | [Installation Guide](./docs/user/installation.md) |
+| **Configure with Claude Code/Desktop** | [Configuration Guide](./docs/user/configuration.md) |
+| **Learn how to use the tools** | [Usage Guide](./docs/user/usage.md) → [API Reference](./docs/api/README.md) |
+| **Test and debug the server** | [Inspection Guide](./docs/development/inspection.md) |
+| **Deploy in production (HTTP/Docker)** | [Deployment Guide](./docs/deployment/deployment.md) |
+| **Fix issues or errors** | [Troubleshooting Guide](./docs/user/troubleshooting.md) |
+| **Contribute to the project** | [Contributing Guide](./docs/development/contributing.md) |
+
+### Complete Documentation
+
 **User Guides:**
 - [Installation](./docs/user/installation.md) - Setup guide (npx, Docker, source)
-- [Configuration](./docs/user/configuration.md) - Claude Code/Desktop setup
-- [Usage](./docs/user/usage.md) - Examples, workflows, advanced deployment
+- [Configuration](./docs/user/configuration.md) - Claude Code/Desktop configuration
+- [Usage](./docs/user/usage.md) - Tool examples and workflows
 - [API Reference](./docs/api/README.md) - Complete tool documentation
-- [Troubleshooting](./docs/user/troubleshooting.md) - Common issues
+- [Troubleshooting](./docs/user/troubleshooting.md) - Common issues and solutions
 
 **Developer Docs:**
-- [Contributing](./docs/development/contributing.md) - Contribution guidelines
-- [Development](./docs/development/development.md) - Development setup
-- [Fuzzing](./docs/development/fuzzing.md) - Fuzzing infrastructure and security testing
-- [Roadmap](./docs/development/roadmap.md) - Project roadmap
-- [Release Process](./docs/development/release-process.md) - Release workflow
+- [Contributing](./docs/development/contributing.md) - Contribution guidelines (TDD workflow)
+- [Development](./docs/development/development.md) - Development setup and debugging
+- [Inspection](./docs/development/inspection.md) - MCP Inspector testing guide
+- [Fuzzing](./docs/development/fuzzing.md) - Security fuzzing and property testing
+- [Roadmap](./docs/development/roadmap.md) - Project roadmap and future features
+- [Release Process](./docs/development/release-process.md) - Release and publishing workflow
 
 **Deployment Docs:**
-- [Deployment](./docs/deployment/deployment.md) - Production deployment guide
-- [Security](./docs/deployment/security.md) - Security features and verification
+- [Deployment](./docs/deployment/deployment.md) - HTTP/Docker production deployment
+- [Security](./docs/deployment/security.md) - Security features, provenance, and SLSA
 
 **Project Info:**
 - [CHANGELOG.md](./CHANGELOG.md) - Version history

@@ -655,7 +655,30 @@ When reporting issues, include:
 
 ## Debug Mode
 
-Currently, the server doesn't have a debug mode. For troubleshooting:
+### Interactive Testing with MCP Inspector
+
+For interactive debugging and testing, use the **MCP Inspector** - a web-based tool that provides a UI for testing MCP servers:
+
+```bash
+# Test server interactively
+npx @modelcontextprotocol/inspector npx @gander-tools/osm-tagging-schema-mcp
+
+# Test Docker image
+npx @modelcontextprotocol/inspector docker run --rm -i ghcr.io/gander-tools/osm-tagging-schema-mcp
+```
+
+**Benefits:**
+- ✅ Interactive web UI for testing tools
+- ✅ View all available tools and their parameters
+- ✅ Execute tools with custom input
+- ✅ Inspect JSON responses
+- ✅ Test error handling
+
+**See [Inspection Guide](../development/inspection.md)** for comprehensive documentation.
+
+### Command-Line Debugging
+
+For command-line troubleshooting:
 
 ```bash
 # Run server directly (see all output)
@@ -663,6 +686,9 @@ npx @gander-tools/osm-tagging-schema-mcp
 
 # Pipe test input
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx @gander-tools/osm-tagging-schema-mcp
+
+# Run with debug logging
+LOG_LEVEL=debug npx @gander-tools/osm-tagging-schema-mcp
 
 # For development, use Node.js inspector
 node --inspect node_modules/.bin/tsx src/index.ts

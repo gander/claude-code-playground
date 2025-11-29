@@ -7,9 +7,11 @@ This guide covers deploying the OSM Tagging Schema MCP Server in production envi
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
+- [HTTP Transport Deployment](#http-transport-deployment)
 - [Production Deployment](#production-deployment)
 - [Configuration Options](#configuration-options)
 - [Health Checks](#health-checks)
+- [Logging](#logging)
 - [Monitoring](#monitoring)
 - [Scaling](#scaling)
 - [Security](#security)
@@ -128,6 +130,111 @@ curl http://localhost:3000/ready
   "timestamp": "2024-01-15T10:30:05.000Z"
 }
 ```
+
+## HTTP Transport Deployment
+
+The server supports HTTP transport for web clients, API integrations, and remote access.
+
+### NPX Deployment
+
+**Quick Start:**
+```bash
+# Start HTTP server on port 3000
+TRANSPORT=http npx @gander-tools/osm-tagging-schema-mcp
+```
+
+**Custom Configuration:**
+```bash
+# Custom port and host
+TRANSPORT=http PORT=8080 HOST=127.0.0.1 LOG_LEVEL=info \
+  npx @gander-tools/osm-tagging-schema-mcp
+```
+
+**Using npm scripts (from source):**
+```bash
+npm run start:http  # Production build with HTTP transport
+npm run dev:http    # Development mode with hot reload
+```
+
+### Docker HTTP Deployment
+
+**Quick Start:**
+```bash
+docker run -d \
+  --name osm-tagging-http \
+  -p 3000:3000 \
+  -e TRANSPORT=http \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+```
+
+**Production Configuration:**
+```bash
+docker run -d \
+  --name osm-tagging-http \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -e TRANSPORT=http \
+  -e PORT=3000 \
+  -e LOG_LEVEL=info \
+  -e NODE_ENV=production \
+  --memory=512m \
+  --cpus=1.0 \
+  --read-only \
+  --tmpfs /tmp \
+  --security-opt=no-new-privileges:true \
+  --health-cmd='node -e "require(\"http\").get(\"http://localhost:3000/health\", (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on(\"error\", () => process.exit(1))"' \
+  --health-interval=30s \
+  --health-timeout=10s \
+  --health-start-period=10s \
+  --health-retries=3 \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+```
+
+### HTTP Environment Variables
+
+| Variable | Values | Default | Description |
+|----------|--------|---------|-------------|
+| `TRANSPORT` | `stdio`, `http` | `stdio` | Transport protocol mode |
+| `PORT` | 1-65535 | `3000` | HTTP server port |
+| `HOST` | IP/hostname | `0.0.0.0` | Bind address (0.0.0.0 = all interfaces) |
+| `LOG_LEVEL` | `SILENT`, `ERROR`, `WARN`, `INFO`, `DEBUG` | `INFO` | Logging verbosity |
+| `NODE_ENV` | `production`, `development` | - | Node.js environment |
+
+### HTTP Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/mcp` | GET | Server-Sent Events stream for MCP messages |
+| `/mcp` | POST | Send JSON-RPC messages to MCP server |
+| `/mcp/:sessionId` | DELETE | Close a specific session |
+| `/health` | GET | Liveness probe (server status) |
+| `/ready` | GET | Readiness probe (schema loaded status) |
+
+**Example Usage:**
+
+```bash
+# Health check
+curl http://localhost:3000/health
+
+# Readiness check
+curl http://localhost:3000/ready
+
+# MCP protocol communication (requires MCP client library)
+# See MCP documentation: https://modelcontextprotocol.io
+```
+
+### Testing HTTP Deployment
+
+**With MCP Inspector:**
+```bash
+# Start server in one terminal
+TRANSPORT=http npx @gander-tools/osm-tagging-schema-mcp
+
+# Connect inspector in another terminal
+npx @modelcontextprotocol/inspector --transport http --server-url http://localhost:3000
+```
+
+📖 **For detailed inspection guide**, see [Inspection Guide](../development/inspection.md)
 
 ## Production Deployment
 
@@ -337,13 +444,38 @@ docker inspect osm-tagging-mcp --format='{{.State.Health.Status}}'
 # Output: healthy
 ```
 
-## Monitoring
+## Logging
 
-### Basic Monitoring
+### Log Levels
 
-**View logs:**
+The server supports configurable logging via the `LOG_LEVEL` environment variable:
+
+| Level | Output | Use Case |
+|-------|--------|----------|
+| `SILENT` | No logs | Not recommended (debugging issues impossible) |
+| `ERROR` | Errors only | Minimal production logging |
+| `WARN` | Errors + warnings | **Recommended for production** |
+| `INFO` | Errors + warnings + info | Troubleshooting, staging environments |
+| `DEBUG` | All messages including debug | Development only |
+
+**Examples:**
+
 ```bash
-# Follow logs
+# NPX with different log levels
+LOG_LEVEL=WARN npx @gander-tools/osm-tagging-schema-mcp
+LOG_LEVEL=DEBUG npx tsx src/index.ts
+
+# Docker with log level
+docker run -d \
+  -e LOG_LEVEL=warn \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+```
+
+### Viewing Logs
+
+**Docker Logs:**
+```bash
+# Follow logs in real-time
 docker logs -f osm-tagging-mcp
 
 # View last 100 lines
@@ -351,9 +483,41 @@ docker logs --tail=100 osm-tagging-mcp
 
 # View logs with timestamps
 docker logs -t osm-tagging-mcp
+
+# Filter by log level
+docker logs osm-tagging-mcp 2>&1 | grep ERROR
+docker logs osm-tagging-mcp 2>&1 | grep WARN
 ```
 
-**Container stats:**
+**NPX/Source Logs:**
+```bash
+# Logs go to stderr by default (doesn't interfere with MCP stdio)
+TRANSPORT=http LOG_LEVEL=info npx @gander-tools/osm-tagging-schema-mcp 2> server.log
+```
+
+### Log Rotation
+
+**Docker Logging Drivers:**
+
+```bash
+# JSON file with rotation
+docker run -d \
+  --log-driver json-file \
+  --log-opt max-size=10m \
+  --log-opt max-file=3 \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+
+# Syslog forwarding
+docker run -d \
+  --log-driver syslog \
+  --log-opt syslog-address=tcp://192.168.0.42:514 \
+  --log-opt tag="osm-tagging-mcp" \
+  ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
+```
+
+## Monitoring
+
+### Container Stats
 ```bash
 # Real-time stats
 docker stats osm-tagging-mcp
