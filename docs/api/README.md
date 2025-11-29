@@ -19,13 +19,14 @@ Complete reference for all MCP tools provided by the OSM Tagging Schema MCP Serv
 
 ## Overview
 
-The server provides 7 tools organized into three categories:
+The server provides 9 tools organized into four categories:
 
 | Category | Tools | Description |
 |----------|-------|-------------|
 | **Tag Query** | 2 tools | Query tag values and search tags |
 | **Preset Discovery** | 2 tools | Search and explore OSM presets |
 | **Validation** | 3 tools | Validate tags and suggest improvements |
+| **Format Conversion** | 2 tools | Convert between flat text and JSON formats |
 
 ## Quick Reference
 
@@ -51,7 +52,14 @@ The server provides 7 tools organized into three categories:
 | [`validate_tag_collection`](./validate_tag_collection.md) | Validate a collection of tags | `tags` (object/string) | Validation report with statistics |
 | [`suggest_improvements`](./suggest_improvements.md) | Suggest improvements for tag collection | `tags` (object/string) | Suggestions, warnings, matched presets |
 
-**Note:** `validate_tag_collection` and `suggest_improvements` accept tags in multiple formats:
+### Format Conversion Tools
+
+| Tool | Description | Input | Output |
+|------|-------------|-------|--------|
+| [`flat_to_json`](./flat_to_json.md) | Convert flat text format (key=value per line) to JSON object | `tags` (string) | JSON object with tags |
+| [`json_to_flat`](./json_to_flat.md) | Convert JSON object to flat text format (key=value per line) | `tags` (object/string) | Flat text with key=value per line |
+
+**Note:** `validate_tag_collection`, `suggest_improvements`, and format conversion tools accept tags in multiple formats:
 - **Object**: `{"amenity": "restaurant", "cuisine": "pizza"}`
 - **Text** (key=value lines): `"amenity=restaurant\ncuisine=pizza"`
 - **JSON string**: `'{"amenity": "restaurant"}'`
@@ -132,7 +140,7 @@ The server translates technical OSM identifiers into human-readable names using 
 
 ### Tools with Localization Support
 
-All 7 tools include localized names in their responses:
+7 of 9 tools include localized names in their responses (format conversion tools are excluded as they perform pure format parsing):
 
 **Tag Query Tools:**
 - ✅ `get_tag_values` - Returns `keyName` and `valuesDetailed[].valueName`
@@ -146,6 +154,10 @@ All 7 tools include localized names in their responses:
 - ✅ `validate_tag` - Returns `keyName`, `valueName`, and `replacementDetailed[].keyName`/`valueName`
 - ✅ `validate_tag_collection` - Uses localized `validate_tag` for each tag
 - ✅ `suggest_improvements` - Returns `suggestions[].keyName` and `matchedPresetsDetailed[].name`
+
+**Format Conversion Tools:**
+- ❌ `flat_to_json` - No localization (pure format parsing)
+- ❌ `json_to_flat` - No localization (pure format conversion)
 
 ### Fallback Logic
 

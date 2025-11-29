@@ -8,12 +8,12 @@ Validates whether a tag key-value pair is valid according to the OSM tagging sch
 - Tag key existence in schema
 - Value validity for the given key
 - Deprecated tag status with replacement suggestions
-- Field option compliance
+- Field option compliance (hasOptions/valueInOptions)
 
 **Phase 8.2 Updates:**
 - Returns localized `keyName` and `valueName` for human-readable display
 - Returns `replacementDetailed` array with localized replacement tag names
-- Removed redundant `fieldExists` and `availableOptions` fields
+- Returns `hasOptions` and `valueInOptions` for field option validation
 
 ## Category
 
@@ -39,6 +39,8 @@ Returns a JSON object with the following structure (Phase 8.2 format):
   valid: boolean;                 // Whether tag is valid
   deprecated: boolean;            // Whether tag is deprecated
   message: string;                // Human-readable validation message
+  hasOptions: boolean;            // Whether this key has predefined options
+  valueInOptions: boolean;        // Whether the value is in the predefined options
   replacement?: object;           // Replacement tags if deprecated (backward compatibility)
   replacementDetailed?: Array<{   // Replacement tags with localized names (Phase 8.2)
     key: string;                  // Replacement key
@@ -48,6 +50,25 @@ Returns a JSON object with the following structure (Phase 8.2 format):
   }>;
 }
 ```
+
+### Output Fields Explained
+
+**Core Fields:**
+- **key**: The tag key that was validated
+- **keyName**: Human-readable, localized name for the key
+- **value**: The tag value that was validated
+- **valueName**: Human-readable, localized name for the value
+- **valid**: Always `true` unless the value is empty or invalid format
+- **deprecated**: `true` if the tag is deprecated in the OSM schema
+- **message**: Human-readable description of the validation result
+
+**Option Validation Fields:**
+- **hasOptions**: `true` if the field definition includes a predefined list of valid values
+- **valueInOptions**: `true` if the value is in the predefined options list (only meaningful when `hasOptions` is `true`)
+
+**Deprecation Fields (only present if deprecated):**
+- **replacement**: Simple key-value object with replacement tags
+- **replacementDetailed**: Array of replacement tags with localized names
 
 ### Validation Logic
 
