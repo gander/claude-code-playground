@@ -257,30 +257,20 @@ claude mcp add @gander-tools/osm-tagging-schema-mcp
 
 **MCP Inspector (Interactive Testing):**
 
-The MCP Inspector provides an interactive web interface to test and explore MCP servers:
+The MCP Inspector provides an interactive web interface to test and debug MCP servers:
 
 ```bash
-# Test with npx
+# Test with npx (quickest)
 npx @modelcontextprotocol/inspector npx @gander-tools/osm-tagging-schema-mcp
 
-# Test with Docker (latest stable)
-npx @modelcontextprotocol/inspector docker run -i --rm --pull always \
+# Test with Docker
+npx @modelcontextprotocol/inspector docker run -i --rm \
   ghcr.io/gander-tools/osm-tagging-schema-mcp:latest
-
-# Test with Docker (edge/development)
-npx @modelcontextprotocol/inspector docker run -i --rm --pull always \
-  ghcr.io/gander-tools/osm-tagging-schema-mcp:edge
-
-# Test with specific version
-npx @modelcontextprotocol/inspector docker run -i --rm --pull always \
-  ghcr.io/gander-tools/osm-tagging-schema-mcp:0.2.1
 ```
 
-The inspector opens a web interface where you can:
-- Browse all available tools
-- Test tool calls with custom parameters
-- View request/response JSON
-- Debug MCP protocol communication
+The inspector opens a web interface where you can browse tools, test calls, and debug protocol communication.
+
+📖 **For detailed inspection guide** with HTTP transport testing and troubleshooting, see [Inspection Guide](../development/inspection.md)
 
 ## Updating
 
