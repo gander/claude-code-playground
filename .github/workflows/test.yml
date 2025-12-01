@@ -2,9 +2,9 @@ name: Test
 
 on:
   pull_request:
-    branches: ["**"]
+    branches: [ "**" ]
   push:
-    branches: ["master"]
+    branches: [ "master" ]
 
 permissions:
   contents: read
@@ -29,6 +29,7 @@ jobs:
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
         with:
+          base: ${{ github.event.pull_request.base.ref || 'master' }}
           filters: |
             code:
               - 'src/**'
@@ -83,4 +84,64 @@ jobs:
       - name: Run integration tests
         run: npm run test:integration
 
+  test-mcp:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    name: MCP Test
+    runs-on: ubuntu-latest
+    outputs:
+      total: ${{ steps.mcp-test.outputs.total }}
+      passed: ${{ steps.mcp-test.outputs.passed }}
+      failed: ${{ steps.mcp-test.outputs.failed }}
+      skipped: ${{ steps.mcp-test.outputs.skipped }}
+      success: ${{ steps.mcp-test-validate.outputs.success }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
+      - name: Setup Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: '22'
+
+      # npm must be newer than 11.5.1 for compatibility
+      - name: Install tools
+        run: npm install -g npm@11.6.4 mcp-jest@1.2.0
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Build
+        run: npm run build
+
+      - name: Run MCP Jest and parse results
+        id: mcp-test
+        run: |
+            mcp-jest --config tests/mcp-jest.json --reporter json --report-output report.json 
+            
+            {
+              echo "total=$(jq '.total' report.json)"
+              echo "passed=$(jq '.passed' report.json)"
+              echo "failed=$(jq '.failed' report.json)"
+              echo "skipped=$(jq '.skipped' report.json)"
+            } >> "$GITHUB_OUTPUT"
+            
+            echo "Results: $(echo "$OUTPUT" | jq '.passed')/$(echo "$OUTPUT" | jq '.total') passed"
+            echo "=== End raw output ==="
+      - name: Validate test results
+        id: mcp-test-validate
+        run: |
+          TOTAL=${{ steps.mcp-test.outputs.total }}
+          PASSED=${{ steps.mcp-test.outputs.passed }}
+          FAILED=${{ steps.mcp-test.outputs.failed }}
+          SKIPPED=${{ steps.mcp-test.outputs.skipped }}
+          
+          if [ "$TOTAL" -gt 0 ] && [ "$PASSED" -eq "$TOTAL" ] && [ "$FAILED" -eq 0 ] && [ "$SKIPPED" -eq 0 ]; then
+            echo "success=true" >> "$GITHUB_OUTPUT"
+            echo "✅ All tests passed ($PASSED/$TOTAL)"
+            exit 0
+          else
+            echo "success=false" >> "$GITHUB_OUTPUT"
+            echo "❌ Tests failed - Passed: $PASSED/$TOTAL, Failed: $FAILED, Skipped: $SKIPPED"
+            exit 1
+          fi
