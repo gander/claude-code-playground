@@ -196,3 +196,7 @@ Contributions welcome! This project follows **Test-Driven Development (TDD)**.
 ## License
 
 GNU General Public License v3.0 - See [LICENSE](./LICENSE) file for details.
+
+---
+
+[![MCP Badge](https://lobehub.com/badge/mcp/gander-tools-osm-tagging-schema-mcp?style=plastic)](https://lobehub.com/mcp/gander-tools-osm-tagging-schema-mcp)
