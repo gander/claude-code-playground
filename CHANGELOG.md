@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v2.3.0...v2.3.1) (2025-12-01)
+
+
+### Bug Fixes
+
+* replace manual JSON imports with ESM imports from id-tagging-schema ([04ee8a1](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/04ee8a19c9d3a071a6e44b86cb96fe0e61abc3a7))
+* **types:** refine type assertions and improve safety in tests and tools ([3601cbe](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/3601cbeaf060938b9b618d9bb7ad0bc4e127e896))
+* **types:** update `TranslationField.options` type to allow string values ([a74f7a0](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/a74f7a01e9c553b49c2456e0222289fbd5c2f80a))
+
+
+### Code Refactoring
+
+* simplify type imports and conditional checks in tools ([88eb94c](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/88eb94c4e885e695c2496ca595f342207d5730e3))
+
 ## [2.3.0](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v2.2.0...v2.3.0) (2025-11-29)
 
 
