@@ -58,7 +58,7 @@ describe("Tool Descriptions Quality", () => {
 
 				for (const [paramName, paramSchema] of Object.entries(config.inputSchema)) {
 					// Get description from Zod schema
-					const description = (paramSchema as any).description || "";
+					const description = (paramSchema as { description?: string }).description || "";
 					const descLength = description.length;
 
 					assert.ok(
@@ -84,13 +84,14 @@ describe("Tool Descriptions Quality", () => {
 				const config = tool.config();
 
 				for (const [paramName, paramSchema] of Object.entries(config.inputSchema)) {
-					const description = (paramSchema as any).description || "";
+					const description = (paramSchema as { description?: string }).description || "";
 					const descLower = description.toLowerCase();
 
 					const hasExample = exampleIndicators.some((indicator) => descLower.includes(indicator));
 
 					// Skip optional parameters without examples (like limit)
-					const isOptional = (paramSchema as any).isOptional?.() || false;
+					const isOptional =
+						(paramSchema as { isOptional?: () => boolean }).isOptional?.() || false;
 
 					if (!isOptional) {
 						assert.ok(
@@ -109,7 +110,7 @@ describe("Tool Descriptions Quality", () => {
 			assert.ok(searchTags, "search_tags tool should exist");
 
 			const config = searchTags.config();
-			const keywordDesc = (config.inputSchema.keyword as any).description;
+			const keywordDesc = (config.inputSchema.keyword as { description: string }).description;
 
 			assert.ok(
 				keywordDesc.includes("standalone") || keywordDesc.includes("single"),
@@ -194,7 +195,7 @@ describe("Tool Descriptions Quality", () => {
 
 			for (const tool of collectionTools) {
 				const config = tool.config();
-				const tagsDesc = (config.inputSchema.tags as any).description;
+				const tagsDesc = (config.inputSchema.tags as { description: string }).description;
 
 				assert.ok(
 					tagsDesc.includes("JSON object") || tagsDesc.includes("object"),
@@ -220,7 +221,7 @@ describe("Tool Descriptions Quality", () => {
 
 			for (const tool of geometryTools) {
 				const config = tool.config();
-				const geometryDesc = (config.inputSchema.geometry as any).description;
+				const geometryDesc = (config.inputSchema.geometry as { description: string }).description;
 
 				const geometryTypes = ["point", "line", "area"];
 

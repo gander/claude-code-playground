@@ -76,7 +76,7 @@ describe("MCP Prompts", () => {
 				const config = prompt.config();
 
 				for (const [argName, argSchema] of Object.entries(config.argsSchema || {})) {
-					const description = (argSchema as any).description;
+					const description = (argSchema as { description?: string }).description;
 
 					assert.ok(
 						description,
@@ -240,8 +240,9 @@ describe("MCP Prompts", () => {
 	describe("Prompt Use Cases", () => {
 		it("validate-osm-feature should mention data quality and pre-upload validation", () => {
 			const validatePrompt = prompts.find((p) => p.name === "validate-osm-feature");
-			const config = validatePrompt!.config();
+			const config = validatePrompt?.config();
 
+			assert.ok(config, "validate-osm-feature prompt should exist");
 			const desc = config.description.toLowerCase();
 
 			assert.ok(
@@ -252,8 +253,9 @@ describe("MCP Prompts", () => {
 
 		it("find-preset should mention learning and discovery", () => {
 			const findPrompt = prompts.find((p) => p.name === "find-preset");
-			const config = findPrompt!.config();
+			const config = findPrompt?.config();
 
+			assert.ok(config, "find-preset prompt should exist");
 			const desc = config.description.toLowerCase();
 
 			assert.ok(
@@ -264,8 +266,9 @@ describe("MCP Prompts", () => {
 
 		it("learn-tag should be explicitly educational", () => {
 			const learnPrompt = prompts.find((p) => p.name === "learn-tag");
-			const config = learnPrompt!.config();
+			const config = learnPrompt?.config();
 
+			assert.ok(config, "learn-tag prompt should exist");
 			const desc = config.description.toLowerCase();
 
 			assert.ok(

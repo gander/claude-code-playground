@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import packageJsonRaw from "@openstreetmap/id-tagging-schema/package.json" with { type: "json" };
 import type {
 	DeprecatedTag,
 	Field,
@@ -12,7 +13,7 @@ import type {
 	SchemaMetadata,
 	TagIndex,
 	Translations,
-} from "../types/index.js";
+} from "../types";
 import { logger } from "./logger.js";
 
 /**
@@ -519,8 +520,8 @@ export class SchemaLoader {
 	 */
 	private async loadSchemaMetadata(): Promise<SchemaMetadata> {
 		try {
-			// Load package.json from schema package
-			const packageJson = await this.loadJSON<{ version: string }>("../package.json");
+			// Use imported package.json from schema package
+			const packageJson = packageJsonRaw as unknown as { version: string };
 
 			return {
 				version: packageJson.version,
@@ -593,10 +594,10 @@ export class SchemaLoader {
 			if (!firstField) {
 				throw new Error(`Invalid schema: field '${firstFieldKey}' is undefined`);
 			}
-			if (!firstField.key || typeof firstField.key !== "string") {
+			if (!firstField.key) {
 				throw new Error(`Invalid schema: field '${firstFieldKey}' missing key property`);
 			}
-			if (!firstField.type || typeof firstField.type !== "string") {
+			if (!firstField.type) {
 				throw new Error(`Invalid schema: field '${firstFieldKey}' missing type property`);
 			}
 		}

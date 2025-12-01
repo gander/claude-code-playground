@@ -40,7 +40,8 @@ describe("Prompts Integration", () => {
 
 			try {
 				// Server info should include prompts capability
-				const serverCapabilities = (client as any)._serverCapabilities;
+				const serverCapabilities = (client as { _serverCapabilities?: { prompts?: unknown } })
+					._serverCapabilities;
 
 				assert.ok(
 					serverCapabilities?.prompts !== undefined,
@@ -254,7 +255,7 @@ describe("Prompts Integration", () => {
 
 				assert.ok(result.messages, "Should return messages");
 
-				const text = (result.messages[0].content as any).text.toLowerCase();
+				const text = (result.messages[0].content as { text: string }).text.toLowerCase();
 				assert.ok(text.includes("amenity"), "Message should include the tag key");
 			} finally {
 				await client.close();
@@ -329,7 +330,7 @@ describe("Prompts Integration", () => {
 
 				assert.ok(result.messages, "Should return messages");
 
-				const text = (result.messages[0].content as any).text.toLowerCase();
+				const text = (result.messages[0].content as { text: string }).text.toLowerCase();
 				assert.ok(text.includes("amenity"), "Message should include the category");
 			} finally {
 				await client.close();
@@ -369,7 +370,7 @@ describe("Prompts Integration", () => {
 					},
 				});
 
-				const text = (result.messages[0].content as any).text;
+				const text = (result.messages[0].content as { text: string }).text;
 
 				// Should mention actual tool names
 				assert.ok(
