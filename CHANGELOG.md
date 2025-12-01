@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v2.3.1...v3.0.0) (2025-12-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* Rename binary to 'osm-tagging-schema-mcp' ([#362](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/362))
+* Rename binary from 'osm-tagging-mcp' to 'osm-tagging-schema-mcp'
+
+### Code Refactoring
+
+* Rename binary from 'osm-tagging-mcp' to 'osm-tagging-schema-mcp' ([4780384](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/478038405f9b5c821a1bded7fc7b1c8c2f3af64b))
+* Rename binary to 'osm-tagging-schema-mcp' ([#362](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/362)) ([2622158](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/262215896b5300bad29cc7824d0d6d92725678f6))
+
 ## [2.3.1](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v2.3.0...v2.3.1) (2025-12-01)
 
 
