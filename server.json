@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.gander-tools/osm-tagging-schema-mcp",
+  "description": "MCP server for querying and validating OpenStreetMap tags",
+  "repository": {
+    "url": "https://github.com/gander-tools/osm-tagging-schema-mcp",
+    "source": "github"
+  },
+  "version": "3.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@gander-tools/osm-tagging-schema-mcp",
+      "version": "3.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
