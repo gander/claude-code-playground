@@ -1,24 +1,12 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import fieldsRaw from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
+import presetsRaw from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { z } from "zod";
 import type { Field, OsmToolDefinition, Preset } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
 import { parseTagInput } from "../utils/tag-parser.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const fields = JSON.parse(
-	readFileSync(
-		join(__dirname, "../../node_modules/@openstreetmap/id-tagging-schema/dist/fields.json"),
-		"utf-8",
-	),
-) as Record<string, Field>;
-const presets = JSON.parse(
-	readFileSync(
-		join(__dirname, "../../node_modules/@openstreetmap/id-tagging-schema/dist/presets.json"),
-		"utf-8",
-	),
-) as Record<string, Preset>;
+const fields = fieldsRaw as unknown as Record<string, Field>;
+const presets = presetsRaw as unknown as Record<string, Preset>;
 
 /**
  * Structured suggestion with operation type and details

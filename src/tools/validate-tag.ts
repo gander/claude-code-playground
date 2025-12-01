@@ -1,23 +1,13 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import deprecatedRaw from "@openstreetmap/id-tagging-schema/dist/deprecated.json" with {
+	type: "json",
+};
+import fieldsRaw from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 import { z } from "zod";
 import type { DeprecatedTag, Field, OsmToolDefinition } from "../types/index.js";
 import { schemaLoader } from "../utils/schema-loader.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const deprecated = JSON.parse(
-	readFileSync(
-		join(__dirname, "../../node_modules/@openstreetmap/id-tagging-schema/dist/deprecated.json"),
-		"utf-8",
-	),
-) as DeprecatedTag[];
-const fields = JSON.parse(
-	readFileSync(
-		join(__dirname, "../../node_modules/@openstreetmap/id-tagging-schema/dist/fields.json"),
-		"utf-8",
-	),
-) as Record<string, Field>;
+const deprecated = deprecatedRaw as unknown as DeprecatedTag[];
+const fields = fieldsRaw as unknown as Record<string, Field>;
 
 /**
  * Detailed tag information with localized names

@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import packageJsonRaw from "@openstreetmap/id-tagging-schema/package.json" with { type: "json" };
 import type {
 	DeprecatedTag,
 	Field,
@@ -519,8 +520,8 @@ export class SchemaLoader {
 	 */
 	private async loadSchemaMetadata(): Promise<SchemaMetadata> {
 		try {
-			// Load package.json from schema package
-			const packageJson = await this.loadJSON<{ version: string }>("../package.json");
+			// Use imported package.json from schema package
+			const packageJson = packageJsonRaw as unknown as { version: string };
 
 			return {
 				version: packageJson.version,
