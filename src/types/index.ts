@@ -122,7 +122,7 @@ export interface TranslationFieldOption {
  */
 export interface TranslationField {
 	label?: string;
-	options?: Record<string, TranslationFieldOption>;
+	options?: Record<string, string | TranslationFieldOption>;
 }
 
 /**
