@@ -13,7 +13,7 @@
 		}
 	},
 	"bin": {
-		"osm-tagging-mcp": "dist/index.js"
+		"osm-tagging-schema-mcp": "dist/index.js"
 	},
 	"scripts": {
 		"dev": "tsx --watch src/index.ts",
