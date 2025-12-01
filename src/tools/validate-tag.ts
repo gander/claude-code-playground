@@ -164,8 +164,8 @@ export async function validateTag(key: string, value: string): Promise<Validatio
 
 	// Get localized names for key and value using tag deduction (NOT field labels!)
 	// IMPORTANT: Use getTagKeyName/getTagValueName (same as get_tag_values) NOT getFieldLabel/getFieldOptionName
-	let keyName;
-	let valueName;
+	let keyName: string;
+	let valueName: string;
 
 	try {
 		keyName = schemaLoader.getTagKeyName(key);
