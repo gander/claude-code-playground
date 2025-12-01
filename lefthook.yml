@@ -1,6 +1,7 @@
 # Lefthook Configuration
 # Git hooks automation for code quality checks
 # Documentation: https://lefthook.dev/configuration/
+rc: ~/.lefthookrc
 
 # Pre-commit: Fast checks before committing
 pre-commit:
