@@ -13,7 +13,7 @@ import type {
 	SchemaMetadata,
 	TagIndex,
 	Translations,
-} from "../types/index.js";
+} from "../types";
 import { logger } from "./logger.js";
 
 /**
@@ -594,10 +594,10 @@ export class SchemaLoader {
 			if (!firstField) {
 				throw new Error(`Invalid schema: field '${firstFieldKey}' is undefined`);
 			}
-			if (!firstField.key || typeof firstField.key !== "string") {
+			if (!firstField.key) {
 				throw new Error(`Invalid schema: field '${firstFieldKey}' missing key property`);
 			}
-			if (!firstField.type || typeof firstField.type !== "string") {
+			if (!firstField.type) {
 				throw new Error(`Invalid schema: field '${firstFieldKey}' missing type property`);
 			}
 		}

@@ -1,7 +1,7 @@
 import fieldsRaw from "@openstreetmap/id-tagging-schema/dist/fields.json" with { type: "json" };
 import presetsRaw from "@openstreetmap/id-tagging-schema/dist/presets.json" with { type: "json" };
 import { z } from "zod";
-import type { Field, OsmToolDefinition, Preset } from "../types/index.js";
+import type { Field, OsmToolDefinition, Preset } from "../types";
 import { schemaLoader } from "../utils/schema-loader.js";
 import { parseTagInput } from "../utils/tag-parser.js";
 
