@@ -1,0 +1,30 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement
+title: "[FEATURE]: "
+labels: ["feature", "enhancement"]
+body:
+  - type: dropdown
+    id: feature-category
+    attributes:
+      label: 🎯 Feature Category
+      description: Select the category for this feature request
+      options:
+        - 🔧 New Tool
+        - 🚀 Tool Enhancement
+        - 📊 Validation Improvement
+        - 🔌 Protocol/Transport
+        - 🐳 Deployment/Infrastructure
+        - 📚 Documentation
+        - ⚡ Performance
+        - 🎨 Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 💡 Description
+      description: Describe the feature and why it would be useful
+      placeholder: A clear and concise description of the feature you'd like to see...
+    validations:
+      required: true
