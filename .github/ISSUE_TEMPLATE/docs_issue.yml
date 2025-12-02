@@ -1,0 +1,29 @@
+name: 📖 Documentation Issue
+description: Report documentation issues or improvements
+title: "[DOCS]: "
+labels: ["documentation"]
+body:
+  - type: dropdown
+    id: bug-category
+    attributes:
+      label: 🏷️ Bug Category
+      description: Select the type of documentation issue
+      options:
+        - 📝 Typo/Grammar
+        - ❌ Missing Information
+        - 🔗 Broken Link
+        - 📋 Incorrect Example
+        - 🎯 Unclear Instructions
+        - 🔄 Outdated Content
+        - 🎨 Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📄 Description
+      description: Describe the documentation issue
+      placeholder: A clear description of what's wrong or missing in the documentation...
+    validations:
+      required: true

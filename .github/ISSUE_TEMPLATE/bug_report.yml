@@ -1,0 +1,43 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: bug-category
+    attributes:
+      label: 🏷️ Bug Category
+      description: Select the category that best describes this bug
+      options:
+        - 🔧 Tool Functionality
+        - 📊 Data Validation
+        - 🔌 MCP Protocol
+        - 🐳 Docker/Deployment
+        - 📦 Installation/Dependencies
+        - ⚡ Performance
+        - 🔒 Security
+        - 📚 Documentation Error
+        - 🎨 Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 Description
+      description: Describe the bug and what you expected to happen
+      placeholder: A clear and concise description of what the bug is...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: 🔄 Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Run command '...'
+        2. Use tool '...'
+        3. See error
+    validations:
+      required: true
