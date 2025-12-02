@@ -1,0 +1,137 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior in the OSM Tagging Schema MCP Server
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 👋 Thanks for reporting a bug!
+
+        Please fill out the information below to help us understand and fix the issue quickly.
+
+  - type: dropdown
+    id: bug-category
+    attributes:
+      label: 🏷️ Bug Category
+      description: What type of bug are you reporting?
+      options:
+        - 🔧 Tool Functionality - Tool returns incorrect or unexpected results
+        - 🚨 Error/Exception - Server crashes or throws errors
+        - 📊 Data Quality - Issues with OSM schema data or validation
+        - 🔌 Integration - Problems connecting or using the MCP server
+        - 🐢 Performance - Slow response times or resource usage
+        - 📝 Output Format - Incorrect or malformed tool responses
+        - 🌍 Localization - Translation or language-specific issues
+        - 🐳 Docker/Deployment - Container or deployment problems
+        - 🔒 Security - Security vulnerabilities or concerns
+        - 📚 Documentation - Errors or missing information in docs
+        - 🎯 Other - Something else (please specify below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 Bug Description
+      description: A clear and detailed description of what the bug is
+      placeholder: |
+        Example: When I call the validate_tag tool with key="amenity" and value="parking_lot",
+        it returns valid=true, but this tag doesn't exist in the OSM schema.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: 🔄 Steps to Reproduce
+      description: Step-by-step instructions to reproduce the bug
+      placeholder: |
+        1. Start the MCP server with `npx @gander-tools/osm-tagging-schema-mcp`
+        2. Call the validate_tag tool with parameters: {"key": "amenity", "value": "parking_lot"}
+        3. Observe the response returns valid=true
+        4. Check OSM Wiki - this tag doesn't exist
+      value: |
+        1.
+        2.
+        3.
+        4.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: ✅ Expected Behavior
+      description: What did you expect to happen?
+      placeholder: |
+        Example: The tool should return valid=false and suggest the correct tag "amenity=parking"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: ❌ Actual Behavior
+      description: What actually happened?
+      placeholder: |
+        Example: The tool returned valid=true with no warnings or suggestions
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 🖥️ Environment
+      description: Please provide details about your environment
+      value: |
+        - **OS**: (e.g., macOS 14.0, Ubuntu 22.04, Windows 11)
+        - **Node.js Version**: (run `node --version`)
+        - **Package Version**: (e.g., 3.0.1 or `latest`)
+        - **Installation Method**: (npx, Docker, or source)
+        - **MCP Client**: (e.g., Claude Desktop, custom client)
+        - **Transport Protocol**: (stdio or HTTP)
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 📋 Logs and Error Messages
+      description: Include any relevant log output or error messages
+      placeholder: |
+        Paste error messages, stack traces, or log output here.
+        For Docker: docker logs <container-id>
+        For npx: Check stderr output
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 📎 Additional Context
+      description: Add any other context, screenshots, or information about the problem
+      placeholder: |
+        - Link to OSM Wiki page
+        - Screenshots showing the issue
+        - Related issues or PRs
+        - Workarounds you've tried
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: ✔️ Pre-submission Checklist
+      description: Please confirm the following before submitting
+      options:
+        - label: 🔍 I have searched existing issues to ensure this bug hasn't been reported
+          required: true
+        - label: 📖 I have read the [documentation](https://github.com/gander-tools/osm-tagging-schema-mcp/tree/master/docs)
+          required: true
+        - label: 🔄 I am using the latest version of the package
+          required: false
+        - label: 🧪 I have tested this with minimal configuration to isolate the issue
+          required: false

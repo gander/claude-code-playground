@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/gander-tools/osm-tagging-schema-mcp/discussions
+    about: Ask questions, share ideas, and engage with the community
+  - name: 📖 Documentation
+    url: https://github.com/gander-tools/osm-tagging-schema-mcp/tree/master/docs
+    about: Read the comprehensive documentation and guides
+  - name: 🌐 OpenStreetMap Wiki
+    url: https://wiki.openstreetmap.org/wiki/Main_Page
+    about: Learn more about OpenStreetMap tagging standards
+  - name: 🔧 MCP Documentation
+    url: https://modelcontextprotocol.io
+    about: Learn about the Model Context Protocol
