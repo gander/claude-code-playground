@@ -54,6 +54,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+
       - name: Setup Node.js and Install Dependencies
         uses: ./.github/actions/setup-node-and-install
 
@@ -72,6 +75,9 @@ jobs:
       skipped: ${{ steps.mcp-test.outputs.skipped }}
       success: ${{ steps.mcp-test-validate.outputs.success }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+
       - name: Setup Node.js and Install Dependencies
         uses: ./.github/actions/setup-node-and-install
         with:
