@@ -61,7 +61,10 @@ The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tool
 
 ## Technical Stack
 
-- **Runtime**: Node.js 24+
+- **Runtime**: Node.js 22+ or 24+ (both versions supported and tested)
+  - **CI/CD & Production**: Node.js 24 (preferred for stability)
+  - **Development**: Node.js 22 or 24 (both work, see `.nvmrc` for preferred)
+  - **npm**: 10+ or 11+ (npm 11.6.4+ required for publishing workflow only)
 - **Language**: TypeScript 5.x
 - **Package**: @gander-tools/osm-tagging-schema-mcp
 - **MCP SDK**: @modelcontextprotocol/sdk ^1.x
@@ -151,7 +154,9 @@ Every feature implementation MUST follow this workflow:
 
 1. **Version Pinning**: Pin ALL action versions with commit SHA (no floating versions)
 2. **Package Manager**: Always use `npm` and `npx` (not yarn/pnpm)
-3. **Node.js Version**: Always use Node.js 22 with npm 11.5.1 explicitly installed
+3. **Node.js Version**: Always use Node.js 24 with npm 11.6.4 explicitly installed
+   - Note: npm 11.6.4+ is required for `npm publish --provenance` (SLSA attestations)
+   - End users can use Node.js 22+ with npm 10+ (engines allows both)
 4. **No npm cache**: Forbidden to use `cache: npm` in setup-node (causes PR issues)
 
 ### Security Testing
