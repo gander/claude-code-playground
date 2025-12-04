@@ -23,14 +23,7 @@ This project uses **Renovate** for automated dependency updates. Renovate is con
 
 ## Current Setup: Renovate
 
-The project is already configured with Renovate via the `renovate.json` file:
-
-```json
-{
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>gander-settings/renovate:automerge"]
-}
-```
+The project is already configured with Renovate via the `renovate.json` file.
 
 **Status**: ✅ **Active and configured**
 
