@@ -61,6 +61,9 @@ jobs:
           disable-sudo: 'true'
           egress-policy: 'audit'
 
+      - name: Checkout code
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+
       - name: Setup Node.js and Install Dependencies
         uses: ./.github/actions/setup-node-and-install
 
