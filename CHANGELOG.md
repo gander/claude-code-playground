@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v3.0.1...v3.1.0) (2025-12-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* Update minimum supported Node.js and npm versions
+
+### Features
+
+* Add comprehensive GitHub issue templates ([3bfc567](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/3bfc56728314e68348b349c5112876c796375ba1))
+* Add comprehensive GitHub issue templates ([3967512](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/3967512b7d1f7d34660e488d932428f1906cbf5e))
+* Add comprehensive GitHub issue templates ([#371](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/371)) ([6c74f13](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/6c74f137b9dfd0b3e22062b9cde3ca977915e988))
+* Add comprehensive GitHub issue templates ([#375](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/375)) ([e92ae61](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/e92ae614d376be386d947bfb23e7457ad1c73c1a))
+* use tilde (~) for dependency version ranges for stricter patch-level updates ([eccad18](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/eccad189f3a548603fe0304d0af03b658305509c))
+* use tilde (~) for dependency version ranges for stricter patch-level updates ([15c8dcd](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/15c8dcdae7493df99fcf90cf57dcaa6160f6e74e))
+
+
+### Bug Fixes
+
+* **deps:** update dependency @modelcontextprotocol/sdk to ~1.24.0 [security] ([e9feab1](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/e9feab1e0eb75f66c73f0465f39b9f4246831afd))
+* **deps:** update dependency @modelcontextprotocol/sdk to ~1.24.0 [security] ([#377](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/377)) ([5bd54d5](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/5bd54d51ffdb3267e483026dbfda4222124e0743))
+
+
+### Documentation
+
+* Replace hardcoded dependency versions with dynamic badges ([#380](https://github.com/gander-tools/osm-tagging-schema-mcp/issues/380)) ([c004137](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/c004137e5dee6287d2ff8ea2401e9d4cab2572fe))
+
+
+### Miscellaneous Chores
+
+* extend Node.js and npm version support for Claude Code for Web compatibility ([cda8fb8](https://github.com/gander-tools/osm-tagging-schema-mcp/commit/cda8fb875be57fa48720665814636a847d3cc11d))
+
 ## [3.0.1](https://github.com/gander-tools/osm-tagging-schema-mcp/compare/v3.0.0...v3.0.1) (2025-12-01)
 
 
