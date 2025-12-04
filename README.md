@@ -11,11 +11,10 @@
 [![GitHub Release](https://img.shields.io/github/v/release/gander-tools/osm-tagging-schema-mcp?logo=github)](https://github.com/gander-tools/osm-tagging-schema-mcp/releases)
 
 <!-- Dependencies -->
-[![Node.js](https://img.shields.io/badge/node-24-brightgreen?logo=node.js)](https://nodejs.org)
-[![npm](https://img.shields.io/badge/npm-11-CB3837?logo=npm)](https://www.npmjs.com/)
-[![TypeScript](https://img.shields.io/badge/typescript-%5E5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![MCP SDK](https://img.shields.io/badge/MCP-%5E1.23-orange)](https://modelcontextprotocol.io)
-[![Zod](https://img.shields.io/badge/zod-%5E4.1-3E67B1?logo=zod)](https://zod.dev/)
+[![Node.js](https://img.shields.io/node/v/@gander-tools/osm-tagging-schema-mcp?logo=node.js&color=brightgreen)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/npm/dependency-version/@gander-tools/osm-tagging-schema-mcp/dev/typescript?logo=typescript&color=3178C6)](https://www.typescriptlang.org/)
+[![MCP SDK](https://img.shields.io/npm/dependency-version/@gander-tools/osm-tagging-schema-mcp/@modelcontextprotocol/sdk?label=MCP%20SDK&color=orange)](https://modelcontextprotocol.io)
+[![OSM Schema](https://img.shields.io/npm/dependency-version/@gander-tools/osm-tagging-schema-mcp/@openstreetmap/id-tagging-schema?label=OSM%20Schema&color=blue)](https://github.com/openstreetmap/id-tagging-schema)
 
 <!-- Code Quality & Security -->
 [![Code Quality](https://img.shields.io/badge/code%20quality-BiomeJS-60a5fa?logo=biome)](https://biomejs.dev/)
