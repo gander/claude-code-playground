@@ -63,8 +63,9 @@ jobs:
           node-version: '24'
 
       # npm must be newer than 11.5.1 for compatibility
+      # Integrity hash ensures package authenticity from npm registry
       - name: Install npm 11.6.4
-        run: npm install -g npm@11.6.4
+        run: npm install -g npm@11.6.4 --integrity sha512-ERjKtGoFpQrua/9bG0+h3xiv/4nVdGViCjUYA1AmlV24fFvfnSB7B7dIfZnySQ1FDLd0ZVrWPsLLp78dCtJdRQ==
 
       - name: Install dependencies
         run: npm ci
@@ -119,8 +120,11 @@ jobs:
           node-version: '24'
 
       # npm must be newer than 11.5.1 for compatibility
+      # Integrity hashes ensure package authenticity from npm registry
       - name: Install tools
-        run: npm install -g npm@11.6.4 mcp-jest@1.2.0
+        run: |
+          npm install -g npm@11.6.4 --integrity sha512-ERjKtGoFpQrua/9bG0+h3xiv/4nVdGViCjUYA1AmlV24fFvfnSB7B7dIfZnySQ1FDLd0ZVrWPsLLp78dCtJdRQ==
+          npm install -g mcp-jest@1.2.0 --integrity sha512-Ruee/XiM6d8ALbHlim607+G4qU/t9OM79eQUxj8cuMoJAVRqWnT62qZJUI3jtyZIneZHYmmHxnYXe48sr8+Olg==
 
       - name: Install dependencies
         run: npm install --ignore-scripts

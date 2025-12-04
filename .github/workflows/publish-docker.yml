@@ -1,5 +1,9 @@
 name: Docker Build and Publish
 
+# Default restrictive permissions - override at job level as needed
+permissions:
+  contents: read
+
 on:
   # Automatic trigger after successful Release Please workflow
   workflow_run:
@@ -181,9 +185,10 @@ jobs:
         with:
           node-version: '24'
 
+      # Integrity hash ensures package authenticity from npm registry
       - name: Install npm 11.6.4 (non-release builds)
         if: needs.extract-version.outputs.is-release == 'false'
-        run: npm install -g npm@11.6.4
+        run: npm install -g npm@11.6.4 --integrity sha512-ERjKtGoFpQrua/9bG0+h3xiv/4nVdGViCjUYA1AmlV24fFvfnSB7B7dIfZnySQ1FDLd0ZVrWPsLLp78dCtJdRQ==
 
       - name: Install dependencies (non-release builds)
         if: needs.extract-version.outputs.is-release == 'false'

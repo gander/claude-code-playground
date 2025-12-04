@@ -71,8 +71,9 @@ jobs:
           # registry-url removed - not needed for Trusted Publishers with OIDC
 
       # npm must be newer than 11.5.1 for compatibility
+      # Integrity hash ensures package authenticity from npm registry
       - name: Install npm 11.6.4
-        run: npm install -g npm@11.6.4
+        run: npm install -g npm@11.6.4 --integrity sha512-ERjKtGoFpQrua/9bG0+h3xiv/4nVdGViCjUYA1AmlV24fFvfnSB7B7dIfZnySQ1FDLd0ZVrWPsLLp78dCtJdRQ==
 
       - name: Verify package.json version matches release version
         env:
