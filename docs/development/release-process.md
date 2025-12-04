@@ -54,9 +54,11 @@ Release Please recognizes these commit types:
 | `ci:` | CI/CD changes | **Patch** (0.0.X) | ❌ Hidden |
 | `chore:` | Miscellaneous changes | **Patch** (0.0.X) | ❌ Hidden |
 
+**Note:** None of these commit types alone can trigger a **Major** version bump. Major bumps require explicit breaking change markers (see below).
+
 ### Breaking Changes
 
-To trigger a **Major** version bump (X.0.0), include `BREAKING CHANGE:` in the commit footer:
+To trigger a **Major** version bump (X.0.0), you **must** include `BREAKING CHANGE:` in the commit footer or use the `!` marker:
 
 ```
 feat: new API for tag validation
@@ -188,8 +190,6 @@ Configuration is in `release-please-config.json`:
     ".": {
       "release-type": "node",
       "package-name": "@gander-tools/osm-tagging-schema-mcp",
-      "bump-minor-pre-major": true,
-      "bump-patch-for-minor-pre-major": true,
       "changelog-sections": [
         // ... commit types mapping
       ]
@@ -200,15 +200,18 @@ Configuration is in `release-please-config.json`:
 
 **Key settings:**
 - `release-type: "node"` - Node.js package (updates package.json)
-- `bump-minor-pre-major: true` - Features bump minor version before 1.0.0
-- `bump-patch-for-minor-pre-major: true` - Fixes bump patch before 1.0.0
 - `changelog-sections` - Maps commit types to CHANGELOG sections
+
+**Versioning Strategy:**
+- Uses **strict semantic versioning** for versions >= 1.0.0
+- **Only breaking changes** with `!` or `BREAKING CHANGE:` trigger major bumps
+- All other commit types follow standard semver rules (feat → minor, fix → patch)
 
 Current version is tracked in `.release-please-manifest.json`.
 
 ## Version Strategy
 
-Release Please automatically determines version bumps:
+Release Please automatically determines version bumps following **strict semantic versioning**:
 
 | Commits | Version Bump | Example |
 |---------|--------------|---------|
@@ -216,15 +219,13 @@ Release Please automatically determines version bumps:
 | At least one `feat:` | **Minor** | 1.0.0 → 1.1.0 |
 | Any commit with `BREAKING CHANGE:` or `!` | **Major** | 1.0.0 → 2.0.0 |
 
-**Pre-1.0.0 behavior:**
-- `feat:` → bumps minor (0.1.0 → 0.2.0)
-- `fix:` → bumps patch (0.1.0 → 0.1.1)
-- Breaking changes → bumps minor (0.1.0 → 0.2.0)
-
-**Post-1.0.0 behavior:**
+**Current versioning behavior (>= 1.0.0):**
 - `feat:` → bumps minor (1.0.0 → 1.1.0)
-- `fix:` → bumps patch (1.0.0 → 1.0.1)
-- Breaking changes → bumps major (1.0.0 → 2.0.0)
+- `fix:`, `docs:`, `refactor:`, `perf:`, `revert:` → bumps patch (1.0.0 → 1.0.1)
+- Breaking changes (with `!` or `BREAKING CHANGE:`) → bumps major (1.0.0 → 2.0.0)
+- Hidden types (`chore:`, `ci:`, `test:`, `build:`, `style:`) → bumps patch but hidden from CHANGELOG
+
+**IMPORTANT:** Only commits with explicit breaking change markers (`!` or `BREAKING CHANGE:`) will trigger major version bumps. No other commit type can trigger a major bump.
 
 ## Troubleshooting
 
