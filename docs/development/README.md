@@ -9,6 +9,7 @@ Essential guides for contributing:
 - **[Contributing](contributing.md)** - Contribution guidelines, TDD workflow, and standards
 - **[Development](development.md)** - Development setup, commands, and debugging
 - **[Inspection](inspection.md)** - Testing and debugging with MCP Inspector
+- **[Dependency Management](dependency-management.md)** - Renovate setup and Dependabot migration
 - **[Release Process](release-process.md)** - How releases are created and published
 
 ## Project Planning

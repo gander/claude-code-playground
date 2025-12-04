@@ -477,6 +477,7 @@ The project maintains comprehensive documentation organized by user type for cle
 - `docs/development/README.md` - Developer overview and navigation
 - `docs/development/contributing.md` - Contribution guidelines (TDD workflow)
 - `docs/development/development.md` - Development setup, commands, debugging
+- `docs/development/dependency-management.md` - Renovate setup and Dependabot migration guide
 - `docs/development/release-process.md` - Release and publishing process
 - `docs/development/fuzzing.md` - Fuzzing infrastructure and security testing
 - `docs/development/roadmap.md` - Development plan and future features
@@ -509,6 +510,7 @@ When completing a phase or major feature:
 3. **Update docs/development/** (if development process changes):
    - Contribution process → `docs/development/contributing.md`
    - Development setup → `docs/development/development.md`
+   - Dependency automation → `docs/development/dependency-management.md`
    - Release process → `docs/development/release-process.md`
    - Roadmap progress → `docs/development/roadmap.md`
 
