@@ -19,6 +19,18 @@ pre-commit:
       run: npm run check
       stage_fixed: true
 
+    # Lockfile integrity check
+    lockfile-check:
+      glob: "package-lock.json"
+      run: |
+        if grep -q '"lockfileVersion": 3' package-lock.json; then
+          echo "✅ Lockfile version 3 verified"
+        else
+          echo "❌ Error: package-lock.json must use lockfileVersion 3"
+          echo "Please regenerate with: npm install"
+          exit 1
+        fi
+
 # Pre-push: Comprehensive checks before pushing
 pre-push:
   parallel: true
