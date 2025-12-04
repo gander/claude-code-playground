@@ -10,7 +10,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "cd \"$CLAUDE_PROJECT_DIR\" && npm install",
+						"command": "npm install -g npm@11.6.4 && cd \"$CLAUDE_PROJECT_DIR\" && npm install",
 						"timeout": 300
 					}
 				]
