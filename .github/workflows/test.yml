@@ -54,49 +54,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - name: Setup Node.js and Install Dependencies
+        uses: ./.github/actions/setup-node-and-install
 
-      - name: Setup Node.js
-        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
-        with:
-          node-version: '24'
-
-      # npm must be newer than 11.5.1 for compatibility
-      - name: Install npm 11.6.4
-        run: npm install -g npm@11.6.4
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Verify lockfile integrity
-        run: |
-          if ! git diff --exit-code package-lock.json; then
-            echo "❌ Error: package-lock.json was modified by npm ci"
-            echo ""
-            echo "This indicates a lockfile/package.json mismatch or npm version incompatibility."
-            echo "Please regenerate package-lock.json with: npm install"
-            echo ""
-            echo "Changes detected:"
-            git diff package-lock.json
-            exit 1
-          fi
-          echo "✅ Lockfile integrity verified - no changes after npm ci"
-
-      - name: Run type check
-        run: npm run typecheck
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run unit tests
-        run: npm run test:unit
-
-      - name: Build
-        run: npm run build
-
-      - name: Run integration tests
-        run: npm run test:integration
+      - name: Run Tests
+        uses: ./.github/actions/run-tests
 
   test-mcp:
     needs: changes
@@ -110,34 +72,14 @@ jobs:
       skipped: ${{ steps.mcp-test.outputs.skipped }}
       success: ${{ steps.mcp-test-validate.outputs.success }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      - name: Setup Node.js and Install Dependencies
+        uses: ./.github/actions/setup-node-and-install
         with:
-          node-version: '24'
+          install-command: 'npm install --ignore-scripts'
 
       # npm must be newer than 11.5.1 for compatibility
       - name: Install tools
-        run: npm install -g npm@11.6.4 mcp-jest@1.2.0
-
-      - name: Install dependencies
-        run: npm install --ignore-scripts
-
-      - name: Verify lockfile integrity
-        run: |
-          if ! git diff --exit-code package-lock.json; then
-            echo "❌ Error: package-lock.json was modified by npm install"
-            echo ""
-            echo "This indicates a lockfile/package.json mismatch or npm version incompatibility."
-            echo "Please regenerate package-lock.json with: npm install"
-            echo ""
-            echo "Changes detected:"
-            git diff package-lock.json
-            exit 1
-          fi
-          echo "✅ Lockfile integrity verified - no changes after npm install"
+        run: npm install -g mcp-jest@1.2.0
 
       - name: Build
         run: npm run build

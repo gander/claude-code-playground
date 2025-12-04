@@ -1,0 +1,52 @@
+name: 'Run Unit and Integration Tests'
+description: 'Run type checking, linting, unit tests, build, and integration tests'
+
+inputs:
+  run-typecheck:
+    description: 'Run type checking'
+    required: false
+    default: 'true'
+  run-lint:
+    description: 'Run linting'
+    required: false
+    default: 'true'
+  run-unit-tests:
+    description: 'Run unit tests'
+    required: false
+    default: 'true'
+  run-build:
+    description: 'Run build'
+    required: false
+    default: 'true'
+  run-integration-tests:
+    description: 'Run integration tests'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run type check
+      if: inputs.run-typecheck == 'true'
+      shell: bash
+      run: npm run typecheck
+
+    - name: Run linter
+      if: inputs.run-lint == 'true'
+      shell: bash
+      run: npm run lint
+
+    - name: Run unit tests
+      if: inputs.run-unit-tests == 'true'
+      shell: bash
+      run: npm run test:unit
+
+    - name: Build
+      if: inputs.run-build == 'true'
+      shell: bash
+      run: npm run build
+
+    - name: Run integration tests
+      if: inputs.run-integration-tests == 'true'
+      shell: bash
+      run: npm run test:integration
