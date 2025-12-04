@@ -67,13 +67,31 @@ The MCP server exposes OpenStreetMap's tagging schema as a set of queryable tool
   - **npm**: 10+ or 11+ (npm 11.6.4+ required for publishing workflow only)
 - **Language**: TypeScript 5.x
 - **Package**: @gander-tools/osm-tagging-schema-mcp
-- **MCP SDK**: @modelcontextprotocol/sdk ^1.x
-- **Schema Library**: @openstreetmap/id-tagging-schema ^6.x
+- **MCP SDK**: @modelcontextprotocol/sdk ~1.x
+- **Schema Library**: @openstreetmap/id-tagging-schema ~6.x
 - **Testing**: Node.js native test runner with TDD methodology
 - **Fuzzing**: fast-check (property-based testing) with CI integration
 - **Code Quality**: BiomeJS (linting & formatting)
 - **CI/CD**: GitHub Actions (automated testing, fuzzing, Docker builds)
 - **Distribution**: npm registry (via npx), GitHub Container Registry (Docker images)
+
+### Dependency Management
+
+**Version Range Policy**: This project uses **tilde (`~`) version ranges** for all dependencies to ensure predictable updates.
+
+- **Tilde (`~`)**: Restricts updates to patch-level only (e.g., `~4.20.6` allows `4.20.7` but not `4.21.0`)
+- **Why not caret (`^`)**: Caret allows minor version updates which may introduce unexpected breaking changes
+- **CRITICAL RULE**: When updating dependencies, **ALWAYS maintain the tilde (`~`) prefix**
+
+**Examples:**
+- ✅ Correct: `"tsx": "~4.20.6"` → `"tsx": "~4.21.0"` (tilde preserved)
+- ❌ Incorrect: `"tsx": "~4.20.6"` → `"tsx": "^4.21.0"` (changed to caret)
+- ❌ Incorrect: `"tsx": "~4.20.6"` → `"tsx": "4.21.0"` (removed tilde)
+
+**Applies to:**
+- All entries in `dependencies`
+- All entries in `devDependencies`
+- Automated dependency updates (Renovate, Dependabot, manual bumps)
 
 ## Development Methodology
 
