@@ -353,6 +353,8 @@ node --import tsx --test tests/tools/my-tool.test.ts
 
 ### Dependency Version Pinning Policy
 
+> **📖 For dependency automation (Renovate/Dependabot), see [dependency-management.md](./dependency-management.md)**
+
 This project uses a **hybrid versioning strategy** to balance security, stability, and maintainability:
 
 **Production Dependencies** (tilde `~` range):
